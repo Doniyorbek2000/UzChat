@@ -25,12 +25,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
-import { MessageType } from "../../types";
+import { ConversationParticipant, MessageType } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { formatDuration } from "../../utils/mediaFile";
+import { formatTime } from "../../utils/conversation";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
@@ -51,6 +52,10 @@ function getPreviewLabel(item: { type: MessageType; text: string | null; deleted
   return item.text ? `${label}: ${item.text}` : label;
 }
 
+function isMessageRead(message: { createdAt: string }, participant: ConversationParticipant) {
+  return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);
+}
+
 export function ChatRoomScreen({ route, navigation }: Props) {
   const { conversationId, title } = route.params;
   const user = useAuthStore((s) => s.user);
@@ -66,6 +71,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
+  const onlineUsers = useChatStore((s) => s.onlineUsers);
 
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
@@ -77,9 +83,33 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
 
+  const otherParticipant =
+    conversation?.type === "DIRECT" ? conversation.participants.find((p) => p.userId !== user?.id) : null;
+  const otherUser = otherParticipant?.user ?? null;
+  const isOtherOnline = otherUser ? onlineUsers.has(otherUser.id) : false;
+  const presenceLabel = otherUser
+    ? isOtherOnline
+      ? "Onlayn"
+      : otherUser.lastSeenAt
+        ? `Oxirgi marta: ${formatTime(otherUser.lastSeenAt)}`
+        : ""
+    : "";
+
   useEffect(() => {
     navigation.setOptions({
       title,
+      headerTitle: presenceLabel
+        ? () => (
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitleText} numberOfLines={1}>
+                {title}
+              </Text>
+              <Text style={styles.headerSubtitle} numberOfLines={1}>
+                {presenceLabel}
+              </Text>
+            </View>
+          )
+        : undefined,
       headerRight:
         conversation?.type === "GROUP"
           ? () => (
@@ -89,7 +119,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             )
           : undefined,
     });
-  }, [navigation, title, conversationId, conversation?.type]);
+  }, [navigation, title, conversationId, conversation?.type, presenceLabel]);
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
@@ -335,9 +365,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )}
           {content}
-          <Text style={styles.messageTime}>
-            {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-          </Text>
+          <View style={styles.messageFooter}>
+            <Text style={styles.messageTime}>
+              {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </Text>
+            {isOwn && otherParticipant && (
+              <Text style={[styles.receipt, isMessageRead(item, otherParticipant) && styles.receiptRead]}>
+                {isMessageRead(item, otherParticipant) ? "✓✓" : "✓"}
+              </Text>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -456,8 +493,14 @@ const styles = StyleSheet.create({
   replyPreviewClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   messageText: { fontSize: 16, color: colors.text },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
-  messageTime: { fontSize: 10, color: colors.textSecondary, alignSelf: "flex-end", marginTop: 4 },
+  messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
+  messageTime: { fontSize: 10, color: colors.textSecondary },
+  receipt: { fontSize: 11, color: colors.textSecondary },
+  receiptRead: { color: colors.primary },
   headerInfoIcon: { fontSize: 20, marginRight: 12 },
+  headerTitleContainer: { alignItems: "center" },
+  headerTitleText: { fontSize: 17, fontWeight: "600", color: colors.text },
+  headerSubtitle: { fontSize: 12, color: colors.textSecondary },
   typing: { paddingHorizontal: 16, paddingBottom: 4, color: colors.textSecondary, fontSize: 12 },
   inputRow: {
     flexDirection: "row",

@@ -9,4 +9,5 @@ export const colors = {
   bubbleSelf: "#A0E75A",
   bubbleOther: "#FFFFFF",
   danger: "#FA5151",
+  online: "#07C160",
 };

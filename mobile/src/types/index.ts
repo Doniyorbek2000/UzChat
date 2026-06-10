@@ -25,6 +25,7 @@ export interface ConversationParticipant {
   userId: string;
   role: ParticipantRole;
   user: User;
+  lastReadAt: string | null;
 }
 
 export interface ReplyToSnapshot {

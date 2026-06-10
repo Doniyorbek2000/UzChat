@@ -43,12 +43,20 @@ export function initSocketServer(httpServer: HttpServer): Server {
 
     const participations = await prisma.conversationParticipant.findMany({
       where: { userId: authed.userId },
-      select: { conversationId: true },
+      include: { conversation: { include: { participants: { select: { userId: true } } } } },
     });
+
+    const relatedUserIds = new Set<string>();
     for (const p of participations) {
       socket.join(`conversation:${p.conversationId}`);
+      for (const cp of p.conversation.participants) {
+        if (cp.userId !== authed.userId) relatedUserIds.add(cp.userId);
+      }
     }
     socket.join(`user:${authed.userId}`);
+
+    const onlineUserIds = [...relatedUserIds].filter((id) => isUserOnline(id));
+    socket.emit("presence:initial", { userIds: onlineUserIds });
 
     io!.emit("presence:update", { userId: authed.userId, online: true });
 

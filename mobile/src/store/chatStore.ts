@@ -35,6 +35,7 @@ interface ChatState {
   messagesByConversation: Record<string, DecryptedMessage[]>;
   hasMoreByConversation: Record<string, boolean>;
   typingUsers: Record<string, Set<string>>;
+  onlineUsers: Set<string>;
   listenersRegistered: boolean;
 
   loadConversations: () => Promise<void>;
@@ -117,6 +118,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messagesByConversation: {},
   hasMoreByConversation: {},
   typingUsers: {},
+  onlineUsers: new Set(),
   listenersRegistered: false,
 
   loadConversations: async () => {
@@ -521,6 +523,41 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (isTyping) current.add(userId);
         else current.delete(userId);
         return { typingUsers: { ...state.typingUsers, [conversationId]: current } };
+      });
+    });
+
+    socket.on("message:read", ({ conversationId, userId, at }: { conversationId: string; userId: string; at: string }) => {
+      set((state) => ({
+        conversations: state.conversations.map((c) =>
+          c.id === conversationId
+            ? { ...c, participants: c.participants.map((p) => (p.userId === userId ? { ...p, lastReadAt: at } : p)) }
+            : c
+        ),
+      }));
+    });
+
+    socket.on("presence:initial", ({ userIds }: { userIds: string[] }) => {
+      set({ onlineUsers: new Set(userIds) });
+    });
+
+    socket.on("presence:update", ({ userId, online }: { userId: string; online: boolean }) => {
+      set((state) => {
+        const onlineUsers = new Set(state.onlineUsers);
+        if (online) onlineUsers.add(userId);
+        else onlineUsers.delete(userId);
+
+        if (online) return { onlineUsers };
+
+        const lastSeenAt = new Date().toISOString();
+        return {
+          onlineUsers,
+          conversations: state.conversations.map((c) => ({
+            ...c,
+            participants: c.participants.map((p) =>
+              p.userId === userId ? { ...p, user: { ...p.user, lastSeenAt } } : p
+            ),
+          })),
+        };
       });
     });
 

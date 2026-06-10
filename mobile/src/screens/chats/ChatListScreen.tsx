@@ -25,6 +25,7 @@ export function ChatListScreen({ navigation }: Props) {
   const loadConversations = useChatStore((s) => s.loadConversations);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const setupSocketListeners = useChatStore((s) => s.setupSocketListeners);
+  const onlineUsers = useChatStore((s) => s.onlineUsers);
   const user = useAuthStore((s) => s.user);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -64,7 +65,11 @@ export function ChatListScreen({ navigation }: Props) {
         style={styles.row}
         onPress={() => navigation.navigate("ChatRoom", { conversationId: item.id, title: display.title })}
       >
-        <Avatar uri={display.avatarUrl} name={display.title} />
+        <Avatar
+          uri={display.avatarUrl}
+          name={display.title}
+          online={!!display.otherUser && onlineUsers.has(display.otherUser.id)}
+        />
         <View style={styles.content}>
           <View style={styles.topRow}>
             <Text style={styles.title} numberOfLines={1}>

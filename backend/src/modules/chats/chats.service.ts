@@ -89,6 +89,7 @@ export const chatsService = {
         userId: cp.userId,
         role: cp.role,
         user: cp.user,
+        lastReadAt: cp.lastReadAt,
       })),
       lastMessage: p.conversation.messages[0] ?? null,
     }));
@@ -119,6 +120,7 @@ export const chatsService = {
         userId: cp.userId,
         role: cp.role,
         user: cp.user,
+        lastReadAt: cp.lastReadAt,
       })),
     };
   },
