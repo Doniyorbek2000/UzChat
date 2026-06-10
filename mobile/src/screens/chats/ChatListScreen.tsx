@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useState } from "react";
 import { MainTabScreenProps } from "../../navigation/types";
@@ -26,6 +26,8 @@ export function ChatListScreen({ navigation }: Props) {
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const setupSocketListeners = useChatStore((s) => s.setupSocketListeners);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
+  const togglePin = useChatStore((s) => s.togglePin);
+  const toggleMute = useChatStore((s) => s.toggleMute);
   const user = useAuthStore((s) => s.user);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -58,12 +60,27 @@ export function ChatListScreen({ navigation }: Props) {
     }
   };
 
+  const onLongPressConversation = (item: Conversation) => {
+    Alert.alert(item.title ?? "Suhbat", undefined, [
+      {
+        text: item.isPinned ? "📌 Qadashni bekor qilish" : "📌 Qadab qo'yish",
+        onPress: () => togglePin(item.id).catch(() => {}),
+      },
+      {
+        text: item.isMuted ? "🔔 Ovozli qilish" : "🔕 Ovozsiz qilish",
+        onPress: () => toggleMute(item.id).catch(() => {}),
+      },
+      { text: "Bekor qilish", style: "cancel" },
+    ]);
+  };
+
   const renderItem = ({ item }: { item: Conversation }) => {
     const display = getConversationDisplay(item, user!.id);
     return (
       <TouchableOpacity
         style={styles.row}
         onPress={() => navigation.navigate("ChatRoom", { conversationId: item.id, title: display.title })}
+        onLongPress={() => onLongPressConversation(item)}
       >
         <Avatar
           uri={display.avatarUrl}
@@ -72,14 +89,20 @@ export function ChatListScreen({ navigation }: Props) {
         />
         <View style={styles.content}>
           <View style={styles.topRow}>
-            <Text style={styles.title} numberOfLines={1}>
-              {display.title}
-            </Text>
+            <View style={styles.titleRow}>
+              {item.isPinned && <Text style={styles.pinIcon}>📌</Text>}
+              <Text style={styles.title} numberOfLines={1}>
+                {display.title}
+              </Text>
+            </View>
             {item.lastMessage && <Text style={styles.time}>{formatTime(item.lastMessage.createdAt)}</Text>}
           </View>
-          <Text style={styles.preview} numberOfLines={1}>
-            {renderPreview(item)}
-          </Text>
+          <View style={styles.bottomRow}>
+            <Text style={styles.preview} numberOfLines={1}>
+              {renderPreview(item)}
+            </Text>
+            {item.isMuted && <Text style={styles.muteIcon}>🔕</Text>}
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -111,9 +134,13 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   content: { flex: 1 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  titleRow: { flexDirection: "row", alignItems: "center", flex: 1, gap: 4 },
   title: { fontSize: 16, fontWeight: "600", color: colors.text, flex: 1 },
+  pinIcon: { fontSize: 12 },
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
-  preview: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
+  bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
+  preview: { fontSize: 14, color: colors.textSecondary, flex: 1 },
+  muteIcon: { fontSize: 12, marginLeft: 8, color: colors.textSecondary },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },

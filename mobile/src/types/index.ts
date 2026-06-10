@@ -64,6 +64,8 @@ export interface Conversation {
   wrappedKeyNonce: string;
   keySenderPublicKey: string;
   lastReadAt: string | null;
+  isPinned: boolean;
+  isMuted: boolean;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;
 }

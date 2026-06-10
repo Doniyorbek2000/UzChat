@@ -7,6 +7,7 @@ import {
   createConversationSchema,
   updateConversationSchema,
   updateParticipantRoleSchema,
+  updatePreferencesSchema,
 } from "./chats.schema";
 import { messagesController } from "../messages/messages.controller";
 import { sendMessageSchema } from "../messages/messages.schema";
@@ -19,6 +20,7 @@ chatsRouter.get("/", chatsController.list);
 chatsRouter.post("/", validateBody(createConversationSchema), chatsController.create);
 chatsRouter.get("/:id", chatsController.get);
 chatsRouter.patch("/:id", validateBody(updateConversationSchema), chatsController.update);
+chatsRouter.patch("/:id/preferences", validateBody(updatePreferencesSchema), chatsController.updatePreferences);
 chatsRouter.post("/:id/leave", chatsController.leave);
 chatsRouter.post("/:id/participants", validateBody(addParticipantSchema), chatsController.addParticipant);
 chatsRouter.delete("/:id/participants/:userId", chatsController.removeParticipant);

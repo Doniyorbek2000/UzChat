@@ -40,6 +40,10 @@ export const chatsApi = {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);
   },
 
+  updatePreferences(conversationId: string, input: { isPinned?: boolean; isMuted?: boolean }) {
+    return apiClient.patch<Conversation>(`/conversations/${conversationId}/preferences`, input).then((r) => r.data);
+  },
+
   removeParticipant(conversationId: string, userId: string) {
     return apiClient.delete<Conversation>(`/conversations/${conversationId}/participants/${userId}`).then((r) => r.data);
   },

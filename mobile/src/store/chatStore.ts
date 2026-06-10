@@ -49,6 +49,8 @@ interface ChatState {
   createDirectConversation: (target: User) => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
   markRead: (conversationId: string) => Promise<void>;
+  togglePin: (conversationId: string) => Promise<void>;
+  toggleMute: (conversationId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
   setupSocketListeners: () => void;
   addParticipant: (conversationId: string, target: User) => Promise<void>;
@@ -110,7 +112,11 @@ function decryptToMessage(conversationKey: string, message: Message): DecryptedM
 
 function upsertConversation(conversations: Conversation[], conversation: Conversation): Conversation[] {
   const filtered = conversations.filter((c) => c.id !== conversation.id);
-  return [conversation, ...filtered];
+  if (conversation.isPinned) return [conversation, ...filtered];
+
+  const insertAt = filtered.findIndex((c) => !c.isPinned);
+  if (insertAt === -1) return [...filtered, conversation];
+  return [...filtered.slice(0, insertAt), conversation, ...filtered.slice(insertAt)];
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -337,6 +343,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
   markRead: async (conversationId) => {
     await chatsApi.markRead(conversationId);
     getSocket()?.emit("message:read", { conversationId });
+  },
+
+  togglePin: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.updatePreferences(conversationId, { isPinned: !conversation.isPinned });
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
+  toggleMute: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.updatePreferences(conversationId, { isMuted: !conversation.isMuted });
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
   },
 
   addParticipant: async (conversationId, target) => {

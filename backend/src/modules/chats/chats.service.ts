@@ -1,7 +1,12 @@
 import { ConversationType, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { AddParticipantInput, CreateConversationInput, UpdateConversationInput } from "./chats.schema";
+import {
+  AddParticipantInput,
+  CreateConversationInput,
+  UpdateConversationInput,
+  UpdatePreferencesInput,
+} from "./chats.schema";
 
 const userSummarySelect = {
   id: true,
@@ -72,7 +77,7 @@ export const chatsService = {
           },
         },
       },
-      orderBy: { conversation: { updatedAt: "desc" } },
+      orderBy: [{ pinnedAt: { sort: "desc", nulls: "last" } }, { conversation: { updatedAt: "desc" } }],
     });
 
     return participations.map((p) => ({
@@ -85,6 +90,8 @@ export const chatsService = {
       wrappedKeyNonce: p.wrappedKeyNonce,
       keySenderPublicKey: p.keySenderPublicKey,
       lastReadAt: p.lastReadAt,
+      isPinned: !!p.pinnedAt,
+      isMuted: p.isMuted,
       participants: p.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,
@@ -116,6 +123,8 @@ export const chatsService = {
       wrappedKeyNonce: participant.wrappedKeyNonce,
       keySenderPublicKey: participant.keySenderPublicKey,
       lastReadAt: participant.lastReadAt,
+      isPinned: !!participant.pinnedAt,
+      isMuted: participant.isMuted,
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,
@@ -123,6 +132,20 @@ export const chatsService = {
         lastReadAt: cp.lastReadAt,
       })),
     };
+  },
+
+  async updatePreferences(userId: string, conversationId: string, input: UpdatePreferencesInput) {
+    const participant = await chatsService.assertParticipant(userId, conversationId);
+
+    await prisma.conversationParticipant.update({
+      where: { id: participant.id },
+      data: {
+        ...(input.isPinned !== undefined ? { pinnedAt: input.isPinned ? new Date() : null } : {}),
+        ...(input.isMuted !== undefined ? { isMuted: input.isMuted } : {}),
+      },
+    });
+
+    return chatsService.getConversation(userId, conversationId);
   },
 
   async addParticipant(userId: string, conversationId: string, input: AddParticipantInput) {
