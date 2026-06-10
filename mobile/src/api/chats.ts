@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Conversation, Message, MessageType } from "../types";
+import { Conversation, Message, MessageType, ParticipantRole } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -33,6 +33,24 @@ export const chatsApi = {
     input: { userId: string; wrappedKey: string; wrappedKeyNonce: string; keySenderPublicKey: string }
   ) {
     return apiClient.post<Conversation>(`/conversations/${conversationId}/participants`, input).then((r) => r.data);
+  },
+
+  update(conversationId: string, input: { title?: string; avatarUrl?: string }) {
+    return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);
+  },
+
+  removeParticipant(conversationId: string, userId: string) {
+    return apiClient.delete<Conversation>(`/conversations/${conversationId}/participants/${userId}`).then((r) => r.data);
+  },
+
+  updateParticipantRole(conversationId: string, userId: string, role: ParticipantRole) {
+    return apiClient
+      .patch<Conversation>(`/conversations/${conversationId}/participants/${userId}/role`, { role })
+      .then((r) => r.data);
+  },
+
+  leave(conversationId: string) {
+    return apiClient.post(`/conversations/${conversationId}/leave`);
   },
 
   listMessages(conversationId: string, before?: string, limit = 30) {

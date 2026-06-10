@@ -1,7 +1,7 @@
 import { ConversationType, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { AddParticipantInput, CreateConversationInput } from "./chats.schema";
+import { AddParticipantInput, CreateConversationInput, UpdateConversationInput } from "./chats.schema";
 
 const userSummarySelect = {
   id: true,
@@ -165,5 +165,122 @@ export const chatsService = {
     });
     if (!participant) throw Errors.forbidden();
     return participant;
+  },
+
+  async updateConversation(userId: string, conversationId: string, input: UpdateConversationInput) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.GROUP) {
+      throw Errors.badRequest("Faqat guruh ma'lumotlarini tahrirlash mumkin");
+    }
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester || requester.role === ParticipantRole.MEMBER) throw Errors.forbidden();
+
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        ...(input.title !== undefined ? { title: input.title } : {}),
+        ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
+      },
+    });
+
+    return chatsService.getConversation(userId, conversationId);
+  },
+
+  async removeParticipant(userId: string, conversationId: string, targetUserId: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.GROUP) {
+      throw Errors.badRequest("Faqat guruhdan a'zo chiqarish mumkin");
+    }
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester || requester.role === ParticipantRole.MEMBER) throw Errors.forbidden();
+
+    if (targetUserId === userId) {
+      throw Errors.badRequest("Guruhdan chiqish uchun 'Guruhdan chiqish' funksiyasidan foydalaning");
+    }
+
+    const target = conversation.participants.find((p) => p.userId === targetUserId);
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+    if (target.role === ParticipantRole.OWNER) throw Errors.forbidden();
+    if (target.role === ParticipantRole.ADMIN && requester.role !== ParticipantRole.OWNER) {
+      throw Errors.forbidden();
+    }
+
+    await prisma.conversationParticipant.delete({ where: { id: target.id } });
+
+    return chatsService.getConversation(userId, conversationId);
+  },
+
+  async leaveConversation(userId: string, conversationId: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: { orderBy: { joinedAt: "asc" } } },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.GROUP) {
+      throw Errors.badRequest("Faqat guruhdan chiqish mumkin");
+    }
+
+    const self = conversation.participants.find((p) => p.userId === userId);
+    if (!self) throw Errors.forbidden();
+
+    const others = conversation.participants.filter((p) => p.userId !== userId);
+
+    if (others.length === 0) {
+      await prisma.conversation.delete({ where: { id: conversationId } });
+      return { deleted: true as const, newOwnerId: null as string | null };
+    }
+
+    let newOwnerId: string | null = null;
+    if (self.role === ParticipantRole.OWNER) {
+      const successor = others.find((p) => p.role === ParticipantRole.ADMIN) ?? others[0];
+      await prisma.conversationParticipant.update({
+        where: { id: successor.id },
+        data: { role: ParticipantRole.OWNER },
+      });
+      newOwnerId = successor.userId;
+    }
+
+    await prisma.conversationParticipant.delete({ where: { id: self.id } });
+
+    return { deleted: false as const, newOwnerId };
+  },
+
+  async updateParticipantRole(userId: string, conversationId: string, targetUserId: string, role: ParticipantRole) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.GROUP) {
+      throw Errors.badRequest("Faqat guruhda rol o'zgartirish mumkin");
+    }
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester || requester.role !== ParticipantRole.OWNER) throw Errors.forbidden();
+    if (targetUserId === userId) throw Errors.badRequest("O'z rolingizni o'zgartira olmaysiz");
+
+    const target = conversation.participants.find((p) => p.userId === targetUserId);
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+
+    if (role === ParticipantRole.OWNER) {
+      await prisma.$transaction([
+        prisma.conversationParticipant.update({ where: { id: target.id }, data: { role: ParticipantRole.OWNER } }),
+        prisma.conversationParticipant.update({ where: { id: requester.id }, data: { role: ParticipantRole.ADMIN } }),
+      ]);
+    } else {
+      await prisma.conversationParticipant.update({ where: { id: target.id }, data: { role } });
+    }
+
+    return chatsService.getConversation(userId, conversationId);
   },
 };

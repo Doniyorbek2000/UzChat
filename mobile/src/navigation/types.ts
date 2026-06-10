@@ -25,6 +25,8 @@ export type RootStackParamList = {
   NewChat: undefined;
   NewGroup: undefined;
   AddContact: undefined;
+  GroupInfo: { conversationId: string };
+  AddGroupMember: { conversationId: string };
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

@@ -31,5 +31,20 @@ export const addParticipantSchema = z.object({
   keySenderPublicKey: z.string().min(1),
 });
 
+export const updateConversationSchema = z
+  .object({
+    title: z.string().min(1).max(64).optional(),
+    avatarUrl: z.string().url().optional(),
+  })
+  .refine((data) => data.title !== undefined || data.avatarUrl !== undefined, {
+    message: "Hech narsa o'zgartirilmadi",
+  });
+
+export const updateParticipantRoleSchema = z.object({
+  role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
+});
+
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
+export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
+export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSchema>;

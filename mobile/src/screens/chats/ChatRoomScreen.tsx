@@ -62,8 +62,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const recorderState = useAudioRecorderState(recorder);
 
   useEffect(() => {
-    navigation.setOptions({ title });
-  }, [navigation, title]);
+    navigation.setOptions({
+      title,
+      headerRight:
+        conversation?.type === "GROUP"
+          ? () => (
+              <TouchableOpacity onPress={() => navigation.navigate("GroupInfo", { conversationId })} hitSlop={8}>
+                <Text style={styles.headerInfoIcon}>ℹ️</Text>
+              </TouchableOpacity>
+            )
+          : undefined,
+    });
+  }, [navigation, title, conversationId, conversation?.type]);
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
@@ -350,6 +360,7 @@ const styles = StyleSheet.create({
   messageText: { fontSize: 16, color: colors.text },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
   messageTime: { fontSize: 10, color: colors.textSecondary, alignSelf: "flex-end", marginTop: 4 },
+  headerInfoIcon: { fontSize: 20, marginRight: 12 },
   typing: { paddingHorizontal: 16, paddingBottom: 4, color: colors.textSecondary, fontSize: 12 },
   inputRow: {
     flexDirection: "row",

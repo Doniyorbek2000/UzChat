@@ -10,7 +10,7 @@ import {
   wrapConversationKey,
 } from "../crypto/e2ee";
 import { encryptAndUploadFile } from "../utils/mediaFile";
-import { Conversation, Message, MediaAsset, MediaMeta, MessageType, User } from "../types";
+import { Conversation, Message, MediaAsset, MediaMeta, MessageType, ParticipantRole, User } from "../types";
 
 export interface DecryptedMessage extends Message {
   text: string | null;
@@ -40,6 +40,17 @@ interface ChatState {
   markRead: (conversationId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
   setupSocketListeners: () => void;
+  addParticipant: (conversationId: string, target: User) => Promise<void>;
+  updateGroupInfo: (conversationId: string, input: { title?: string; avatarUrl?: string }) => Promise<void>;
+  removeParticipant: (conversationId: string, userId: string) => Promise<void>;
+  updateParticipantRole: (conversationId: string, userId: string, role: ParticipantRole) => Promise<void>;
+  leaveGroup: (conversationId: string) => Promise<void>;
+}
+
+function dropConversation<T>(record: Record<string, T>, conversationId: string): Record<string, T> {
+  const next = { ...record };
+  delete next[conversationId];
+  return next;
 }
 
 const conversationKeyCache: Record<string, string> = {};
@@ -256,6 +267,84 @@ export const useChatStore = create<ChatState>((set, get) => ({
     getSocket()?.emit("message:read", { conversationId });
   },
 
+  addParticipant: async (conversationId, target) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) throw new Error("Suhbat topilmadi");
+
+    const { keyPair } = useAuthStore.getState();
+    if (!keyPair) throw new Error("Avtorizatsiyadan o'tilmagan");
+
+    const conversationKey = get().getConversationKey(conversation);
+    const wrapped = wrapConversationKey(conversationKey, target.publicKey, keyPair.privateKey);
+
+    const updated = await chatsApi.addParticipant(conversationId, {
+      userId: target.id,
+      wrappedKey: wrapped.wrappedKey,
+      wrappedKeyNonce: wrapped.wrappedKeyNonce,
+      keySenderPublicKey: keyPair.publicKey,
+    });
+
+    set((state) => ({ conversations: upsertConversation(state.conversations, updated) }));
+  },
+
+  updateGroupInfo: async (conversationId, input) => {
+    const updated = await chatsApi.update(conversationId, input);
+    set((state) => {
+      const existing = state.conversations.find((c) => c.id === conversationId);
+      const merged = existing
+        ? {
+            ...updated,
+            wrappedKey: existing.wrappedKey,
+            wrappedKeyNonce: existing.wrappedKeyNonce,
+            keySenderPublicKey: existing.keySenderPublicKey,
+          }
+        : updated;
+      return { conversations: upsertConversation(state.conversations, merged) };
+    });
+  },
+
+  removeParticipant: async (conversationId, userId) => {
+    const updated = await chatsApi.removeParticipant(conversationId, userId);
+    set((state) => {
+      const existing = state.conversations.find((c) => c.id === conversationId);
+      const merged = existing
+        ? {
+            ...updated,
+            wrappedKey: existing.wrappedKey,
+            wrappedKeyNonce: existing.wrappedKeyNonce,
+            keySenderPublicKey: existing.keySenderPublicKey,
+          }
+        : updated;
+      return { conversations: upsertConversation(state.conversations, merged) };
+    });
+  },
+
+  updateParticipantRole: async (conversationId, userId, role) => {
+    const updated = await chatsApi.updateParticipantRole(conversationId, userId, role);
+    set((state) => {
+      const existing = state.conversations.find((c) => c.id === conversationId);
+      const merged = existing
+        ? {
+            ...updated,
+            wrappedKey: existing.wrappedKey,
+            wrappedKeyNonce: existing.wrappedKeyNonce,
+            keySenderPublicKey: existing.keySenderPublicKey,
+          }
+        : updated;
+      return { conversations: upsertConversation(state.conversations, merged) };
+    });
+  },
+
+  leaveGroup: async (conversationId) => {
+    await chatsApi.leave(conversationId);
+    delete conversationKeyCache[conversationId];
+    set((state) => ({
+      conversations: state.conversations.filter((c) => c.id !== conversationId),
+      messagesByConversation: dropConversation(state.messagesByConversation, conversationId),
+      hasMoreByConversation: dropConversation(state.hasMoreByConversation, conversationId),
+    }));
+  },
+
   setTyping: (conversationId, isTyping) => {
     getSocket()?.emit("typing", { conversationId, isTyping });
   },
@@ -308,7 +397,52 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     socket.on("conversation:updated", (conversation: Conversation) => {
-      set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
+      set((state) => {
+        const existing = state.conversations.find((c) => c.id === conversation.id);
+        // The broadcaster's wrapped key is meaningless to us; keep our own.
+        const merged = existing
+          ? {
+              ...conversation,
+              wrappedKey: existing.wrappedKey,
+              wrappedKeyNonce: existing.wrappedKeyNonce,
+              keySenderPublicKey: existing.keySenderPublicKey,
+            }
+          : conversation;
+        return { conversations: upsertConversation(state.conversations, merged) };
+      });
+    });
+
+    socket.on("conversation:participantRemoved", ({ conversationId, userId }: { conversationId: string; userId: string }) => {
+      const selfId = useAuthStore.getState().user?.id;
+      if (userId === selfId) {
+        delete conversationKeyCache[conversationId];
+        set((state) => ({
+          conversations: state.conversations.filter((c) => c.id !== conversationId),
+          messagesByConversation: dropConversation(state.messagesByConversation, conversationId),
+          hasMoreByConversation: dropConversation(state.hasMoreByConversation, conversationId),
+        }));
+        return;
+      }
+
+      set((state) => {
+        const conversation = state.conversations.find((c) => c.id === conversationId);
+        if (!conversation) return state;
+        return {
+          conversations: upsertConversation(state.conversations, {
+            ...conversation,
+            participants: conversation.participants.filter((p) => p.userId !== userId),
+          }),
+        };
+      });
+    });
+
+    socket.on("conversation:deleted", ({ conversationId }: { conversationId: string }) => {
+      delete conversationKeyCache[conversationId];
+      set((state) => ({
+        conversations: state.conversations.filter((c) => c.id !== conversationId),
+        messagesByConversation: dropConversation(state.messagesByConversation, conversationId),
+        hasMoreByConversation: dropConversation(state.hasMoreByConversation, conversationId),
+      }));
     });
 
     socket.on("typing", ({ conversationId, userId, isTyping }: { conversationId: string; userId: string; isTyping: boolean }) => {
