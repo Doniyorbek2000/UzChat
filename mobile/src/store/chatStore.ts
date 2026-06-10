@@ -12,6 +12,7 @@ import {
 } from "../crypto/e2ee";
 import { downloadAndDecryptFile, encryptAndUploadFile, extensionFromName } from "../utils/mediaFile";
 import { draftStorage } from "../storage/draftStorage";
+import { isConversationUnread } from "../utils/conversation";
 import {
   Conversation,
   Message,
@@ -70,6 +71,7 @@ interface ChatState {
   togglePin: (conversationId: string) => Promise<void>;
   toggleMute: (conversationId: string) => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
+  toggleUnread: (conversationId: string) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
@@ -455,6 +457,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));
+  },
+
+  toggleUnread: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    const userId = useAuthStore.getState().user?.id;
+    if (!conversation || !userId) return;
+
+    if (isConversationUnread(conversation, userId)) {
+      await chatsApi.markRead(conversationId);
+      set((state) => ({
+        conversations: upsertConversation(state.conversations, {
+          ...conversation,
+          lastReadAt: new Date().toISOString(),
+          markedUnread: false,
+        }),
+      }));
+    } else {
+      const updated = await chatsApi.updatePreferences(conversationId, { markedUnread: true });
+      set((state) => ({
+        conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+      }));
+    }
   },
 
   blockUser: async (userId) => {

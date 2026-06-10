@@ -200,7 +200,7 @@ export const messagesService = {
     await chatsService.assertParticipant(userId, conversationId);
     await prisma.conversationParticipant.update({
       where: { conversationId_userId: { conversationId, userId } },
-      data: { lastReadAt: new Date() },
+      data: { lastReadAt: new Date(), markedUnread: false },
     });
   },
 

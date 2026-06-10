@@ -143,11 +143,13 @@ model ConversationParticipant {
   // public key of whoever performed the wrapping (needed to open the box)
   keySenderPublicKey String
 
-  joinedAt   DateTime  @default(now())
-  lastReadAt DateTime?
-  isMuted    Boolean   @default(false)
-  pinnedAt   DateTime?
-  isArchived Boolean   @default(false)
+  joinedAt     DateTime  @default(now())
+  lastReadAt   DateTime?
+  isMuted      Boolean   @default(false)
+  pinnedAt     DateTime?
+  isArchived   Boolean   @default(false)
+  // User manually flagged this conversation as unread; cleared on next markRead.
+  markedUnread Boolean   @default(false)
 
   @@unique([conversationId, userId])
   @@index([userId])

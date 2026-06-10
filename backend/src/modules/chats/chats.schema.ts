@@ -49,9 +49,14 @@ export const updatePreferencesSchema = z
     isPinned: z.boolean().optional(),
     isMuted: z.boolean().optional(),
     isArchived: z.boolean().optional(),
+    markedUnread: z.boolean().optional(),
   })
   .refine(
-    (data) => data.isPinned !== undefined || data.isMuted !== undefined || data.isArchived !== undefined,
+    (data) =>
+      data.isPinned !== undefined ||
+      data.isMuted !== undefined ||
+      data.isArchived !== undefined ||
+      data.markedUnread !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

@@ -13,6 +13,16 @@ export function getConversationDisplay(conversation: Conversation, currentUserId
   };
 }
 
+export function isConversationUnread(conversation: Conversation, currentUserId: string): boolean {
+  if (conversation.markedUnread) return true;
+
+  const lastMessage = conversation.lastMessage;
+  if (!lastMessage || lastMessage.senderId === currentUserId) return false;
+
+  if (!conversation.lastReadAt) return true;
+  return new Date(lastMessage.createdAt) > new Date(conversation.lastReadAt);
+}
+
 export function formatTime(iso: string): string {
   const date = new Date(iso);
   const now = new Date();

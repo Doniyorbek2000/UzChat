@@ -75,6 +75,7 @@ export interface Conversation {
   isPinned: boolean;
   isMuted: boolean;
   isArchived: boolean;
+  markedUnread: boolean;
   isBlocked: boolean;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;
