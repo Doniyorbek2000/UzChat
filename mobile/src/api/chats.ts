@@ -41,7 +41,7 @@ export const chatsApi = {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);
   },
 
-  updatePreferences(conversationId: string, input: { isPinned?: boolean; isMuted?: boolean }) {
+  updatePreferences(conversationId: string, input: { isPinned?: boolean; isMuted?: boolean; isArchived?: boolean }) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}/preferences`, input).then((r) => r.data);
   },
 

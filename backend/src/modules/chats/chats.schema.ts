@@ -48,10 +48,12 @@ export const updatePreferencesSchema = z
   .object({
     isPinned: z.boolean().optional(),
     isMuted: z.boolean().optional(),
+    isArchived: z.boolean().optional(),
   })
-  .refine((data) => data.isPinned !== undefined || data.isMuted !== undefined, {
-    message: "Hech narsa o'zgartirilmadi",
-  });
+  .refine(
+    (data) => data.isPinned !== undefined || data.isMuted !== undefined || data.isArchived !== undefined,
+    { message: "Hech narsa o'zgartirilmadi" }
+  );
 
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;

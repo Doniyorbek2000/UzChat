@@ -100,6 +100,7 @@ export const chatsService = {
         lastReadAt: p.lastReadAt,
         isPinned: !!p.pinnedAt,
         isMuted: p.isMuted,
+        isArchived: p.isArchived,
         isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
@@ -141,6 +142,7 @@ export const chatsService = {
       lastReadAt: participant.lastReadAt,
       isPinned: !!participant.pinnedAt,
       isMuted: participant.isMuted,
+      isArchived: participant.isArchived,
       isBlocked,
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
@@ -159,6 +161,7 @@ export const chatsService = {
       data: {
         ...(input.isPinned !== undefined ? { pinnedAt: input.isPinned ? new Date() : null } : {}),
         ...(input.isMuted !== undefined ? { isMuted: input.isMuted } : {}),
+        ...(input.isArchived !== undefined ? { isArchived: input.isArchived } : {}),
       },
     });
 

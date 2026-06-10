@@ -147,6 +147,7 @@ model ConversationParticipant {
   lastReadAt DateTime?
   isMuted    Boolean   @default(false)
   pinnedAt   DateTime?
+  isArchived Boolean   @default(false)
 
   @@unique([conversationId, userId])
   @@index([userId])

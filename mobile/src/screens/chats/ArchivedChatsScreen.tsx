@@ -2,7 +2,8 @@ import { useCallback, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useState } from "react";
-import { MainTabScreenProps } from "../../navigation/types";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../navigation/types";
 import { useChatStore } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
@@ -11,7 +12,7 @@ import { Conversation } from "../../types";
 import { getConversationDisplay, formatTime } from "../../utils/conversation";
 import { decryptMessage } from "../../crypto/e2ee";
 
-type Props = MainTabScreenProps<"Chats">;
+type Props = NativeStackScreenProps<RootStackParamList, "ArchivedChats">;
 
 const MEDIA_LABELS: Record<string, string> = {
   IMAGE: "🖼 Rasm",
@@ -20,7 +21,7 @@ const MEDIA_LABELS: Record<string, string> = {
   FILE: "📄 Fayl",
 };
 
-export function ChatListScreen({ navigation }: Props) {
+export function ArchivedChatsScreen({ navigation }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const loadConversations = useChatStore((s) => s.loadConversations);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
@@ -48,6 +49,8 @@ export function ChatListScreen({ navigation }: Props) {
     setRefreshing(false);
   };
 
+  const archivedConversations = conversations.filter((c) => c.isArchived);
+
   const renderPreview = (conversation: Conversation): string => {
     const lastMessage = conversation.lastMessage;
     if (!lastMessage) return "Xabarlar yo'q";
@@ -64,16 +67,16 @@ export function ChatListScreen({ navigation }: Props) {
   const onLongPressConversation = (item: Conversation) => {
     Alert.alert(item.title ?? "Suhbat", undefined, [
       {
+        text: "📤 Arxivdan chiqarish",
+        onPress: () => toggleArchive(item.id).catch(() => {}),
+      },
+      {
         text: item.isPinned ? "📌 Qadashni bekor qilish" : "📌 Qadab qo'yish",
         onPress: () => togglePin(item.id).catch(() => {}),
       },
       {
         text: item.isMuted ? "🔔 Ovozli qilish" : "🔕 Ovozsiz qilish",
         onPress: () => toggleMute(item.id).catch(() => {}),
-      },
-      {
-        text: item.isArchived ? "📤 Arxivdan chiqarish" : "🗄 Arxivlash",
-        onPress: () => toggleArchive(item.id).catch(() => {}),
       },
       { text: "Bekor qilish", style: "cancel" },
     ]);
@@ -113,35 +116,20 @@ export function ChatListScreen({ navigation }: Props) {
     );
   };
 
-  const visibleConversations = conversations.filter((c) => !c.isArchived);
-  const archivedCount = conversations.length - visibleConversations.length;
-
   return (
     <View style={styles.container}>
       <FlatList
-        data={visibleConversations}
+        data={archivedConversations}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListHeaderComponent={
-          archivedCount > 0 ? (
-            <TouchableOpacity style={styles.archiveRow} onPress={() => navigation.navigate("ArchivedChats")}>
-              <Text style={styles.archiveIcon}>🗄</Text>
-              <Text style={styles.archiveText}>Arxivlangan suhbatlar</Text>
-              <Text style={styles.archiveCount}>{archivedCount}</Text>
-            </TouchableOpacity>
-          ) : null
-        }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Hali suhbatlar yo'q</Text>
+            <Text style={styles.emptyText}>🗄 Arxivlangan suhbatlar yo'q</Text>
           </View>
         }
       />
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate("NewChat")}>
-        <Text style={styles.fabIcon}>+</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -159,34 +147,6 @@ const styles = StyleSheet.create({
   preview: { fontSize: 14, color: colors.textSecondary, flex: 1 },
   muteIcon: { fontSize: 12, marginLeft: 8, color: colors.textSecondary },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
-  archiveRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    gap: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  archiveIcon: { fontSize: 20, width: 36, textAlign: "center" },
-  archiveText: { flex: 1, fontSize: 15, color: colors.text },
-  archiveCount: { fontSize: 13, color: colors.textSecondary },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  fabIcon: { color: "#fff", fontSize: 28, lineHeight: 30 },
 });

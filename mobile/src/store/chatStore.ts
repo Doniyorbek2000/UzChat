@@ -65,6 +65,7 @@ interface ChatState {
   markRead: (conversationId: string) => Promise<void>;
   togglePin: (conversationId: string) => Promise<void>;
   toggleMute: (conversationId: string) => Promise<void>;
+  toggleArchive: (conversationId: string) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
@@ -421,6 +422,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
     const updated = await chatsApi.updatePreferences(conversationId, { isMuted: !conversation.isMuted });
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
+  toggleArchive: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.updatePreferences(conversationId, { isArchived: !conversation.isArchived });
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));
