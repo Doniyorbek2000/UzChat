@@ -18,6 +18,10 @@ export const contactsService = {
     if (!target) throw Errors.notFound("Foydalanuvchi");
     if (target.id === ownerId) throw Errors.badRequest("O'zingizni qo'sha olmaysiz");
 
+    if (await contactsService.isBlockedEitherWay(ownerId, target.id)) {
+      throw Errors.blocked();
+    }
+
     const existing = await prisma.contact.findUnique({
       where: { ownerId_targetId: { ownerId, targetId: target.id } },
     });
@@ -76,5 +80,49 @@ export const contactsService = {
     const contact = await prisma.contact.findUnique({ where: { id: contactId } });
     if (!contact || contact.ownerId !== userId) throw Errors.notFound("Kontakt");
     await prisma.contact.delete({ where: { id: contactId } });
+  },
+
+  async blockUser(ownerId: string, targetUserId: string) {
+    if (targetUserId === ownerId) throw Errors.badRequest("O'zingizni bloklay olmaysiz");
+    const target = await prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+
+    await prisma.blockedUser.upsert({
+      where: { ownerId_blockedId: { ownerId, blockedId: targetUserId } },
+      update: {},
+      create: { ownerId, blockedId: targetUserId },
+    });
+  },
+
+  async unblockUser(ownerId: string, targetUserId: string) {
+    await prisma.blockedUser.deleteMany({ where: { ownerId, blockedId: targetUserId } });
+  },
+
+  async listBlocked(ownerId: string) {
+    const blocked = await prisma.blockedUser.findMany({
+      where: { ownerId },
+      include: { blocked: { select: userSummarySelect } },
+      orderBy: { createdAt: "desc" },
+    });
+    return blocked.map((b) => ({ id: b.id, user: b.blocked }));
+  },
+
+  async hasBlocked(ownerId: string, targetUserId: string) {
+    const block = await prisma.blockedUser.findUnique({
+      where: { ownerId_blockedId: { ownerId, blockedId: targetUserId } },
+    });
+    return !!block;
+  },
+
+  async isBlockedEitherWay(userId: string, otherUserId: string) {
+    const block = await prisma.blockedUser.findFirst({
+      where: {
+        OR: [
+          { ownerId: userId, blockedId: otherUserId },
+          { ownerId: otherUserId, blockedId: userId },
+        ],
+      },
+    });
+    return !!block;
   },
 };

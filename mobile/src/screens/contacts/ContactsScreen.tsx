@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { MainTabScreenProps } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
@@ -35,6 +35,32 @@ export function ContactsScreen({ navigation }: Props) {
   const onDecline = async (id: string) => {
     await contactsApi.decline(id).catch(() => {});
     load();
+  };
+
+  const onLongPressContact = (item: Contact) => {
+    Alert.alert(item.alias ?? item.user.displayName, undefined, [
+      {
+        text: "🚫 Bloklash",
+        style: "destructive",
+        onPress: () => {
+          contactsApi
+            .block(item.user.id)
+            .then(load)
+            .catch(() => {});
+        },
+      },
+      {
+        text: "Kontaktni o'chirish",
+        style: "destructive",
+        onPress: () => {
+          contactsApi
+            .remove(item.id)
+            .then(load)
+            .catch(() => {});
+        },
+      },
+      { text: "Bekor qilish", style: "cancel" },
+    ]);
   };
 
   if (loading) {
@@ -78,10 +104,10 @@ export function ContactsScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => (
-          <View style={styles.row}>
+          <TouchableOpacity style={styles.row} onLongPress={() => onLongPressContact(item)}>
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
             <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={styles.center}>

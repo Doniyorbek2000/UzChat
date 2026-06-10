@@ -55,4 +55,31 @@ export const contactsController = {
       next(err);
     }
   },
+
+  async block(req: Request, res: Response, next: NextFunction) {
+    try {
+      await contactsService.blockUser(req.user!.sub, req.params.userId);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async unblock(req: Request, res: Response, next: NextFunction) {
+    try {
+      await contactsService.unblockUser(req.user!.sub, req.params.userId);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async listBlocked(req: Request, res: Response, next: NextFunction) {
+    try {
+      const blocked = await contactsService.listBlocked(req.user!.sub);
+      res.json(blocked);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

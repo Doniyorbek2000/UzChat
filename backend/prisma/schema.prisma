@@ -55,6 +55,8 @@ model User {
   starredMessages  MessageStar[]
   sentContacts     Contact[]                  @relation("ContactOwner")
   receivedContacts Contact[]                  @relation("ContactTarget")
+  blockedUsers     BlockedUser[]              @relation("BlockOwner")
+  blockedByUsers   BlockedUser[]              @relation("BlockTarget")
   pushTokens       PushToken[]
 
   @@index([username])
@@ -97,6 +99,19 @@ model Contact {
 
   @@unique([ownerId, targetId])
   @@index([targetId])
+}
+
+// One-directional block: ownerId no longer wants contact/messages from blockedId.
+model BlockedUser {
+  id        String   @id @default(uuid())
+  ownerId   String
+  owner     User     @relation("BlockOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlockTarget", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([ownerId, blockedId])
+  @@index([blockedId])
 }
 
 model Conversation {

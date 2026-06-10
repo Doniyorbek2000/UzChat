@@ -29,6 +29,7 @@ export type RootStackParamList = {
   AddGroupMember: { conversationId: string };
   ForwardMessage: { conversationId: string; messageId: string };
   StarredMessages: undefined;
+  BlockedUsers: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

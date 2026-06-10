@@ -74,6 +74,7 @@ export interface Conversation {
   lastReadAt: string | null;
   isPinned: boolean;
   isMuted: boolean;
+  isBlocked: boolean;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;
 }
@@ -89,6 +90,11 @@ export interface ContactRequest {
   status: "PENDING" | "ACCEPTED" | "BLOCKED";
   owner: User;
   createdAt: string;
+}
+
+export interface BlockedUser {
+  id: string;
+  user: User;
 }
 
 /** Encrypted alongside the message ciphertext for IMAGE/VIDEO/AUDIO/FILE messages. */

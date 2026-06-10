@@ -1,9 +1,10 @@
-import { Message } from "@prisma/client";
+import { ConversationType, Message } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { isUserOnline } from "../../sockets";
 import { pushService } from "../push/push.service";
 import { chatsService } from "../chats/chats.service";
+import { contactsService } from "../contacts/contacts.service";
 import { EditMessageInput, ListMessagesQuery, SendMessageInput } from "./messages.schema";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
@@ -96,6 +97,17 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
 export const messagesService = {
   async sendMessage(userId: string, conversationId: string, input: SendMessageInput) {
     await chatsService.assertParticipant(userId, conversationId);
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: { select: { userId: true } } },
+    });
+    if (conversation?.type === ConversationType.DIRECT) {
+      const other = conversation.participants.find((p) => p.userId !== userId);
+      if (other && (await contactsService.isBlockedEitherWay(userId, other.userId))) {
+        throw Errors.blocked();
+      }
+    }
 
     if (input.replyToId) {
       const replyTo = await prisma.message.findUnique({ where: { id: input.replyToId } });

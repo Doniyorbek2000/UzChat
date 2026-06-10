@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Contact, ContactRequest } from "../types";
+import { BlockedUser, Contact, ContactRequest } from "../types";
 
 export const contactsApi = {
   list() {
@@ -24,5 +24,17 @@ export const contactsApi = {
 
   remove(contactId: string) {
     return apiClient.delete(`/contacts/${contactId}`);
+  },
+
+  block(userId: string) {
+    return apiClient.post(`/contacts/blocked/${userId}`);
+  },
+
+  unblock(userId: string) {
+    return apiClient.delete(`/contacts/blocked/${userId}`);
+  },
+
+  listBlocked() {
+    return apiClient.get<BlockedUser[]>("/contacts/blocked").then((r) => r.data);
   },
 };

@@ -106,6 +106,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const editMessage = useChatStore((s) => s.editMessage);
   const toggleReaction = useChatStore((s) => s.toggleReaction);
   const toggleStar = useChatStore((s) => s.toggleStar);
+  const blockUser = useChatStore((s) => s.blockUser);
+  const unblockUser = useChatStore((s) => s.unblockUser);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
@@ -138,6 +140,21 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         : ""
     : "";
 
+  const onToggleBlock = () => {
+    if (!otherUser) return;
+    if (conversation?.isBlocked) {
+      Alert.alert("Blokdan chiqarish", `${otherUser.displayName} blokdan chiqarilsinmi?`, [
+        { text: "Bekor qilish", style: "cancel" },
+        { text: "Blokdan chiqarish", onPress: () => unblockUser(otherUser.id).catch(() => {}) },
+      ]);
+    } else {
+      Alert.alert("Bloklash", `${otherUser.displayName} bloklansinmi? U sizga xabar yubora olmaydi.`, [
+        { text: "Bekor qilish", style: "cancel" },
+        { text: "Bloklash", style: "destructive", onPress: () => blockUser(otherUser.id).catch(() => {}) },
+      ]);
+    }
+  };
+
   useEffect(() => {
     navigation.setOptions({
       title,
@@ -160,9 +177,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.headerInfoIcon}>ℹ️</Text>
               </TouchableOpacity>
             )
-          : undefined,
+          : conversation?.type === "DIRECT"
+            ? () => (
+                <TouchableOpacity onPress={onToggleBlock} hitSlop={8}>
+                  <Text style={styles.headerInfoIcon}>⋮</Text>
+                </TouchableOpacity>
+              )
+            : undefined,
     });
-  }, [navigation, title, conversationId, conversation?.type, presenceLabel]);
+  }, [navigation, title, conversationId, conversation?.type, conversation?.isBlocked, presenceLabel, otherUser]);
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
@@ -526,7 +549,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         </View>
       )}
-      {recording ? (
+      {conversation?.isBlocked ? (
+        <View style={styles.blockedBar}>
+          <Text style={styles.blockedText}>🚫 Siz bu foydalanuvchini bloklagansiz</Text>
+          <TouchableOpacity onPress={onToggleBlock}>
+            <Text style={styles.blockedAction}>Blokdan chiqarish</Text>
+          </TouchableOpacity>
+        </View>
+      ) : recording ? (
         <View style={styles.recordingRow}>
           <View style={styles.recordingDot} />
           <Text style={styles.recordingTime}>{formatDuration(recorderState.durationMillis / 1000)}</Text>
@@ -787,6 +817,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     gap: 8,
   },
+  blockedBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+    gap: 8,
+  },
+  blockedText: { flex: 1, fontSize: 13, color: colors.textSecondary },
+  blockedAction: { fontSize: 13, fontWeight: "600", color: colors.primary },
   recordingDot: {
     width: 10,
     height: 10,

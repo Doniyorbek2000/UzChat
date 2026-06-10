@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { chatsApi } from "../api/chats";
+import { contactsApi } from "../api/contacts";
 import { getSocket } from "../socket/socket";
 import { useAuthStore } from "./authStore";
 import {
@@ -64,6 +65,8 @@ interface ChatState {
   markRead: (conversationId: string) => Promise<void>;
   togglePin: (conversationId: string) => Promise<void>;
   toggleMute: (conversationId: string) => Promise<void>;
+  blockUser: (userId: string) => Promise<void>;
+  unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
   setupSocketListeners: () => void;
   addParticipant: (conversationId: string, target: User) => Promise<void>;
@@ -420,6 +423,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const updated = await chatsApi.updatePreferences(conversationId, { isMuted: !conversation.isMuted });
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
+  blockUser: async (userId) => {
+    await contactsApi.block(userId);
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.type === "DIRECT" && c.participants.some((p) => p.userId === userId) ? { ...c, isBlocked: true } : c
+      ),
+    }));
+  },
+
+  unblockUser: async (userId) => {
+    await contactsApi.unblock(userId);
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.type === "DIRECT" && c.participants.some((p) => p.userId === userId) ? { ...c, isBlocked: false } : c
+      ),
     }));
   },
 
