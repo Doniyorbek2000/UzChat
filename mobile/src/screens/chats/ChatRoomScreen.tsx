@@ -70,6 +70,28 @@ function groupReactions(reactions: MessageReaction[]) {
   return [...groups.entries()].map(([emoji, userIds]) => ({ emoji, userIds }));
 }
 
+const MENTION_PATTERN = /(@[a-zA-Z0-9_]+)/g;
+
+function renderMessageText(text: string, participants: ConversationParticipant[]) {
+  const usernames = new Set(participants.map((p) => p.user.username));
+  if (usernames.size === 0) return <Text style={styles.messageText}>{text}</Text>;
+
+  const parts = text.split(MENTION_PATTERN);
+  return (
+    <Text style={styles.messageText}>
+      {parts.map((part, i) =>
+        part.startsWith("@") && usernames.has(part.slice(1)) ? (
+          <Text key={i} style={styles.mentionText}>
+            {part}
+          </Text>
+        ) : (
+          part
+        )
+      )}
+    </Text>
+  );
+}
+
 export function ChatRoomScreen({ route, navigation }: Props) {
   const { conversationId, title } = route.params;
   const user = useAuthStore((s) => s.user);
@@ -95,6 +117,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [recording, setRecording] = useState(false);
   const [replyingTo, setReplyingTo] = useState<DecryptedMessage | null>(null);
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
+  const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
+  const [pendingMentions, setPendingMentions] = useState<string[]>([]);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
@@ -171,15 +195,29 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const trimmed = text.trim();
     if (!trimmed) return;
     const replyToId = replyingTo?.id;
+    const mentions = pendingMentions.filter((id) => {
+      const username = conversation?.participants.find((p) => p.userId === id)?.user.username;
+      return username && trimmed.includes(`@${username}`);
+    });
     setText("");
     setReplyingTo(null);
+    setPendingMentions([]);
     setTyping(conversationId, false);
     try {
-      await sendTextMessage(conversationId, trimmed, replyToId);
+      await sendTextMessage(conversationId, trimmed, replyToId, mentions.length > 0 ? mentions : undefined);
       scrollToLatest();
     } catch {
       setText(trimmed);
     }
+  };
+
+  const onMentionUser = (participant: ConversationParticipant) => {
+    setText((prev) => {
+      const needsSpace = prev.length > 0 && !/\s$/.test(prev);
+      return `${prev}${needsSpace ? " " : ""}@${participant.user.username} `;
+    });
+    setPendingMentions((prev) => (prev.includes(participant.userId) ? prev : [...prev, participant.userId]));
+    setMentionPickerVisible(false);
   };
 
   const onChangeText = (value: string) => {
@@ -338,7 +376,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } else if ((item.type === "FILE" || item.type === "VIDEO") && conversationKey) {
       content = <MediaFileBubble message={item} conversationKey={conversationKey} />;
     } else {
-      content = <Text style={styles.messageText}>{item.text}</Text>;
+      content = renderMessageText(item.text ?? "", conversation?.participants ?? []);
     }
 
     return (
@@ -455,6 +493,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending}>
             {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
           </TouchableOpacity>
+          {isGroup && (
+            <TouchableOpacity style={styles.attachButton} onPress={() => setMentionPickerVisible(true)} disabled={sending}>
+              <Text style={styles.attachIcon}>@</Text>
+            </TouchableOpacity>
+          )}
           <TextInput
             style={styles.input}
             value={text}
@@ -531,6 +574,30 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </Pressable>
       </Pressable>
     </Modal>
+    <Modal
+      visible={mentionPickerVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setMentionPickerVisible(false)}
+    >
+      <Pressable style={styles.actionBackdrop} onPress={() => setMentionPickerVisible(false)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Kimnidir eslatish</Text>
+          {conversation?.participants
+            .filter((p) => p.userId !== user?.id)
+            .map((p) => (
+              <TouchableOpacity key={p.userId} style={styles.actionButton} onPress={() => onMentionUser(p)}>
+                <Text style={styles.actionButtonText}>
+                  {p.user.displayName} <Text style={styles.mentionText}>@{p.user.username}</Text>
+                </Text>
+              </TouchableOpacity>
+            ))}
+          <TouchableOpacity style={styles.actionButton} onPress={() => setMentionPickerVisible(false)}>
+            <Text style={styles.actionButtonText}>Bekor qilish</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
     </>
   );
 }
@@ -564,6 +631,8 @@ const styles = StyleSheet.create({
   },
   replyPreviewClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   messageText: { fontSize: 16, color: colors.text },
+  mentionText: { color: colors.primary, fontWeight: "600" },
+  mentionPickerTitle: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 8 },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
   messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
   messageTime: { fontSize: 10, color: colors.textSecondary },

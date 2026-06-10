@@ -54,6 +54,7 @@ export interface Message {
   replyToId: string | null;
   replyTo?: ReplyToSnapshot | null;
   reactions: MessageReaction[];
+  mentions: string[];
   createdAt: string;
   editedAt: string | null;
   deletedAt: string | null;

@@ -52,7 +52,7 @@ interface ChatState {
   getConversationKey: (conversation: Conversation) => string;
   loadMessages: (conversationId: string) => Promise<void>;
   loadOlderMessages: (conversationId: string) => Promise<void>;
-  sendTextMessage: (conversationId: string, text: string, replyToId?: string) => Promise<void>;
+  sendTextMessage: (conversationId: string, text: string, replyToId?: string, mentions?: string[]) => Promise<void>;
   sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   toggleReaction: (conversationId: string, messageId: string, emoji: string) => Promise<void>;
@@ -196,14 +196,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  sendTextMessage: async (conversationId, text, replyToId) => {
+  sendTextMessage: async (conversationId, text, replyToId, mentions) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
     const key = get().getConversationKey(conversation);
     const { ciphertext, nonce } = encryptMessage(text, key);
 
-    const message = await chatsApi.sendMessage(conversationId, { type: "TEXT", ciphertext, nonce, replyToId });
+    const message = await chatsApi.sendMessage(conversationId, { type: "TEXT", ciphertext, nonce, replyToId, mentions });
     const decrypted = decryptToMessage(key, message);
 
     set((state) => {

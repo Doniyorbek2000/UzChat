@@ -14,6 +14,7 @@ export interface SendMessageInput {
   nonce: string;
   mediaUrl?: string;
   replyToId?: string;
+  mentions?: string[];
 }
 
 export const chatsApi = {

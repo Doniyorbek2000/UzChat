@@ -7,6 +7,8 @@ export const sendMessageSchema = z.object({
   nonce: z.string().min(1),
   mediaUrl: z.string().url().optional(),
   replyToId: z.string().uuid().optional(),
+  // user IDs of @-mentioned participants (sent in cleartext for notification routing)
+  mentions: z.array(z.string().uuid()).max(50).optional(),
 });
 
 export const listMessagesQuerySchema = z.object({

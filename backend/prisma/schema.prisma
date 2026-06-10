@@ -152,6 +152,10 @@ model Message {
   // for IMAGE/VIDEO/AUDIO/FILE: URL to the (also encrypted) media blob
   mediaUrl String?
 
+  // user IDs of @-mentioned participants (sent in cleartext alongside the
+  // ciphertext so the server can route mention notifications)
+  mentions String[] @default([])
+
   replyToId String?
   replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies   Message[] @relation("MessageReplies")

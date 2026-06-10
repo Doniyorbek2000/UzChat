@@ -48,12 +48,26 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
 
   const contentLabel = MEDIA_LABELS[message.type] ?? "Yangi xabar";
   const isGroup = conversation.type === "GROUP";
+  const title = isGroup ? conversation.title ?? "Guruh" : sender.displayName;
 
-  await pushService.sendToUsers(recipientIds, {
-    title: isGroup ? conversation.title ?? "Guruh" : sender.displayName,
-    body: isGroup ? `${sender.displayName}: ${contentLabel}` : contentLabel,
-    data: { conversationId, messageId: message.id, type: "message" },
-  });
+  const mentionedIds = recipientIds.filter((id) => message.mentions.includes(id));
+  const regularIds = recipientIds.filter((id) => !message.mentions.includes(id));
+
+  if (mentionedIds.length > 0) {
+    await pushService.sendToUsers(mentionedIds, {
+      title,
+      body: `${sender.displayName} sizni eslatib o'tdi`,
+      data: { conversationId, messageId: message.id, type: "mention" },
+    });
+  }
+
+  if (regularIds.length > 0) {
+    await pushService.sendToUsers(regularIds, {
+      title,
+      body: isGroup ? `${sender.displayName}: ${contentLabel}` : contentLabel,
+      data: { conversationId, messageId: message.id, type: "message" },
+    });
+  }
 }
 
 export const messagesService = {
@@ -67,6 +81,16 @@ export const messagesService = {
       }
     }
 
+    let mentions: string[] = [];
+    if (input.mentions?.length) {
+      const participants = await prisma.conversationParticipant.findMany({
+        where: { conversationId },
+        select: { userId: true },
+      });
+      const participantIds = new Set(participants.map((p) => p.userId));
+      mentions = input.mentions.filter((id) => id !== userId && participantIds.has(id));
+    }
+
     const message = await prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
         data: {
@@ -77,6 +101,7 @@ export const messagesService = {
           nonce: input.nonce,
           mediaUrl: input.mediaUrl,
           replyToId: input.replyToId,
+          mentions,
         },
         include: { replyTo: replyToSelect, reactions: reactionSelect },
       });
