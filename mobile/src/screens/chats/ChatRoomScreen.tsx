@@ -13,6 +13,13 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import {
+  useAudioRecorder,
+  useAudioRecorderState,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+} from "expo-audio";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage } from "../../store/chatStore";
@@ -20,6 +27,8 @@ import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
+import { MediaAudioBubble } from "../../components/MediaAudioBubble";
+import { formatDuration } from "../../utils/mediaFile";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
@@ -45,11 +54,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [recording, setRecording] = useState(false);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(recorder);
 
   useEffect(() => {
     navigation.setOptions({ title });
   }, [navigation, title]);
+
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     loadMessages(conversationId)
@@ -146,6 +162,48 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     ]);
   };
 
+  const startRecording = async () => {
+    const permission = await requestRecordingPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Ruxsat kerak", "Ovozli xabar yuborish uchun mikrofonga ruxsat bering");
+      return;
+    }
+    await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+    await recorder.prepareToRecordAsync();
+    recorder.record();
+    setRecording(true);
+  };
+
+  const cancelRecording = async () => {
+    await recorder.stop();
+    await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+    setRecording(false);
+  };
+
+  const sendRecording = async () => {
+    const durationMs = recorderState.durationMillis;
+    await recorder.stop();
+    await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
+    setRecording(false);
+
+    const uri = recorder.uri;
+    if (!uri || durationMs < 1000) return;
+
+    setSending(true);
+    try {
+      await sendMediaMessage(
+        conversationId,
+        { uri, name: `voice-${Date.now()}.m4a`, mimeType: "audio/m4a", duration: Math.round(durationMs / 1000) },
+        "AUDIO"
+      );
+      scrollToLatest();
+    } catch {
+      Alert.alert("Xatolik", "Ovozli xabarni yuborib bo'lmadi");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const onLongPress = (item: DecryptedMessage) => {
     if (item.senderId !== user?.id || item.deletedAt) return;
     if (Date.now() - new Date(item.createdAt).getTime() > RECALL_WINDOW_MS) return;
@@ -176,7 +234,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       content = <Text style={styles.messageText}>🔒 Xabarni ochib bo'lmadi</Text>;
     } else if (item.type === "IMAGE" && conversationKey) {
       content = <MediaImageBubble message={item} conversationKey={conversationKey} />;
-    } else if ((item.type === "FILE" || item.type === "VIDEO" || item.type === "AUDIO") && conversationKey) {
+    } else if (item.type === "AUDIO" && conversationKey) {
+      content = <MediaAudioBubble message={item} conversationKey={conversationKey} />;
+    } else if ((item.type === "FILE" || item.type === "VIDEO") && conversationKey) {
       content = <MediaFileBubble message={item} conversationKey={conversationKey} />;
     } else {
       content = <Text style={styles.messageText}>{item.text}</Text>;
@@ -227,21 +287,41 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         }
       />
       {typingCount > 0 && <Text style={styles.typing}>yozmoqda...</Text>}
-      <View style={styles.inputRow}>
-        <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending}>
-          {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          value={text}
-          onChangeText={onChangeText}
-          placeholder="Xabar yozing..."
-          multiline
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={onSend} disabled={!text.trim()}>
-          <Text style={styles.sendText}>Yuborish</Text>
-        </TouchableOpacity>
-      </View>
+      {recording ? (
+        <View style={styles.recordingRow}>
+          <View style={styles.recordingDot} />
+          <Text style={styles.recordingTime}>{formatDuration(recorderState.durationMillis / 1000)}</Text>
+          <Text style={styles.recordingHint}>Ovoz yozilmoqda...</Text>
+          <TouchableOpacity style={styles.recordingCancel} onPress={cancelRecording}>
+            <Text style={styles.recordingCancelText}>Bekor qilish</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.sendButton} onPress={sendRecording}>
+            <Text style={styles.sendText}>Yuborish</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.inputRow}>
+          <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending}>
+            {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            value={text}
+            onChangeText={onChangeText}
+            placeholder="Xabar yozing..."
+            multiline
+          />
+          {text.trim() ? (
+            <TouchableOpacity style={styles.sendButton} onPress={onSend}>
+              <Text style={styles.sendText}>Yuborish</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.attachButton} onPress={startRecording} disabled={sending}>
+              <Text style={styles.attachIcon}>🎤</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -271,6 +351,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     gap: 8,
   },
+  recordingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+    gap: 8,
+  },
+  recordingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.danger,
+  },
+  recordingTime: { fontSize: 14, fontWeight: "600", color: colors.text, fontVariant: ["tabular-nums"] },
+  recordingHint: { flex: 1, fontSize: 13, color: colors.textSecondary },
+  recordingCancel: { paddingHorizontal: 12, paddingVertical: 10 },
+  recordingCancelText: { color: colors.danger, fontWeight: "600" },
   attachButton: {
     width: 40,
     height: 40,
