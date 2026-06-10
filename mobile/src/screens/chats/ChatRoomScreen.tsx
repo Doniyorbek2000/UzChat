@@ -25,6 +25,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
+import { MessageType } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
@@ -35,6 +36,20 @@ import { setActiveConversationId } from "../../utils/pushNotifications";
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
+
+const REPLY_TYPE_LABELS: Partial<Record<MessageType, string>> = {
+  IMAGE: "🖼 Rasm",
+  VIDEO: "🎬 Video",
+  AUDIO: "🎵 Ovozli xabar",
+  FILE: "📄 Fayl",
+};
+
+function getPreviewLabel(item: { type: MessageType; text: string | null; deletedAt: string | null }) {
+  if (item.deletedAt) return "🚫 Xabar o'chirildi";
+  if (item.type === "TEXT") return item.text ?? "🔒 Xabarni ochib bo'lmadi";
+  const label = REPLY_TYPE_LABELS[item.type] ?? "Xabar";
+  return item.text ? `${label}: ${item.text}` : label;
+}
 
 export function ChatRoomScreen({ route, navigation }: Props) {
   const { conversationId, title } = route.params;
@@ -57,6 +72,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [sending, setSending] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<DecryptedMessage | null>(null);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
@@ -100,13 +116,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const scrollToLatest = () => listRef.current?.scrollToOffset({ offset: 0, animated: true });
 
+  const getAuthorName = (senderId: string) => {
+    if (senderId === user?.id) return "Siz";
+    return conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
+  };
+
   const onSend = async () => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    const replyToId = replyingTo?.id;
     setText("");
+    setReplyingTo(null);
     setTyping(conversationId, false);
     try {
-      await sendTextMessage(conversationId, trimmed);
+      await sendTextMessage(conversationId, trimmed, replyToId);
       scrollToLatest();
     } catch {
       setText(trimmed);
@@ -128,6 +151,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (result.canceled || !result.assets[0]) return;
 
     const asset = result.assets[0];
+    const replyToId = replyingTo?.id;
+    setReplyingTo(null);
     setSending(true);
     try {
       await sendMediaMessage(
@@ -139,7 +164,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           width: asset.width,
           height: asset.height,
         },
-        "IMAGE"
+        "IMAGE",
+        replyToId
       );
       scrollToLatest();
     } catch {
@@ -154,6 +180,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (result.canceled || !result.assets[0]) return;
 
     const asset = result.assets[0];
+    const replyToId = replyingTo?.id;
+    setReplyingTo(null);
     setSending(true);
     try {
       await sendMediaMessage(
@@ -163,7 +191,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           name: asset.name,
           mimeType: asset.mimeType ?? "application/octet-stream",
         },
-        "FILE"
+        "FILE",
+        replyToId
       );
       scrollToLatest();
     } catch {
@@ -208,12 +237,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const uri = recorder.uri;
     if (!uri || durationMs < 1000) return;
 
+    const replyToId = replyingTo?.id;
+    setReplyingTo(null);
     setSending(true);
     try {
       await sendMediaMessage(
         conversationId,
         { uri, name: `voice-${Date.now()}.m4a`, mimeType: "audio/m4a", duration: Math.round(durationMs / 1000) },
-        "AUDIO"
+        "AUDIO",
+        replyToId
       );
       scrollToLatest();
     } catch {
@@ -223,14 +255,34 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
   };
 
-  const onLongPress = (item: DecryptedMessage) => {
-    if (item.senderId !== user?.id || item.deletedAt) return;
-    if (Date.now() - new Date(item.createdAt).getTime() > RECALL_WINDOW_MS) return;
-
+  const onDelete = (item: DecryptedMessage) => {
     Alert.alert("Xabarni o'chirish", "Bu xabar barcha ishtirokchilardan o'chiriladi", [
       { text: "Bekor qilish", style: "cancel" },
       { text: "O'chirish", style: "destructive", onPress: () => deleteMessage(conversationId, item.id) },
     ]);
+  };
+
+  const onLongPress = (item: DecryptedMessage) => {
+    if (item.deletedAt) return;
+
+    const options: { text: string; style?: "default" | "destructive" | "cancel"; onPress?: () => void }[] = [
+      { text: "↩️ Javob berish", onPress: () => setReplyingTo(item) },
+    ];
+
+    if (!item.decryptFailed) {
+      options.push({
+        text: "➡️ Yo'naltirish",
+        onPress: () => navigation.navigate("ForwardMessage", { conversationId, messageId: item.id }),
+      });
+    }
+
+    if (item.senderId === user?.id && Date.now() - new Date(item.createdAt).getTime() <= RECALL_WINDOW_MS) {
+      options.push({ text: "🗑 O'chirish", style: "destructive", onPress: () => onDelete(item) });
+    }
+
+    options.push({ text: "Bekor qilish", style: "cancel" });
+
+    Alert.alert("Xabar", undefined, options);
   };
 
   const onEndReached = async () => {
@@ -269,6 +321,19 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       >
         <View style={[styles.bubble, isOwn ? styles.bubbleSelf : styles.bubbleOther, item.deletedAt && styles.bubbleDeleted]}>
           {isGroup && !isOwn && sender && <Text style={styles.senderName}>{sender.displayName}</Text>}
+          {item.replyPreview && (
+            <View style={styles.replyBox}>
+              <View style={styles.replyBar} />
+              <View style={styles.replyContent}>
+                <Text style={styles.replyAuthor} numberOfLines={1}>
+                  {getAuthorName(item.replyPreview.senderId)}
+                </Text>
+                <Text style={styles.replyText} numberOfLines={1}>
+                  {getPreviewLabel(item.replyPreview)}
+                </Text>
+              </View>
+            </View>
+          )}
           {content}
           <Text style={styles.messageTime}>
             {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -306,6 +371,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         }
       />
       {typingCount > 0 && <Text style={styles.typing}>yozmoqda...</Text>}
+      {replyingTo && (
+        <View style={styles.replyPreviewBar}>
+          <View style={styles.replyBar} />
+          <View style={styles.replyContent}>
+            <Text style={styles.replyAuthor} numberOfLines={1}>
+              {getAuthorName(replyingTo.senderId)}
+            </Text>
+            <Text style={styles.replyText} numberOfLines={1}>
+              {getPreviewLabel(replyingTo)}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setReplyingTo(null)} hitSlop={8}>
+            <Text style={styles.replyPreviewClose}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       {recording ? (
         <View style={styles.recordingRow}>
           <View style={styles.recordingDot} />
@@ -357,6 +438,22 @@ const styles = StyleSheet.create({
   bubbleOther: { backgroundColor: colors.bubbleOther, borderTopLeftRadius: 2 },
   bubbleDeleted: { opacity: 0.6 },
   senderName: { fontSize: 12, fontWeight: "600", color: colors.primaryDark, marginBottom: 2 },
+  replyBox: { flexDirection: "row", marginBottom: 6, opacity: 0.85 },
+  replyBar: { width: 3, borderRadius: 2, backgroundColor: colors.primary, marginRight: 6 },
+  replyContent: { flex: 1 },
+  replyAuthor: { fontSize: 12, fontWeight: "600", color: colors.primary },
+  replyText: { fontSize: 13, color: colors.textSecondary },
+  replyPreviewBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+    gap: 8,
+  },
+  replyPreviewClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   messageText: { fontSize: 16, color: colors.text },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
   messageTime: { fontSize: 10, color: colors.textSecondary, alignSelf: "flex-end", marginTop: 4 },

@@ -27,6 +27,7 @@ export type RootStackParamList = {
   AddContact: undefined;
   GroupInfo: { conversationId: string };
   AddGroupMember: { conversationId: string };
+  ForwardMessage: { conversationId: string; messageId: string };
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

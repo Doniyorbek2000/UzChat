@@ -11,6 +11,7 @@ import { NewChatScreen } from "../screens/chats/NewChatScreen";
 import { NewGroupScreen } from "../screens/chats/NewGroupScreen";
 import { GroupInfoScreen } from "../screens/chats/GroupInfoScreen";
 import { AddGroupMemberScreen } from "../screens/chats/AddGroupMemberScreen";
+import { ForwardMessageScreen } from "../screens/chats/ForwardMessageScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { useAuthStore } from "../store/authStore";
 import { useChatStore } from "../store/chatStore";
@@ -78,6 +79,7 @@ export function RootNavigator() {
           <Stack.Screen name="NewGroup" component={NewGroupScreen} options={{ title: "Yangi guruh" }} />
           <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{ title: "Guruh ma'lumoti" }} />
           <Stack.Screen name="AddGroupMember" component={AddGroupMemberScreen} options={{ title: "A'zo qo'shish" }} />
+          <Stack.Screen name="ForwardMessage" component={ForwardMessageScreen} options={{ title: "Yo'naltirish" }} />
           <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />
         </Stack.Navigator>
       ) : (

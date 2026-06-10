@@ -6,6 +6,7 @@ export const sendMessageSchema = z.object({
   ciphertext: z.string().min(1),
   nonce: z.string().min(1),
   mediaUrl: z.string().url().optional(),
+  replyToId: z.string().uuid().optional(),
 });
 
 export const listMessagesQuerySchema = z.object({

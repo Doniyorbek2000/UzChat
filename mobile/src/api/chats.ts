@@ -13,6 +13,7 @@ export interface SendMessageInput {
   ciphertext: string;
   nonce: string;
   mediaUrl?: string;
+  replyToId?: string;
 }
 
 export const chatsApi = {

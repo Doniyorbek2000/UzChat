@@ -9,13 +9,22 @@ import {
   unwrapConversationKey,
   wrapConversationKey,
 } from "../crypto/e2ee";
-import { encryptAndUploadFile } from "../utils/mediaFile";
-import { Conversation, Message, MediaAsset, MediaMeta, MessageType, ParticipantRole, User } from "../types";
+import { downloadAndDecryptFile, encryptAndUploadFile, extensionFromName } from "../utils/mediaFile";
+import { Conversation, Message, MediaAsset, MediaMeta, MessageType, ParticipantRole, ReplyToSnapshot, User } from "../types";
 
 export interface DecryptedMessage extends Message {
   text: string | null;
   meta: MediaMeta | null;
   decryptFailed: boolean;
+  replyPreview?: ReplyPreview | null;
+}
+
+export interface ReplyPreview {
+  id: string;
+  senderId: string;
+  type: MessageType;
+  text: string | null;
+  deletedAt: string | null;
 }
 
 const MEDIA_TYPES: MessageType[] = ["IMAGE", "VIDEO", "AUDIO", "FILE"];
@@ -32,9 +41,10 @@ interface ChatState {
   getConversationKey: (conversation: Conversation) => string;
   loadMessages: (conversationId: string) => Promise<void>;
   loadOlderMessages: (conversationId: string) => Promise<void>;
-  sendTextMessage: (conversationId: string, text: string) => Promise<void>;
-  sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType) => Promise<void>;
+  sendTextMessage: (conversationId: string, text: string, replyToId?: string) => Promise<void>;
+  sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
+  forwardMessage: (sourceConversationId: string, messageId: string, targetConversationId: string) => Promise<void>;
   createDirectConversation: (target: User) => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
   markRead: (conversationId: string) => Promise<void>;
@@ -55,28 +65,46 @@ function dropConversation<T>(record: Record<string, T>, conversationId: string):
 
 const conversationKeyCache: Record<string, string> = {};
 
+function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSnapshot): ReplyPreview {
+  const base = { id: replyTo.id, senderId: replyTo.senderId, type: replyTo.type, deletedAt: replyTo.deletedAt };
+  if (replyTo.deletedAt) return { ...base, text: null };
+
+  try {
+    const plaintext = decryptMessage(replyTo.ciphertext, replyTo.nonce, conversationKey);
+    if (MEDIA_TYPES.includes(replyTo.type)) {
+      const meta = JSON.parse(plaintext) as MediaMeta;
+      return { ...base, text: meta.caption ?? null };
+    }
+    return { ...base, text: plaintext };
+  } catch {
+    return { ...base, text: null };
+  }
+}
+
 function decryptToMessage(conversationKey: string, message: Message): DecryptedMessage {
+  const replyPreview = message.replyTo ? decryptReplyPreview(conversationKey, message.replyTo) : null;
+
   if (message.deletedAt) {
-    return { ...message, text: null, meta: null, decryptFailed: false };
+    return { ...message, text: null, meta: null, decryptFailed: false, replyPreview };
   }
 
   let plaintext: string;
   try {
     plaintext = decryptMessage(message.ciphertext, message.nonce, conversationKey);
   } catch {
-    return { ...message, text: null, meta: null, decryptFailed: true };
+    return { ...message, text: null, meta: null, decryptFailed: true, replyPreview };
   }
 
   if (MEDIA_TYPES.includes(message.type)) {
     try {
       const meta = JSON.parse(plaintext) as MediaMeta;
-      return { ...message, text: meta.caption ?? null, meta, decryptFailed: false };
+      return { ...message, text: meta.caption ?? null, meta, decryptFailed: false, replyPreview };
     } catch {
-      return { ...message, text: null, meta: null, decryptFailed: true };
+      return { ...message, text: null, meta: null, decryptFailed: true, replyPreview };
     }
   }
 
-  return { ...message, text: plaintext, meta: null, decryptFailed: false };
+  return { ...message, text: plaintext, meta: null, decryptFailed: false, replyPreview };
 }
 
 function upsertConversation(conversations: Conversation[], conversation: Conversation): Conversation[] {
@@ -149,14 +177,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  sendTextMessage: async (conversationId, text) => {
+  sendTextMessage: async (conversationId, text, replyToId) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
     const key = get().getConversationKey(conversation);
     const { ciphertext, nonce } = encryptMessage(text, key);
 
-    const message = await chatsApi.sendMessage(conversationId, { type: "TEXT", ciphertext, nonce });
+    const message = await chatsApi.sendMessage(conversationId, { type: "TEXT", ciphertext, nonce, replyToId });
     const decrypted = decryptToMessage(key, message);
 
     set((state) => {
@@ -172,7 +200,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
-  sendMediaMessage: async (conversationId, asset, type) => {
+  sendMediaMessage: async (conversationId, asset, type, replyToId) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
@@ -190,7 +218,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     };
     const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), key);
 
-    const message = await chatsApi.sendMessage(conversationId, { type, ciphertext, nonce, mediaUrl: url });
+    const message = await chatsApi.sendMessage(conversationId, { type, ciphertext, nonce, mediaUrl: url, replyToId });
     const decrypted = decryptToMessage(key, message);
 
     set((state) => {
@@ -215,6 +243,48 @@ export const useChatStore = create<ChatState>((set, get) => ({
           ...state.messagesByConversation,
           [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, ...updated, text: null, meta: null, decryptFailed: false } : m)),
         },
+      };
+    });
+  },
+
+  forwardMessage: async (sourceConversationId, messageId, targetConversationId) => {
+    const sourceConversation = get().conversations.find((c) => c.id === sourceConversationId);
+    const targetConversation = get().conversations.find((c) => c.id === targetConversationId);
+    if (!sourceConversation || !targetConversation) throw new Error("Suhbat topilmadi");
+
+    const message = (get().messagesByConversation[sourceConversationId] ?? []).find((m) => m.id === messageId);
+    if (!message || message.deletedAt || message.decryptFailed) throw new Error("Xabarni yo'naltirib bo'lmadi");
+
+    const sourceKey = get().getConversationKey(sourceConversation);
+    const targetKey = get().getConversationKey(targetConversation);
+
+    let sentMessage: Message;
+    if (MEDIA_TYPES.includes(message.type) && message.mediaUrl && message.meta) {
+      const localUri = await downloadAndDecryptFile(
+        message.mediaUrl,
+        message.meta.fileNonce,
+        sourceKey,
+        `${message.id}${extensionFromName(message.meta.name)}`
+      );
+      const { url, size, fileNonce } = await encryptAndUploadFile(localUri, targetKey);
+      const meta: MediaMeta = { ...message.meta, size, fileNonce, caption: undefined };
+      const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), targetKey);
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: message.type, ciphertext, nonce, mediaUrl: url });
+    } else {
+      const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce });
+    }
+
+    const decrypted = decryptToMessage(targetKey, sentMessage);
+    set((state) => {
+      const existing = state.messagesByConversation[targetConversationId] ?? [];
+      if (existing.some((m) => m.id === decrypted.id)) return state;
+      return {
+        messagesByConversation: { ...state.messagesByConversation, [targetConversationId]: [...existing, decrypted] },
+        conversations: upsertConversation(
+          state.conversations,
+          { ...targetConversation, lastMessage: sentMessage, updatedAt: sentMessage.createdAt }
+        ),
       };
     });
   },

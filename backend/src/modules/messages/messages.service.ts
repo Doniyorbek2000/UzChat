@@ -8,6 +8,18 @@ import { ListMessagesQuery, SendMessageInput } from "./messages.schema";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
 
+const replyToSelect = {
+  select: {
+    id: true,
+    senderId: true,
+    type: true,
+    ciphertext: true,
+    nonce: true,
+    mediaUrl: true,
+    deletedAt: true,
+  },
+} as const;
+
 const MEDIA_LABELS: Partial<Record<Message["type"], string>> = {
   IMAGE: "🖼 Rasm",
   VIDEO: "🎬 Video",
@@ -44,6 +56,13 @@ export const messagesService = {
   async sendMessage(userId: string, conversationId: string, input: SendMessageInput) {
     await chatsService.assertParticipant(userId, conversationId);
 
+    if (input.replyToId) {
+      const replyTo = await prisma.message.findUnique({ where: { id: input.replyToId } });
+      if (!replyTo || replyTo.conversationId !== conversationId) {
+        throw Errors.badRequest("Javob beriladigan xabar topilmadi");
+      }
+    }
+
     const message = await prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
         data: {
@@ -53,7 +72,9 @@ export const messagesService = {
           ciphertext: input.ciphertext,
           nonce: input.nonce,
           mediaUrl: input.mediaUrl,
+          replyToId: input.replyToId,
         },
+        include: { replyTo: replyToSelect },
       });
       await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
       return created;
@@ -74,6 +95,7 @@ export const messagesService = {
       },
       orderBy: { createdAt: "desc" },
       take: query.limit,
+      include: { replyTo: replyToSelect },
     });
 
     return messages.reverse();

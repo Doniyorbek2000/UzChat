@@ -27,6 +27,16 @@ export interface ConversationParticipant {
   user: User;
 }
 
+export interface ReplyToSnapshot {
+  id: string;
+  senderId: string;
+  type: MessageType;
+  ciphertext: string;
+  nonce: string;
+  mediaUrl: string | null;
+  deletedAt: string | null;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -35,6 +45,8 @@ export interface Message {
   ciphertext: string;
   nonce: string;
   mediaUrl: string | null;
+  replyToId: string | null;
+  replyTo?: ReplyToSnapshot | null;
   createdAt: string;
   editedAt: string | null;
   deletedAt: string | null;
