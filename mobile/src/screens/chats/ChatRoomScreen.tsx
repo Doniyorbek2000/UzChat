@@ -10,6 +10,8 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
@@ -25,7 +27,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
-import { ConversationParticipant, MessageType } from "../../types";
+import { ConversationParticipant, MessageReaction, MessageType } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
@@ -56,6 +58,18 @@ function isMessageRead(message: { createdAt: string }, participant: Conversation
   return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);
 }
 
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+
+function groupReactions(reactions: MessageReaction[]) {
+  const groups = new Map<string, string[]>();
+  for (const r of reactions) {
+    const userIds = groups.get(r.emoji) ?? [];
+    userIds.push(r.userId);
+    groups.set(r.emoji, userIds);
+  }
+  return [...groups.entries()].map(([emoji, userIds]) => ({ emoji, userIds }));
+}
+
 export function ChatRoomScreen({ route, navigation }: Props) {
   const { conversationId, title } = route.params;
   const user = useAuthStore((s) => s.user);
@@ -67,6 +81,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const sendTextMessage = useChatStore((s) => s.sendTextMessage);
   const sendMediaMessage = useChatStore((s) => s.sendMediaMessage);
   const deleteMessage = useChatStore((s) => s.deleteMessage);
+  const toggleReaction = useChatStore((s) => s.toggleReaction);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
@@ -79,6 +94,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [recording, setRecording] = useState(false);
   const [replyingTo, setReplyingTo] = useState<DecryptedMessage | null>(null);
+  const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
@@ -294,25 +310,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const onLongPress = (item: DecryptedMessage) => {
     if (item.deletedAt) return;
-
-    const options: { text: string; style?: "default" | "destructive" | "cancel"; onPress?: () => void }[] = [
-      { text: "↩️ Javob berish", onPress: () => setReplyingTo(item) },
-    ];
-
-    if (!item.decryptFailed) {
-      options.push({
-        text: "➡️ Yo'naltirish",
-        onPress: () => navigation.navigate("ForwardMessage", { conversationId, messageId: item.id }),
-      });
-    }
-
-    if (item.senderId === user?.id && Date.now() - new Date(item.createdAt).getTime() <= RECALL_WINDOW_MS) {
-      options.push({ text: "🗑 O'chirish", style: "destructive", onPress: () => onDelete(item) });
-    }
-
-    options.push({ text: "Bekor qilish", style: "cancel" });
-
-    Alert.alert("Xabar", undefined, options);
+    setActionMessage(item);
   };
 
   const onEndReached = async () => {
@@ -365,6 +363,21 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )}
           {content}
+          {!item.deletedAt && item.reactions.length > 0 && (
+            <View style={styles.reactionsRow}>
+              {groupReactions(item.reactions).map(({ emoji, userIds }) => (
+                <TouchableOpacity
+                  key={emoji}
+                  style={[styles.reactionBadge, userIds.includes(user!.id) && styles.reactionBadgeActive]}
+                  onPress={() => toggleReaction(conversationId, item.id, emoji).catch(() => {})}
+                >
+                  <Text style={styles.reactionBadgeText}>
+                    {emoji} {userIds.length}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
           <View style={styles.messageFooter}>
             <Text style={styles.messageTime}>
               {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -384,6 +397,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const invertedData = [...messages].reverse();
 
   return (
+    <>
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -460,6 +474,64 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </View>
       )}
     </KeyboardAvoidingView>
+    <Modal visible={!!actionMessage} transparent animationType="fade" onRequestClose={() => setActionMessage(null)}>
+      <Pressable style={styles.actionBackdrop} onPress={() => setActionMessage(null)}>
+        <Pressable style={styles.actionSheet}>
+          <View style={styles.reactionPickerRow}>
+            {QUICK_REACTIONS.map((emoji) => (
+              <TouchableOpacity
+                key={emoji}
+                style={styles.reactionPickerOption}
+                onPress={() => {
+                  if (actionMessage) toggleReaction(conversationId, actionMessage.id, emoji).catch(() => {});
+                  setActionMessage(null);
+                }}
+              >
+                <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => {
+              if (actionMessage) setReplyingTo(actionMessage);
+              setActionMessage(null);
+            }}
+          >
+            <Text style={styles.actionButtonText}>↩️ Javob berish</Text>
+          </TouchableOpacity>
+          {actionMessage && !actionMessage.decryptFailed && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                navigation.navigate("ForwardMessage", { conversationId, messageId: actionMessage.id });
+                setActionMessage(null);
+              }}
+            >
+              <Text style={styles.actionButtonText}>➡️ Yo'naltirish</Text>
+            </TouchableOpacity>
+          )}
+          {actionMessage &&
+            actionMessage.senderId === user?.id &&
+            Date.now() - new Date(actionMessage.createdAt).getTime() <= RECALL_WINDOW_MS && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  onDelete(message);
+                }}
+              >
+                <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🗑 O'chirish</Text>
+              </TouchableOpacity>
+            )}
+          <TouchableOpacity style={styles.actionButton} onPress={() => setActionMessage(null)}>
+            <Text style={styles.actionButtonText}>Bekor qilish</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    </>
   );
 }
 
@@ -497,6 +569,47 @@ const styles = StyleSheet.create({
   messageTime: { fontSize: 10, color: colors.textSecondary },
   receipt: { fontSize: 11, color: colors.textSecondary },
   receiptRead: { color: colors.primary },
+  reactionsRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 6, gap: 6 },
+  reactionBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  reactionBadgeActive: { borderColor: colors.primary, backgroundColor: colors.surface },
+  reactionBadgeText: { fontSize: 12, color: colors.text },
+  actionBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  actionSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 32,
+  },
+  reactionPickerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 16,
+    marginBottom: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  reactionPickerOption: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reactionPickerEmoji: { fontSize: 26 },
+  actionButton: { paddingVertical: 14, alignItems: "center" },
+  actionButtonText: { fontSize: 16, color: colors.text },
+  actionButtonDanger: { color: colors.danger },
   headerInfoIcon: { fontSize: 20, marginRight: 12 },
   headerTitleContainer: { alignItems: "center" },
   headerTitleText: { fontSize: 17, fontWeight: "600", color: colors.text },

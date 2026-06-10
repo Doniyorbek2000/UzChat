@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Conversation, Message, MessageType, ParticipantRole } from "../types";
+import { Conversation, Message, MessageReaction, MessageType, ParticipantRole } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -74,5 +74,14 @@ export const chatsApi = {
 
   deleteMessage(conversationId: string, messageId: string) {
     return apiClient.delete<Message>(`/conversations/${conversationId}/messages/${messageId}`).then((r) => r.data);
+  },
+
+  setReaction(conversationId: string, messageId: string, emoji: string) {
+    return apiClient
+      .put<{ messageId: string; reactions: MessageReaction[] }>(
+        `/conversations/${conversationId}/messages/${messageId}/reactions`,
+        { emoji }
+      )
+      .then((r) => r.data);
   },
 };

@@ -20,6 +20,10 @@ const replyToSelect = {
   },
 } as const;
 
+const reactionSelect = {
+  select: { userId: true, emoji: true },
+} as const;
+
 const MEDIA_LABELS: Partial<Record<Message["type"], string>> = {
   IMAGE: "🖼 Rasm",
   VIDEO: "🎬 Video",
@@ -74,7 +78,7 @@ export const messagesService = {
           mediaUrl: input.mediaUrl,
           replyToId: input.replyToId,
         },
-        include: { replyTo: replyToSelect },
+        include: { replyTo: replyToSelect, reactions: reactionSelect },
       });
       await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
       return created;
@@ -95,7 +99,7 @@ export const messagesService = {
       },
       orderBy: { createdAt: "desc" },
       take: query.limit,
-      include: { replyTo: replyToSelect },
+      include: { replyTo: replyToSelect, reactions: reactionSelect },
     });
 
     return messages.reverse();
@@ -124,5 +128,29 @@ export const messagesService = {
       where: { conversationId_userId: { conversationId, userId } },
       data: { lastReadAt: new Date() },
     });
+  },
+
+  async setReaction(userId: string, conversationId: string, messageId: string, emoji: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarga reaksiya qo'yib bo'lmaydi");
+
+    const existing = await prisma.messageReaction.findUnique({
+      where: { messageId_userId: { messageId, userId } },
+    });
+
+    if (existing && existing.emoji === emoji) {
+      await prisma.messageReaction.delete({ where: { id: existing.id } });
+    } else {
+      await prisma.messageReaction.upsert({
+        where: { messageId_userId: { messageId, userId } },
+        create: { messageId, userId, emoji },
+        update: { emoji },
+      });
+    }
+
+    return prisma.messageReaction.findMany({ where: { messageId }, ...reactionSelect });
   },
 };

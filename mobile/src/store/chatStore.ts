@@ -10,7 +10,17 @@ import {
   wrapConversationKey,
 } from "../crypto/e2ee";
 import { downloadAndDecryptFile, encryptAndUploadFile, extensionFromName } from "../utils/mediaFile";
-import { Conversation, Message, MediaAsset, MediaMeta, MessageType, ParticipantRole, ReplyToSnapshot, User } from "../types";
+import {
+  Conversation,
+  Message,
+  MediaAsset,
+  MediaMeta,
+  MessageReaction,
+  MessageType,
+  ParticipantRole,
+  ReplyToSnapshot,
+  User,
+} from "../types";
 
 export interface DecryptedMessage extends Message {
   text: string | null;
@@ -45,6 +55,7 @@ interface ChatState {
   sendTextMessage: (conversationId: string, text: string, replyToId?: string) => Promise<void>;
   sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
+  toggleReaction: (conversationId: string, messageId: string, emoji: string) => Promise<void>;
   forwardMessage: (sourceConversationId: string, messageId: string, targetConversationId: string) => Promise<void>;
   createDirectConversation: (target: User) => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
@@ -250,6 +261,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
         messagesByConversation: {
           ...state.messagesByConversation,
           [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, ...updated, text: null, meta: null, decryptFailed: false } : m)),
+        },
+      };
+    });
+  },
+
+  toggleReaction: async (conversationId, messageId, emoji) => {
+    const { reactions } = await chatsApi.setReaction(conversationId, messageId, emoji);
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      return {
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
         },
       };
     });
@@ -549,6 +573,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
         return { typingUsers: { ...state.typingUsers, [conversationId]: current } };
       });
     });
+
+    socket.on(
+      "message:reaction",
+      ({ conversationId, messageId, reactions }: { conversationId: string; messageId: string; reactions: MessageReaction[] }) => {
+        set((state) => {
+          const existing = state.messagesByConversation[conversationId] ?? [];
+          return {
+            messagesByConversation: {
+              ...state.messagesByConversation,
+              [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+            },
+          };
+        });
+      }
+    );
 
     socket.on("message:read", ({ conversationId, userId, at }: { conversationId: string; userId: string; at: string }) => {
       set((state) => ({

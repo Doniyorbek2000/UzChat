@@ -51,6 +51,7 @@ model User {
   refreshTokens    RefreshToken[]
   participants     ConversationParticipant[]
   messages         Message[]
+  reactions        MessageReaction[]
   sentContacts     Contact[]                  @relation("ContactOwner")
   receivedContacts Contact[]                  @relation("ContactTarget")
   pushTokens       PushToken[]
@@ -155,6 +156,8 @@ model Message {
   replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies   Message[] @relation("MessageReplies")
 
+  reactions MessageReaction[]
+
   createdAt DateTime  @default(now())
   editedAt  DateTime?
   deletedAt DateTime?
@@ -162,6 +165,19 @@ model Message {
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@index([replyToId])
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([messageId])
 }
 
 model PushToken {

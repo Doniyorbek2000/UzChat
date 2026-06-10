@@ -28,6 +28,11 @@ export interface ConversationParticipant {
   lastReadAt: string | null;
 }
 
+export interface MessageReaction {
+  userId: string;
+  emoji: string;
+}
+
 export interface ReplyToSnapshot {
   id: string;
   senderId: string;
@@ -48,6 +53,7 @@ export interface Message {
   mediaUrl: string | null;
   replyToId: string | null;
   replyTo?: ReplyToSnapshot | null;
+  reactions: MessageReaction[];
   createdAt: string;
   editedAt: string | null;
   deletedAt: string | null;

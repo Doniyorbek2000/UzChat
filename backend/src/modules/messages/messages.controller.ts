@@ -42,4 +42,15 @@ export const messagesController = {
       next(err);
     }
   },
+
+  async setReaction(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      const reactions = await messagesService.setReaction(req.user!.sub, conversationId, messageId, req.body.emoji);
+      getIo().to(`conversation:${conversationId}`).emit("message:reaction", { conversationId, messageId, reactions });
+      res.json({ messageId, reactions });
+    } catch (err) {
+      next(err);
+    }
+  },
 };
