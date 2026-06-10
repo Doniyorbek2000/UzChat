@@ -1,0 +1,69 @@
+export interface User {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio?: string | null;
+  publicKey: string;
+  lastSeenAt?: string;
+}
+
+export interface AuthUser extends User {
+  phone: string;
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export type ConversationType = "DIRECT" | "GROUP";
+export type ParticipantRole = "OWNER" | "ADMIN" | "MEMBER";
+export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "SYSTEM";
+
+export interface ConversationParticipant {
+  userId: string;
+  role: ParticipantRole;
+  user: User;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  type: MessageType;
+  ciphertext: string;
+  nonce: string;
+  mediaUrl: string | null;
+  createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+}
+
+export interface Conversation {
+  id: string;
+  type: ConversationType;
+  title: string | null;
+  avatarUrl: string | null;
+  updatedAt: string;
+  // base64 NaCl box: this conversation's symmetric key, encrypted for the current user
+  wrappedKey: string;
+  wrappedKeyNonce: string;
+  keySenderPublicKey: string;
+  lastReadAt: string | null;
+  participants: ConversationParticipant[];
+  lastMessage?: Message | null;
+}
+
+export interface Contact {
+  id: string;
+  alias: string | null;
+  user: User;
+}
+
+export interface ContactRequest {
+  id: string;
+  status: "PENDING" | "ACCEPTED" | "BLOCKED";
+  owner: User;
+  createdAt: string;
+}

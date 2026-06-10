@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: uzchat
+      POSTGRES_PASSWORD: uzchat
+      POSTGRES_DB: uzchat
+    ports:
+      - "5432:5432"
+    volumes:
+      - uzchat_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  uzchat_postgres_data:
