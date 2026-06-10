@@ -43,6 +43,17 @@ export const messagesController = {
     }
   },
 
+  async edit(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      const message = await messagesService.editMessage(req.user!.sub, conversationId, messageId, req.body);
+      getIo().to(`conversation:${conversationId}`).emit("message:edited", message);
+      res.json(message);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async setReaction(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;

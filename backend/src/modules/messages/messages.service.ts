@@ -4,7 +4,7 @@ import { Errors } from "../../utils/errors";
 import { isUserOnline } from "../../sockets";
 import { pushService } from "../push/push.service";
 import { chatsService } from "../chats/chats.service";
-import { ListMessagesQuery, SendMessageInput } from "./messages.schema";
+import { EditMessageInput, ListMessagesQuery, SendMessageInput } from "./messages.schema";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
 
@@ -30,6 +30,16 @@ const MEDIA_LABELS: Partial<Record<Message["type"], string>> = {
   AUDIO: "🎵 Ovozli xabar",
   FILE: "📄 Fayl",
 };
+
+async function resolveMentions(conversationId: string, userId: string, mentions: string[] | undefined) {
+  if (!mentions?.length) return [];
+  const participants = await prisma.conversationParticipant.findMany({
+    where: { conversationId },
+    select: { userId: true },
+  });
+  const participantIds = new Set(participants.map((p) => p.userId));
+  return mentions.filter((id) => id !== userId && participantIds.has(id));
+}
 
 async function notifyParticipants(senderId: string, conversationId: string, message: Message) {
   const conversation = await prisma.conversation.findUnique({
@@ -81,15 +91,7 @@ export const messagesService = {
       }
     }
 
-    let mentions: string[] = [];
-    if (input.mentions?.length) {
-      const participants = await prisma.conversationParticipant.findMany({
-        where: { conversationId },
-        select: { userId: true },
-      });
-      const participantIds = new Set(participants.map((p) => p.userId));
-      mentions = input.mentions.filter((id) => id !== userId && participantIds.has(id));
-    }
+    const mentions = await resolveMentions(conversationId, userId, input.mentions);
 
     const message = await prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
@@ -144,6 +146,26 @@ export const messagesService = {
     return prisma.message.update({
       where: { id: messageId },
       data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date() },
+    });
+  },
+
+  async editMessage(userId: string, conversationId: string, messageId: string, input: EditMessageInput) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.senderId !== userId) throw Errors.forbidden();
+    if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni tahrirlab bo'lmaydi");
+    if (Date.now() - message.createdAt.getTime() > RECALL_WINDOW_MS) {
+      throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 2 daqiqa ichida tahrirlash mumkin");
+    }
+
+    const mentions = await resolveMentions(conversationId, userId, input.mentions);
+
+    return prisma.message.update({
+      where: { id: messageId },
+      data: { ciphertext: input.ciphertext, nonce: input.nonce, mentions, editedAt: new Date() },
+      include: { replyTo: replyToSelect, reactions: reactionSelect },
     });
   },
 

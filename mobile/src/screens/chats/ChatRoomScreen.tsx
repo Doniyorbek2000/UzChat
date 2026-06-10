@@ -103,6 +103,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const sendTextMessage = useChatStore((s) => s.sendTextMessage);
   const sendMediaMessage = useChatStore((s) => s.sendMediaMessage);
   const deleteMessage = useChatStore((s) => s.deleteMessage);
+  const editMessage = useChatStore((s) => s.editMessage);
   const toggleReaction = useChatStore((s) => s.toggleReaction);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
@@ -116,6 +117,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [recording, setRecording] = useState(false);
   const [replyingTo, setReplyingTo] = useState<DecryptedMessage | null>(null);
+  const [editingMessage, setEditingMessage] = useState<DecryptedMessage | null>(null);
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
   const [pendingMentions, setPendingMentions] = useState<string[]>([]);
@@ -194,11 +196,27 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onSend = async () => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const replyToId = replyingTo?.id;
     const mentions = pendingMentions.filter((id) => {
       const username = conversation?.participants.find((p) => p.userId === id)?.user.username;
       return username && trimmed.includes(`@${username}`);
     });
+
+    if (editingMessage) {
+      const messageId = editingMessage.id;
+      setText("");
+      setEditingMessage(null);
+      setPendingMentions([]);
+      setTyping(conversationId, false);
+      try {
+        await editMessage(conversationId, messageId, trimmed, mentions.length > 0 ? mentions : undefined);
+      } catch {
+        setText(trimmed);
+        setEditingMessage(editingMessage);
+      }
+      return;
+    }
+
+    const replyToId = replyingTo?.id;
     setText("");
     setReplyingTo(null);
     setPendingMentions([]);
@@ -209,6 +227,19 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } catch {
       setText(trimmed);
     }
+  };
+
+  const onEdit = (item: DecryptedMessage) => {
+    setReplyingTo(null);
+    setPendingMentions([...item.mentions]);
+    setEditingMessage(item);
+    setText(item.text ?? "");
+  };
+
+  const cancelEditing = () => {
+    setEditingMessage(null);
+    setPendingMentions([]);
+    setText("");
   };
 
   const onMentionUser = (participant: ConversationParticipant) => {
@@ -417,6 +448,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )}
           <View style={styles.messageFooter}>
+            {item.editedAt && !item.deletedAt && <Text style={styles.editedLabel}>tahrirlangan</Text>}
             <Text style={styles.messageTime}>
               {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </Text>
@@ -460,6 +492,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         }
       />
       {typingCount > 0 && <Text style={styles.typing}>yozmoqda...</Text>}
+      {editingMessage && (
+        <View style={styles.replyPreviewBar}>
+          <View style={styles.replyBar} />
+          <View style={styles.replyContent}>
+            <Text style={styles.replyAuthor} numberOfLines={1}>
+              ✏️ Xabarni tahrirlash
+            </Text>
+            <Text style={styles.replyText} numberOfLines={1}>
+              {getPreviewLabel(editingMessage)}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={cancelEditing} hitSlop={8}>
+            <Text style={styles.replyPreviewClose}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       {replyingTo && (
         <View style={styles.replyPreviewBar}>
           <View style={styles.replyBar} />
@@ -490,7 +538,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </View>
       ) : (
         <View style={styles.inputRow}>
-          <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending}>
+          <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage}>
             {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
           </TouchableOpacity>
           {isGroup && (
@@ -510,7 +558,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.sendText}>Yuborish</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.attachButton} onPress={startRecording} disabled={sending}>
+            <TouchableOpacity style={styles.attachButton} onPress={startRecording} disabled={sending || !!editingMessage}>
               <Text style={styles.attachIcon}>🎤</Text>
             </TouchableOpacity>
           )}
@@ -537,12 +585,31 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => {
-              if (actionMessage) setReplyingTo(actionMessage);
+              if (actionMessage) {
+                setEditingMessage(null);
+                setReplyingTo(actionMessage);
+              }
               setActionMessage(null);
             }}
           >
             <Text style={styles.actionButtonText}>↩️ Javob berish</Text>
           </TouchableOpacity>
+          {actionMessage &&
+            actionMessage.senderId === user?.id &&
+            actionMessage.type === "TEXT" &&
+            !actionMessage.decryptFailed &&
+            Date.now() - new Date(actionMessage.createdAt).getTime() <= RECALL_WINDOW_MS && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  onEdit(message);
+                }}
+              >
+                <Text style={styles.actionButtonText}>✏️ Tahrirlash</Text>
+              </TouchableOpacity>
+            )}
           {actionMessage && !actionMessage.decryptFailed && (
             <TouchableOpacity
               style={styles.actionButton}
@@ -636,6 +703,7 @@ const styles = StyleSheet.create({
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
   messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
   messageTime: { fontSize: 10, color: colors.textSecondary },
+  editedLabel: { fontSize: 10, color: colors.textSecondary, fontStyle: "italic" },
   receipt: { fontSize: 11, color: colors.textSecondary },
   receiptRead: { color: colors.primary },
   reactionsRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 6, gap: 6 },

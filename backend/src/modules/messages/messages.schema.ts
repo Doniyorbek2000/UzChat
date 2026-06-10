@@ -20,6 +20,13 @@ export const setReactionSchema = z.object({
   emoji: z.string().min(1).max(8),
 });
 
+export const editMessageSchema = z.object({
+  ciphertext: z.string().min(1),
+  nonce: z.string().min(1),
+  mentions: z.array(z.string().uuid()).max(50).optional(),
+});
+
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type ListMessagesQuery = z.infer<typeof listMessagesQuerySchema>;
 export type SetReactionInput = z.infer<typeof setReactionSchema>;
+export type EditMessageInput = z.infer<typeof editMessageSchema>;

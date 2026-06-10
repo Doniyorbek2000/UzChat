@@ -10,7 +10,7 @@ import {
   updatePreferencesSchema,
 } from "./chats.schema";
 import { messagesController } from "../messages/messages.controller";
-import { sendMessageSchema, setReactionSchema } from "../messages/messages.schema";
+import { editMessageSchema, sendMessageSchema, setReactionSchema } from "../messages/messages.schema";
 
 export const chatsRouter = Router();
 
@@ -34,6 +34,7 @@ chatsRouter.get("/:id/messages", messagesController.list);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);
 chatsRouter.post("/:id/read", messagesController.markRead);
 chatsRouter.delete("/:id/messages/:messageId", messagesController.remove);
+chatsRouter.patch("/:id/messages/:messageId", validateBody(editMessageSchema), messagesController.edit);
 chatsRouter.put(
   "/:id/messages/:messageId/reactions",
   validateBody(setReactionSchema),

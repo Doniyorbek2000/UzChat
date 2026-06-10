@@ -55,6 +55,7 @@ interface ChatState {
   sendTextMessage: (conversationId: string, text: string, replyToId?: string, mentions?: string[]) => Promise<void>;
   sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
+  editMessage: (conversationId: string, messageId: string, text: string, mentions?: string[]) => Promise<void>;
   toggleReaction: (conversationId: string, messageId: string, emoji: string) => Promise<void>;
   forwardMessage: (sourceConversationId: string, messageId: string, targetConversationId: string) => Promise<void>;
   createDirectConversation: (target: User) => Promise<Conversation>;
@@ -261,6 +262,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
         messagesByConversation: {
           ...state.messagesByConversation,
           [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, ...updated, text: null, meta: null, decryptFailed: false } : m)),
+        },
+      };
+    });
+  },
+
+  editMessage: async (conversationId, messageId, text, mentions) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) throw new Error("Suhbat topilmadi");
+
+    const key = get().getConversationKey(conversation);
+    const { ciphertext, nonce } = encryptMessage(text, key);
+
+    const updated = await chatsApi.editMessage(conversationId, messageId, { ciphertext, nonce, mentions });
+    const decrypted = decryptToMessage(key, updated);
+
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      return {
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: existing.map((m) => (m.id === messageId ? decrypted : m)),
         },
       };
     });
@@ -507,6 +529,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
             [message.conversationId]: existing.map((m) =>
               m.id === message.id ? { ...m, ...message, text: null, meta: null, decryptFailed: false } : m
             ),
+          },
+        };
+      });
+    });
+
+    socket.on("message:edited", (message: Message) => {
+      const conversation = get().conversations.find((c) => c.id === message.conversationId);
+      if (!conversation) return;
+
+      const key = get().getConversationKey(conversation);
+      const decrypted = decryptToMessage(key, message);
+
+      set((state) => {
+        const existing = state.messagesByConversation[message.conversationId] ?? [];
+        return {
+          messagesByConversation: {
+            ...state.messagesByConversation,
+            [message.conversationId]: existing.map((m) => (m.id === message.id ? decrypted : m)),
           },
         };
       });

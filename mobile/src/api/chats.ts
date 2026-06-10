@@ -77,6 +77,10 @@ export const chatsApi = {
     return apiClient.delete<Message>(`/conversations/${conversationId}/messages/${messageId}`).then((r) => r.data);
   },
 
+  editMessage(conversationId: string, messageId: string, input: { ciphertext: string; nonce: string; mentions?: string[] }) {
+    return apiClient.patch<Message>(`/conversations/${conversationId}/messages/${messageId}`, input).then((r) => r.data);
+  },
+
   setReaction(conversationId: string, messageId: string, emoji: string) {
     return apiClient
       .put<{ messageId: string; reactions: MessageReaction[] }>(
