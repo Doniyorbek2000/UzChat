@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import * as Notifications from "expo-notifications";
 import { RootStackParamList } from "./types";
 import { AuthNavigator } from "./AuthNavigator";
 import { MainNavigator } from "./MainNavigator";
@@ -10,9 +11,29 @@ import { NewChatScreen } from "../screens/chats/NewChatScreen";
 import { NewGroupScreen } from "../screens/chats/NewGroupScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { useAuthStore } from "../store/authStore";
+import { useChatStore } from "../store/chatStore";
+import { getConversationDisplay } from "../utils/conversation";
+import { MessageNotificationData } from "../utils/pushNotifications";
 import { colors } from "../theme/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+
+async function navigateToConversation(conversationId?: string) {
+  if (!conversationId || !navigationRef.isReady()) return;
+  const userId = useAuthStore.getState().user?.id;
+  if (!userId) return;
+
+  let conversation = useChatStore.getState().conversations.find((c) => c.id === conversationId);
+  if (!conversation) {
+    await useChatStore.getState().loadConversations().catch(() => {});
+    conversation = useChatStore.getState().conversations.find((c) => c.id === conversationId);
+  }
+
+  const title = conversation ? getConversationDisplay(conversation, userId).title : "";
+  navigationRef.navigate("ChatRoom", { conversationId, title });
+}
 
 export function RootNavigator() {
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -23,6 +44,20 @@ export function RootNavigator() {
     bootstrap();
   }, [bootstrap]);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const lastResponse = Notifications.getLastNotificationResponse();
+    const lastData = lastResponse?.notification.request.content.data as MessageNotificationData | undefined;
+    navigateToConversation(lastData?.conversationId);
+
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as MessageNotificationData;
+      navigateToConversation(data?.conversationId);
+    });
+    return () => subscription.remove();
+  }, [isAuthenticated]);
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
@@ -32,7 +67,7 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       {isAuthenticated ? (
         <Stack.Navigator>
           <Stack.Screen name="MainTabs" component={MainNavigator} options={{ title: "UzChat" }} />

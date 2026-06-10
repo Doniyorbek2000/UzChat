@@ -5,6 +5,7 @@ import { setUnauthorizedHandler } from "../api/client";
 import { secureStorage } from "../storage/secureStorage";
 import { generateKeyPair, KeyPair } from "../crypto/e2ee";
 import { connectSocket, disconnectSocket } from "../socket/socket";
+import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from "../utils/pushNotifications";
 import { AuthUser } from "../types";
 
 interface AuthState {
@@ -60,6 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = await usersApi.me();
       connectSocket(accessToken);
       set({ user, keyPair, isAuthenticated: true, isLoading: false });
+      registerForPushNotificationsAsync().catch(() => {});
     } catch {
       set({ isLoading: false, keyPair });
     }
@@ -78,6 +80,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await secureStorage.setTokens(accessToken, refreshToken);
     connectSocket(accessToken);
     set({ user, keyPair, isAuthenticated: true });
+    registerForPushNotificationsAsync().catch(() => {});
   },
 
   login: async (phone, password) => {
@@ -86,9 +89,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await secureStorage.setTokens(accessToken, refreshToken);
     connectSocket(accessToken);
     set({ user, keyPair, isAuthenticated: true });
+    registerForPushNotificationsAsync().catch(() => {});
   },
 
   logout: async () => {
+    await unregisterPushNotificationsAsync().catch(() => {});
     const { refreshToken } = await secureStorage.getTokens();
     if (refreshToken) {
       try {

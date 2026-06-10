@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import {
   setAudioModeAsync,
 } from "expo-audio";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
@@ -29,6 +30,7 @@ import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { formatDuration } from "../../utils/mediaFile";
+import { setActiveConversationId } from "../../utils/pushNotifications";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
@@ -66,6 +68,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setActiveConversationId(conversationId);
+      return () => setActiveConversationId(null);
+    }, [conversationId])
+  );
 
   useEffect(() => {
     loadMessages(conversationId)

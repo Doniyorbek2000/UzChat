@@ -53,6 +53,7 @@ model User {
   messages         Message[]
   sentContacts     Contact[]                  @relation("ContactOwner")
   receivedContacts Contact[]                  @relation("ContactTarget")
+  pushTokens       PushToken[]
 
   @@index([username])
   @@index([phone])
@@ -154,4 +155,14 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@index([senderId])
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

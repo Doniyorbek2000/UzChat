@@ -16,6 +16,11 @@ export function getIo(): Server {
   return io;
 }
 
+export function isUserOnline(userId: string): boolean {
+  if (!io) return false;
+  return io.sockets.adapter.rooms.has(`user:${userId}`);
+}
+
 export function initSocketServer(httpServer: HttpServer): Server {
   io = new Server(httpServer, {
     cors: { origin: env.corsOrigin },

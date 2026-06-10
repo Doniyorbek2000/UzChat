@@ -1,9 +1,44 @@
+import { Message } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
+import { isUserOnline } from "../../sockets";
+import { pushService } from "../push/push.service";
 import { chatsService } from "../chats/chats.service";
 import { ListMessagesQuery, SendMessageInput } from "./messages.schema";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
+
+const MEDIA_LABELS: Partial<Record<Message["type"], string>> = {
+  IMAGE: "🖼 Rasm",
+  VIDEO: "🎬 Video",
+  AUDIO: "🎵 Ovozli xabar",
+  FILE: "📄 Fayl",
+};
+
+async function notifyParticipants(senderId: string, conversationId: string, message: Message) {
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: { participants: { include: { user: { select: { id: true, displayName: true } } } } },
+  });
+  if (!conversation) return;
+
+  const sender = conversation.participants.find((p) => p.userId === senderId)?.user;
+  if (!sender) return;
+
+  const recipientIds = conversation.participants
+    .map((p) => p.userId)
+    .filter((id) => id !== senderId && !isUserOnline(id));
+  if (recipientIds.length === 0) return;
+
+  const contentLabel = MEDIA_LABELS[message.type] ?? "Yangi xabar";
+  const isGroup = conversation.type === "GROUP";
+
+  await pushService.sendToUsers(recipientIds, {
+    title: isGroup ? conversation.title ?? "Guruh" : sender.displayName,
+    body: isGroup ? `${sender.displayName}: ${contentLabel}` : contentLabel,
+    data: { conversationId, messageId: message.id, type: "message" },
+  });
+}
 
 export const messagesService = {
   async sendMessage(userId: string, conversationId: string, input: SendMessageInput) {
@@ -23,6 +58,8 @@ export const messagesService = {
       await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
       return created;
     });
+
+    notifyParticipants(userId, conversationId, message).catch(() => {});
 
     return message;
   },
