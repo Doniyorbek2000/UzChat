@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import * as Clipboard from "expo-clipboard";
 import {
   useAudioRecorder,
   useAudioRecorderState,
@@ -653,6 +654,21 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           >
             <Text style={styles.actionButtonText}>↩️ Javob berish</Text>
           </TouchableOpacity>
+          {actionMessage &&
+            actionMessage.type === "TEXT" &&
+            !actionMessage.decryptFailed &&
+            !actionMessage.deletedAt &&
+            !!actionMessage.text && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  Clipboard.setStringAsync(actionMessage.text ?? "").catch(() => {});
+                  setActionMessage(null);
+                }}
+              >
+                <Text style={styles.actionButtonText}>📋 Nusxalash</Text>
+              </TouchableOpacity>
+            )}
           {actionMessage &&
             actionMessage.senderId === user?.id &&
             actionMessage.type === "TEXT" &&
