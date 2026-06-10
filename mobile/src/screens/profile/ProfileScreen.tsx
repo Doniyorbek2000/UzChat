@@ -6,8 +6,11 @@ import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
+import { MainTabScreenProps } from "../../navigation/types";
 
-export function ProfileScreen() {
+type Props = MainTabScreenProps<"Profile">;
+
+export function ProfileScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const logout = useAuthStore((s) => s.logout);
@@ -100,6 +103,11 @@ export function ProfileScreen() {
         </Text>
       </View>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("StarredMessages")}>
+        <Text style={styles.menuRowText}>⭐ Saqlangan xabarlar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
         <Text style={styles.logoutText}>Chiqish</Text>
       </TouchableOpacity>
@@ -136,6 +144,17 @@ const styles = StyleSheet.create({
   securityBox: { backgroundColor: colors.background, borderRadius: 8, padding: 16, marginTop: 24 },
   securityTitle: { fontSize: 14, fontWeight: "600", color: colors.text, marginBottom: 8 },
   securityText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
+  menuRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 12,
+  },
+  menuRowText: { fontSize: 15, color: colors.text },
+  menuRowArrow: { fontSize: 18, color: colors.textSecondary },
   logoutButton: { marginTop: 32, alignItems: "center", paddingVertical: 14 },
   logoutText: { color: colors.danger, fontSize: 16, fontWeight: "600" },
 });

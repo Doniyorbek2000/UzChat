@@ -105,6 +105,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const deleteMessage = useChatStore((s) => s.deleteMessage);
   const editMessage = useChatStore((s) => s.editMessage);
   const toggleReaction = useChatStore((s) => s.toggleReaction);
+  const toggleStar = useChatStore((s) => s.toggleStar);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
@@ -449,6 +450,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           <View style={styles.messageFooter}>
             {item.editedAt && !item.deletedAt && <Text style={styles.editedLabel}>tahrirlangan</Text>}
+            {item.isStarred && <Text style={styles.starIcon}>⭐</Text>}
             <Text style={styles.messageTime}>
               {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </Text>
@@ -610,6 +612,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.actionButtonText}>✏️ Tahrirlash</Text>
               </TouchableOpacity>
             )}
+          {actionMessage && !actionMessage.deletedAt && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                toggleStar(conversationId, message.id).catch(() => {});
+              }}
+            >
+              <Text style={styles.actionButtonText}>
+                {actionMessage.isStarred ? "⭐ Saqlashni bekor qilish" : "⭐ Saqlash"}
+              </Text>
+            </TouchableOpacity>
+          )}
           {actionMessage && !actionMessage.decryptFailed && (
             <TouchableOpacity
               style={styles.actionButton}
@@ -704,6 +720,7 @@ const styles = StyleSheet.create({
   messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
   messageTime: { fontSize: 10, color: colors.textSecondary },
   editedLabel: { fontSize: 10, color: colors.textSecondary, fontStyle: "italic" },
+  starIcon: { fontSize: 10 },
   receipt: { fontSize: 11, color: colors.textSecondary },
   receiptRead: { color: colors.primary },
   reactionsRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 6, gap: 6 },

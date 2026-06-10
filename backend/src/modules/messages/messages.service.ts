@@ -31,6 +31,19 @@ const MEDIA_LABELS: Partial<Record<Message["type"], string>> = {
   FILE: "📄 Fayl",
 };
 
+function messageInclude(userId: string) {
+  return {
+    replyTo: replyToSelect,
+    reactions: reactionSelect,
+    stars: { where: { userId }, select: { id: true } },
+  } as const;
+}
+
+function formatMessage<T extends { stars: { id: string }[] }>(message: T) {
+  const { stars, ...rest } = message;
+  return { ...rest, isStarred: stars.length > 0 };
+}
+
 async function resolveMentions(conversationId: string, userId: string, mentions: string[] | undefined) {
   if (!mentions?.length) return [];
   const participants = await prisma.conversationParticipant.findMany({
@@ -105,7 +118,7 @@ export const messagesService = {
           replyToId: input.replyToId,
           mentions,
         },
-        include: { replyTo: replyToSelect, reactions: reactionSelect },
+        include: messageInclude(userId),
       });
       await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
       return created;
@@ -113,7 +126,7 @@ export const messagesService = {
 
     notifyParticipants(userId, conversationId, message).catch(() => {});
 
-    return message;
+    return formatMessage(message);
   },
 
   async listMessages(userId: string, conversationId: string, query: ListMessagesQuery) {
@@ -126,10 +139,10 @@ export const messagesService = {
       },
       orderBy: { createdAt: "desc" },
       take: query.limit,
-      include: { replyTo: replyToSelect, reactions: reactionSelect },
+      include: messageInclude(userId),
     });
 
-    return messages.reverse();
+    return messages.reverse().map(formatMessage);
   },
 
   async deleteMessage(userId: string, conversationId: string, messageId: string) {
@@ -162,11 +175,13 @@ export const messagesService = {
 
     const mentions = await resolveMentions(conversationId, userId, input.mentions);
 
-    return prisma.message.update({
+    const updated = await prisma.message.update({
       where: { id: messageId },
       data: { ciphertext: input.ciphertext, nonce: input.nonce, mentions, editedAt: new Date() },
-      include: { replyTo: replyToSelect, reactions: reactionSelect },
+      include: messageInclude(userId),
     });
+
+    return formatMessage(updated);
   },
 
   async markRead(userId: string, conversationId: string) {
@@ -199,5 +214,35 @@ export const messagesService = {
     }
 
     return prisma.messageReaction.findMany({ where: { messageId }, ...reactionSelect });
+  },
+
+  async toggleStar(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni saqlab bo'lmaydi");
+
+    const existing = await prisma.messageStar.findUnique({
+      where: { messageId_userId: { messageId, userId } },
+    });
+
+    if (existing) {
+      await prisma.messageStar.delete({ where: { id: existing.id } });
+      return { starred: false };
+    }
+
+    await prisma.messageStar.create({ data: { messageId, userId } });
+    return { starred: true };
+  },
+
+  async listStarred(userId: string) {
+    const stars = await prisma.messageStar.findMany({
+      where: { userId, message: { deletedAt: null } },
+      orderBy: { createdAt: "desc" },
+      include: { message: { include: { replyTo: replyToSelect, reactions: reactionSelect } } },
+    });
+
+    return stars.map((s) => ({ ...s.message, isStarred: true }));
   },
 };

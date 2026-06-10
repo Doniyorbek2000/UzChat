@@ -52,6 +52,7 @@ model User {
   participants     ConversationParticipant[]
   messages         Message[]
   reactions        MessageReaction[]
+  starredMessages  MessageStar[]
   sentContacts     Contact[]                  @relation("ContactOwner")
   receivedContacts Contact[]                  @relation("ContactTarget")
   pushTokens       PushToken[]
@@ -161,6 +162,7 @@ model Message {
   replies   Message[] @relation("MessageReplies")
 
   reactions MessageReaction[]
+  stars     MessageStar[]
 
   createdAt DateTime  @default(now())
   editedAt  DateTime?
@@ -182,6 +184,20 @@ model MessageReaction {
 
   @@unique([messageId, userId])
   @@index([messageId])
+}
+
+// Per-user "favorite" flag on a message (WeChat-style starred messages).
+// Not shared with other participants.
+model MessageStar {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([userId])
 }
 
 model PushToken {

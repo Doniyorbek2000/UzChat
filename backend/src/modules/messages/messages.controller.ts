@@ -64,4 +64,23 @@ export const messagesController = {
       next(err);
     }
   },
+
+  async toggleStar(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      const result = await messagesService.toggleStar(req.user!.sub, conversationId, messageId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async listStarred(req: Request, res: Response, next: NextFunction) {
+    try {
+      const messages = await messagesService.listStarred(req.user!.sub);
+      res.json(messages);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

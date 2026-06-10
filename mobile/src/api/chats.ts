@@ -89,4 +89,14 @@ export const chatsApi = {
       )
       .then((r) => r.data);
   },
+
+  toggleStar(conversationId: string, messageId: string) {
+    return apiClient
+      .put<{ starred: boolean }>(`/conversations/${conversationId}/messages/${messageId}/star`)
+      .then((r) => r.data);
+  },
+
+  listStarred() {
+    return apiClient.get<Message[]>("/conversations/starred/messages").then((r) => r.data);
+  },
 };

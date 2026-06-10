@@ -55,6 +55,7 @@ export interface Message {
   replyTo?: ReplyToSnapshot | null;
   reactions: MessageReaction[];
   mentions: string[];
+  isStarred: boolean;
   createdAt: string;
   editedAt: string | null;
   deletedAt: string | null;

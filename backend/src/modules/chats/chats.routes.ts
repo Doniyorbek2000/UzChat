@@ -30,6 +30,8 @@ chatsRouter.patch(
   chatsController.updateParticipantRole
 );
 
+chatsRouter.get("/starred/messages", messagesController.listStarred);
+
 chatsRouter.get("/:id/messages", messagesController.list);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);
 chatsRouter.post("/:id/read", messagesController.markRead);
@@ -40,3 +42,4 @@ chatsRouter.put(
   validateBody(setReactionSchema),
   messagesController.setReaction
 );
+chatsRouter.put("/:id/messages/:messageId/star", messagesController.toggleStar);

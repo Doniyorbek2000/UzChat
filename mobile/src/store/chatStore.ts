@@ -57,6 +57,7 @@ interface ChatState {
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   editMessage: (conversationId: string, messageId: string, text: string, mentions?: string[]) => Promise<void>;
   toggleReaction: (conversationId: string, messageId: string, emoji: string) => Promise<void>;
+  toggleStar: (conversationId: string, messageId: string) => Promise<void>;
   forwardMessage: (sourceConversationId: string, messageId: string, targetConversationId: string) => Promise<void>;
   createDirectConversation: (target: User) => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
@@ -296,6 +297,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
         messagesByConversation: {
           ...state.messagesByConversation,
           [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+        },
+      };
+    });
+  },
+
+  toggleStar: async (conversationId, messageId) => {
+    const { starred } = await chatsApi.toggleStar(conversationId, messageId);
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      return {
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, isStarred: starred } : m)),
         },
       };
     });
@@ -546,7 +560,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         return {
           messagesByConversation: {
             ...state.messagesByConversation,
-            [message.conversationId]: existing.map((m) => (m.id === message.id ? decrypted : m)),
+            [message.conversationId]: existing.map((m) =>
+              m.id === message.id ? { ...decrypted, isStarred: m.isStarred } : m
+            ),
           },
         };
       });
