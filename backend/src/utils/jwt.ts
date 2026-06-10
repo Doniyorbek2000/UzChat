@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 
@@ -13,7 +14,9 @@ export function signAccessToken(payload: AccessTokenPayload): string {
 }
 
 export function signRefreshToken(payload: AccessTokenPayload): string {
-  return jwt.sign(payload, env.jwt.refreshSecret, {
+  // include a random jti so two tokens issued for the same user within the
+  // same second don't collide on the RefreshToken.token unique constraint
+  return jwt.sign({ ...payload, jti: crypto.randomUUID() }, env.jwt.refreshSecret, {
     expiresIn: env.jwt.refreshExpiresIn,
   } as jwt.SignOptions);
 }
