@@ -13,6 +13,13 @@ import { decryptMessage } from "../../crypto/e2ee";
 
 type Props = MainTabScreenProps<"Chats">;
 
+const MEDIA_LABELS: Record<string, string> = {
+  IMAGE: "🖼 Rasm",
+  VIDEO: "🎬 Video",
+  AUDIO: "🎵 Ovozli xabar",
+  FILE: "📄 Fayl",
+};
+
 export function ChatListScreen({ navigation }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const loadConversations = useChatStore((s) => s.loadConversations);
@@ -38,11 +45,13 @@ export function ChatListScreen({ navigation }: Props) {
   };
 
   const renderPreview = (conversation: Conversation): string => {
-    if (!conversation.lastMessage) return "Xabarlar yo'q";
-    if (conversation.lastMessage.type !== "TEXT") return "Media xabar";
+    const lastMessage = conversation.lastMessage;
+    if (!lastMessage) return "Xabarlar yo'q";
+    if (lastMessage.deletedAt) return "Xabar o'chirildi";
+    if (lastMessage.type in MEDIA_LABELS) return MEDIA_LABELS[lastMessage.type];
     try {
       const key = getConversationKey(conversation);
-      return decryptMessage(conversation.lastMessage.ciphertext, conversation.lastMessage.nonce, key);
+      return decryptMessage(lastMessage.ciphertext, lastMessage.nonce, key);
     } catch {
       return "Xabarni ochib bo'lmadi";
     }

@@ -77,3 +77,17 @@ export function decryptMessage(ciphertext: string, nonce: string, conversationKe
   if (!opened) throw new Error("Xabarni ochib bo'lmadi");
   return encodeUTF8(opened);
 }
+
+/** Encrypts arbitrary binary data (e.g. media files) with the conversation's shared symmetric key. */
+export function encryptBytes(data: Uint8Array, conversationKey: string): { ciphertext: Uint8Array; nonce: string } {
+  const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
+  const ciphertext = nacl.secretbox(data, nonce, decodeBase64(conversationKey));
+  return { ciphertext, nonce: encodeBase64(nonce) };
+}
+
+/** Decrypts binary data (e.g. media files) encrypted with `encryptBytes`. */
+export function decryptBytes(ciphertext: Uint8Array, nonce: string, conversationKey: string): Uint8Array {
+  const opened = nacl.secretbox.open(ciphertext, decodeBase64(nonce), decodeBase64(conversationKey));
+  if (!opened) throw new Error("Faylni ochib bo'lmadi");
+  return opened;
+}

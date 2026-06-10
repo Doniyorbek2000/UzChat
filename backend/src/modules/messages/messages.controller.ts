@@ -32,4 +32,14 @@ export const messagesController = {
       next(err);
     }
   },
+
+  async remove(req: Request, res: Response, next: NextFunction) {
+    try {
+      const message = await messagesService.deleteMessage(req.user!.sub, req.params.id, req.params.messageId);
+      getIo().to(`conversation:${req.params.id}`).emit("message:deleted", message);
+      res.json(message);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

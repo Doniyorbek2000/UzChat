@@ -19,6 +19,7 @@ export const env = {
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? "30d",
   },
   corsOrigin: process.env.CORS_ORIGIN ?? "*",
+  publicUrl: process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 4000}`,
 } as const;
 
 export const isProduction = env.nodeEnv === "production";

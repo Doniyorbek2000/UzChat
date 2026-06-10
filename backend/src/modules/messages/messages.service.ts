@@ -1,6 +1,9 @@
 import { prisma } from "../../config/prisma";
+import { Errors } from "../../utils/errors";
 import { chatsService } from "../chats/chats.service";
 import { ListMessagesQuery, SendMessageInput } from "./messages.schema";
+
+const RECALL_WINDOW_MS = 2 * 60 * 1000;
 
 export const messagesService = {
   async sendMessage(userId: string, conversationId: string, input: SendMessageInput) {
@@ -37,6 +40,23 @@ export const messagesService = {
     });
 
     return messages.reverse();
+  },
+
+  async deleteMessage(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.senderId !== userId) throw Errors.forbidden();
+    if (message.deletedAt) return message;
+    if (Date.now() - message.createdAt.getTime() > RECALL_WINDOW_MS) {
+      throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 2 daqiqa ichida o'chirish mumkin");
+    }
+
+    return prisma.message.update({
+      where: { id: messageId },
+      data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date() },
+    });
   },
 
   async markRead(userId: string, conversationId: string) {

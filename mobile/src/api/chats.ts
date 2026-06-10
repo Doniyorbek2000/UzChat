@@ -48,4 +48,8 @@ export const chatsApi = {
   markRead(conversationId: string) {
     return apiClient.post(`/conversations/${conversationId}/read`);
   },
+
+  deleteMessage(conversationId: string, messageId: string) {
+    return apiClient.delete<Message>(`/conversations/${conversationId}/messages/${messageId}`).then((r) => r.data);
+  },
 };

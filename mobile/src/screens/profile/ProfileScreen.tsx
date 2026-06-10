@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
+import { uploadPlainFile } from "../../utils/mediaFile";
 
 export function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
@@ -12,6 +14,7 @@ export function ProfileScreen() {
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   if (!user) return null;
 
@@ -28,6 +31,33 @@ export function ProfileScreen() {
     }
   };
 
+  const onChangeAvatar = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Ruxsat kerak", "Avatar tanlash uchun galereyaga ruxsat bering");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    setUploadingAvatar(true);
+    try {
+      const { url } = await uploadPlainFile(asset.uri, asset.mimeType ?? "image/jpeg");
+      await usersApi.updateMe({ avatarUrl: url });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Avatarni yangilab bo'lmadi");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const onLogout = () => {
     Alert.alert("Chiqish", "Hisobdan chiqishni xohlaysizmi?", [
       { text: "Bekor qilish", style: "cancel" },
@@ -38,7 +68,14 @@ export function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Avatar uri={user.avatarUrl} name={user.displayName} size={72} />
+        <TouchableOpacity onPress={onChangeAvatar} disabled={uploadingAvatar}>
+          <Avatar uri={user.avatarUrl} name={user.displayName} size={72} />
+          {uploadingAvatar && (
+            <View style={styles.avatarOverlay}>
+              <ActivityIndicator color="#fff" />
+            </View>
+          )}
+        </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.username}>@{user.username}</Text>
           <Text style={styles.phone}>{user.phone}</Text>
@@ -73,6 +110,13 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
   header: { flexDirection: "row", alignItems: "center", marginBottom: 24, gap: 16 },
+  avatarOverlay: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerInfo: { flex: 1 },
   username: { fontSize: 18, fontWeight: "700", color: colors.text },
   phone: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },

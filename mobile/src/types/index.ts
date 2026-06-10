@@ -67,3 +67,25 @@ export interface ContactRequest {
   owner: User;
   createdAt: string;
 }
+
+/** Encrypted alongside the message ciphertext for IMAGE/VIDEO/AUDIO/FILE messages. */
+export interface MediaMeta {
+  name: string;
+  mimeType: string;
+  size: number;
+  fileNonce: string;
+  width?: number;
+  height?: number;
+  duration?: number;
+  caption?: string;
+}
+
+/** A locally picked file/image ready to be encrypted and sent. */
+export interface MediaAsset {
+  uri: string;
+  name: string;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  duration?: number;
+}

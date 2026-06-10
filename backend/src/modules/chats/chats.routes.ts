@@ -18,3 +18,4 @@ chatsRouter.post("/:id/participants", validateBody(addParticipantSchema), chatsC
 chatsRouter.get("/:id/messages", messagesController.list);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);
 chatsRouter.post("/:id/read", messagesController.markRead);
+chatsRouter.delete("/:id/messages/:messageId", messagesController.remove);

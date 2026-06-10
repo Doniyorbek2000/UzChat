@@ -9,23 +9,32 @@ import {
   unwrapConversationKey,
   wrapConversationKey,
 } from "../crypto/e2ee";
-import { Conversation, Message, User } from "../types";
+import { encryptAndUploadFile } from "../utils/mediaFile";
+import { Conversation, Message, MediaAsset, MediaMeta, MessageType, User } from "../types";
 
 export interface DecryptedMessage extends Message {
   text: string | null;
+  meta: MediaMeta | null;
   decryptFailed: boolean;
 }
+
+const MEDIA_TYPES: MessageType[] = ["IMAGE", "VIDEO", "AUDIO", "FILE"];
+const PAGE_SIZE = 30;
 
 interface ChatState {
   conversations: Conversation[];
   messagesByConversation: Record<string, DecryptedMessage[]>;
+  hasMoreByConversation: Record<string, boolean>;
   typingUsers: Record<string, Set<string>>;
   listenersRegistered: boolean;
 
   loadConversations: () => Promise<void>;
   getConversationKey: (conversation: Conversation) => string;
   loadMessages: (conversationId: string) => Promise<void>;
+  loadOlderMessages: (conversationId: string) => Promise<void>;
   sendTextMessage: (conversationId: string, text: string) => Promise<void>;
+  sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType) => Promise<void>;
+  deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   createDirectConversation: (target: User) => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
   markRead: (conversationId: string) => Promise<void>;
@@ -36,18 +45,27 @@ interface ChatState {
 const conversationKeyCache: Record<string, string> = {};
 
 function decryptToMessage(conversationKey: string, message: Message): DecryptedMessage {
-  if (message.type === "SYSTEM" || message.type === "AUDIO" || message.type === "IMAGE" || message.type === "VIDEO" || message.type === "FILE") {
+  if (message.deletedAt) {
+    return { ...message, text: null, meta: null, decryptFailed: false };
+  }
+
+  let plaintext: string;
+  try {
+    plaintext = decryptMessage(message.ciphertext, message.nonce, conversationKey);
+  } catch {
+    return { ...message, text: null, meta: null, decryptFailed: true };
+  }
+
+  if (MEDIA_TYPES.includes(message.type)) {
     try {
-      return { ...message, text: decryptMessage(message.ciphertext, message.nonce, conversationKey), decryptFailed: false };
+      const meta = JSON.parse(plaintext) as MediaMeta;
+      return { ...message, text: meta.caption ?? null, meta, decryptFailed: false };
     } catch {
-      return { ...message, text: null, decryptFailed: true };
+      return { ...message, text: null, meta: null, decryptFailed: true };
     }
   }
-  try {
-    return { ...message, text: decryptMessage(message.ciphertext, message.nonce, conversationKey), decryptFailed: false };
-  } catch {
-    return { ...message, text: null, decryptFailed: true };
-  }
+
+  return { ...message, text: plaintext, meta: null, decryptFailed: false };
 }
 
 function upsertConversation(conversations: Conversation[], conversation: Conversation): Conversation[] {
@@ -58,6 +76,7 @@ function upsertConversation(conversations: Conversation[], conversation: Convers
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   messagesByConversation: {},
+  hasMoreByConversation: {},
   typingUsers: {},
   listenersRegistered: false,
 
@@ -90,11 +109,32 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
 
     const key = get().getConversationKey(conversation);
-    const messages = await chatsApi.listMessages(conversationId);
+    const messages = await chatsApi.listMessages(conversationId, undefined, PAGE_SIZE);
     const decrypted = messages.map((m) => decryptToMessage(key, m));
 
     set((state) => ({
       messagesByConversation: { ...state.messagesByConversation, [conversationId]: decrypted },
+      hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: messages.length === PAGE_SIZE },
+    }));
+  },
+
+  loadOlderMessages: async (conversationId) => {
+    if (get().hasMoreByConversation[conversationId] === false) return;
+
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    const existing = get().messagesByConversation[conversationId] ?? [];
+    if (!conversation || existing.length === 0) return;
+
+    const key = get().getConversationKey(conversation);
+    const older = await chatsApi.listMessages(conversationId, existing[0].createdAt, PAGE_SIZE);
+    const decryptedOlder = older.map((m) => decryptToMessage(key, m));
+
+    set((state) => ({
+      messagesByConversation: {
+        ...state.messagesByConversation,
+        [conversationId]: [...decryptedOlder, ...(state.messagesByConversation[conversationId] ?? [])],
+      },
+      hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: older.length === PAGE_SIZE },
     }));
   },
 
@@ -117,6 +157,53 @@ export const useChatStore = create<ChatState>((set, get) => ({
           state.conversations,
           { ...conversation, lastMessage: message, updatedAt: message.createdAt }
         ),
+      };
+    });
+  },
+
+  sendMediaMessage: async (conversationId, asset, type) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) throw new Error("Suhbat topilmadi");
+
+    const key = get().getConversationKey(conversation);
+    const { url, size, fileNonce } = await encryptAndUploadFile(asset.uri, key);
+
+    const meta: MediaMeta = {
+      name: asset.name,
+      mimeType: asset.mimeType,
+      size,
+      fileNonce,
+      width: asset.width,
+      height: asset.height,
+      duration: asset.duration,
+    };
+    const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), key);
+
+    const message = await chatsApi.sendMessage(conversationId, { type, ciphertext, nonce, mediaUrl: url });
+    const decrypted = decryptToMessage(key, message);
+
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      if (existing.some((m) => m.id === decrypted.id)) return state;
+      return {
+        messagesByConversation: { ...state.messagesByConversation, [conversationId]: [...existing, decrypted] },
+        conversations: upsertConversation(
+          state.conversations,
+          { ...conversation, lastMessage: message, updatedAt: message.createdAt }
+        ),
+      };
+    });
+  },
+
+  deleteMessage: async (conversationId, messageId) => {
+    const updated = await chatsApi.deleteMessage(conversationId, messageId);
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      return {
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, ...updated, text: null, meta: null, decryptFailed: false } : m)),
+        },
       };
     });
   },
@@ -198,6 +285,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
             lastMessage: message,
             updatedAt: message.createdAt,
           }),
+        };
+      });
+    });
+
+    socket.on("message:deleted", (message: Message) => {
+      set((state) => {
+        const existing = state.messagesByConversation[message.conversationId] ?? [];
+        return {
+          messagesByConversation: {
+            ...state.messagesByConversation,
+            [message.conversationId]: existing.map((m) =>
+              m.id === message.id ? { ...m, ...message, text: null, meta: null, decryptFailed: false } : m
+            ),
+          },
         };
       });
     });
