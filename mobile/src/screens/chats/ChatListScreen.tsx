@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert } from "react-native";
+import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useState } from "react";
 import { MainTabScreenProps } from "../../navigation/types";
@@ -34,6 +34,7 @@ export function ChatListScreen({ navigation }: Props) {
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const user = useAuthStore((s) => s.user);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setupSocketListeners();
@@ -133,16 +134,44 @@ export function ChatListScreen({ navigation }: Props) {
   const visibleConversations = conversations.filter((c) => !c.isArchived);
   const archivedCount = conversations.length - visibleConversations.length;
 
+  const query = searchQuery.trim().toLowerCase();
+  const filteredConversations = query
+    ? visibleConversations.filter((c) => {
+        const display = getConversationDisplay(c, user!.id);
+        if (display.title.toLowerCase().includes(query)) return true;
+        return c.participants.some(
+          (p) =>
+            p.user.displayName.toLowerCase().includes(query) || p.user.username.toLowerCase().includes(query)
+        );
+      })
+    : visibleConversations;
+
   return (
     <View style={styles.container}>
+      <View style={styles.searchBar}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Qidirish"
+          placeholderTextColor={colors.textSecondary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery("")} hitSlop={8}>
+            <Text style={styles.searchClear}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <FlatList
-        data={visibleConversations}
+        data={filteredConversations}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListHeaderComponent={
-          archivedCount > 0 ? (
+          !query && archivedCount > 0 ? (
             <TouchableOpacity style={styles.archiveRow} onPress={() => navigation.navigate("ArchivedChats")}>
               <Text style={styles.archiveIcon}>🗄</Text>
               <Text style={styles.archiveText}>Arxivlangan suhbatlar</Text>
@@ -152,7 +181,7 @@ export function ChatListScreen({ navigation }: Props) {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Hali suhbatlar yo'q</Text>
+            <Text style={styles.emptyText}>{query ? "Hech narsa topilmadi" : "Hali suhbatlar yo'q"}</Text>
           </View>
         }
       />
@@ -165,6 +194,20 @@ export function ChatListScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    paddingHorizontal: 12,
+    height: 40,
+    gap: 8,
+  },
+  searchIcon: { fontSize: 14 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
+  searchClear: { fontSize: 14, color: colors.textSecondary, paddingHorizontal: 4 },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   content: { flex: 1 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
