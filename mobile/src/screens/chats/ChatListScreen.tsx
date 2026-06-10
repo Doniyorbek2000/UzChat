@@ -29,12 +29,15 @@ export function ChatListScreen({ navigation }: Props) {
   const togglePin = useChatStore((s) => s.togglePin);
   const toggleMute = useChatStore((s) => s.toggleMute);
   const toggleArchive = useChatStore((s) => s.toggleArchive);
+  const drafts = useChatStore((s) => s.drafts);
+  const loadDrafts = useChatStore((s) => s.loadDrafts);
   const user = useAuthStore((s) => s.user);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     setupSocketListeners();
-  }, [setupSocketListeners]);
+    loadDrafts().catch(() => {});
+  }, [setupSocketListeners, loadDrafts]);
 
   useFocusEffect(
     useCallback(() => {
@@ -104,7 +107,14 @@ export function ChatListScreen({ navigation }: Props) {
           </View>
           <View style={styles.bottomRow}>
             <Text style={styles.preview} numberOfLines={1}>
-              {renderPreview(item)}
+              {drafts[item.id] ? (
+                <>
+                  <Text style={styles.draftLabel}>Qoralama: </Text>
+                  {drafts[item.id]}
+                </>
+              ) : (
+                renderPreview(item)
+              )}
             </Text>
             {item.isMuted && <Text style={styles.muteIcon}>🔕</Text>}
           </View>
@@ -157,6 +167,7 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
   bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
   preview: { fontSize: 14, color: colors.textSecondary, flex: 1 },
+  draftLabel: { color: colors.danger },
   muteIcon: { fontSize: 12, marginLeft: 8, color: colors.textSecondary },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   archiveRow: {

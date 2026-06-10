@@ -113,6 +113,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
+  const loadDrafts = useChatStore((s) => s.loadDrafts);
+  const setDraft = useChatStore((s) => s.setDraft);
 
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
@@ -203,6 +205,31 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [conversationId, loadMessages]);
+
+  const textRef = useRef(text);
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
+
+  const editingRef = useRef<DecryptedMessage | null>(null);
+  useEffect(() => {
+    editingRef.current = editingMessage;
+  }, [editingMessage]);
+
+  useEffect(() => {
+    loadDrafts()
+      .then(() => {
+        const draft = useChatStore.getState().drafts[conversationId];
+        if (draft) setText(draft);
+      })
+      .catch(() => {});
+
+    return () => {
+      if (!editingRef.current) {
+        setDraft(conversationId, textRef.current).catch(() => {});
+      }
+    };
+  }, [conversationId, loadDrafts, setDraft]);
 
   useEffect(() => {
     markRead(conversationId).catch(() => {});

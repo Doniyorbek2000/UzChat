@@ -11,6 +11,7 @@ import {
   wrapConversationKey,
 } from "../crypto/e2ee";
 import { downloadAndDecryptFile, encryptAndUploadFile, extensionFromName } from "../utils/mediaFile";
+import { draftStorage } from "../storage/draftStorage";
 import {
   Conversation,
   Message,
@@ -48,8 +49,11 @@ interface ChatState {
   typingUsers: Record<string, Set<string>>;
   onlineUsers: Set<string>;
   listenersRegistered: boolean;
+  drafts: Record<string, string>;
 
   loadConversations: () => Promise<void>;
+  loadDrafts: () => Promise<void>;
+  setDraft: (conversationId: string, text: string) => Promise<void>;
   getConversationKey: (conversation: Conversation) => string;
   loadMessages: (conversationId: string) => Promise<void>;
   loadOlderMessages: (conversationId: string) => Promise<void>;
@@ -143,10 +147,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
   typingUsers: {},
   onlineUsers: new Set(),
   listenersRegistered: false,
+  drafts: {},
 
   loadConversations: async () => {
     const conversations = await chatsApi.list();
     set({ conversations });
+  },
+
+  loadDrafts: async () => {
+    const drafts = await draftStorage.getAll();
+    set({ drafts });
+  },
+
+  setDraft: async (conversationId, text) => {
+    const drafts = { ...get().drafts };
+    if (text.trim()) {
+      drafts[conversationId] = text;
+    } else {
+      delete drafts[conversationId];
+    }
+    set({ drafts });
+    await draftStorage.setAll(drafts);
   },
 
   getConversationKey: (conversation) => {
