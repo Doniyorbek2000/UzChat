@@ -14,6 +14,7 @@ const profileSelect = {
   publicKey: true,
   lastSeenAt: true,
   lastSeenPrivacy: true,
+  groupAddPrivacy: true,
   createdAt: true,
 } as const;
 

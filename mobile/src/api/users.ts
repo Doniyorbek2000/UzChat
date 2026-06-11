@@ -1,12 +1,18 @@
 import { apiClient } from "./client";
-import { AuthUser, LastSeenPrivacy, User } from "../types";
+import { AuthUser, GroupAddPrivacy, LastSeenPrivacy, User } from "../types";
 
 export const usersApi = {
   me() {
     return apiClient.get<AuthUser>("/users/me").then((r) => r.data);
   },
 
-  updateMe(data: { displayName?: string; bio?: string; avatarUrl?: string; lastSeenPrivacy?: LastSeenPrivacy }) {
+  updateMe(data: {
+    displayName?: string;
+    bio?: string;
+    avatarUrl?: string;
+    lastSeenPrivacy?: LastSeenPrivacy;
+    groupAddPrivacy?: GroupAddPrivacy;
+  }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);
   },
 

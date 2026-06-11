@@ -5,28 +5,47 @@ import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
 import { colors } from "../../theme/colors";
-import { LastSeenPrivacy } from "../../types";
+import { GroupAddPrivacy, LastSeenPrivacy } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PrivacySettings">;
 
-const OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
+const LAST_SEEN_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
   { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar oxirgi marta qachon onlayn bo'lganingizni ko'ra oladi" },
   { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz oxirgi marta onlayn bo'lganingizni ko'ra oladi" },
   { value: "NOBODY", label: "Hech kim", description: "Hech kim oxirgi marta onlayn bo'lganingizni ko'ra olmaydi" },
 ];
 
+const GROUP_ADD_OPTIONS: { value: GroupAddPrivacy; label: string; description: string }[] = [
+  { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi sizni guruhga qo'sha oladi" },
+  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz sizni guruhga qo'sha oladi" },
+  { value: "NOBODY", label: "Hech kim", description: "Sizni hech kim guruhga qo'sha olmaydi, faqat taklif havolasi orqali qo'shilishingiz mumkin" },
+];
+
 export function PrivacySettingsScreen({}: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
-  const [saving, setSaving] = useState<LastSeenPrivacy | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
 
   if (!user) return null;
 
-  const onSelect = async (value: LastSeenPrivacy) => {
+  const onSelectLastSeen = async (value: LastSeenPrivacy) => {
     if (value === user.lastSeenPrivacy || saving) return;
-    setSaving(value);
+    setSaving(`lastSeen:${value}`);
     try {
       await usersApi.updateMe({ lastSeenPrivacy: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectGroupAdd = async (value: GroupAddPrivacy) => {
+    if (value === user.groupAddPrivacy || saving) return;
+    setSaving(`groupAdd:${value}`);
+    try {
+      await usersApi.updateMe({ groupAddPrivacy: value });
       await refreshProfile();
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
@@ -38,15 +57,35 @@ export function PrivacySettingsScreen({}: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Oxirgi marta onlayn bo'lgan vaqtni kim ko'ra oladi</Text>
-      {OPTIONS.map((option) => {
+      {LAST_SEEN_OPTIONS.map((option) => {
         const selected = user.lastSeenPrivacy === option.value;
         return (
-          <TouchableOpacity key={option.value} style={styles.row} onPress={() => onSelect(option.value)} disabled={!!saving}>
+          <TouchableOpacity key={option.value} style={styles.row} onPress={() => onSelectLastSeen(option.value)} disabled={!!saving}>
             <View style={styles.rowText}>
               <Text style={styles.rowLabel}>{option.label}</Text>
               <Text style={styles.rowDescription}>{option.description}</Text>
             </View>
-            {saving === option.value ? (
+            {saving === `lastSeen:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Kim meni guruhlarga qo'sha oladi</Text>
+      {GROUP_ADD_OPTIONS.map((option) => {
+        const selected = user.groupAddPrivacy === option.value;
+        return (
+          <TouchableOpacity key={option.value} style={styles.row} onPress={() => onSelectGroupAdd(option.value)} disabled={!!saving}>
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+              <Text style={styles.rowDescription}>{option.description}</Text>
+            </View>
+            {saving === `groupAdd:${option.value}` ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
               <View style={[styles.radio, selected && styles.radioSelected]}>
@@ -63,6 +102,7 @@ export function PrivacySettingsScreen({}: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
   sectionTitle: { fontSize: 13, color: colors.textSecondary, marginBottom: 12 },
+  sectionSpacer: { marginTop: 12 },
   row: {
     flexDirection: "row",
     alignItems: "center",

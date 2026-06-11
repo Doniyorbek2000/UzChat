@@ -39,6 +39,12 @@ enum LastSeenPrivacy {
   NOBODY
 }
 
+enum GroupAddPrivacy {
+  EVERYONE
+  CONTACTS
+  NOBODY
+}
+
 model User {
   id           String   @id @default(uuid())
   phone        String   @unique
@@ -53,6 +59,8 @@ model User {
   lastSeenAt   DateTime @default(now())
   // Who can see this user's lastSeenAt timestamp.
   lastSeenPrivacy LastSeenPrivacy @default(EVERYONE)
+  // Who can add this user to a group directly (without an invite link).
+  groupAddPrivacy GroupAddPrivacy @default(EVERYONE)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

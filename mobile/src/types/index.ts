@@ -1,4 +1,5 @@
 export type LastSeenPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
+export type GroupAddPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
 
 export interface User {
   id: string;
@@ -13,6 +14,7 @@ export interface User {
 export interface AuthUser extends User {
   phone: string;
   lastSeenPrivacy: LastSeenPrivacy;
+  groupAddPrivacy: GroupAddPrivacy;
 }
 
 export interface AuthTokens {

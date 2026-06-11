@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { ConversationType, ParticipantRole } from "@prisma/client";
+import { ConversationType, GroupAddPrivacy, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { getContactIds, filterLastSeen } from "../../utils/lastSeen";
@@ -45,6 +45,13 @@ export const chatsService = {
     const users = await prisma.user.findMany({ where: { id: { in: participantIds } } });
     if (users.length !== new Set(participantIds).size) {
       throw Errors.badRequest("Ishtirokchilardan biri topilmadi");
+    }
+
+    if (input.type === "GROUP") {
+      await chatsService.assertCanAddToGroup(
+        userId,
+        users.filter((u) => u.id !== userId)
+      );
     }
 
     if (input.type === "DIRECT") {
@@ -357,6 +364,8 @@ export const chatsService = {
     const target = await prisma.user.findUnique({ where: { id: input.userId } });
     if (!target) throw Errors.notFound("Foydalanuvchi");
 
+    await chatsService.assertCanAddToGroup(userId, [target]);
+
     await prisma.conversationParticipant.create({
       data: {
         conversationId,
@@ -377,6 +386,21 @@ export const chatsService = {
     });
     if (!participant) throw Errors.forbidden();
     return participant;
+  },
+
+  /** Throws if `inviterId` is not allowed to add any of `targets` to a group, per their groupAddPrivacy. */
+  async assertCanAddToGroup(inviterId: string, targets: { id: string; displayName: string; groupAddPrivacy: GroupAddPrivacy }[]) {
+    if (targets.length === 0) return;
+
+    const contactIds = await getContactIds(inviterId);
+    for (const target of targets) {
+      if (target.groupAddPrivacy === GroupAddPrivacy.NOBODY) {
+        throw Errors.forbidden(`${target.displayName} foydalanuvchisini guruhga qo'shib bo'lmaydi`);
+      }
+      if (target.groupAddPrivacy === GroupAddPrivacy.CONTACTS && !contactIds.has(target.id)) {
+        throw Errors.forbidden(`${target.displayName} foydalanuvchisini faqat uning kontaktlari guruhga qo'sha oladi`);
+      }
+    }
   },
 
   async updateConversation(userId: string, conversationId: string, input: UpdateConversationInput) {

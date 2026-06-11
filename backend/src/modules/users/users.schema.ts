@@ -6,6 +6,7 @@ export const updateProfileSchema = z.object({
   bio: z.string().max(256).optional(),
   avatarUrl: z.string().url().optional(),
   lastSeenPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
+  groupAddPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
 });
 
 export const searchUsersSchema = z.object({
