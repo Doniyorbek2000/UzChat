@@ -105,6 +105,24 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   }
 }
 
+async function notifyReaction(reactorId: string, conversationId: string, message: Message, emoji: string) {
+  if (isUserOnline(message.senderId) || message.senderId === reactorId) return;
+
+  const participant = await prisma.conversationParticipant.findUnique({
+    where: { conversationId_userId: { conversationId, userId: message.senderId } },
+  });
+  if (!participant || isParticipantMuted(participant)) return;
+
+  const reactor = await prisma.user.findUnique({ where: { id: reactorId }, select: { displayName: true } });
+  if (!reactor) return;
+
+  await pushService.sendToUsers([message.senderId], {
+    title: reactor.displayName,
+    body: `${emoji} bilan reaksiya bildirdi`,
+    data: { conversationId, messageId: message.id, type: "reaction" },
+  });
+}
+
 export const messagesService = {
   async sendMessage(userId: string, conversationId: string, input: SendMessageInput) {
     const participant = await chatsService.assertParticipant(userId, conversationId);
@@ -363,6 +381,7 @@ export const messagesService = {
         create: { messageId, userId, emoji },
         update: { emoji },
       });
+      notifyReaction(userId, conversationId, message, emoji).catch(() => {});
     }
 
     return prisma.messageReaction.findMany({ where: { messageId }, ...reactionSelect });
