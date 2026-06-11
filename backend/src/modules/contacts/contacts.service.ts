@@ -2,6 +2,7 @@ import { ContactStatus } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { filterLastSeen, filterLastSeenSingle, getContactIds } from "../../utils/lastSeen";
+import { UpdateContactInput } from "./contacts.schema";
 
 const userSummarySelect = {
   id: true,
@@ -74,10 +75,15 @@ export const contactsService = {
     const contacts = await prisma.contact.findMany({
       where: { ownerId: userId, status: ContactStatus.ACCEPTED },
       include: { target: { select: userSummarySelect } },
-      orderBy: { target: { displayName: "asc" } },
+      orderBy: [{ isFavorite: "desc" }, { target: { displayName: "asc" } }],
     });
     const contactIds = await getContactIds(userId);
-    return contacts.map((c) => ({ id: c.id, alias: c.alias, user: filterLastSeen(userId, c.target, contactIds) }));
+    return contacts.map((c) => ({
+      id: c.id,
+      alias: c.alias,
+      isFavorite: c.isFavorite,
+      user: filterLastSeen(userId, c.target, contactIds),
+    }));
   },
 
   async removeContact(userId: string, contactId: string) {
@@ -86,12 +92,12 @@ export const contactsService = {
     await prisma.contact.delete({ where: { id: contactId } });
   },
 
-  async updateAlias(userId: string, contactId: string, alias: string | null) {
+  async updateContact(userId: string, contactId: string, data: UpdateContactInput) {
     const contact = await prisma.contact.findUnique({ where: { id: contactId } });
     if (!contact || contact.ownerId !== userId) throw Errors.notFound("Kontakt");
 
-    const updated = await prisma.contact.update({ where: { id: contactId }, data: { alias } });
-    return { id: updated.id, alias: updated.alias };
+    const updated = await prisma.contact.update({ where: { id: contactId }, data });
+    return { id: updated.id, alias: updated.alias, isFavorite: updated.isFavorite };
   },
 
   async blockUser(ownerId: string, targetUserId: string) {

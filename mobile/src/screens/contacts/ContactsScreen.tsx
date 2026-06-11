@@ -63,8 +63,21 @@ export function ContactsScreen({ navigation }: Props) {
     load();
   };
 
+  const onToggleFavorite = async (item: Contact) => {
+    try {
+      await contactsApi.setFavorite(item.id, !item.isFavorite);
+      load();
+    } catch {
+      Alert.alert("Xatolik", "O'zgartirib bo'lmadi");
+    }
+  };
+
   const onLongPressContact = (item: Contact) => {
     Alert.alert(item.alias ?? item.user.displayName, undefined, [
+      {
+        text: item.isFavorite ? "⭐ Sevimlilardan olib tashlash" : "⭐ Sevimlilarga qo'shish",
+        onPress: () => onToggleFavorite(item),
+      },
       {
         text: "✏️ Taxallus qo'yish",
         onPress: () => {
@@ -173,6 +186,7 @@ export function ContactsScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.row} onLongPress={() => onLongPressContact(item)}>
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
             <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
+            {item.isFavorite && <Text style={styles.favoriteStar}>⭐</Text>}
           </TouchableOpacity>
         )}
         ListEmptyComponent={
@@ -237,6 +251,7 @@ const styles = StyleSheet.create({
   addText: { fontSize: 16, fontWeight: "500", color: colors.text },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   name: { fontSize: 16, color: colors.text, flex: 1 },
+  favoriteStar: { fontSize: 14 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   searchBar: {
     flexDirection: "row",

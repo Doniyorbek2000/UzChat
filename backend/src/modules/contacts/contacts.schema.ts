@@ -10,7 +10,9 @@ export const updateContactSchema = z.object({
     .trim()
     .max(64, "Taxallus juda uzun")
     .nullable()
-    .transform((v) => (v ? v : null)),
+    .transform((v) => (v ? v : null))
+    .optional(),
+  isFavorite: z.boolean().optional(),
 });
 
 export type AddContactInput = z.infer<typeof addContactSchema>;

@@ -56,9 +56,9 @@ export const contactsController = {
     }
   },
 
-  async updateAlias(req: Request, res: Response, next: NextFunction) {
+  async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await contactsService.updateAlias(req.user!.sub, req.params.contactId, req.body.alias);
+      const result = await contactsService.updateContact(req.user!.sub, req.params.contactId, req.body);
       res.json(result);
     } catch (err) {
       next(err);

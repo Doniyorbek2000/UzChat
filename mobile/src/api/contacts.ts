@@ -30,6 +30,12 @@ export const contactsApi = {
     return apiClient.patch<{ id: string; alias: string | null }>(`/contacts/${contactId}`, { alias }).then((r) => r.data);
   },
 
+  setFavorite(contactId: string, isFavorite: boolean) {
+    return apiClient
+      .patch<{ id: string; isFavorite: boolean }>(`/contacts/${contactId}`, { isFavorite })
+      .then((r) => r.data);
+  },
+
   block(userId: string) {
     return apiClient.post(`/contacts/blocked/${userId}`);
   },

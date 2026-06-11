@@ -16,5 +16,5 @@ contactsRouter.post("/requests/:requestId/decline", contactsController.decline);
 contactsRouter.get("/blocked", contactsController.listBlocked);
 contactsRouter.post("/blocked/:userId", contactsController.block);
 contactsRouter.delete("/blocked/:userId", contactsController.unblock);
-contactsRouter.patch("/:contactId", validateBody(updateContactSchema), contactsController.updateAlias);
+contactsRouter.patch("/:contactId", validateBody(updateContactSchema), contactsController.update);
 contactsRouter.delete("/:contactId", contactsController.remove);

@@ -137,6 +137,7 @@ export interface Conversation {
 export interface Contact {
   id: string;
   alias: string | null;
+  isFavorite: boolean;
   user: User;
 }
 
