@@ -3,6 +3,7 @@ import {
   View,
   Text,
   FlatList,
+  ScrollView,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -37,6 +38,7 @@ import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { ContactCardBubble } from "../../components/ContactCardBubble";
+import { Avatar } from "../../components/Avatar";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
@@ -206,6 +208,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [replyingTo, setReplyingTo] = useState<DecryptedMessage | null>(null);
   const [editingMessage, setEditingMessage] = useState<DecryptedMessage | null>(null);
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
+  const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
@@ -1162,6 +1165,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </Text>
             </TouchableOpacity>
           )}
+          {actionMessage && isGroup && actionMessage.senderId === user?.id && !actionMessage.deletedAt && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                setSeenByMessage(message);
+              }}
+            >
+              <Text style={styles.actionButtonText}>👁 Kim ko'rdi</Text>
+            </TouchableOpacity>
+          )}
           {actionMessage && !actionMessage.decryptFailed && (
             <TouchableOpacity
               style={styles.actionButton}
@@ -1201,6 +1216,46 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           <TouchableOpacity style={styles.actionButton} onPress={() => setActionMessage(null)}>
             <Text style={styles.actionButtonText}>Bekor qilish</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    <Modal visible={!!seenByMessage} transparent animationType="fade" onRequestClose={() => setSeenByMessage(null)}>
+      <Pressable style={styles.actionBackdrop} onPress={() => setSeenByMessage(null)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Kim ko'rdi</Text>
+          <ScrollView style={styles.seenByList}>
+            {seenByMessage &&
+              (() => {
+                const others = conversation?.participants.filter((p) => p.userId !== user?.id) ?? [];
+                const read = others.filter((p) => isMessageRead(seenByMessage, p));
+                const unread = others.filter((p) => !isMessageRead(seenByMessage, p));
+                return (
+                  <>
+                    {read.length > 0 && (
+                      <Text style={styles.seenBySectionLabel}>Ko'rgan ({read.length})</Text>
+                    )}
+                    {read.map((p) => (
+                      <View key={p.userId} style={styles.seenByRow}>
+                        <Avatar uri={p.user.avatarUrl} name={contactAliases[p.userId] ?? p.user.displayName} size={36} />
+                        <Text style={styles.seenByName}>{contactAliases[p.userId] ?? p.user.displayName}</Text>
+                      </View>
+                    ))}
+                    {unread.length > 0 && (
+                      <Text style={styles.seenBySectionLabel}>Hali ko'rmagan ({unread.length})</Text>
+                    )}
+                    {unread.map((p) => (
+                      <View key={p.userId} style={styles.seenByRow}>
+                        <Avatar uri={p.user.avatarUrl} name={contactAliases[p.userId] ?? p.user.displayName} size={36} />
+                        <Text style={styles.seenByName}>{contactAliases[p.userId] ?? p.user.displayName}</Text>
+                      </View>
+                    ))}
+                  </>
+                );
+              })()}
+          </ScrollView>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setSeenByMessage(null)}>
+            <Text style={styles.actionButtonText}>Yopish</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -1371,6 +1426,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
   },
   mentionPickerTitle: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 8 },
+  seenByList: { maxHeight: 320 },
+  seenBySectionLabel: { fontSize: 13, fontWeight: "600", color: colors.textSecondary, marginTop: 12, marginBottom: 6 },
+  seenByRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 6 },
+  seenByName: { fontSize: 15, color: colors.text },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
   messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
   messageTime: { fontSize: 10, color: colors.textSecondary },
