@@ -30,6 +30,7 @@ const MEDIA_LABELS: Partial<Record<Message["type"], string>> = {
   VIDEO: "🎬 Video",
   AUDIO: "🎵 Ovozli xabar",
   FILE: "📄 Fayl",
+  CONTACT: "👤 Kontakt",
 };
 
 function messageInclude(userId: string) {

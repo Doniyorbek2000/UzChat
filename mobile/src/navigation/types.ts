@@ -29,6 +29,7 @@ export type RootStackParamList = {
   AddGroupMember: { conversationId: string };
   JoinGroup: undefined;
   ForwardMessage: { conversationId: string; messageId: string };
+  ShareContact: { conversationId: string };
   SharedMedia: { conversationId: string };
   StarredMessages: undefined;
   ArchivedChats: undefined;

@@ -19,6 +19,7 @@ const MEDIA_LABELS: Partial<Record<MessageType, string>> = {
   VIDEO: "🎬 Video",
   AUDIO: "🎵 Ovozli xabar",
   FILE: "📄 Fayl",
+  CONTACT: "👤 Kontakt",
 };
 
 export function StarredMessagesScreen({ navigation }: Props) {

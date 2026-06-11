@@ -34,6 +34,7 @@ import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
+import { ContactCardBubble } from "../../components/ContactCardBubble";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
@@ -50,6 +51,7 @@ const REPLY_TYPE_LABELS: Partial<Record<MessageType, string>> = {
   VIDEO: "🎬 Video",
   AUDIO: "🎵 Ovozli xabar",
   FILE: "📄 Fayl",
+  CONTACT: "👤 Kontakt",
 };
 
 function getPreviewLabel(item: { type: MessageType; text: string | null; deletedAt: string | null }) {
@@ -559,6 +561,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     Alert.alert("Yuborish", "Nimani yubormoqchisiz?", [
       { text: "🖼 Rasm", onPress: pickImage },
       { text: "📄 Fayl", onPress: pickFile },
+      { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
       { text: "Bekor qilish", style: "cancel" },
     ]);
   };
@@ -646,6 +649,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       content = <MediaAudioBubble message={item} conversationKey={conversationKey} />;
     } else if ((item.type === "FILE" || item.type === "VIDEO") && conversationKey) {
       content = <MediaFileBubble message={item} conversationKey={conversationKey} />;
+    } else if (item.type === "CONTACT") {
+      content = <ContactCardBubble message={item} navigation={navigation} />;
     } else {
       content = renderMessageText(item.text ?? "", conversation?.participants ?? []);
     }

@@ -17,6 +17,7 @@ import { draftStorage } from "../storage/draftStorage";
 import { isConversationUnread } from "../utils/conversation";
 import {
   Conversation,
+  ContactCardMeta,
   Message,
   MediaAsset,
   MediaMeta,
@@ -31,6 +32,8 @@ import {
 export interface DecryptedMessage extends Message {
   text: string | null;
   meta: MediaMeta | null;
+  // for CONTACT messages: the shared contact's profile info
+  contactMeta: ContactCardMeta | null;
   decryptFailed: boolean;
   replyPreview?: ReplyPreview | null;
 }
@@ -65,6 +68,7 @@ interface ChatState {
   loadOlderMessages: (conversationId: string) => Promise<void>;
   sendTextMessage: (conversationId: string, text: string, replyToId?: string, mentions?: string[]) => Promise<void>;
   sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
+  sendContactMessage: (conversationId: string, contact: User, replyToId?: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   editMessage: (conversationId: string, messageId: string, text: string, mentions?: string[]) => Promise<void>;
   toggleReaction: (conversationId: string, messageId: string, emoji: string) => Promise<void>;
@@ -117,6 +121,10 @@ export function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSna
 
   try {
     const plaintext = decryptMessage(replyTo.ciphertext, replyTo.nonce, conversationKey);
+    if (replyTo.type === "CONTACT") {
+      const meta = JSON.parse(plaintext) as ContactCardMeta;
+      return { ...base, text: meta.displayName };
+    }
     if (MEDIA_TYPES.includes(replyTo.type)) {
       const meta = JSON.parse(plaintext) as MediaMeta;
       return { ...base, text: meta.caption ?? null };
@@ -131,26 +139,35 @@ export function decryptToMessage(conversationKey: string, message: Message): Dec
   const replyPreview = message.replyTo ? decryptReplyPreview(conversationKey, message.replyTo) : null;
 
   if (message.deletedAt) {
-    return { ...message, text: null, meta: null, decryptFailed: false, replyPreview };
+    return { ...message, text: null, meta: null, contactMeta: null, decryptFailed: false, replyPreview };
   }
 
   let plaintext: string;
   try {
     plaintext = decryptMessage(message.ciphertext, message.nonce, conversationKey);
   } catch {
-    return { ...message, text: null, meta: null, decryptFailed: true, replyPreview };
+    return { ...message, text: null, meta: null, contactMeta: null, decryptFailed: true, replyPreview };
+  }
+
+  if (message.type === "CONTACT") {
+    try {
+      const contactMeta = JSON.parse(plaintext) as ContactCardMeta;
+      return { ...message, text: contactMeta.displayName, meta: null, contactMeta, decryptFailed: false, replyPreview };
+    } catch {
+      return { ...message, text: null, meta: null, contactMeta: null, decryptFailed: true, replyPreview };
+    }
   }
 
   if (MEDIA_TYPES.includes(message.type)) {
     try {
       const meta = JSON.parse(plaintext) as MediaMeta;
-      return { ...message, text: meta.caption ?? null, meta, decryptFailed: false, replyPreview };
+      return { ...message, text: meta.caption ?? null, meta, contactMeta: null, decryptFailed: false, replyPreview };
     } catch {
-      return { ...message, text: null, meta: null, decryptFailed: true, replyPreview };
+      return { ...message, text: null, meta: null, contactMeta: null, decryptFailed: true, replyPreview };
     }
   }
 
-  return { ...message, text: plaintext, meta: null, decryptFailed: false, replyPreview };
+  return { ...message, text: plaintext, meta: null, contactMeta: null, decryptFailed: false, replyPreview };
 }
 
 function upsertConversation(conversations: Conversation[], conversation: Conversation): Conversation[] {
@@ -312,6 +329,35 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
+  sendContactMessage: async (conversationId, contact, replyToId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) throw new Error("Suhbat topilmadi");
+
+    const key = get().getConversationKey(conversation);
+    const meta: ContactCardMeta = {
+      userId: contact.id,
+      username: contact.username,
+      displayName: contact.displayName,
+      avatarUrl: contact.avatarUrl,
+    };
+    const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), key);
+
+    const message = await chatsApi.sendMessage(conversationId, { type: "CONTACT", ciphertext, nonce, replyToId });
+    const decrypted = decryptToMessage(key, message);
+
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      if (existing.some((m) => m.id === decrypted.id)) return state;
+      return {
+        messagesByConversation: { ...state.messagesByConversation, [conversationId]: [...existing, decrypted] },
+        conversations: upsertConversation(
+          state.conversations,
+          { ...conversation, lastMessage: message, updatedAt: message.createdAt }
+        ),
+      };
+    });
+  },
+
   deleteMessage: async (conversationId, messageId) => {
     const updated = await chatsApi.deleteMessage(conversationId, messageId);
     set((state) => {
@@ -319,7 +365,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       return {
         messagesByConversation: {
           ...state.messagesByConversation,
-          [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, ...updated, text: null, meta: null, decryptFailed: false } : m)),
+          [conversationId]: existing.map((m) =>
+            m.id === messageId ? { ...m, ...updated, text: null, meta: null, contactMeta: null, decryptFailed: false } : m
+          ),
         },
       };
     });
@@ -410,6 +458,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         mediaUrl: url,
         forwardedFromName,
       });
+    } else if (message.type === "CONTACT" && message.contactMeta) {
+      const { ciphertext, nonce } = encryptMessage(JSON.stringify(message.contactMeta), targetKey);
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "CONTACT", ciphertext, nonce, forwardedFromName });
     } else {
       const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
       sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce, forwardedFromName });
@@ -732,7 +783,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           messagesByConversation: {
             ...state.messagesByConversation,
             [message.conversationId]: existing.map((m) =>
-              m.id === message.id ? { ...m, ...message, text: null, meta: null, decryptFailed: false } : m
+              m.id === message.id ? { ...m, ...message, text: null, meta: null, contactMeta: null, decryptFailed: false } : m
             ),
           },
         };

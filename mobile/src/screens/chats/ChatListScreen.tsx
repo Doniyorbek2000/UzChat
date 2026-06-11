@@ -18,6 +18,7 @@ const MEDIA_LABELS: Record<string, string> = {
   VIDEO: "🎬 Video",
   AUDIO: "🎵 Ovozli xabar",
   FILE: "📄 Fayl",
+  CONTACT: "👤 Kontakt",
 };
 
 export function ChatListScreen({ navigation }: Props) {

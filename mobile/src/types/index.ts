@@ -27,7 +27,7 @@ export interface AuthTokens {
 
 export type ConversationType = "DIRECT" | "GROUP";
 export type ParticipantRole = "OWNER" | "ADMIN" | "MEMBER";
-export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "SYSTEM";
+export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "CONTACT" | "SYSTEM";
 
 export interface ConversationParticipant {
   userId: string;
@@ -149,4 +149,12 @@ export interface MediaAsset {
   width?: number;
   height?: number;
   duration?: number;
+}
+
+/** Encrypted alongside the message ciphertext for CONTACT messages: a shared contact card. */
+export interface ContactCardMeta {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
 }

@@ -13,6 +13,7 @@ import { GroupInfoScreen } from "../screens/chats/GroupInfoScreen";
 import { AddGroupMemberScreen } from "../screens/chats/AddGroupMemberScreen";
 import { JoinGroupScreen } from "../screens/chats/JoinGroupScreen";
 import { ForwardMessageScreen } from "../screens/chats/ForwardMessageScreen";
+import { ShareContactScreen } from "../screens/chats/ShareContactScreen";
 import { SharedMediaScreen } from "../screens/chats/SharedMediaScreen";
 import { StarredMessagesScreen } from "../screens/chats/StarredMessagesScreen";
 import { ArchivedChatsScreen } from "../screens/chats/ArchivedChatsScreen";
@@ -108,6 +109,7 @@ export function RootNavigator() {
             <Stack.Screen name="AddGroupMember" component={AddGroupMemberScreen} options={{ title: "A'zo qo'shish" }} />
             <Stack.Screen name="JoinGroup" component={JoinGroupScreen} options={{ title: "Havola orqali qo'shilish" }} />
             <Stack.Screen name="ForwardMessage" component={ForwardMessageScreen} options={{ title: "Yo'naltirish" }} />
+            <Stack.Screen name="ShareContact" component={ShareContactScreen} options={{ title: "Kontakt yuborish" }} />
             <Stack.Screen name="SharedMedia" component={SharedMediaScreen} options={{ title: "Umumiy media" }} />
             <Stack.Screen name="StarredMessages" component={StarredMessagesScreen} options={{ title: "Saqlangan xabarlar" }} />
             <Stack.Screen name="ArchivedChats" component={ArchivedChatsScreen} options={{ title: "Arxivlangan suhbatlar" }} />
