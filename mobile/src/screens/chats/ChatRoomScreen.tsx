@@ -570,6 +570,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const isGroup = conversation?.type === "GROUP";
+  const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
+  const canSend = !isGroup || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
 
   const renderItem = ({ item }: { item: DecryptedMessage }) => {
     const isOwn = item.senderId === user?.id;
@@ -741,6 +743,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <TouchableOpacity onPress={onToggleBlock}>
             <Text style={styles.blockedAction}>Blokdan chiqarish</Text>
           </TouchableOpacity>
+        </View>
+      ) : !canSend ? (
+        <View style={styles.blockedBar}>
+          <Text style={styles.blockedText}>🔇 Faqat guruh egasi va adminlar xabar yubora oladi</Text>
         </View>
       ) : recording ? (
         <View style={styles.recordingRow}>

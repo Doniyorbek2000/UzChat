@@ -122,6 +122,7 @@ export const chatsService = {
         isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
         inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
         disappearingSeconds: p.conversation.disappearingSeconds,
+        onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
         pinnedMessage: p.conversation.pinnedMessage,
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
@@ -175,6 +176,7 @@ export const chatsService = {
       isBlocked,
       inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
       disappearingSeconds: participant.conversation.disappearingSeconds,
+      onlyAdminsCanSend: participant.conversation.onlyAdminsCanSend,
       pinnedMessage: participant.conversation.pinnedMessage,
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
@@ -391,6 +393,7 @@ export const chatsService = {
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
         ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.onlyAdminsCanSend !== undefined ? { onlyAdminsCanSend: input.onlyAdminsCanSend } : {}),
       },
     });
 

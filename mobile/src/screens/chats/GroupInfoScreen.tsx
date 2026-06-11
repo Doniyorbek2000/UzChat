@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, Share } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  Share,
+  Switch,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -111,6 +122,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         { text: "Bekor qilish", style: "cancel" as const },
       ]
     );
+  };
+
+  const onToggleOnlyAdminsCanSend = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { onlyAdminsCanSend: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
   };
 
   const onChangeAvatar = async () => {
@@ -296,6 +315,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteText}>O'chiriladigan xabarlar</Text>
             <Text style={styles.inviteValue}>{formatDisappearingDuration(conversation.disappearingSeconds)}</Text>
           </TouchableOpacity>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>🔇</Text>
+            <Text style={styles.inviteText}>Faqat adminlar yoza oladi</Text>
+            <Switch value={conversation.onlyAdminsCanSend} onValueChange={onToggleOnlyAdminsCanSend} />
+          </View>
         </View>
       )}
 

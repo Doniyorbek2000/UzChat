@@ -36,9 +36,14 @@ export const updateConversationSchema = z
     title: z.string().min(1).max(64).optional(),
     avatarUrl: z.string().url().optional(),
     description: z.string().max(500).nullable().optional(),
+    onlyAdminsCanSend: z.boolean().optional(),
   })
   .refine(
-    (data) => data.title !== undefined || data.avatarUrl !== undefined || data.description !== undefined,
+    (data) =>
+      data.title !== undefined ||
+      data.avatarUrl !== undefined ||
+      data.description !== undefined ||
+      data.onlyAdminsCanSend !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

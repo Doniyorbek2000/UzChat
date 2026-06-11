@@ -82,6 +82,8 @@ export interface Conversation {
   inviteCode: string | null;
   // New messages auto-delete this many seconds after being sent; null disables it.
   disappearingSeconds: number | null;
+  // GROUP only: when true, only the owner and admins may send messages.
+  onlyAdminsCanSend: boolean;
   pinnedMessage: ReplyToSnapshot | null;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;

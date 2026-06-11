@@ -86,7 +86,7 @@ interface ChatState {
   addParticipant: (conversationId: string, target: User) => Promise<void>;
   updateGroupInfo: (
     conversationId: string,
-    input: { title?: string; avatarUrl?: string; description?: string | null }
+    input: { title?: string; avatarUrl?: string; description?: string | null; onlyAdminsCanSend?: boolean }
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;
   updateParticipantRole: (conversationId: string, userId: string, role: ParticipantRole) => Promise<void>;

@@ -37,7 +37,10 @@ export const chatsApi = {
     return apiClient.post<Conversation>(`/conversations/${conversationId}/participants`, input).then((r) => r.data);
   },
 
-  update(conversationId: string, input: { title?: string; avatarUrl?: string; description?: string | null }) {
+  update(
+    conversationId: string,
+    input: { title?: string; avatarUrl?: string; description?: string | null; onlyAdminsCanSend?: boolean }
+  ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);
   },
 

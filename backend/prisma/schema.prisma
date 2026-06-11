@@ -133,6 +133,9 @@ model Conversation {
   // New messages auto-delete this many seconds after being sent; null disables it.
   disappearingSeconds Int?
 
+  // GROUP only: when true, only the owner and admins may send messages.
+  onlyAdminsCanSend Boolean @default(false)
+
   participants ConversationParticipant[]
   messages     Message[]
 }

@@ -96,7 +96,7 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
 
 export const messagesService = {
   async sendMessage(userId: string, conversationId: string, input: SendMessageInput) {
-    await chatsService.assertParticipant(userId, conversationId);
+    const participant = await chatsService.assertParticipant(userId, conversationId);
 
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
@@ -107,6 +107,14 @@ export const messagesService = {
       if (other && (await contactsService.isBlockedEitherWay(userId, other.userId))) {
         throw Errors.blocked();
       }
+    }
+
+    if (
+      conversation?.type === ConversationType.GROUP &&
+      conversation.onlyAdminsCanSend &&
+      participant.role === "MEMBER"
+    ) {
+      throw Errors.forbidden("Faqat guruh egasi va adminlar xabar yubora oladi");
     }
 
     if (input.replyToId) {
