@@ -2,6 +2,8 @@ export type LastSeenPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
 export type GroupAddPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
 // "1h"/"8h"/"1d"/"1w": mute for that duration; "forever": mute indefinitely; "off": unmute.
 export type MuteDuration = "1h" | "8h" | "1d" | "1w" | "forever" | "off";
+// "1h"/"1d"/"1w": restrict for that duration; "forever": restrict indefinitely; "off": lift restriction.
+export type RestrictDuration = "1h" | "1d" | "1w" | "forever" | "off";
 
 export interface User {
   id: string;
@@ -38,6 +40,7 @@ export interface ConversationParticipant {
   role: ParticipantRole;
   user: User;
   lastReadAt: string | null;
+  restrictedUntil: string | null;
 }
 
 export interface MessageReaction {

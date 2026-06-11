@@ -9,6 +9,7 @@ import {
   CreateConversationInput,
   JoinByInviteInput,
   UpdateConversationInput,
+  UpdateParticipantRestrictionInput,
   UpdatePreferencesInput,
 } from "./chats.schema";
 
@@ -30,6 +31,17 @@ const MUTE_DURATIONS_MS: Record<"1h" | "8h" | "1d" | "1w", number> = {
   "1d": 24 * 60 * 60 * 1000,
   "1w": 7 * 24 * 60 * 60 * 1000,
 };
+
+const RESTRICTION_DURATIONS_MS: Record<"1h" | "1d" | "1w", number> = {
+  "1h": 60 * 60 * 1000,
+  "1d": 24 * 60 * 60 * 1000,
+  "1w": 7 * 24 * 60 * 60 * 1000,
+};
+
+// Sentinel for an indefinite ("Doimiy") restriction. Uses a 4-digit year
+// (rather than the JS Date max) since Prisma's Postgres driver can't encode
+// dates with a 5+ digit (`+`-prefixed) year.
+const FAR_FUTURE = new Date("9999-12-31T23:59:59.999Z");
 
 /** A conversation is muted if muted indefinitely, or muted until a time still in the future. */
 function isParticipantMuted(p: { isMuted: boolean; mutedUntil: Date | null }): boolean {
@@ -181,6 +193,7 @@ export const chatsService = {
           role: cp.role,
           user: omitPrivacyFlags(filterLastSeen(userId, cp.user, contactIds)),
           lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
+          restrictedUntil: cp.restrictedUntil,
         })),
         lastMessage:
           p.clearedAt && p.conversation.messages[0] && p.conversation.messages[0].createdAt <= p.clearedAt
@@ -244,6 +257,7 @@ export const chatsService = {
         role: cp.role,
         user: omitPrivacyFlags(filterLastSeen(userId, cp.user, contactIds)),
         lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
+        restrictedUntil: cp.restrictedUntil,
       })),
     };
   },
@@ -574,6 +588,31 @@ export const chatsService = {
     } else {
       await prisma.conversationParticipant.update({ where: { id: target.id }, data: { role } });
     }
+
+    return chatsService.getConversation(userId, conversationId);
+  },
+
+  async updateParticipantRestriction(
+    userId: string,
+    conversationId: string,
+    targetUserId: string,
+    restrictFor: UpdateParticipantRestrictionInput["restrictFor"]
+  ) {
+    const conversation = await chatsService.assertGroupManager(userId, conversationId);
+
+    const target = conversation.participants.find((p) => p.userId === targetUserId);
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+    if (target.role !== ParticipantRole.MEMBER) {
+      throw Errors.badRequest("Admin va guruh egasini cheklab bo'lmaydi");
+    }
+
+    const restrictedUntil =
+      restrictFor === "off" ? null : restrictFor === "forever" ? FAR_FUTURE : new Date(Date.now() + RESTRICTION_DURATIONS_MS[restrictFor]);
+
+    await prisma.conversationParticipant.update({
+      where: { id: target.id },
+      data: { restrictedUntil },
+    });
 
     return chatsService.getConversation(userId, conversationId);
   },

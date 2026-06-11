@@ -22,6 +22,7 @@ import { uploadPlainFile } from "../../utils/mediaFile";
 import { encodeInviteLink } from "../../crypto/e2ee";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SLOW_MODE_OPTIONS, formatSlowModeDuration } from "../../utils/slowMode";
+import { isParticipantRestricted } from "../../utils/restriction";
 import { ConversationParticipant, ParticipantRole } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
@@ -40,6 +41,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const updateGroupInfo = useChatStore((s) => s.updateGroupInfo);
   const removeParticipant = useChatStore((s) => s.removeParticipant);
   const updateParticipantRole = useChatStore((s) => s.updateParticipantRole);
+  const restrictParticipant = useChatStore((s) => s.restrictParticipant);
   const leaveGroup = useChatStore((s) => s.leaveGroup);
   const clearHistory = useChatStore((s) => s.clearHistory);
   const createInviteLink = useChatStore((s) => s.createInviteLink);
@@ -217,6 +219,56 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       });
     }
 
+    if (participant.role === "MEMBER") {
+      if (isParticipantRestricted(participant)) {
+        options.push({
+          text: "Cheklovni bekor qilish",
+          onPress: () =>
+            restrictParticipant(conversationId, participant.userId, "off").catch(() => {
+              Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+            }),
+        });
+      } else {
+        options.push({
+          text: "Xabar yozishni cheklash",
+          onPress: () => {
+            const participantName = contactAliases[participant.userId] ?? participant.user.displayName;
+            Alert.alert(`${participantName}ni cheklash`, "Qancha vaqt davomida xabar yoza olmasin?", [
+              {
+                text: "1 soatga",
+                onPress: () =>
+                  restrictParticipant(conversationId, participant.userId, "1h").catch(() => {
+                    Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                  }),
+              },
+              {
+                text: "1 kunga",
+                onPress: () =>
+                  restrictParticipant(conversationId, participant.userId, "1d").catch(() => {
+                    Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                  }),
+              },
+              {
+                text: "1 haftaga",
+                onPress: () =>
+                  restrictParticipant(conversationId, participant.userId, "1w").catch(() => {
+                    Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                  }),
+              },
+              {
+                text: "Doimiy",
+                onPress: () =>
+                  restrictParticipant(conversationId, participant.userId, "forever").catch(() => {
+                    Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                  }),
+              },
+              { text: "Bekor qilish", style: "cancel" },
+            ]);
+          },
+        });
+      }
+    }
+
     if (isOwner || participant.role === "MEMBER") {
       options.push({
         text: "Guruhdan chiqarish",
@@ -372,6 +424,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
               {item.userId === user?.id ? " (Siz)" : ""}
             </Text>
             {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{ROLE_LABELS[item.role]}</Text>}
+            {isParticipantRestricted(item) && <Text style={styles.restrictedBadge}>🔇</Text>}
           </TouchableOpacity>
         )}
       />
@@ -431,6 +484,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   name: { fontSize: 16, color: colors.text, flex: 1 },
   roleBadge: { fontSize: 12, color: colors.primary, fontWeight: "600" },
+  restrictedBadge: { fontSize: 14, marginLeft: 8 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   clearButton: { paddingVertical: 16, alignItems: "center" },
   clearButtonText: { color: colors.text, fontSize: 16, fontWeight: "600" },

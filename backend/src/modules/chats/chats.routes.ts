@@ -9,6 +9,7 @@ import {
   setPinnedMessageSchema,
   updateConversationSchema,
   updateDisappearingMessagesSchema,
+  updateParticipantRestrictionSchema,
   updateParticipantRoleSchema,
   updatePreferencesSchema,
 } from "./chats.schema";
@@ -42,6 +43,11 @@ chatsRouter.patch(
   "/:id/participants/:userId/role",
   validateBody(updateParticipantRoleSchema),
   chatsController.updateParticipantRole
+);
+chatsRouter.patch(
+  "/:id/participants/:userId/restrict",
+  validateBody(updateParticipantRestrictionSchema),
+  chatsController.updateParticipantRestriction
 );
 
 chatsRouter.get("/starred/messages", messagesController.listStarred);

@@ -28,6 +28,7 @@ import {
   MuteDuration,
   ParticipantRole,
   ReplyToSnapshot,
+  RestrictDuration,
   User,
 } from "../types";
 
@@ -112,6 +113,7 @@ interface ChatState {
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;
   updateParticipantRole: (conversationId: string, userId: string, role: ParticipantRole) => Promise<void>;
+  restrictParticipant: (conversationId: string, userId: string, restrictFor: RestrictDuration) => Promise<void>;
   leaveGroup: (conversationId: string) => Promise<void>;
   createInviteLink: (conversationId: string) => Promise<string>;
   revokeInviteLink: (conversationId: string) => Promise<void>;
@@ -761,6 +763,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   updateParticipantRole: async (conversationId, userId, role) => {
     const updated = await chatsApi.updateParticipantRole(conversationId, userId, role);
+    set((state) => {
+      const existing = state.conversations.find((c) => c.id === conversationId);
+      const merged = existing
+        ? {
+            ...updated,
+            wrappedKey: existing.wrappedKey,
+            wrappedKeyNonce: existing.wrappedKeyNonce,
+            keySenderPublicKey: existing.keySenderPublicKey,
+          }
+        : updated;
+      return { conversations: upsertConversation(state.conversations, merged) };
+    });
+  },
+
+  restrictParticipant: async (conversationId, userId, restrictFor) => {
+    const updated = await chatsApi.restrictParticipant(conversationId, userId, restrictFor);
     set((state) => {
       const existing = state.conversations.find((c) => c.id === conversationId);
       const merged = existing

@@ -200,6 +200,9 @@ model ConversationParticipant {
   markedUnread Boolean   @default(false)
   // Messages created at or before this time are hidden from this user only.
   clearedAt    DateTime?
+  // GROUP only: when set and in the future, this MEMBER cannot send messages
+  // until this time (admin-imposed restriction).
+  restrictedUntil DateTime?
 
   @@unique([conversationId, userId])
   @@index([userId])

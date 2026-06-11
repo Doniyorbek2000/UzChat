@@ -120,6 +120,15 @@ export const messagesService = {
 
     if (
       conversation?.type === ConversationType.GROUP &&
+      participant.role === "MEMBER" &&
+      participant.restrictedUntil !== null &&
+      participant.restrictedUntil.getTime() > Date.now()
+    ) {
+      throw Errors.forbidden("Siz vaqtincha xabar yubora olmaysiz: admin sizni cheklagan");
+    }
+
+    if (
+      conversation?.type === ConversationType.GROUP &&
       conversation.slowModeSeconds > 0 &&
       participant.role === "MEMBER"
     ) {

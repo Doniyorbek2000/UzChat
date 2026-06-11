@@ -66,6 +66,11 @@ export const updateParticipantRoleSchema = z.object({
   role: z.enum(["OWNER", "ADMIN", "MEMBER"]),
 });
 
+export const updateParticipantRestrictionSchema = z.object({
+  // "1h"/"1d"/"1w": restrict for that duration; "forever": restrict indefinitely; "off": lift restriction.
+  restrictFor: z.enum(["1h", "1d", "1w", "forever", "off"]),
+});
+
 export const updatePreferencesSchema = z
   .object({
     isPinned: z.boolean().optional(),
@@ -104,6 +109,7 @@ export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
 export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSchema>;
+export type UpdateParticipantRestrictionInput = z.infer<typeof updateParticipantRestrictionSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
 export type SetPinnedMessageInput = z.infer<typeof setPinnedMessageSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;

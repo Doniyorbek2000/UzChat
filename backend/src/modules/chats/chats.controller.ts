@@ -204,4 +204,15 @@ export const chatsController = {
       next(err);
     }
   },
+
+  async updateParticipantRestriction(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, userId } = req.params;
+      const conversation = await chatsService.updateParticipantRestriction(req.user!.sub, id, userId, req.body.restrictFor);
+      getIo().to(`conversation:${id}`).emit("conversation:updated", conversation);
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

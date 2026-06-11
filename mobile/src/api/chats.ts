@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Conversation, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole } from "../types";
+import { Conversation, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -81,6 +81,12 @@ export const chatsApi = {
   updateParticipantRole(conversationId: string, userId: string, role: ParticipantRole) {
     return apiClient
       .patch<Conversation>(`/conversations/${conversationId}/participants/${userId}/role`, { role })
+      .then((r) => r.data);
+  },
+
+  restrictParticipant(conversationId: string, userId: string, restrictFor: RestrictDuration) {
+    return apiClient
+      .patch<Conversation>(`/conversations/${conversationId}/participants/${userId}/restrict`, { restrictFor })
       .then((r) => r.data);
   },
 
