@@ -14,6 +14,7 @@ export const usersApi = {
     groupAddPrivacy?: GroupAddPrivacy;
     messagePrivacy?: MessagePrivacy;
     readReceiptsEnabled?: boolean;
+    typingIndicatorsEnabled?: boolean;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);
   },

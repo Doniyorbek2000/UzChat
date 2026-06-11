@@ -86,6 +86,19 @@ export function PrivacySettingsScreen({}: Props) {
     }
   };
 
+  const onToggleTypingIndicators = async (value: boolean) => {
+    if (saving) return;
+    setSaving("typingIndicators");
+    try {
+      await usersApi.updateMe({ typingIndicatorsEnabled: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Oxirgi marta onlayn bo'lgan vaqtni kim ko'ra oladi</Text>
@@ -161,6 +174,25 @@ export function PrivacySettingsScreen({}: Props) {
           <ActivityIndicator color={colors.primary} />
         ) : (
           <Switch value={user.readReceiptsEnabled} onValueChange={onToggleReadReceipts} trackColor={{ true: colors.primary }} />
+        )}
+      </View>
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Yozish holati</Text>
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>Yozayotganini ko'rsatish</Text>
+          <Text style={styles.rowDescription}>
+            O'chirilsa, "yozmoqda..." va ovozli xabar yozish belgilari boshqalarga ko'rsatilmaydi
+          </Text>
+        </View>
+        {saving === "typingIndicators" ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Switch
+            value={user.typingIndicatorsEnabled}
+            onValueChange={onToggleTypingIndicators}
+            trackColor={{ true: colors.primary }}
+          />
         )}
       </View>
     </View>

@@ -9,6 +9,7 @@ let io: Server | undefined;
 
 export interface AuthenticatedSocket extends Socket {
   userId: string;
+  typingIndicatorsEnabled: boolean;
 }
 
 export function getIo(): Server {
@@ -40,6 +41,12 @@ export function initSocketServer(httpServer: HttpServer): Server {
 
   io.on("connection", async (socket) => {
     const authed = socket as AuthenticatedSocket;
+
+    const self = await prisma.user.findUnique({
+      where: { id: authed.userId },
+      select: { typingIndicatorsEnabled: true },
+    });
+    authed.typingIndicatorsEnabled = self?.typingIndicatorsEnabled ?? true;
 
     const participations = await prisma.conversationParticipant.findMany({
       where: { userId: authed.userId },

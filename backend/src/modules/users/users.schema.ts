@@ -9,6 +9,7 @@ export const updateProfileSchema = z.object({
   groupAddPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   messagePrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   readReceiptsEnabled: z.boolean().optional(),
+  typingIndicatorsEnabled: z.boolean().optional(),
 });
 
 export const searchUsersSchema = z.object({

@@ -84,6 +84,8 @@ model User {
   // When false, this user's read receipts ("seen" status) are hidden from
   // others in direct chats, and they likewise can't see others' read receipts.
   readReceiptsEnabled Boolean @default(true)
+  // When false, this user's typing/recording indicators are not sent to others.
+  typingIndicatorsEnabled Boolean @default(true)
   // Optional second ("cloud") password, required after the account password
   // when logging in. Null means two-step verification is disabled.
   twoFactorHash String?

@@ -23,6 +23,7 @@ export interface AuthUser extends User {
   groupAddPrivacy: GroupAddPrivacy;
   messagePrivacy: MessagePrivacy;
   readReceiptsEnabled: boolean;
+  typingIndicatorsEnabled: boolean;
   twoFactorEnabled: boolean;
   twoFactorHint: string | null;
 }

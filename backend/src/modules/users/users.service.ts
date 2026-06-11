@@ -25,6 +25,7 @@ const profileSelect = {
   groupAddPrivacy: true,
   messagePrivacy: true,
   readReceiptsEnabled: true,
+  typingIndicatorsEnabled: true,
   twoFactorHash: true,
   twoFactorHint: true,
   createdAt: true,

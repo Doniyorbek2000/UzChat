@@ -19,6 +19,7 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
 
   socket.on("typing", async (payload: { conversationId: string; isTyping: boolean }) => {
     try {
+      if (!socket.typingIndicatorsEnabled) return;
       await chatsService.assertParticipant(socket.userId, payload.conversationId);
       socket.to(`conversation:${payload.conversationId}`).emit("typing", {
         conversationId: payload.conversationId,
@@ -32,6 +33,7 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
 
   socket.on("voice-recording", async (payload: { conversationId: string; isRecording: boolean }) => {
     try {
+      if (!socket.typingIndicatorsEnabled) return;
       await chatsService.assertParticipant(socket.userId, payload.conversationId);
       socket.to(`conversation:${payload.conversationId}`).emit("voice-recording", {
         conversationId: payload.conversationId,
