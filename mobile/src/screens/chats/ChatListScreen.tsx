@@ -29,6 +29,8 @@ export function ChatListScreen({ navigation }: Props) {
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const setupSocketListeners = useChatStore((s) => s.setupSocketListeners);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
+  const typingUsers = useChatStore((s) => s.typingUsers);
+  const recordingUsers = useChatStore((s) => s.recordingUsers);
   const togglePin = useChatStore((s) => s.togglePin);
   const muteConversation = useChatStore((s) => s.muteConversation);
   const toggleArchive = useChatStore((s) => s.toggleArchive);
@@ -142,6 +144,8 @@ export function ChatListScreen({ navigation }: Props) {
   const renderItem = ({ item }: { item: Conversation }) => {
     const display = getConversationDisplay(item, user!.id, contactAliases);
     const unread = isConversationUnread(item, user!.id);
+    const isRecording = (recordingUsers[item.id]?.size ?? 0) > 0;
+    const isTyping = (typingUsers[item.id]?.size ?? 0) > 0;
     return (
       <TouchableOpacity
         style={styles.row}
@@ -165,8 +169,12 @@ export function ChatListScreen({ navigation }: Props) {
             {item.lastMessage && <Text style={styles.time}>{formatTime(item.lastMessage.createdAt)}</Text>}
           </View>
           <View style={styles.bottomRow}>
-            <Text style={styles.preview} numberOfLines={1}>
-              {drafts[item.id] ? (
+            <Text style={[styles.preview, (isTyping || isRecording) && styles.previewTyping]} numberOfLines={1}>
+              {isRecording ? (
+                "🎤 ovozli xabar yozmoqda..."
+              ) : isTyping ? (
+                "yozmoqda..."
+              ) : drafts[item.id] ? (
                 <>
                   <Text style={styles.draftLabel}>Qoralama: </Text>
                   {drafts[item.id]}
@@ -382,6 +390,7 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
   bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
   preview: { fontSize: 14, color: colors.textSecondary, flex: 1 },
+  previewTyping: { color: colors.primary, fontWeight: "600" },
   draftLabel: { color: colors.danger },
   muteIcon: { fontSize: 12, marginLeft: 8, color: colors.textSecondary },
   unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary, marginLeft: 8 },
