@@ -35,7 +35,7 @@ import { useAppLockStore } from "../store/appLockStore";
 import { useChatStore } from "../store/chatStore";
 import { useWallpaperStore } from "../store/wallpaperStore";
 import { getConversationDisplay } from "../utils/conversation";
-import { MessageNotificationData } from "../utils/pushNotifications";
+import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
 import { colors } from "../theme/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -61,6 +61,7 @@ async function navigateToConversation(conversationId?: string) {
 export function RootNavigator() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const appLockReady = useAppLockStore((s) => s.isReady);
   const isLocked = useAppLockStore((s) => s.isLocked);
@@ -84,6 +85,15 @@ export function RootNavigator() {
     });
     return () => subscription.remove();
   }, [lockApp]);
+
+  const conversations = useChatStore((s) => s.conversations);
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      clearAppBadgeCount();
+      return;
+    }
+    updateAppBadgeCount(conversations, user.id);
+  }, [isAuthenticated, user, conversations]);
 
   useEffect(() => {
     if (!isAuthenticated) return;

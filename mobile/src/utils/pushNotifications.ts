@@ -1,6 +1,8 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { pushApi } from "../api/push";
+import { Conversation } from "../types";
+import { isConversationUnread } from "./conversation";
 
 export interface MessageNotificationData {
   conversationId?: string;
@@ -65,4 +67,15 @@ export async function unregisterPushNotificationsAsync(): Promise<void> {
   } finally {
     registeredToken = null;
   }
+}
+
+/** Sets the app icon badge to the number of unread conversations. */
+export async function updateAppBadgeCount(conversations: Conversation[], userId: string): Promise<void> {
+  const count = conversations.filter((c) => isConversationUnread(c, userId)).length;
+  await Notifications.setBadgeCountAsync(count).catch(() => {});
+}
+
+/** Clears the app icon badge, e.g. on logout. */
+export async function clearAppBadgeCount(): Promise<void> {
+  await Notifications.setBadgeCountAsync(0).catch(() => {});
 }
