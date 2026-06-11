@@ -61,6 +61,7 @@ chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesContr
 chatsRouter.post("/:id/read", messagesController.markRead);
 chatsRouter.delete("/:id/messages/:messageId", messagesController.remove);
 chatsRouter.post("/:id/messages/:messageId/hide", messagesController.hideForMe);
+chatsRouter.post("/:id/messages/:messageId/view", messagesController.view);
 chatsRouter.patch("/:id/messages/:messageId", validateBody(editMessageSchema), messagesController.edit);
 chatsRouter.put(
   "/:id/messages/:messageId/reactions",

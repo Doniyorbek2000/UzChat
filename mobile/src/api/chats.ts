@@ -18,6 +18,8 @@ export interface SendMessageInput {
   forwardedFromName?: string;
   // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
   scheduledFor?: string;
+  // "View once" (IMAGE only): media is deleted server-side after the recipient views it.
+  viewOnce?: boolean;
 }
 
 export const chatsApi = {
@@ -146,6 +148,10 @@ export const chatsApi = {
 
   hideMessageForMe(conversationId: string, messageId: string) {
     return apiClient.post(`/conversations/${conversationId}/messages/${messageId}/hide`);
+  },
+
+  viewMessage(conversationId: string, messageId: string) {
+    return apiClient.post<Message>(`/conversations/${conversationId}/messages/${messageId}/view`).then((r) => r.data);
   },
 
   editMessage(conversationId: string, messageId: string, input: { ciphertext: string; nonce: string; mentions?: string[] }) {

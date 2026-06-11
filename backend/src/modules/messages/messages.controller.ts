@@ -64,6 +64,21 @@ export const messagesController = {
     }
   },
 
+  async view(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      const message = await messagesService.viewMessage(req.user!.sub, conversationId, messageId);
+      getIo().to(`conversation:${conversationId}`).emit("message:viewed", {
+        conversationId,
+        messageId,
+        viewedAt: message.viewedAt,
+      });
+      res.json(message);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async edit(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;

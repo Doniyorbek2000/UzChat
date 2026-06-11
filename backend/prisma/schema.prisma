@@ -265,6 +265,11 @@ model Message {
   // only, other participants are unaffected.
   hiddenFor String[] @default([])
 
+  // "View once" media (IMAGE only): the media is deleted server-side after the
+  // recipient views it once.
+  viewOnce Boolean   @default(false)
+  viewedAt DateTime?
+
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@index([replyToId])

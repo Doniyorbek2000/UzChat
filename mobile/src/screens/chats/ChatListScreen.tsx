@@ -91,6 +91,9 @@ export function ChatListScreen({ navigation }: Props) {
     const lastMessage = conversation.lastMessage;
     if (!lastMessage) return "Xabarlar yo'q";
     if (lastMessage.deletedAt) return "Xabar o'chirildi";
+    if (lastMessage.type === "IMAGE" && lastMessage.viewOnce) {
+      return lastMessage.viewedAt ? "🔥 Ko'rilgan rasm" : "🔥 Bir martalik rasm";
+    }
     if (lastMessage.type in MEDIA_LABELS) return MEDIA_LABELS[lastMessage.type];
     try {
       const key = getConversationKey(conversation);

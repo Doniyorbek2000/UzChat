@@ -39,6 +39,11 @@ function messageToLine(message: Message, conversationKey: string, senderName: st
       body = decrypted.contactMeta ? `👤 Kontakt: ${decrypted.contactMeta.displayName}` : "👤 Kontakt";
       break;
     case "IMAGE":
+      if (message.viewOnce) {
+        body = message.viewedAt ? "🔥 Ko'rilgan rasm" : "🔥 Bir martalik rasm";
+        break;
+      }
+    // falls through
     case "VIDEO":
     case "AUDIO":
     case "FILE": {

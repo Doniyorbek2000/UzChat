@@ -14,10 +14,16 @@ export const sendMessageSchema = z
     forwardedFromName: z.string().min(1).max(100).optional(),
     // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
     scheduledFor: z.string().datetime().optional(),
+    // "View once": media is deleted after the recipient views it (IMAGE only).
+    viewOnce: z.boolean().optional(),
   })
   .refine((data) => !data.scheduledFor || new Date(data.scheduledFor).getTime() > Date.now(), {
     message: "Yuborish vaqti kelajakda bo'lishi kerak",
     path: ["scheduledFor"],
+  })
+  .refine((data) => !data.viewOnce || data.type === "IMAGE", {
+    message: "Bir martalik ko'rish faqat rasmlar uchun mavjud",
+    path: ["viewOnce"],
   });
 
 export const listMessagesQuerySchema = z.object({

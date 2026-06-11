@@ -85,6 +85,10 @@ export interface Message {
   // ISO timestamp; if set, this message hasn't been delivered yet and is only
   // visible to its sender in the "Scheduled Messages" list.
   scheduledFor: string | null;
+  // "View once" media (IMAGE only): the media is deleted server-side after
+  // the recipient views it once.
+  viewOnce: boolean;
+  viewedAt: string | null;
 }
 
 export interface Conversation {

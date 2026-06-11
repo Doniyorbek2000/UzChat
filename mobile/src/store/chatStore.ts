@@ -91,7 +91,14 @@ interface ChatState {
   ) => Promise<void>;
   loadScheduledMessages: (conversationId: string) => Promise<void>;
   cancelScheduledMessage: (conversationId: string, messageId: string) => Promise<void>;
-  sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
+  sendMediaMessage: (
+    conversationId: string,
+    asset: MediaAsset,
+    type: MessageType,
+    replyToId?: string,
+    viewOnce?: boolean
+  ) => Promise<void>;
+  viewOnceMedia: (conversationId: string, messageId: string) => Promise<void>;
   sendContactMessage: (conversationId: string, contact: User, replyToId?: string) => Promise<void>;
   sendPollMessage: (
     conversationId: string,
@@ -448,7 +455,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  sendMediaMessage: async (conversationId, asset, type, replyToId) => {
+  sendMediaMessage: async (conversationId, asset, type, replyToId, viewOnce) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
@@ -466,7 +473,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     };
     const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), key);
 
-    const message = await chatsApi.sendMessage(conversationId, { type, ciphertext, nonce, mediaUrl: url, replyToId });
+    const message = await chatsApi.sendMessage(conversationId, {
+      type,
+      ciphertext,
+      nonce,
+      mediaUrl: url,
+      replyToId,
+      viewOnce,
+    });
     const decrypted = decryptToMessage(key, message);
 
     set((state) => {
@@ -478,6 +492,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
           state.conversations,
           { ...conversation, lastMessage: message, updatedAt: message.createdAt }
         ),
+      };
+    });
+  },
+
+  viewOnceMedia: async (conversationId, messageId) => {
+    const updated = await chatsApi.viewMessage(conversationId, messageId);
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      return {
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: existing.map((m) =>
+            m.id === messageId ? { ...m, viewedAt: updated.viewedAt, mediaUrl: null } : m
+          ),
+        },
       };
     });
   },
@@ -1070,6 +1099,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
         };
       });
     });
+
+    socket.on(
+      "message:viewed",
+      ({ conversationId, messageId, viewedAt }: { conversationId: string; messageId: string; viewedAt: string }) => {
+        set((state) => {
+          const existing = state.messagesByConversation[conversationId] ?? [];
+          return {
+            messagesByConversation: {
+              ...state.messagesByConversation,
+              [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, viewedAt, mediaUrl: null } : m)),
+            },
+          };
+        });
+      }
+    );
 
     socket.on("conversation:new", (conversation: Conversation) => {
       set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));

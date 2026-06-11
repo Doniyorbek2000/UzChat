@@ -1,3 +1,5 @@
+import fs from "fs/promises";
+import path from "path";
 import { ConversationType, Message, MessageType } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
@@ -5,6 +7,7 @@ import { isUserOnline } from "../../sockets";
 import { pushService } from "../push/push.service";
 import { chatsService } from "../chats/chats.service";
 import { contactsService } from "../contacts/contacts.service";
+import { uploadsDir } from "../media/upload";
 import { EditMessageInput, ListMessagesQuery, SendMessageInput } from "./messages.schema";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
@@ -184,6 +187,7 @@ export const messagesService = {
           forwardedFromName: input.forwardedFromName,
           expiresAt,
           scheduledFor: isScheduled ? new Date(input.scheduledFor!) : null,
+          viewOnce: input.viewOnce ?? false,
         },
         include: messageInclude(userId),
       });
@@ -233,6 +237,7 @@ export const messagesService = {
       where: {
         conversationId,
         type: { in: [MessageType.IMAGE, MessageType.VIDEO, MessageType.AUDIO, MessageType.FILE] },
+        viewOnce: false,
         deletedAt: null,
         scheduledFor: null,
         NOT: { hiddenFor: { has: userId } },
@@ -274,6 +279,38 @@ export const messagesService = {
       where: { id: messageId },
       data: { hiddenFor: { push: userId } },
     });
+  },
+
+  // Marks a "view once" IMAGE message as viewed and deletes its media file
+  // server-side, so it can never be downloaded again. Idempotent.
+  async viewMessage(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.type !== MessageType.IMAGE || !message.viewOnce) {
+      throw Errors.badRequest("Bu xabar bir martalik emas");
+    }
+
+    if (message.senderId === userId) {
+      const conversation = await prisma.conversation.findUnique({ where: { id: conversationId } });
+      if (!conversation?.isSelf) throw Errors.forbidden();
+    }
+
+    if (message.viewedAt) return formatMessage({ ...message, reactions: [], pollVotes: [], replyTo: null, stars: [] });
+
+    const updated = await prisma.message.update({
+      where: { id: messageId },
+      data: { viewedAt: new Date(), mediaUrl: null },
+      include: messageInclude(userId),
+    });
+
+    if (message.mediaUrl) {
+      const filename = path.basename(message.mediaUrl);
+      await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
+    }
+
+    return formatMessage(updated);
   },
 
   async editMessage(userId: string, conversationId: string, messageId: string, input: EditMessageInput) {

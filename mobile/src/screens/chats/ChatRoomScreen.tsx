@@ -36,6 +36,7 @@ import { getWallpaperColor } from "../../theme/wallpapers";
 import { ConversationParticipant, MessageReaction, MessageType } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
+import { ViewOnceImageBubble } from "../../components/ViewOnceImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { ContactCardBubble } from "../../components/ContactCardBubble";
@@ -673,6 +674,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (result.canceled || !result.assets[0]) return;
 
     const asset = result.assets[0];
+    Alert.alert("Rasmni yuborish", "Qanday yuborilsin?", [
+      { text: "Oddiy rasm", onPress: () => sendImageAsset(asset, false) },
+      { text: "🔥 Bir martalik", onPress: () => sendImageAsset(asset, true) },
+      { text: "Bekor qilish", style: "cancel" },
+    ]);
+  };
+
+  const sendImageAsset = async (asset: ImagePicker.ImagePickerAsset, viewOnce: boolean) => {
     const replyToId = replyingTo?.id;
     setReplyingTo(null);
     setSending(true);
@@ -687,7 +696,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           height: asset.height,
         },
         "IMAGE",
-        replyToId
+        replyToId,
+        viewOnce
       );
       scrollToLatest();
     } catch (err: any) {
@@ -860,7 +870,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onBulkForward = () => {
     const ids = [...selectedIds].filter((id) => {
       const message = messages.find((m) => m.id === id);
-      return message && !message.deletedAt && !message.decryptFailed;
+      return message && !message.deletedAt && !message.decryptFailed && !message.viewOnce;
     });
     if (ids.length === 0) return;
     exitSelectionMode();
@@ -943,6 +953,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       content = <Text style={styles.deletedText}>🚫 Xabar o'chirildi</Text>;
     } else if (item.decryptFailed) {
       content = <Text style={styles.messageText}>🔒 Xabarni ochib bo'lmadi</Text>;
+    } else if (item.type === "IMAGE" && item.viewOnce && conversationKey) {
+      content = (
+        <ViewOnceImageBubble
+          message={item}
+          conversationKey={conversationKey}
+          conversationId={conversationId}
+          isOwn={isOwn}
+          canView={!item.viewedAt && (!isOwn || !!conversation?.isSelf)}
+        />
+      );
     } else if (item.type === "IMAGE" && conversationKey) {
       content = <MediaImageBubble message={item} conversationKey={conversationKey} />;
     } else if (item.type === "AUDIO" && conversationKey) {
@@ -1285,7 +1305,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.actionButtonText}>👁 Kim ko'rdi</Text>
             </TouchableOpacity>
           )}
-          {actionMessage && !actionMessage.decryptFailed && (
+          {actionMessage && !actionMessage.decryptFailed && !actionMessage.viewOnce && (
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => {
