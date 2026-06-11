@@ -120,6 +120,7 @@ interface ChatState {
   getOrCreateSavedMessages: () => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
   markRead: (conversationId: string) => Promise<void>;
+  markAllRead: () => Promise<void>;
   togglePin: (conversationId: string) => Promise<void>;
   muteConversation: (conversationId: string, muteFor: MuteDuration) => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
@@ -794,6 +795,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
   markRead: async (conversationId) => {
     await chatsApi.markRead(conversationId);
     getSocket()?.emit("message:read", { conversationId });
+  },
+
+  markAllRead: async () => {
+    const userId = useAuthStore.getState().user?.id;
+    if (!userId) return;
+    const unread = get().conversations.filter((c) => !c.isArchived && isConversationUnread(c, userId));
+    if (unread.length === 0) return;
+    const now = new Date().toISOString();
+    await Promise.all(
+      unread.map((c) => {
+        getSocket()?.emit("message:read", { conversationId: c.id });
+        return chatsApi.markRead(c.id);
+      })
+    );
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        unread.some((u) => u.id === c.id) ? { ...c, lastReadAt: now, markedUnread: false } : c
+      ),
+    }));
   },
 
   togglePin: async (conversationId) => {

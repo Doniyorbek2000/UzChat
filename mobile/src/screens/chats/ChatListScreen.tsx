@@ -35,6 +35,7 @@ export function ChatListScreen({ navigation }: Props) {
   const muteConversation = useChatStore((s) => s.muteConversation);
   const toggleArchive = useChatStore((s) => s.toggleArchive);
   const toggleUnread = useChatStore((s) => s.toggleUnread);
+  const markAllRead = useChatStore((s) => s.markAllRead);
   const drafts = useChatStore((s) => s.drafts);
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const folders = useChatStore((s) => s.folders);
@@ -231,8 +232,13 @@ export function ChatListScreen({ navigation }: Props) {
     );
   };
 
+  const onMarkAllRead = () => {
+    markAllRead().catch(() => {});
+  };
+
   const visibleConversations = conversations.filter((c) => !c.isArchived);
   const archivedCount = conversations.length - visibleConversations.length;
+  const hasUnread = visibleConversations.some((c) => isConversationUnread(c, user!.id));
 
   const activeFolder = activeFolderId ? folders.find((f) => f.id === activeFolderId) : undefined;
   const folderConversations = activeFolder
@@ -276,6 +282,11 @@ export function ChatListScreen({ navigation }: Props) {
         <TouchableOpacity style={styles.folderEditChip} onPress={() => navigation.navigate("ChatFolders")}>
           <Text style={styles.folderEditIcon}>✏️</Text>
         </TouchableOpacity>
+        {hasUnread && (
+          <TouchableOpacity style={styles.folderEditChip} onPress={onMarkAllRead}>
+            <Text style={styles.folderEditIcon}>✅</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
       <View style={styles.searchBar}>
         <Text style={styles.searchIcon}>🔍</Text>
