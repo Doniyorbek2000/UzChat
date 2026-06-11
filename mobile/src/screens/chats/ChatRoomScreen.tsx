@@ -450,9 +450,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         title: `${selectedIds.size} ta tanlandi`,
         headerTitle: undefined,
         headerLeft: () => (
-          <TouchableOpacity onPress={exitSelectionMode} hitSlop={8}>
-            <Text style={styles.headerInfoIcon}>✕</Text>
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={exitSelectionMode} hitSlop={8}>
+              <Text style={styles.headerInfoIcon}>✕</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onToggleSelectAll} hitSlop={8}>
+              <Text style={styles.headerInfoIcon}>☑️</Text>
+            </TouchableOpacity>
+          </View>
         ),
         headerRight: () => (
           <View style={styles.headerActions}>
@@ -1003,6 +1008,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       if (next.size === 0) setSelectionMode(false);
       return next;
     });
+  };
+
+  const onToggleSelectAll = () => {
+    const selectableIds = messages.filter((m) => !m.deletedAt).map((m) => m.id);
+    if (selectedIds.size >= selectableIds.length) {
+      exitSelectionMode();
+    } else {
+      setSelectedIds(new Set(selectableIds));
+    }
   };
 
   const onPressMessage = (item: DecryptedMessage) => {
