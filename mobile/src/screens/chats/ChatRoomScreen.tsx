@@ -76,6 +76,7 @@ function groupReactions(reactions: MessageReaction[]) {
 }
 
 const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
+const EVERYONE_MENTION = "@hammasi";
 
 function escapeRegExp(text: string) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -101,7 +102,7 @@ function renderMessageText(text: string, participants: ConversationParticipant[]
   return (
     <Text style={styles.messageText}>
       {parts.map((part, i) => {
-        if (part.startsWith("@") && usernames.has(part.slice(1))) {
+        if (part === EVERYONE_MENTION || (part.startsWith("@") && usernames.has(part.slice(1)))) {
           return (
             <Text key={i} style={styles.mentionText}>
               {part}
@@ -377,6 +378,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const trimmed = text.trim();
     if (!trimmed) return;
     const mentions = pendingMentions.filter((id) => {
+      if (trimmed.includes(EVERYONE_MENTION)) return true;
       const username = conversation?.participants.find((p) => p.userId === id)?.user.username;
       return username && trimmed.includes(`@${username}`);
     });
@@ -428,6 +430,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       return `${prev}${needsSpace ? " " : ""}@${participant.user.username} `;
     });
     setPendingMentions((prev) => (prev.includes(participant.userId) ? prev : [...prev, participant.userId]));
+    setMentionPickerVisible(false);
+  };
+
+  const onMentionEveryone = () => {
+    setText((prev) => {
+      const needsSpace = prev.length > 0 && !/\s$/.test(prev);
+      return `${prev}${needsSpace ? " " : ""}${EVERYONE_MENTION} `;
+    });
+    const everyoneIds = (conversation?.participants ?? [])
+      .map((p) => p.userId)
+      .filter((id) => id !== user?.id);
+    setPendingMentions((prev) => Array.from(new Set([...prev, ...everyoneIds])));
     setMentionPickerVisible(false);
   };
 
@@ -918,6 +932,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       <Pressable style={styles.actionBackdrop} onPress={() => setMentionPickerVisible(false)}>
         <Pressable style={styles.actionSheet}>
           <Text style={styles.mentionPickerTitle}>Kimnidir eslatish</Text>
+          <TouchableOpacity style={styles.actionButton} onPress={onMentionEveryone}>
+            <Text style={styles.actionButtonText}>
+              <Text style={styles.mentionText}>{EVERYONE_MENTION}</Text> (barcha a'zolar)
+            </Text>
+          </TouchableOpacity>
           {conversation?.participants
             .filter((p) => p.userId !== user?.id)
             .map((p) => (
