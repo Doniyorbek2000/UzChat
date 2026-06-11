@@ -66,9 +66,15 @@ export const chatsApi = {
     return apiClient.post(`/conversations/${conversationId}/clear`);
   },
 
-  setPinnedMessage(conversationId: string, messageId: string | null) {
+  pinMessage(conversationId: string, messageId: string) {
     return apiClient
-      .put<Conversation>(`/conversations/${conversationId}/pinned-message`, { messageId })
+      .put<Conversation>(`/conversations/${conversationId}/pinned-messages/${messageId}`)
+      .then((r) => r.data);
+  },
+
+  unpinMessage(conversationId: string, messageId: string) {
+    return apiClient
+      .delete<Conversation>(`/conversations/${conversationId}/pinned-messages/${messageId}`)
       .then((r) => r.data);
   },
 

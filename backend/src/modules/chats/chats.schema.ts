@@ -88,10 +88,6 @@ export const updatePreferencesSchema = z
     { message: "Hech narsa o'zgartirilmadi" }
   );
 
-export const setPinnedMessageSchema = z.object({
-  messageId: z.string().uuid().nullable(),
-});
-
 export const joinByInviteSchema = z.object({
   wrappedKey: z.string().min(1),
   wrappedKeyNonce: z.string().min(1),
@@ -111,6 +107,5 @@ export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
 export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSchema>;
 export type UpdateParticipantRestrictionInput = z.infer<typeof updateParticipantRestrictionSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
-export type SetPinnedMessageInput = z.infer<typeof setPinnedMessageSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
 export type UpdateDisappearingMessagesInput = z.infer<typeof updateDisappearingMessagesSchema>;

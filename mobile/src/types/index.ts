@@ -67,6 +67,10 @@ export interface ReplyToSnapshot {
   deletedAt: string | null;
 }
 
+export interface PinnedMessageInfo extends ReplyToSnapshot {
+  pinnedAt: string;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -123,7 +127,8 @@ export interface Conversation {
   slowModeSeconds: number;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
-  pinnedMessage: ReplyToSnapshot | null;
+  // Pinned messages, most-recently-pinned first.
+  pinnedMessages: PinnedMessageInfo[];
   participants: ConversationParticipant[];
   lastMessage?: Message | null;
 }

@@ -16,6 +16,7 @@ import { ForwardMessageScreen } from "../screens/chats/ForwardMessageScreen";
 import { ShareContactScreen } from "../screens/chats/ShareContactScreen";
 import { SharedMediaScreen } from "../screens/chats/SharedMediaScreen";
 import { ScheduledMessagesScreen } from "../screens/chats/ScheduledMessagesScreen";
+import { PinnedMessagesScreen } from "../screens/chats/PinnedMessagesScreen";
 import { StarredMessagesScreen } from "../screens/chats/StarredMessagesScreen";
 import { ArchivedChatsScreen } from "../screens/chats/ArchivedChatsScreen";
 import { ChatFoldersScreen } from "../screens/chats/ChatFoldersScreen";
@@ -122,6 +123,7 @@ export function RootNavigator() {
             <Stack.Screen name="ShareContact" component={ShareContactScreen} options={{ title: "Kontakt yuborish" }} />
             <Stack.Screen name="SharedMedia" component={SharedMediaScreen} options={{ title: "Umumiy media" }} />
             <Stack.Screen name="ScheduledMessages" component={ScheduledMessagesScreen} options={{ title: "Rejalashtirilgan xabarlar" }} />
+            <Stack.Screen name="PinnedMessages" component={PinnedMessagesScreen} options={{ title: "Qadalgan xabarlar" }} />
             <Stack.Screen name="StarredMessages" component={StarredMessagesScreen} options={{ title: "Saqlangan xabarlar" }} />
             <Stack.Screen name="ArchivedChats" component={ArchivedChatsScreen} options={{ title: "Arxivlangan suhbatlar" }} />
             <Stack.Screen name="ChatFolders" component={ChatFoldersScreen} options={{ title: "Papkalar" }} />

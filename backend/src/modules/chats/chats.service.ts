@@ -66,16 +66,19 @@ function omitPrivacyFlags<T extends { readReceiptsEnabled: boolean }>(user: T): 
   return rest;
 }
 
-const pinnedMessageSelect = {
-  select: {
-    id: true,
-    senderId: true,
-    type: true,
-    ciphertext: true,
-    nonce: true,
-    mediaUrl: true,
-    deletedAt: true,
-  },
+const pinnedMessageFields = {
+  id: true,
+  senderId: true,
+  type: true,
+  ciphertext: true,
+  nonce: true,
+  mediaUrl: true,
+  deletedAt: true,
+} as const;
+
+const pinnedMessagesInclude = {
+  orderBy: { pinnedAt: "desc" as const },
+  include: { message: { select: pinnedMessageFields } },
 } as const;
 
 export const chatsService = {
@@ -152,7 +155,7 @@ export const chatsService = {
             include: {
               participants: { include: { user: { select: userSummarySelect } } },
               messages: { where: { scheduledFor: null }, orderBy: { createdAt: "desc" }, take: 1 },
-              pinnedMessage: pinnedMessageSelect,
+              pinnedMessages: pinnedMessagesInclude,
             },
           },
         },
@@ -190,7 +193,7 @@ export const chatsService = {
         onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
         slowModeSeconds: p.conversation.slowModeSeconds,
         isSelf: p.conversation.isSelf,
-        pinnedMessage: p.conversation.pinnedMessage,
+        pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
           role: cp.role,
@@ -213,7 +216,7 @@ export const chatsService = {
         conversation: {
           include: {
             participants: { include: { user: { select: userSummarySelect } } },
-            pinnedMessage: pinnedMessageSelect,
+            pinnedMessages: pinnedMessagesInclude,
           },
         },
       },
@@ -254,7 +257,7 @@ export const chatsService = {
       onlyAdminsCanSend: participant.conversation.onlyAdminsCanSend,
       slowModeSeconds: participant.conversation.slowModeSeconds,
       isSelf: participant.conversation.isSelf,
-      pinnedMessage: participant.conversation.pinnedMessage,
+      pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,
@@ -296,19 +299,26 @@ export const chatsService = {
     });
   },
 
-  async setPinnedMessage(userId: string, conversationId: string, messageId: string | null) {
+  async pinMessage(userId: string, conversationId: string, messageId: string) {
     await chatsService.assertParticipant(userId, conversationId);
 
-    if (messageId) {
-      const message = await prisma.message.findUnique({ where: { id: messageId } });
-      if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
-      if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni qadab bo'lmaydi");
-    }
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni qadab bo'lmaydi");
 
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: { pinnedMessageId: messageId },
+    await prisma.pinnedMessage.upsert({
+      where: { conversationId_messageId: { conversationId, messageId } },
+      create: { conversationId, messageId, pinnedBy: userId },
+      update: {},
     });
+
+    return chatsService.getConversation(userId, conversationId);
+  },
+
+  async unpinMessage(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    await prisma.pinnedMessage.deleteMany({ where: { conversationId, messageId } });
 
     return chatsService.getConversation(userId, conversationId);
   },

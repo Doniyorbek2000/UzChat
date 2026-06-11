@@ -36,6 +36,7 @@ export type RootStackParamList = {
   ShareContact: { conversationId: string };
   SharedMedia: { conversationId: string };
   ScheduledMessages: { conversationId: string };
+  PinnedMessages: { conversationId: string; title: string };
   StarredMessages: undefined;
   ArchivedChats: undefined;
   ChatFolders: undefined;

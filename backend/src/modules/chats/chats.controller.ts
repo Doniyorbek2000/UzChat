@@ -83,9 +83,19 @@ export const chatsController = {
     }
   },
 
-  async setPinnedMessage(req: Request, res: Response, next: NextFunction) {
+  async pinMessage(req: Request, res: Response, next: NextFunction) {
     try {
-      const conversation = await chatsService.setPinnedMessage(req.user!.sub, req.params.id, req.body.messageId);
+      const conversation = await chatsService.pinMessage(req.user!.sub, req.params.id, req.params.messageId);
+      getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async unpinMessage(req: Request, res: Response, next: NextFunction) {
+    try {
+      const conversation = await chatsService.unpinMessage(req.user!.sub, req.params.id, req.params.messageId);
       getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
       res.json(conversation);
     } catch (err) {

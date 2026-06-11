@@ -6,7 +6,6 @@ import {
   addParticipantSchema,
   createConversationSchema,
   joinByInviteSchema,
-  setPinnedMessageSchema,
   updateConversationSchema,
   updateDisappearingMessagesSchema,
   updateParticipantRestrictionSchema,
@@ -25,7 +24,8 @@ chatsRouter.post("/", validateBody(createConversationSchema), chatsController.cr
 chatsRouter.get("/:id", chatsController.get);
 chatsRouter.patch("/:id", validateBody(updateConversationSchema), chatsController.update);
 chatsRouter.patch("/:id/preferences", validateBody(updatePreferencesSchema), chatsController.updatePreferences);
-chatsRouter.put("/:id/pinned-message", validateBody(setPinnedMessageSchema), chatsController.setPinnedMessage);
+chatsRouter.put("/:id/pinned-messages/:messageId", chatsController.pinMessage);
+chatsRouter.delete("/:id/pinned-messages/:messageId", chatsController.unpinMessage);
 chatsRouter.put(
   "/:id/disappearing-messages",
   validateBody(updateDisappearingMessagesSchema),

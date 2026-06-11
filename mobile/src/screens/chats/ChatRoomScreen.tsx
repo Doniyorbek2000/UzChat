@@ -215,7 +215,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const blockUser = useChatStore((s) => s.blockUser);
   const unblockUser = useChatStore((s) => s.unblockUser);
   const clearHistory = useChatStore((s) => s.clearHistory);
-  const setPinnedMessage = useChatStore((s) => s.setPinnedMessage);
+  const pinMessage = useChatStore((s) => s.pinMessage);
+  const unpinMessage = useChatStore((s) => s.unpinMessage);
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
@@ -548,15 +549,21 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     return contactAliases[senderId] ?? conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
   };
 
-  const pinnedPreview =
-    conversation?.pinnedMessage && conversationKey
-      ? decryptReplyPreview(conversationKey, conversation.pinnedMessage)
-      : null;
+  const pinnedMessages = conversation?.pinnedMessages ?? [];
+  const latestPinned = pinnedMessages[0] ?? null;
+  const pinnedPreview = latestPinned && conversationKey ? decryptReplyPreview(conversationKey, latestPinned) : null;
 
-  const onUnpin = () => {
+  const onPinnedBarPress = () => {
+    if (!latestPinned) return;
+    navigation.setParams({ highlightMessageId: latestPinned.id });
+  };
+
+  const onUnpinLatest = () => {
+    if (!latestPinned) return;
+    const messageId = latestPinned.id;
     Alert.alert("Qadalgan xabar", "Xabarni qadashdan olib tashlansinmi?", [
       { text: "Bekor qilish", style: "cancel" },
-      { text: "Olib tashlash", style: "destructive", onPress: () => setPinnedMessage(conversationId, null).catch(() => {}) },
+      { text: "Olib tashlash", style: "destructive", onPress: () => unpinMessage(conversationId, messageId).catch(() => {}) },
     ]);
   };
 
@@ -1095,17 +1102,25 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       keyboardVerticalOffset={90}
     >
       {pinnedPreview && (
-        <TouchableOpacity style={styles.pinnedBar} onPress={onUnpin}>
+        <TouchableOpacity style={styles.pinnedBar} onPress={onPinnedBarPress}>
           <Text style={styles.pinnedIcon}>📌</Text>
           <View style={styles.replyContent}>
             <Text style={styles.replyAuthor} numberOfLines={1}>
               {getAuthorName(pinnedPreview.senderId)}
+              {pinnedMessages.length > 1 ? ` · 1/${pinnedMessages.length}` : ""}
             </Text>
             <Text style={styles.replyText} numberOfLines={1}>
               {getPreviewLabel(pinnedPreview)}
             </Text>
           </View>
-          <Text style={styles.pinnedClose}>✕</Text>
+          {pinnedMessages.length > 1 && (
+            <TouchableOpacity onPress={() => navigation.navigate("PinnedMessages", { conversationId, title })} hitSlop={8}>
+              <Text style={styles.pinnedListIcon}>☰</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={onUnpinLatest} hitSlop={8}>
+            <Text style={styles.pinnedClose}>✕</Text>
+          </TouchableOpacity>
         </TouchableOpacity>
       )}
       <FlatList
@@ -1310,12 +1325,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               onPress={() => {
                 const message = actionMessage;
                 setActionMessage(null);
-                const isPinned = conversation?.pinnedMessage?.id === message.id;
-                setPinnedMessage(conversationId, isPinned ? null : message.id).catch(() => {});
+                const isPinned = pinnedMessages.some((pm) => pm.id === message.id);
+                (isPinned ? unpinMessage(conversationId, message.id) : pinMessage(conversationId, message.id)).catch(
+                  () => {}
+                );
               }}
             >
               <Text style={styles.actionButtonText}>
-                {conversation?.pinnedMessage?.id === actionMessage.id ? "📌 Qadashni bekor qilish" : "📌 Qadash"}
+                {pinnedMessages.some((pm) => pm.id === actionMessage.id) ? "📌 Qadashni bekor qilish" : "📌 Qadash"}
               </Text>
             </TouchableOpacity>
           )}
@@ -1653,6 +1670,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pinnedIcon: { fontSize: 14 },
+  pinnedListIcon: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   pinnedClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   messageText: { fontSize: 16, color: colors.text },
   stickerText: { fontSize: 56, lineHeight: 64 },
