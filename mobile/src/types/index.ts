@@ -95,6 +95,8 @@ export interface Conversation {
   disappearingSeconds: number | null;
   // GROUP only: when true, only the owner and admins may send messages.
   onlyAdminsCanSend: boolean;
+  // GROUP only: minimum seconds a member must wait between their messages; 0 disables it.
+  slowModeSeconds: number;
   pinnedMessage: ReplyToSnapshot | null;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;

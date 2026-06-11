@@ -117,6 +117,26 @@ export const messagesService = {
       throw Errors.forbidden("Faqat guruh egasi va adminlar xabar yubora oladi");
     }
 
+    if (
+      conversation?.type === ConversationType.GROUP &&
+      conversation.slowModeSeconds > 0 &&
+      participant.role === "MEMBER"
+    ) {
+      const lastMessage = await prisma.message.findFirst({
+        where: { conversationId, senderId: userId },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      });
+      if (lastMessage) {
+        const elapsedMs = Date.now() - lastMessage.createdAt.getTime();
+        const remainingMs = conversation.slowModeSeconds * 1000 - elapsedMs;
+        if (remainingMs > 0) {
+          const remainingSeconds = Math.ceil(remainingMs / 1000);
+          throw Errors.badRequest(`Sekin rejim: yana ${remainingSeconds} soniyadan keyin xabar yuborishingiz mumkin`);
+        }
+      }
+    }
+
     if (input.replyToId) {
       const replyTo = await prisma.message.findUnique({ where: { id: input.replyToId } });
       if (!replyTo || replyTo.conversationId !== conversationId) {

@@ -21,6 +21,7 @@ import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { encodeInviteLink } from "../../crypto/e2ee";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
+import { SLOW_MODE_OPTIONS, formatSlowModeDuration } from "../../utils/slowMode";
 import { ConversationParticipant, ParticipantRole } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
@@ -130,6 +131,23 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
     }
+  };
+
+  const onSetSlowMode = () => {
+    Alert.alert(
+      "Sekin rejim",
+      "A'zolar ketma-ket xabar yuborishdan oldin kutishi kerak bo'lgan vaqt",
+      [
+        ...SLOW_MODE_OPTIONS.map((option) => ({
+          text: option.label,
+          onPress: () =>
+            updateGroupInfo(conversationId, { slowModeSeconds: option.value }).catch(() => {
+              Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+            }),
+        })),
+        { text: "Bekor qilish", style: "cancel" as const },
+      ]
+    );
   };
 
   const onChangeAvatar = async () => {
@@ -320,6 +338,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteText}>Faqat adminlar yoza oladi</Text>
             <Switch value={conversation.onlyAdminsCanSend} onValueChange={onToggleOnlyAdminsCanSend} />
           </View>
+          <TouchableOpacity style={styles.inviteRow} onPress={onSetSlowMode}>
+            <Text style={styles.inviteIcon}>🐢</Text>
+            <Text style={styles.inviteText}>Sekin rejim</Text>
+            <Text style={styles.inviteValue}>{formatSlowModeDuration(conversation.slowModeSeconds)}</Text>
+          </TouchableOpacity>
         </View>
       )}
 

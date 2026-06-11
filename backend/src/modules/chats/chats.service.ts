@@ -167,6 +167,7 @@ export const chatsService = {
         inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
         disappearingSeconds: p.conversation.disappearingSeconds,
         onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
+        slowModeSeconds: p.conversation.slowModeSeconds,
         pinnedMessage: p.conversation.pinnedMessage,
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
@@ -228,6 +229,7 @@ export const chatsService = {
       inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
       disappearingSeconds: participant.conversation.disappearingSeconds,
       onlyAdminsCanSend: participant.conversation.onlyAdminsCanSend,
+      slowModeSeconds: participant.conversation.slowModeSeconds,
       pinnedMessage: participant.conversation.pinnedMessage,
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
@@ -468,6 +470,7 @@ export const chatsService = {
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
         ...(input.description !== undefined ? { description: input.description } : {}),
         ...(input.onlyAdminsCanSend !== undefined ? { onlyAdminsCanSend: input.onlyAdminsCanSend } : {}),
+        ...(input.slowModeSeconds !== undefined ? { slowModeSeconds: input.slowModeSeconds } : {}),
       },
     });
 

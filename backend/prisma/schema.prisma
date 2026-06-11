@@ -155,6 +155,9 @@ model Conversation {
   // GROUP only: when true, only the owner and admins may send messages.
   onlyAdminsCanSend Boolean @default(false)
 
+  // GROUP only: minimum seconds a MEMBER must wait between their messages; 0 disables it.
+  slowModeSeconds Int @default(0)
+
   participants ConversationParticipant[]
   messages     Message[]
 }

@@ -31,19 +31,24 @@ export const addParticipantSchema = z.object({
   keySenderPublicKey: z.string().min(1),
 });
 
+// 1 hour, the longest supported slow-mode delay between a member's messages.
+const MAX_SLOW_MODE_SECONDS = 60 * 60;
+
 export const updateConversationSchema = z
   .object({
     title: z.string().min(1).max(64).optional(),
     avatarUrl: z.string().url().optional(),
     description: z.string().max(500).nullable().optional(),
     onlyAdminsCanSend: z.boolean().optional(),
+    slowModeSeconds: z.number().int().min(0).max(MAX_SLOW_MODE_SECONDS).optional(),
   })
   .refine(
     (data) =>
       data.title !== undefined ||
       data.avatarUrl !== undefined ||
       data.description !== undefined ||
-      data.onlyAdminsCanSend !== undefined,
+      data.onlyAdminsCanSend !== undefined ||
+      data.slowModeSeconds !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

@@ -40,7 +40,13 @@ export const chatsApi = {
 
   update(
     conversationId: string,
-    input: { title?: string; avatarUrl?: string; description?: string | null; onlyAdminsCanSend?: boolean }
+    input: {
+      title?: string;
+      avatarUrl?: string;
+      description?: string | null;
+      onlyAdminsCanSend?: boolean;
+      slowModeSeconds?: number;
+    }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);
   },

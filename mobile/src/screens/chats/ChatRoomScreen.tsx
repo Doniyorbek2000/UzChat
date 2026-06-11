@@ -431,9 +431,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       setTyping(conversationId, false);
       try {
         await editMessage(conversationId, messageId, trimmed, mentions.length > 0 ? mentions : undefined);
-      } catch {
+      } catch (err: any) {
         setText(trimmed);
         setEditingMessage(editingMessage);
+        const message = err?.response?.data?.error?.message;
+        if (message) Alert.alert("Xatolik", message);
       }
       return;
     }
@@ -446,8 +448,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     try {
       await sendTextMessage(conversationId, trimmed, replyToId, mentions.length > 0 ? mentions : undefined);
       scrollToLatest();
-    } catch {
+    } catch (err: any) {
       setText(trimmed);
+      const message = err?.response?.data?.error?.message;
+      if (message) Alert.alert("Xatolik", message);
     }
   };
 
@@ -517,8 +521,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         replyToId
       );
       scrollToLatest();
-    } catch {
-      Alert.alert("Xatolik", "Rasmni yuborib bo'lmadi");
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Rasmni yuborib bo'lmadi");
     } finally {
       setSending(false);
     }
@@ -544,8 +548,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         replyToId
       );
       scrollToLatest();
-    } catch {
-      Alert.alert("Xatolik", "Faylni yuborib bo'lmadi");
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Faylni yuborib bo'lmadi");
     } finally {
       setSending(false);
     }
@@ -597,8 +601,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         replyToId
       );
       scrollToLatest();
-    } catch {
-      Alert.alert("Xatolik", "Ovozli xabarni yuborib bo'lmadi");
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Ovozli xabarni yuborib bo'lmadi");
     } finally {
       setSending(false);
     }
