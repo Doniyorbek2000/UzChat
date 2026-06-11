@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Switch } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -54,6 +54,19 @@ export function PrivacySettingsScreen({}: Props) {
     }
   };
 
+  const onToggleReadReceipts = async (value: boolean) => {
+    if (saving) return;
+    setSaving("readReceipts");
+    try {
+      await usersApi.updateMe({ readReceiptsEnabled: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Oxirgi marta onlayn bo'lgan vaqtni kim ko'ra oladi</Text>
@@ -95,6 +108,22 @@ export function PrivacySettingsScreen({}: Props) {
           </TouchableOpacity>
         );
       })}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>O'qilgan xabarlar</Text>
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>Ko'rilgan belgisi</Text>
+          <Text style={styles.rowDescription}>
+            O'chirilsa, shaxsiy suhbatlarda xabaringiz o'qilganini boshqalar ko'ra olmaydi va siz ham ularning
+            o'qilgan xabarlarini ko'ra olmaysiz
+          </Text>
+        </View>
+        {saving === "readReceipts" ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Switch value={user.readReceiptsEnabled} onValueChange={onToggleReadReceipts} trackColor={{ true: colors.primary }} />
+        )}
+      </View>
     </View>
   );
 }

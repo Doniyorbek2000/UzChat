@@ -17,6 +17,7 @@ export interface AuthUser extends User {
   phone: string;
   lastSeenPrivacy: LastSeenPrivacy;
   groupAddPrivacy: GroupAddPrivacy;
+  readReceiptsEnabled: boolean;
 }
 
 export interface AuthTokens {

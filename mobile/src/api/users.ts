@@ -12,6 +12,7 @@ export const usersApi = {
     avatarUrl?: string;
     lastSeenPrivacy?: LastSeenPrivacy;
     groupAddPrivacy?: GroupAddPrivacy;
+    readReceiptsEnabled?: boolean;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);
   },

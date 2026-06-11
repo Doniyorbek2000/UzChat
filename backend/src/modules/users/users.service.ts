@@ -15,6 +15,7 @@ const profileSelect = {
   lastSeenAt: true,
   lastSeenPrivacy: true,
   groupAddPrivacy: true,
+  readReceiptsEnabled: true,
   createdAt: true,
 } as const;
 

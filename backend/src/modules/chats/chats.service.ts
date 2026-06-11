@@ -21,6 +21,7 @@ const userSummarySelect = {
   publicKey: true,
   lastSeenAt: true,
   lastSeenPrivacy: true,
+  readReceiptsEnabled: true,
 } as const;
 
 const MUTE_DURATIONS_MS: Record<"1h" | "8h" | "1d" | "1w", number> = {
@@ -33,6 +34,24 @@ const MUTE_DURATIONS_MS: Record<"1h" | "8h" | "1d" | "1w", number> = {
 /** A conversation is muted if muted indefinitely, or muted until a time still in the future. */
 function isParticipantMuted(p: { isMuted: boolean; mutedUntil: Date | null }): boolean {
   return p.isMuted || (p.mutedUntil !== null && p.mutedUntil.getTime() > Date.now());
+}
+
+// Strips a participant's `lastReadAt` (read receipt) unless both the viewer and that
+// participant have read receipts enabled. Viewers always see their own `lastReadAt`.
+function visibleLastReadAt(
+  viewerId: string,
+  viewerReadReceiptsEnabled: boolean,
+  participant: { userId: string; lastReadAt: Date | null; user: { readReceiptsEnabled: boolean } }
+): Date | null {
+  if (participant.userId === viewerId) return participant.lastReadAt;
+  return viewerReadReceiptsEnabled && participant.user.readReceiptsEnabled ? participant.lastReadAt : null;
+}
+
+// Removes the cleartext `readReceiptsEnabled` and `lastSeenPrivacy` flags from a
+// participant's user object before returning it to other participants.
+function omitPrivacyFlags<T extends { readReceiptsEnabled: boolean }>(user: T): Omit<T, "readReceiptsEnabled"> {
+  const { readReceiptsEnabled, ...rest } = user;
+  return rest;
 }
 
 const pinnedMessageSelect = {
@@ -104,7 +123,7 @@ export const chatsService = {
   },
 
   async listConversations(userId: string) {
-    const [participations, blocked, contactIds] = await Promise.all([
+    const [participations, blocked, contactIds, viewer] = await Promise.all([
       prisma.conversationParticipant.findMany({
         where: { userId },
         include: {
@@ -120,7 +139,9 @@ export const chatsService = {
       }),
       prisma.blockedUser.findMany({ where: { ownerId: userId }, select: { blockedId: true } }),
       getContactIds(userId),
+      prisma.user.findUnique({ where: { id: userId }, select: { readReceiptsEnabled: true } }),
     ]);
+    const viewerReadReceiptsEnabled = viewer?.readReceiptsEnabled ?? true;
 
     const blockedIds = new Set(blocked.map((b) => b.blockedId));
 
@@ -150,8 +171,8 @@ export const chatsService = {
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
           role: cp.role,
-          user: filterLastSeen(userId, cp.user, contactIds),
-          lastReadAt: cp.lastReadAt,
+          user: omitPrivacyFlags(filterLastSeen(userId, cp.user, contactIds)),
+          lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
         })),
         lastMessage:
           p.clearedAt && p.conversation.messages[0] && p.conversation.messages[0].createdAt <= p.clearedAt
@@ -181,7 +202,11 @@ export const chatsService = {
       if (other) isBlocked = await contactsService.hasBlocked(userId, other.userId);
     }
 
-    const contactIds = await getContactIds(userId);
+    const [contactIds, viewer] = await Promise.all([
+      getContactIds(userId),
+      prisma.user.findUnique({ where: { id: userId }, select: { readReceiptsEnabled: true } }),
+    ]);
+    const viewerReadReceiptsEnabled = viewer?.readReceiptsEnabled ?? true;
 
     return {
       id: participant.conversation.id,
@@ -207,8 +232,8 @@ export const chatsService = {
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,
-        user: filterLastSeen(userId, cp.user, contactIds),
-        lastReadAt: cp.lastReadAt,
+        user: omitPrivacyFlags(filterLastSeen(userId, cp.user, contactIds)),
+        lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
       })),
     };
   },
