@@ -1302,7 +1302,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           )}
           {actionMessage &&
-            actionMessage.type === "TEXT" &&
+            (actionMessage.type === "TEXT" ||
+              actionMessage.type === "IMAGE" ||
+              actionMessage.type === "VIDEO" ||
+              actionMessage.type === "FILE") &&
             !actionMessage.decryptFailed &&
             !actionMessage.deletedAt &&
             !!actionMessage.text && (
