@@ -74,6 +74,17 @@ function isMessageRead(message: { createdAt: string }, participant: Conversation
   return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);
 }
 
+// Matches 1-3 emoji "clusters" (a base emoji optionally followed by a variation selector,
+// skin-tone modifier, or ZWJ-joined emoji like family/profession emoji) and nothing else.
+const EMOJI_ONLY_PATTERN =
+  /^(?:\p{Extended_Pictographic}(?:️|[\u{1F3FB}-\u{1F3FF}]|‍\p{Extended_Pictographic}️?)*){1,3}$/u;
+
+// WeChat/Telegram-style "stickers": a message containing only 1-3 emoji renders large, without a bubble.
+function isEmojiOnlyMessage(text: string): boolean {
+  const stripped = text.replace(/\s+/g, "");
+  return stripped.length > 0 && stripped.length <= 30 && EMOJI_ONLY_PATTERN.test(stripped);
+}
+
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 function groupReactions(reactions: MessageReaction[]) {
@@ -924,6 +935,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const renderItem = ({ item }: { item: DecryptedMessage }) => {
     const isOwn = item.senderId === user?.id;
     const sender = conversation?.participants.find((p) => p.userId === item.senderId)?.user;
+    const isSticker =
+      item.type === "TEXT" && !item.deletedAt && !item.decryptFailed && isEmojiOnlyMessage(item.text ?? "");
 
     let content;
     if (item.deletedAt) {
@@ -940,6 +953,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       content = <ContactCardBubble message={item} navigation={navigation} />;
     } else if (item.type === "POLL") {
       content = <PollBubble message={item} conversationId={conversationId} />;
+    } else if (isSticker) {
+      content = <Text style={styles.stickerText}>{item.text}</Text>;
     } else {
       content = renderMessageText(item.text ?? "", conversation?.participants ?? []);
     }
@@ -967,6 +982,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             isOwn ? styles.bubbleSelf : styles.bubbleOther,
             item.deletedAt && styles.bubbleDeleted,
             item.id === highlightedMessageId && styles.bubbleHighlighted,
+            isSticker && styles.bubbleSticker,
           ]}
         >
           {isGroup && !isOwn && sender && (
@@ -1546,6 +1562,7 @@ const styles = StyleSheet.create({
   bubbleOther: { backgroundColor: colors.bubbleOther, borderTopLeftRadius: 2 },
   bubbleDeleted: { opacity: 0.6 },
   bubbleHighlighted: { borderWidth: 2, borderColor: colors.primary },
+  bubbleSticker: { backgroundColor: "transparent", paddingHorizontal: 0, paddingVertical: 0 },
   senderName: { fontSize: 12, fontWeight: "600", color: colors.primaryDark, marginBottom: 2 },
   forwardedLabel: { fontSize: 11, color: colors.textSecondary, fontStyle: "italic", marginBottom: 2 },
   replyBox: { flexDirection: "row", marginBottom: 6, opacity: 0.85 },
@@ -1577,6 +1594,7 @@ const styles = StyleSheet.create({
   pinnedIcon: { fontSize: 14 },
   pinnedClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   messageText: { fontSize: 16, color: colors.text },
+  stickerText: { fontSize: 56, lineHeight: 64 },
   mentionText: { color: colors.primary, fontWeight: "600" },
   linkText: { color: colors.primary, textDecorationLine: "underline" },
   boldText: { fontWeight: "700" },
