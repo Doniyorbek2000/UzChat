@@ -82,10 +82,19 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   const isGroup = conversation.type === "GROUP";
   const title = isGroup ? conversation.title ?? "Guruh" : sender.displayName;
 
+  let repliedToSenderId: string | null = null;
+  if (message.replyToId) {
+    const repliedTo = await prisma.message.findUnique({ where: { id: message.replyToId }, select: { senderId: true } });
+    repliedToSenderId = repliedTo?.senderId ?? null;
+  }
+
   // Muted conversations are silenced, except for messages that @-mention the recipient.
   const mentionedIds = recipients.filter((p) => message.mentions.includes(p.userId)).map((p) => p.userId);
+  const replyIds = recipients
+    .filter((p) => p.userId === repliedToSenderId && !message.mentions.includes(p.userId) && !isParticipantMuted(p))
+    .map((p) => p.userId);
   const regularIds = recipients
-    .filter((p) => !message.mentions.includes(p.userId) && !isParticipantMuted(p))
+    .filter((p) => !message.mentions.includes(p.userId) && p.userId !== repliedToSenderId && !isParticipantMuted(p))
     .map((p) => p.userId);
 
   if (mentionedIds.length > 0) {
@@ -93,6 +102,14 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
       title,
       body: `${sender.displayName} sizni eslatib o'tdi`,
       data: { conversationId, messageId: message.id, type: "mention" },
+    });
+  }
+
+  if (replyIds.length > 0) {
+    await pushService.sendToUsers(replyIds, {
+      title,
+      body: `${sender.displayName} sizning xabaringizga javob berdi`,
+      data: { conversationId, messageId: message.id, type: "reply" },
     });
   }
 
