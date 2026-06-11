@@ -160,3 +160,11 @@ export interface ContactCardMeta {
   displayName: string;
   avatarUrl: string | null;
 }
+
+/** A user-defined chat list tab (Telegram-style folder) grouping a subset of conversations. */
+export interface ChatFolder {
+  id: string;
+  name: string;
+  order: number;
+  conversationIds: string[];
+}

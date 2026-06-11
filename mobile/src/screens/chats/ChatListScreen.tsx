@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, RefreshControl, Alert } from "react-native";
+import { View, Text, TextInput, FlatList, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useState } from "react";
 import { MainTabScreenProps } from "../../navigation/types";
@@ -35,9 +35,12 @@ export function ChatListScreen({ navigation }: Props) {
   const toggleUnread = useChatStore((s) => s.toggleUnread);
   const drafts = useChatStore((s) => s.drafts);
   const loadDrafts = useChatStore((s) => s.loadDrafts);
+  const folders = useChatStore((s) => s.folders);
+  const loadFolders = useChatStore((s) => s.loadFolders);
   const user = useAuthStore((s) => s.user);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
 
   useEffect(() => {
     setupSocketListeners();
@@ -48,7 +51,8 @@ export function ChatListScreen({ navigation }: Props) {
     useCallback(() => {
       loadConversations().catch(() => {});
       loadContactAliases().catch(() => {});
-    }, [loadConversations, loadContactAliases])
+      loadFolders().catch(() => {});
+    }, [loadConversations, loadContactAliases, loadFolders])
   );
 
   const onRefresh = async () => {
@@ -56,6 +60,12 @@ export function ChatListScreen({ navigation }: Props) {
     await Promise.all([loadConversations().catch(() => {}), loadContactAliases().catch(() => {})]);
     setRefreshing(false);
   };
+
+  useEffect(() => {
+    if (activeFolderId && !folders.some((f) => f.id === activeFolderId)) {
+      setActiveFolderId(null);
+    }
+  }, [folders, activeFolderId]);
 
   const renderPreview = (conversation: Conversation): string => {
     const lastMessage = conversation.lastMessage;
@@ -118,7 +128,7 @@ export function ChatListScreen({ navigation }: Props) {
         <Avatar
           uri={display.avatarUrl}
           name={display.title}
-          icon={item.isSelf ? "🔖" : undefined}
+          icon={item.isSelf ? "📝" : undefined}
           online={!!display.otherUser && onlineUsers.has(display.otherUser.id)}
         />
         <View style={styles.content}>
@@ -153,9 +163,14 @@ export function ChatListScreen({ navigation }: Props) {
   const visibleConversations = conversations.filter((c) => !c.isArchived);
   const archivedCount = conversations.length - visibleConversations.length;
 
+  const activeFolder = activeFolderId ? folders.find((f) => f.id === activeFolderId) : undefined;
+  const folderConversations = activeFolder
+    ? visibleConversations.filter((c) => activeFolder.conversationIds.includes(c.id))
+    : visibleConversations;
+
   const query = searchQuery.trim().toLowerCase();
   const filteredConversations = query
-    ? visibleConversations.filter((c) => {
+    ? folderConversations.filter((c) => {
         const display = getConversationDisplay(c, user!.id, contactAliases);
         if (display.title.toLowerCase().includes(query)) return true;
         return c.participants.some(
@@ -163,10 +178,34 @@ export function ChatListScreen({ navigation }: Props) {
             p.user.displayName.toLowerCase().includes(query) || p.user.username.toLowerCase().includes(query)
         );
       })
-    : visibleConversations;
+    : folderConversations;
 
   return (
     <View style={styles.container}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.folderBar} contentContainerStyle={styles.folderBarContent}>
+        <TouchableOpacity
+          style={[styles.folderChip, activeFolderId === null && styles.folderChipActive]}
+          onPress={() => setActiveFolderId(null)}
+        >
+          <Text style={[styles.folderChipText, activeFolderId === null && styles.folderChipTextActive]}>
+            Barchasi
+          </Text>
+        </TouchableOpacity>
+        {folders.map((folder) => (
+          <TouchableOpacity
+            key={folder.id}
+            style={[styles.folderChip, activeFolderId === folder.id && styles.folderChipActive]}
+            onPress={() => setActiveFolderId(folder.id)}
+          >
+            <Text style={[styles.folderChipText, activeFolderId === folder.id && styles.folderChipTextActive]}>
+              {folder.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={styles.folderEditChip} onPress={() => navigation.navigate("ChatFolders")}>
+          <Text style={styles.folderEditIcon}>✏️</Text>
+        </TouchableOpacity>
+      </ScrollView>
       <View style={styles.searchBar}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
@@ -213,6 +252,24 @@ export function ChatListScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
+  folderBar: { flexGrow: 0, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  folderBarContent: { paddingHorizontal: 8, paddingVertical: 8, alignItems: "center", gap: 8 },
+  folderChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.background,
+  },
+  folderChipActive: { backgroundColor: colors.primary },
+  folderChipText: { fontSize: 14, fontWeight: "500", color: colors.textSecondary },
+  folderChipTextActive: { color: "#fff" },
+  folderEditChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.background,
+  },
+  folderEditIcon: { fontSize: 14 },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",

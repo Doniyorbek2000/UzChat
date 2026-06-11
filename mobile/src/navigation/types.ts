@@ -33,6 +33,8 @@ export type RootStackParamList = {
   SharedMedia: { conversationId: string };
   StarredMessages: undefined;
   ArchivedChats: undefined;
+  ChatFolders: undefined;
+  EditChatFolder: { folderId: string };
   BlockedUsers: undefined;
   ChangePassword: undefined;
   PrivacySettings: undefined;

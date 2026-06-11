@@ -10,6 +10,7 @@ import { contactsRouter } from "./modules/contacts/contacts.routes";
 import { chatsRouter } from "./modules/chats/chats.routes";
 import { mediaRouter } from "./modules/media/media.routes";
 import { pushRouter } from "./modules/push/push.routes";
+import { foldersRouter } from "./modules/folders/folders.routes";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 
@@ -32,6 +33,7 @@ export function createApp() {
   app.use("/conversations", apiRateLimiter, chatsRouter);
   app.use("/media", apiRateLimiter, mediaRouter);
   app.use("/push", apiRateLimiter, pushRouter);
+  app.use("/chat-folders", apiRateLimiter, foldersRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

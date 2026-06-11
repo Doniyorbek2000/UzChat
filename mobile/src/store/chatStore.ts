@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { chatsApi } from "../api/chats";
 import { contactsApi } from "../api/contacts";
+import { chatFoldersApi } from "../api/chatFolders";
 import { getSocket } from "../socket/socket";
 import { useAuthStore } from "./authStore";
 import {
@@ -16,6 +17,7 @@ import { downloadAndDecryptFile, encryptAndUploadFile, extensionFromName } from 
 import { draftStorage } from "../storage/draftStorage";
 import { isConversationUnread } from "../utils/conversation";
 import {
+  ChatFolder,
   Conversation,
   ContactCardMeta,
   Message,
@@ -58,9 +60,16 @@ interface ChatState {
   listenersRegistered: boolean;
   drafts: Record<string, string>;
   contactAliases: Record<string, string>;
+  folders: ChatFolder[];
 
   loadConversations: () => Promise<void>;
   loadContactAliases: () => Promise<void>;
+  loadFolders: () => Promise<void>;
+  createFolder: (name: string) => Promise<ChatFolder>;
+  renameFolder: (folderId: string, name: string) => Promise<void>;
+  reorderFolders: (folderIds: string[]) => Promise<void>;
+  setFolderConversations: (folderId: string, conversationIds: string[]) => Promise<void>;
+  deleteFolder: (folderId: string) => Promise<void>;
   loadDrafts: () => Promise<void>;
   setDraft: (conversationId: string, text: string) => Promise<void>;
   getConversationKey: (conversation: Conversation) => string;
@@ -189,6 +198,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   listenersRegistered: false,
   drafts: {},
   contactAliases: {},
+  folders: [],
 
   loadConversations: async () => {
     const conversations = await chatsApi.list();
@@ -202,6 +212,41 @@ export const useChatStore = create<ChatState>((set, get) => ({
       if (contact.alias) contactAliases[contact.user.id] = contact.alias;
     }
     set({ contactAliases });
+  },
+
+  loadFolders: async () => {
+    const folders = await chatFoldersApi.list();
+    set({ folders });
+  },
+
+  createFolder: async (name) => {
+    const folder = await chatFoldersApi.create(name);
+    set((state) => ({ folders: [...state.folders, folder] }));
+    return folder;
+  },
+
+  renameFolder: async (folderId, name) => {
+    const folder = await chatFoldersApi.update(folderId, { name });
+    set((state) => ({ folders: state.folders.map((f) => (f.id === folderId ? folder : f)) }));
+  },
+
+  reorderFolders: async (folderIds) => {
+    const previous = get().folders;
+    const reordered = folderIds
+      .map((id) => previous.find((f) => f.id === id))
+      .filter((f): f is ChatFolder => !!f);
+    set({ folders: reordered });
+    await Promise.all(reordered.map((f, index) => chatFoldersApi.update(f.id, { order: index })));
+  },
+
+  setFolderConversations: async (folderId, conversationIds) => {
+    const folder = await chatFoldersApi.update(folderId, { conversationIds });
+    set((state) => ({ folders: state.folders.map((f) => (f.id === folderId ? folder : f)) }));
+  },
+
+  deleteFolder: async (folderId) => {
+    await chatFoldersApi.remove(folderId);
+    set((state) => ({ folders: state.folders.filter((f) => f.id !== folderId) }));
   },
 
   loadDrafts: async () => {

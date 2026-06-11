@@ -17,6 +17,8 @@ import { ShareContactScreen } from "../screens/chats/ShareContactScreen";
 import { SharedMediaScreen } from "../screens/chats/SharedMediaScreen";
 import { StarredMessagesScreen } from "../screens/chats/StarredMessagesScreen";
 import { ArchivedChatsScreen } from "../screens/chats/ArchivedChatsScreen";
+import { ChatFoldersScreen } from "../screens/chats/ChatFoldersScreen";
+import { EditChatFolderScreen } from "../screens/chats/EditChatFolderScreen";
 import { BlockedUsersScreen } from "../screens/contacts/BlockedUsersScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
@@ -113,6 +115,8 @@ export function RootNavigator() {
             <Stack.Screen name="SharedMedia" component={SharedMediaScreen} options={{ title: "Umumiy media" }} />
             <Stack.Screen name="StarredMessages" component={StarredMessagesScreen} options={{ title: "Saqlangan xabarlar" }} />
             <Stack.Screen name="ArchivedChats" component={ArchivedChatsScreen} options={{ title: "Arxivlangan suhbatlar" }} />
+            <Stack.Screen name="ChatFolders" component={ChatFoldersScreen} options={{ title: "Papkalar" }} />
+            <Stack.Screen name="EditChatFolder" component={EditChatFolderScreen} options={{ title: "Suhbatlarni tanlash" }} />
             <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
             <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />

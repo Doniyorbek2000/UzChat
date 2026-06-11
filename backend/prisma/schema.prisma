@@ -78,6 +78,7 @@ model User {
   blockedUsers     BlockedUser[]              @relation("BlockOwner")
   blockedByUsers   BlockedUser[]              @relation("BlockTarget")
   pushTokens       PushToken[]
+  chatFolders      ChatFolder[]
 
   @@index([username])
   @@index([phone])
@@ -280,6 +281,21 @@ model PushToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   token     String   @unique
   createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// User-defined chat list tabs (Telegram-style folders), e.g. "Ish", "Oila".
+model ChatFolder {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name   String
+  order  Int    @default(0)
+  // IDs of conversations included in this folder. Not enforced as a foreign key;
+  // stale IDs (e.g. for left groups) are simply filtered out client-side.
+  conversationIds String[] @default([])
+  createdAt       DateTime @default(now())
 
   @@index([userId])
 }
