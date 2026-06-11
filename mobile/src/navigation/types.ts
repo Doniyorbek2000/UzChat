@@ -35,6 +35,7 @@ export type RootStackParamList = {
   ForwardMessage: { conversationId: string; messageIds: string[] };
   ShareContact: { conversationId: string };
   SharedMedia: { conversationId: string };
+  ScheduledMessages: { conversationId: string };
   StarredMessages: undefined;
   ArchivedChats: undefined;
   ChatFolders: undefined;

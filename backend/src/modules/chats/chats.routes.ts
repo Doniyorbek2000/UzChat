@@ -52,6 +52,9 @@ chatsRouter.patch(
 
 chatsRouter.get("/starred/messages", messagesController.listStarred);
 
+chatsRouter.get("/:id/scheduled-messages", messagesController.listScheduled);
+chatsRouter.delete("/:id/scheduled-messages/:messageId", messagesController.cancelScheduled);
+
 chatsRouter.get("/:id/messages", messagesController.list);
 chatsRouter.get("/:id/media", messagesController.listMedia);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);

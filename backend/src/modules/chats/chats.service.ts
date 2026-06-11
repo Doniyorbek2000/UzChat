@@ -148,7 +148,7 @@ export const chatsService = {
           conversation: {
             include: {
               participants: { include: { user: { select: userSummarySelect } } },
-              messages: { orderBy: { createdAt: "desc" }, take: 1 },
+              messages: { where: { scheduledFor: null }, orderBy: { createdAt: "desc" }, take: 1 },
               pinnedMessage: pinnedMessageSelect,
             },
           },

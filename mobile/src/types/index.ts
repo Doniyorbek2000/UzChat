@@ -75,6 +75,9 @@ export interface Message {
   createdAt: string;
   editedAt: string | null;
   deletedAt: string | null;
+  // ISO timestamp; if set, this message hasn't been delivered yet and is only
+  // visible to its sender in the "Scheduled Messages" list.
+  scheduledFor: string | null;
 }
 
 export interface Conversation {

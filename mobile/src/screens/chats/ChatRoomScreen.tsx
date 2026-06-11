@@ -42,6 +42,7 @@ import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
 import { formatTime } from "../../utils/conversation";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
+import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
@@ -194,6 +195,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const setDraft = useChatStore((s) => s.setDraft);
+  const loadScheduledMessages = useChatStore((s) => s.loadScheduledMessages);
+  const scheduledCount = useChatStore((s) => s.scheduledMessagesByConversation[conversationId]?.length ?? 0);
 
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
@@ -346,6 +349,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         : undefined,
       headerRight: () => (
         <View style={styles.headerActions}>
+          {scheduledCount > 0 && (
+            <TouchableOpacity onPress={() => navigation.navigate("ScheduledMessages", { conversationId })} hitSlop={8}>
+              <View>
+                <Text style={styles.headerInfoIcon}>🕒</Text>
+                <View style={styles.headerBadge}>
+                  <Text style={styles.headerBadgeText}>{scheduledCount}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={() => setSearchVisible(true)} hitSlop={8}>
             <Text style={styles.headerInfoIcon}>🔍</Text>
           </TouchableOpacity>
@@ -376,6 +389,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     selectedIds,
     messages,
     user?.id,
+    scheduledCount,
   ]);
 
   useEffect(() => {
@@ -394,6 +408,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [conversationId, loadMessages]);
+
+  useEffect(() => {
+    loadScheduledMessages(conversationId).catch(() => {});
+  }, [conversationId, loadScheduledMessages]);
 
   const textRef = useRef(text);
   useEffect(() => {
@@ -476,7 +494,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setTimeout(() => setHighlightedMessageId((id) => (id === message.id ? null : id)), 1500);
   };
 
-  const onSend = async () => {
+  const onSend = async (scheduledFor?: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     const mentions = pendingMentions.filter((id) => {
@@ -508,13 +526,32 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPendingMentions([]);
     setTyping(conversationId, false);
     try {
-      await sendTextMessage(conversationId, trimmed, replyToId, mentions.length > 0 ? mentions : undefined);
-      scrollToLatest();
+      await sendTextMessage(conversationId, trimmed, replyToId, mentions.length > 0 ? mentions : undefined, scheduledFor);
+      if (scheduledFor) {
+        Alert.alert("Rejalashtirildi", "Xabar belgilangan vaqtda yuboriladi");
+      } else {
+        scrollToLatest();
+      }
     } catch (err: any) {
       setText(trimmed);
       const message = err?.response?.data?.error?.message;
       if (message) Alert.alert("Xatolik", message);
     }
+  };
+
+  const onScheduleSend = () => {
+    if (!text.trim() || editingMessage) return;
+    Alert.alert(
+      "Keyinroq yuborish",
+      "Xabarni qachon yuborish kerak?",
+      [
+        ...SCHEDULE_OPTIONS.map((option) => ({
+          text: option.label,
+          onPress: () => onSend(option.getDate().toISOString()),
+        })),
+        { text: "Bekor qilish", style: "cancel" as const },
+      ]
+    );
   };
 
   const onEdit = (item: DecryptedMessage) => {
@@ -1009,7 +1046,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             multiline
           />
           {text.trim() ? (
-            <TouchableOpacity style={styles.sendButton} onPress={onSend}>
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={() => onSend()}
+              onLongPress={onScheduleSend}
+              disabled={!!editingMessage}
+            >
               <Text style={styles.sendText}>Yuborish</Text>
             </TouchableOpacity>
           ) : (
@@ -1379,6 +1421,19 @@ const styles = StyleSheet.create({
   actionButtonDanger: { color: colors.danger },
   headerInfoIcon: { fontSize: 20, marginRight: 12 },
   headerActions: { flexDirection: "row", alignItems: "center" },
+  headerBadge: {
+    position: "absolute",
+    top: -4,
+    right: 6,
+    minWidth: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.danger,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 2,
+  },
+  headerBadgeText: { color: "#fff", fontSize: 9, fontWeight: "700" },
   headerTitleContainer: { alignItems: "center" },
   headerTitleText: { fontSize: 17, fontWeight: "600", color: colors.text },
   headerSubtitle: { fontSize: 12, color: colors.textSecondary },

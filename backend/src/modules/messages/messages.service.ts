@@ -127,7 +127,10 @@ export const messagesService = {
       throw Errors.forbidden("Siz vaqtincha xabar yubora olmaysiz: admin sizni cheklagan");
     }
 
+    const isScheduled = !!input.scheduledFor;
+
     if (
+      !isScheduled &&
       conversation?.type === ConversationType.GROUP &&
       conversation.slowModeSeconds > 0 &&
       participant.role === "MEMBER"
@@ -156,9 +159,10 @@ export const messagesService = {
 
     const mentions = await resolveMentions(conversationId, userId, input.mentions);
 
-    const expiresAt = conversation?.disappearingSeconds
-      ? new Date(Date.now() + conversation.disappearingSeconds * 1000)
-      : null;
+    const expiresAt =
+      !isScheduled && conversation?.disappearingSeconds
+        ? new Date(Date.now() + conversation.disappearingSeconds * 1000)
+        : null;
 
     const message = await prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
@@ -173,14 +177,19 @@ export const messagesService = {
           mentions,
           forwardedFromName: input.forwardedFromName,
           expiresAt,
+          scheduledFor: isScheduled ? new Date(input.scheduledFor!) : null,
         },
         include: messageInclude(userId),
       });
-      await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
+      if (!isScheduled) {
+        await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
+      }
       return created;
     });
 
-    notifyParticipants(userId, conversationId, message).catch(() => {});
+    if (!isScheduled) {
+      notifyParticipants(userId, conversationId, message).catch(() => {});
+    }
 
     return formatMessage(message);
   },
@@ -195,6 +204,7 @@ export const messagesService = {
     const messages = await prisma.message.findMany({
       where: {
         conversationId,
+        scheduledFor: null,
         NOT: { hiddenFor: { has: userId } },
         ...(Object.keys(createdAtFilter).length ? { createdAt: createdAtFilter } : {}),
       },
@@ -218,6 +228,7 @@ export const messagesService = {
         conversationId,
         type: { in: [MessageType.IMAGE, MessageType.VIDEO, MessageType.AUDIO, MessageType.FILE] },
         deletedAt: null,
+        scheduledFor: null,
         NOT: { hiddenFor: { has: userId } },
         ...(Object.keys(createdAtFilter).length ? { createdAt: createdAtFilter } : {}),
       },
@@ -362,5 +373,58 @@ export const messagesService = {
         })
       )
     );
+  },
+
+  async listScheduledMessages(userId: string, conversationId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const messages = await prisma.message.findMany({
+      where: { conversationId, senderId: userId, scheduledFor: { not: null } },
+      orderBy: { scheduledFor: "asc" },
+      include: messageInclude(userId),
+    });
+
+    return messages.map(formatMessage);
+  },
+
+  async cancelScheduledMessage(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId || message.scheduledFor === null) {
+      throw Errors.notFound("Rejalashtirilgan xabar");
+    }
+    if (message.senderId !== userId) throw Errors.forbidden();
+
+    await prisma.message.delete({ where: { id: messageId } });
+  },
+
+  // Publishes (delivers) scheduled messages whose time has come: makes them
+  // visible to other participants, computes a fresh disappearing-messages
+  // timer based on the conversation's current setting, and notifies recipients.
+  async publishDueScheduledMessages() {
+    const due = await prisma.message.findMany({
+      where: { scheduledFor: { lte: new Date() } },
+    });
+    if (due.length === 0) return [];
+
+    const published = [];
+    for (const m of due) {
+      const conversation = await prisma.conversation.findUnique({ where: { id: m.conversationId } });
+      const expiresAt = conversation?.disappearingSeconds
+        ? new Date(Date.now() + conversation.disappearingSeconds * 1000)
+        : null;
+
+      const updated = await prisma.message.update({
+        where: { id: m.id },
+        data: { scheduledFor: null, createdAt: new Date(), expiresAt },
+        include: messageInclude(m.senderId),
+      });
+      await prisma.conversation.update({ where: { id: m.conversationId }, data: { updatedAt: new Date() } });
+
+      notifyParticipants(m.senderId, m.conversationId, updated).catch(() => {});
+      published.push(formatMessage(updated));
+    }
+    return published;
   },
 };

@@ -7,7 +7,9 @@ export const messagesController = {
   async send(req: Request, res: Response, next: NextFunction) {
     try {
       const message = await messagesService.sendMessage(req.user!.sub, req.params.id, req.body);
-      getIo().to(`conversation:${req.params.id}`).emit("message:new", message);
+      if (!message.scheduledFor) {
+        getIo().to(`conversation:${req.params.id}`).emit("message:new", message);
+      }
       res.status(201).json(message);
     } catch (err) {
       next(err);
@@ -98,6 +100,24 @@ export const messagesController = {
     try {
       const messages = await messagesService.listStarred(req.user!.sub);
       res.json(messages);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async listScheduled(req: Request, res: Response, next: NextFunction) {
+    try {
+      const messages = await messagesService.listScheduledMessages(req.user!.sub, req.params.id);
+      res.json(messages);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async cancelScheduled(req: Request, res: Response, next: NextFunction) {
+    try {
+      await messagesService.cancelScheduledMessage(req.user!.sub, req.params.id, req.params.messageId);
+      res.status(204).send();
     } catch (err) {
       next(err);
     }

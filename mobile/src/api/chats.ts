@@ -16,6 +16,8 @@ export interface SendMessageInput {
   replyToId?: string;
   mentions?: string[];
   forwardedFromName?: string;
+  // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
+  scheduledFor?: string;
 }
 
 export const chatsApi = {
@@ -124,6 +126,14 @@ export const chatsApi = {
 
   sendMessage(conversationId: string, input: SendMessageInput) {
     return apiClient.post<Message>(`/conversations/${conversationId}/messages`, input).then((r) => r.data);
+  },
+
+  listScheduledMessages(conversationId: string) {
+    return apiClient.get<Message[]>(`/conversations/${conversationId}/scheduled-messages`).then((r) => r.data);
+  },
+
+  cancelScheduledMessage(conversationId: string, messageId: string) {
+    return apiClient.delete(`/conversations/${conversationId}/scheduled-messages/${messageId}`);
   },
 
   markRead(conversationId: string) {

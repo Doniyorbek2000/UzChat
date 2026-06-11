@@ -56,6 +56,7 @@ interface ChatState {
   conversations: Conversation[];
   messagesByConversation: Record<string, DecryptedMessage[]>;
   hasMoreByConversation: Record<string, boolean>;
+  scheduledMessagesByConversation: Record<string, DecryptedMessage[]>;
   typingUsers: Record<string, Set<string>>;
   onlineUsers: Set<string>;
   listenersRegistered: boolean;
@@ -76,7 +77,15 @@ interface ChatState {
   getConversationKey: (conversation: Conversation) => string;
   loadMessages: (conversationId: string) => Promise<void>;
   loadOlderMessages: (conversationId: string) => Promise<void>;
-  sendTextMessage: (conversationId: string, text: string, replyToId?: string, mentions?: string[]) => Promise<void>;
+  sendTextMessage: (
+    conversationId: string,
+    text: string,
+    replyToId?: string,
+    mentions?: string[],
+    scheduledFor?: string
+  ) => Promise<void>;
+  loadScheduledMessages: (conversationId: string) => Promise<void>;
+  cancelScheduledMessage: (conversationId: string, messageId: string) => Promise<void>;
   sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
   sendContactMessage: (conversationId: string, contact: User, replyToId?: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
@@ -196,6 +205,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   messagesByConversation: {},
   hasMoreByConversation: {},
+  scheduledMessagesByConversation: {},
   typingUsers: {},
   onlineUsers: new Set(),
   listenersRegistered: false,
@@ -321,15 +331,32 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  sendTextMessage: async (conversationId, text, replyToId, mentions) => {
+  sendTextMessage: async (conversationId, text, replyToId, mentions, scheduledFor) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
     const key = get().getConversationKey(conversation);
     const { ciphertext, nonce } = encryptMessage(text, key);
 
-    const message = await chatsApi.sendMessage(conversationId, { type: "TEXT", ciphertext, nonce, replyToId, mentions });
+    const message = await chatsApi.sendMessage(conversationId, {
+      type: "TEXT",
+      ciphertext,
+      nonce,
+      replyToId,
+      mentions,
+      scheduledFor,
+    });
     const decrypted = decryptToMessage(key, message);
+
+    if (message.scheduledFor) {
+      set((state) => ({
+        scheduledMessagesByConversation: {
+          ...state.scheduledMessagesByConversation,
+          [conversationId]: [...(state.scheduledMessagesByConversation[conversationId] ?? []), decrypted],
+        },
+      }));
+      return;
+    }
 
     set((state) => {
       const existing = state.messagesByConversation[conversationId] ?? [];
@@ -342,6 +369,29 @@ export const useChatStore = create<ChatState>((set, get) => ({
         ),
       };
     });
+  },
+
+  loadScheduledMessages: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+
+    const key = get().getConversationKey(conversation);
+    const messages = await chatsApi.listScheduledMessages(conversationId);
+    const decrypted = messages.map((m) => decryptToMessage(key, m));
+
+    set((state) => ({
+      scheduledMessagesByConversation: { ...state.scheduledMessagesByConversation, [conversationId]: decrypted },
+    }));
+  },
+
+  cancelScheduledMessage: async (conversationId, messageId) => {
+    await chatsApi.cancelScheduledMessage(conversationId, messageId);
+    set((state) => ({
+      scheduledMessagesByConversation: {
+        ...state.scheduledMessagesByConversation,
+        [conversationId]: (state.scheduledMessagesByConversation[conversationId] ?? []).filter((m) => m.id !== messageId),
+      },
+    }));
   },
 
   sendMediaMessage: async (conversationId, asset, type, replyToId) => {
@@ -862,7 +912,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       set((state) => {
         const existing = state.messagesByConversation[message.conversationId] ?? [];
-        if (existing.some((m) => m.id === decrypted.id)) return state;
+        const scheduled = state.scheduledMessagesByConversation[message.conversationId];
+        const nextScheduled = scheduled?.some((m) => m.id === decrypted.id)
+          ? { [message.conversationId]: scheduled.filter((m) => m.id !== decrypted.id) }
+          : null;
+
+        if (existing.some((m) => m.id === decrypted.id)) {
+          return nextScheduled
+            ? { scheduledMessagesByConversation: { ...state.scheduledMessagesByConversation, ...nextScheduled } }
+            : state;
+        }
         return {
           messagesByConversation: {
             ...state.messagesByConversation,
@@ -873,6 +932,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
             lastMessage: message,
             updatedAt: message.createdAt,
           }),
+          ...(nextScheduled
+            ? { scheduledMessagesByConversation: { ...state.scheduledMessagesByConversation, ...nextScheduled } }
+            : {}),
         };
       });
     });
