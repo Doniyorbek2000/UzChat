@@ -15,6 +15,7 @@ export interface SendMessageInput {
   mediaUrl?: string;
   replyToId?: string;
   mentions?: string[];
+  forwardedFromName?: string;
 }
 
 export const chatsApi = {

@@ -62,6 +62,7 @@ export interface Message {
   replyTo?: ReplyToSnapshot | null;
   reactions: MessageReaction[];
   mentions: string[];
+  forwardedFromName: string | null;
   isStarred: boolean;
   createdAt: string;
   editedAt: string | null;

@@ -9,6 +9,8 @@ export const sendMessageSchema = z.object({
   replyToId: z.string().uuid().optional(),
   // user IDs of @-mentioned participants (sent in cleartext for notification routing)
   mentions: z.array(z.string().uuid()).max(50).optional(),
+  // original sender's display name, set when forwarding a message from another conversation
+  forwardedFromName: z.string().min(1).max(100).optional(),
 });
 
 export const listMessagesQuerySchema = z.object({

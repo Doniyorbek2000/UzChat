@@ -626,6 +626,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           {isGroup && !isOwn && sender && (
             <Text style={styles.senderName}>{contactAliases[sender.id] ?? sender.displayName}</Text>
           )}
+          {item.forwardedFromName && !item.deletedAt && (
+            <Text style={styles.forwardedLabel}>↪ Yo'naltirilgan: {item.forwardedFromName}</Text>
+          )}
           {item.replyPreview && (
             <View style={styles.replyBox}>
               <View style={styles.replyBar} />
@@ -1034,6 +1037,7 @@ const styles = StyleSheet.create({
   bubbleDeleted: { opacity: 0.6 },
   bubbleHighlighted: { borderWidth: 2, borderColor: colors.primary },
   senderName: { fontSize: 12, fontWeight: "600", color: colors.primaryDark, marginBottom: 2 },
+  forwardedLabel: { fontSize: 11, color: colors.textSecondary, fontStyle: "italic", marginBottom: 2 },
   replyBox: { flexDirection: "row", marginBottom: 6, opacity: 0.85 },
   replyBar: { width: 3, borderRadius: 2, backgroundColor: colors.primary, marginRight: 6 },
   replyContent: { flex: 1 },

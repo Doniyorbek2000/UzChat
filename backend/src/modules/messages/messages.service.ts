@@ -141,6 +141,7 @@ export const messagesService = {
           mediaUrl: input.mediaUrl,
           replyToId: input.replyToId,
           mentions,
+          forwardedFromName: input.forwardedFromName,
           expiresAt,
         },
         include: messageInclude(userId),

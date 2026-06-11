@@ -377,6 +377,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const sourceKey = get().getConversationKey(sourceConversation);
     const targetKey = get().getConversationKey(targetConversation);
 
+    const currentUser = useAuthStore.getState().user;
+    const aliases = get().contactAliases;
+    const forwardedFromName =
+      message.forwardedFromName ??
+      (message.senderId === currentUser?.id
+        ? currentUser.displayName
+        : aliases[message.senderId] ??
+          sourceConversation.participants.find((p) => p.userId === message.senderId)?.user.displayName);
+
     let sentMessage: Message;
     if (MEDIA_TYPES.includes(message.type) && message.mediaUrl && message.meta) {
       const localUri = await downloadAndDecryptFile(
@@ -388,10 +397,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const { url, size, fileNonce } = await encryptAndUploadFile(localUri, targetKey);
       const meta: MediaMeta = { ...message.meta, size, fileNonce, caption: undefined };
       const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), targetKey);
-      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: message.type, ciphertext, nonce, mediaUrl: url });
+      sentMessage = await chatsApi.sendMessage(targetConversationId, {
+        type: message.type,
+        ciphertext,
+        nonce,
+        mediaUrl: url,
+        forwardedFromName,
+      });
     } else {
       const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
-      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce });
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce, forwardedFromName });
     }
 
     const decrypted = decryptToMessage(targetKey, sentMessage);

@@ -210,6 +210,10 @@ model Message {
   // ciphertext so the server can route mention notifications)
   mentions String[] @default([])
 
+  // When set, this message was forwarded from another conversation; holds the
+  // original sender's display name (sent in cleartext for the "Forwarded" label).
+  forwardedFromName String?
+
   replyToId String?
   replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies   Message[] @relation("MessageReplies")
