@@ -23,6 +23,18 @@ const userSummarySelect = {
   lastSeenPrivacy: true,
 } as const;
 
+const MUTE_DURATIONS_MS: Record<"1h" | "8h" | "1d" | "1w", number> = {
+  "1h": 60 * 60 * 1000,
+  "8h": 8 * 60 * 60 * 1000,
+  "1d": 24 * 60 * 60 * 1000,
+  "1w": 7 * 24 * 60 * 60 * 1000,
+};
+
+/** A conversation is muted if muted indefinitely, or muted until a time still in the future. */
+function isParticipantMuted(p: { isMuted: boolean; mutedUntil: Date | null }): boolean {
+  return p.isMuted || (p.mutedUntil !== null && p.mutedUntil.getTime() > Date.now());
+}
+
 const pinnedMessageSelect = {
   select: {
     id: true,
@@ -126,7 +138,8 @@ export const chatsService = {
         keySenderPublicKey: p.keySenderPublicKey,
         lastReadAt: p.lastReadAt,
         isPinned: !!p.pinnedAt,
-        isMuted: p.isMuted,
+        isMuted: isParticipantMuted(p),
+        mutedUntil: p.mutedUntil,
         isArchived: p.isArchived,
         markedUnread: p.markedUnread,
         isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
@@ -182,7 +195,8 @@ export const chatsService = {
       keySenderPublicKey: participant.keySenderPublicKey,
       lastReadAt: participant.lastReadAt,
       isPinned: !!participant.pinnedAt,
-      isMuted: participant.isMuted,
+      isMuted: isParticipantMuted(participant),
+      mutedUntil: participant.mutedUntil,
       isArchived: participant.isArchived,
       markedUnread: participant.markedUnread,
       isBlocked,
@@ -202,11 +216,17 @@ export const chatsService = {
   async updatePreferences(userId: string, conversationId: string, input: UpdatePreferencesInput) {
     const participant = await chatsService.assertParticipant(userId, conversationId);
 
+    let muteData: { isMuted?: boolean; mutedUntil?: Date | null } = {};
+    if (input.muteFor === "off") muteData = { isMuted: false, mutedUntil: null };
+    else if (input.muteFor === "forever") muteData = { isMuted: true, mutedUntil: null };
+    else if (input.muteFor !== undefined)
+      muteData = { isMuted: false, mutedUntil: new Date(Date.now() + MUTE_DURATIONS_MS[input.muteFor]) };
+
     await prisma.conversationParticipant.update({
       where: { id: participant.id },
       data: {
         ...(input.isPinned !== undefined ? { pinnedAt: input.isPinned ? new Date() : null } : {}),
-        ...(input.isMuted !== undefined ? { isMuted: input.isMuted } : {}),
+        ...muteData,
         ...(input.isArchived !== undefined ? { isArchived: input.isArchived } : {}),
         ...(input.markedUnread !== undefined ? { markedUnread: input.markedUnread } : {}),
       },

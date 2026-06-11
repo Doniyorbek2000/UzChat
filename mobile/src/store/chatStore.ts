@@ -22,6 +22,7 @@ import {
   MediaMeta,
   MessageReaction,
   MessageType,
+  MuteDuration,
   ParticipantRole,
   ReplyToSnapshot,
   User,
@@ -73,7 +74,7 @@ interface ChatState {
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
   markRead: (conversationId: string) => Promise<void>;
   togglePin: (conversationId: string) => Promise<void>;
-  toggleMute: (conversationId: string) => Promise<void>;
+  muteConversation: (conversationId: string, muteFor: MuteDuration) => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
   clearHistory: (conversationId: string) => Promise<void>;
@@ -464,10 +465,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  toggleMute: async (conversationId) => {
+  muteConversation: async (conversationId, muteFor) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
-    const updated = await chatsApi.updatePreferences(conversationId, { isMuted: !conversation.isMuted });
+    const updated = await chatsApi.updatePreferences(conversationId, { muteFor });
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));
@@ -754,6 +755,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
               lastReadAt: existing.lastReadAt,
               isPinned: existing.isPinned,
               isMuted: existing.isMuted,
+              mutedUntil: existing.mutedUntil,
               isArchived: existing.isArchived,
               markedUnread: existing.markedUnread,
               inviteCode: existing.inviteCode,

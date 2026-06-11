@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Conversation, InvitePreview, Message, MessageReaction, MessageType, ParticipantRole } from "../types";
+import { Conversation, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -46,7 +46,7 @@ export const chatsApi = {
 
   updatePreferences(
     conversationId: string,
-    input: { isPinned?: boolean; isMuted?: boolean; isArchived?: boolean; markedUnread?: boolean }
+    input: { isPinned?: boolean; muteFor?: MuteDuration; isArchived?: boolean; markedUnread?: boolean }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}/preferences`, input).then((r) => r.data);
   },

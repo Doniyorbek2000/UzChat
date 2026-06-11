@@ -1,5 +1,7 @@
 export type LastSeenPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
 export type GroupAddPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
+// "1h"/"8h"/"1d"/"1w": mute for that duration; "forever": mute indefinitely; "off": unmute.
+export type MuteDuration = "1h" | "8h" | "1d" | "1w" | "forever" | "off";
 
 export interface User {
   id: string;
@@ -80,6 +82,8 @@ export interface Conversation {
   lastReadAt: string | null;
   isPinned: boolean;
   isMuted: boolean;
+  // When isMuted is due to a timed mute (not "forever"), the ISO timestamp it expires at.
+  mutedUntil: string | null;
   isArchived: boolean;
   markedUnread: boolean;
   isBlocked: boolean;

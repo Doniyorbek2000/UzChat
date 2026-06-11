@@ -54,14 +54,15 @@ export const updateParticipantRoleSchema = z.object({
 export const updatePreferencesSchema = z
   .object({
     isPinned: z.boolean().optional(),
-    isMuted: z.boolean().optional(),
+    // "1h"/"8h"/"1d"/"1w": mute for that duration; "forever": mute indefinitely; "off": unmute.
+    muteFor: z.enum(["1h", "8h", "1d", "1w", "forever", "off"]).optional(),
     isArchived: z.boolean().optional(),
     markedUnread: z.boolean().optional(),
   })
   .refine(
     (data) =>
       data.isPinned !== undefined ||
-      data.isMuted !== undefined ||
+      data.muteFor !== undefined ||
       data.isArchived !== undefined ||
       data.markedUnread !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }

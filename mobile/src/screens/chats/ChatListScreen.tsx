@@ -29,7 +29,7 @@ export function ChatListScreen({ navigation }: Props) {
   const setupSocketListeners = useChatStore((s) => s.setupSocketListeners);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const togglePin = useChatStore((s) => s.togglePin);
-  const toggleMute = useChatStore((s) => s.toggleMute);
+  const muteConversation = useChatStore((s) => s.muteConversation);
   const toggleArchive = useChatStore((s) => s.toggleArchive);
   const toggleUnread = useChatStore((s) => s.toggleUnread);
   const drafts = useChatStore((s) => s.drafts);
@@ -69,6 +69,20 @@ export function ChatListScreen({ navigation }: Props) {
     }
   };
 
+  const onMutePress = (item: Conversation) => {
+    if (item.isMuted) {
+      muteConversation(item.id, "off").catch(() => {});
+      return;
+    }
+    Alert.alert("Ovozsiz qilish muddati", undefined, [
+      { text: "1 soatga", onPress: () => muteConversation(item.id, "1h").catch(() => {}) },
+      { text: "8 soatga", onPress: () => muteConversation(item.id, "8h").catch(() => {}) },
+      { text: "1 haftaga", onPress: () => muteConversation(item.id, "1w").catch(() => {}) },
+      { text: "Doimiy", onPress: () => muteConversation(item.id, "forever").catch(() => {}) },
+      { text: "Bekor qilish", style: "cancel" },
+    ]);
+  };
+
   const onLongPressConversation = (item: Conversation) => {
     Alert.alert(item.title ?? "Suhbat", undefined, [
       {
@@ -81,7 +95,7 @@ export function ChatListScreen({ navigation }: Props) {
       },
       {
         text: item.isMuted ? "🔔 Ovozli qilish" : "🔕 Ovozsiz qilish",
-        onPress: () => toggleMute(item.id).catch(() => {}),
+        onPress: () => onMutePress(item),
       },
       {
         text: item.isArchived ? "📤 Arxivdan chiqarish" : "🗄 Arxivlash",

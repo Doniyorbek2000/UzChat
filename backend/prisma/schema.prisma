@@ -175,7 +175,10 @@ model ConversationParticipant {
 
   joinedAt     DateTime  @default(now())
   lastReadAt   DateTime?
+  // True when this conversation is muted indefinitely ("Doimiy").
   isMuted      Boolean   @default(false)
+  // When set and in the future, this conversation is muted until this time.
+  mutedUntil   DateTime?
   pinnedAt     DateTime?
   isArchived   Boolean   @default(false)
   // User manually flagged this conversation as unread; cleared on next markRead.
