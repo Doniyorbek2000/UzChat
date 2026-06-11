@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -16,6 +16,7 @@ export function NewGroupScreen({ navigation }: Props) {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [search, setSearch] = useState("");
   const createGroupConversation = useChatStore((s) => s.createGroupConversation);
 
   useEffect(() => {
@@ -25,6 +26,17 @@ export function NewGroupScreen({ navigation }: Props) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  const filteredContacts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return contacts;
+    return contacts.filter((item) => {
+      const alias = item.alias?.toLowerCase() ?? "";
+      const displayName = item.user.displayName.toLowerCase();
+      const username = item.user.username.toLowerCase();
+      return alias.includes(query) || displayName.includes(query) || username.includes(query);
+    });
+  }, [contacts, search]);
 
   const toggle = (userId: string) => {
     setSelected((prev) => {
@@ -67,8 +79,26 @@ export function NewGroupScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <TextInput style={styles.input} placeholder="Guruh nomi" value={title} onChangeText={setTitle} />
+      {contacts.length > 0 && (
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Qidirish"
+            placeholderTextColor={colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch("")} hitSlop={8}>
+              <Text style={styles.searchClear}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
       <FlatList
-        data={contacts}
+        data={filteredContacts}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => {
@@ -85,7 +115,9 @@ export function NewGroupScreen({ navigation }: Props) {
         }}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Hali kontaktlar yo'q</Text>
+            <Text style={styles.emptyText}>
+              {contacts.length === 0 ? "Hali kontaktlar yo'q" : "Hech narsa topilmadi"}
+            </Text>
           </View>
         }
       />
@@ -113,6 +145,20 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   name: { fontSize: 16, color: colors.text, flex: 1 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    paddingHorizontal: 12,
+    height: 40,
+    gap: 8,
+  },
+  searchIcon: { fontSize: 14 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
+  searchClear: { fontSize: 14, color: colors.textSecondary, paddingHorizontal: 4 },
   checkbox: {
     width: 24,
     height: 24,
