@@ -54,6 +54,12 @@ export function NewChatScreen({ navigation }: Props) {
         </View>
         <Text style={styles.actionText}>Kontakt qo'shish</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("JoinGroup")}>
+        <View style={styles.groupIcon}>
+          <Text style={styles.groupIconText}>🔗</Text>
+        </View>
+        <Text style={styles.actionText}>Havola orqali qo'shilish</Text>
+      </TouchableOpacity>
 
       <FlatList
         data={contacts}

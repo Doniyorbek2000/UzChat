@@ -78,6 +78,8 @@ export interface Conversation {
   isArchived: boolean;
   markedUnread: boolean;
   isBlocked: boolean;
+  // The current group's invite code (only visible to OWNER/ADMIN), or null.
+  inviteCode: string | null;
   pinnedMessage: ReplyToSnapshot | null;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;
@@ -99,6 +101,15 @@ export interface ContactRequest {
 export interface BlockedUser {
   id: string;
   user: User;
+}
+
+export interface InvitePreview {
+  id: string;
+  type: ConversationType;
+  title: string | null;
+  description: string | null;
+  avatarUrl: string | null;
+  memberCount: number;
 }
 
 /** Encrypted alongside the message ciphertext for IMAGE/VIDEO/AUDIO/FILE messages. */

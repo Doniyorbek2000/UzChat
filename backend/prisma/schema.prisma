@@ -127,6 +127,9 @@ model Conversation {
   pinnedMessageId String?  @unique
   pinnedMessage   Message? @relation("PinnedMessage", fields: [pinnedMessageId], references: [id], onDelete: SetNull)
 
+  // Shareable code allowing anyone to join a GROUP conversation; null means invites are disabled.
+  inviteCode String? @unique
+
   participants ConversationParticipant[]
   messages     Message[]
 }

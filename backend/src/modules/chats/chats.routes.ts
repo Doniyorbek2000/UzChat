@@ -5,6 +5,7 @@ import { validateBody } from "../../utils/validate";
 import {
   addParticipantSchema,
   createConversationSchema,
+  joinByInviteSchema,
   setPinnedMessageSchema,
   updateConversationSchema,
   updateParticipantRoleSchema,
@@ -23,6 +24,10 @@ chatsRouter.get("/:id", chatsController.get);
 chatsRouter.patch("/:id", validateBody(updateConversationSchema), chatsController.update);
 chatsRouter.patch("/:id/preferences", validateBody(updatePreferencesSchema), chatsController.updatePreferences);
 chatsRouter.put("/:id/pinned-message", validateBody(setPinnedMessageSchema), chatsController.setPinnedMessage);
+chatsRouter.post("/:id/invite-link", chatsController.createInviteLink);
+chatsRouter.delete("/:id/invite-link", chatsController.revokeInviteLink);
+chatsRouter.get("/invite/:code", chatsController.getInvitePreview);
+chatsRouter.post("/invite/:code/join", validateBody(joinByInviteSchema), chatsController.joinByInvite);
 chatsRouter.post("/:id/clear", chatsController.clearHistory);
 chatsRouter.post("/:id/leave", chatsController.leave);
 chatsRouter.post("/:id/participants", validateBody(addParticipantSchema), chatsController.addParticipant);

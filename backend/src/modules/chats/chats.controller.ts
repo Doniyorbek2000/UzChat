@@ -93,6 +93,52 @@ export const chatsController = {
     }
   },
 
+  async createInviteLink(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await chatsService.createInviteLink(req.user!.sub, req.params.id);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async revokeInviteLink(req: Request, res: Response, next: NextFunction) {
+    try {
+      await chatsService.revokeInviteLink(req.user!.sub, req.params.id);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async getInvitePreview(req: Request, res: Response, next: NextFunction) {
+    try {
+      const preview = await chatsService.getInvitePreview(req.params.code);
+      res.json(preview);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async joinByInvite(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.sub;
+      const { conversation, alreadyMember } = await chatsService.joinByInvite(userId, req.params.code, req.body);
+
+      if (!alreadyMember) {
+        getIo().to(`user:${userId}`).socketsJoin(`conversation:${conversation.id}`);
+        getIo()
+          .to(`conversation:${conversation.id}`)
+          .except(`user:${userId}`)
+          .emit("conversation:updated", conversation);
+      }
+
+      res.status(alreadyMember ? 200 : 201).json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async removeParticipant(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;

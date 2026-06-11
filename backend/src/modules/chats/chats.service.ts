@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { ConversationType, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
@@ -5,6 +6,7 @@ import { contactsService } from "../contacts/contacts.service";
 import {
   AddParticipantInput,
   CreateConversationInput,
+  JoinByInviteInput,
   UpdateConversationInput,
   UpdatePreferencesInput,
 } from "./chats.schema";
@@ -117,6 +119,7 @@ export const chatsService = {
         isArchived: p.isArchived,
         markedUnread: p.markedUnread,
         isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
+        inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
         pinnedMessage: p.conversation.pinnedMessage,
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
@@ -168,6 +171,7 @@ export const chatsService = {
       isArchived: participant.isArchived,
       markedUnread: participant.markedUnread,
       isBlocked,
+      inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
       pinnedMessage: participant.conversation.pinnedMessage,
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
@@ -218,6 +222,85 @@ export const chatsService = {
     });
 
     return chatsService.getConversation(userId, conversationId);
+  },
+
+  async assertGroupManager(userId: string, conversationId: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.GROUP) {
+      throw Errors.badRequest("Bu amal faqat guruhlar uchun mavjud");
+    }
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester || (requester.role !== ParticipantRole.OWNER && requester.role !== ParticipantRole.ADMIN)) {
+      throw Errors.forbidden();
+    }
+
+    return conversation;
+  },
+
+  async createInviteLink(userId: string, conversationId: string) {
+    await chatsService.assertGroupManager(userId, conversationId);
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const inviteCode = crypto.randomBytes(6).toString("base64url");
+      try {
+        await prisma.conversation.update({ where: { id: conversationId }, data: { inviteCode } });
+        return { inviteCode };
+      } catch (err: any) {
+        if (err?.code !== "P2002") throw err;
+      }
+    }
+    throw Errors.badRequest("Taklif havolasini yaratib bo'lmadi");
+  },
+
+  async revokeInviteLink(userId: string, conversationId: string) {
+    await chatsService.assertGroupManager(userId, conversationId);
+    await prisma.conversation.update({ where: { id: conversationId }, data: { inviteCode: null } });
+  },
+
+  async getInvitePreview(code: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { inviteCode: code },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Taklif havolasi");
+
+    return {
+      id: conversation.id,
+      type: conversation.type,
+      title: conversation.title,
+      description: conversation.description,
+      avatarUrl: conversation.avatarUrl,
+      memberCount: conversation.participants.length,
+    };
+  },
+
+  async joinByInvite(userId: string, code: string, input: JoinByInviteInput) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { inviteCode: code },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Taklif havolasi");
+
+    const alreadyMember = conversation.participants.some((p) => p.userId === userId);
+    if (!alreadyMember) {
+      await prisma.conversationParticipant.create({
+        data: {
+          conversationId: conversation.id,
+          userId,
+          role: ParticipantRole.MEMBER,
+          wrappedKey: input.wrappedKey,
+          wrappedKeyNonce: input.wrappedKeyNonce,
+          keySenderPublicKey: input.keySenderPublicKey,
+        },
+      });
+    }
+
+    return { conversation: await chatsService.getConversation(userId, conversation.id), alreadyMember };
   },
 
   async addParticipant(userId: string, conversationId: string, input: AddParticipantInput) {

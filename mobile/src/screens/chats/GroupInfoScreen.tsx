@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, Share } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
+import { encodeInviteLink } from "../../crypto/e2ee";
 import { ConversationParticipant, ParticipantRole } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
@@ -27,10 +28,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const updateParticipantRole = useChatStore((s) => s.updateParticipantRole);
   const leaveGroup = useChatStore((s) => s.leaveGroup);
   const clearHistory = useChatStore((s) => s.clearHistory);
+  const createInviteLink = useChatStore((s) => s.createInviteLink);
+  const revokeInviteLink = useChatStore((s) => s.revokeInviteLink);
+  const getConversationKey = useChatStore((s) => s.getConversationKey);
 
   const [title, setTitle] = useState(conversation?.title ?? "");
   const [description, setDescription] = useState(conversation?.description ?? "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   if (!conversation) return null;
 
@@ -64,6 +69,28 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
       setDescription(conversation.description ?? "");
     }
+  };
+
+  const onShareInviteLink = async () => {
+    if (inviteLoading) return;
+    setInviteLoading(true);
+    try {
+      const invite = conversation.inviteCode
+        ? encodeInviteLink(conversation.inviteCode, getConversationKey(conversation))
+        : await createInviteLink(conversationId);
+      await Share.share({ message: invite });
+    } catch {
+      Alert.alert("Xatolik", "Taklif havolasini ulashib bo'lmadi");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const onRevokeInviteLink = () => {
+    Alert.alert("Taklif havolasini bekor qilish", "Eski havola endi ishlamaydi. Davom etilsinmi?", [
+      { text: "Yo'q", style: "cancel" },
+      { text: "Ha, bekor qilish", style: "destructive", onPress: () => revokeInviteLink(conversationId).catch(() => {}) },
+    ]);
   };
 
   const onChangeAvatar = async () => {
@@ -218,6 +245,24 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       )}
 
+      {canManage && (
+        <View style={styles.inviteSection}>
+          <TouchableOpacity style={styles.inviteRow} onPress={onShareInviteLink} disabled={inviteLoading}>
+            <Text style={styles.inviteIcon}>🔗</Text>
+            <Text style={styles.inviteText}>
+              {conversation.inviteCode ? "Taklif havolasini ulashish" : "Taklif havolasi yaratish"}
+            </Text>
+            {inviteLoading && <ActivityIndicator size="small" color={colors.primary} />}
+          </TouchableOpacity>
+          {conversation.inviteCode && (
+            <TouchableOpacity style={styles.inviteRow} onPress={onRevokeInviteLink}>
+              <Text style={styles.inviteIcon}>🚫</Text>
+              <Text style={[styles.inviteText, { color: colors.danger }]}>Havolani bekor qilish</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
       <FlatList
         data={conversation.participants}
         keyExtractor={(item) => item.userId}
@@ -290,6 +335,13 @@ const styles = StyleSheet.create({
   descriptionLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4, fontWeight: "600" },
   descriptionText: { fontSize: 15, color: colors.text, lineHeight: 20 },
   descriptionInput: { fontSize: 15, color: colors.text, lineHeight: 20, padding: 0 },
+  inviteSection: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  inviteRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
+  inviteIcon: { fontSize: 18 },
+  inviteText: { fontSize: 15, color: colors.text, flex: 1 },
   addButton: { paddingVertical: 14, paddingHorizontal: 16 },
   addButtonText: { color: colors.primary, fontSize: 15, fontWeight: "600" },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },

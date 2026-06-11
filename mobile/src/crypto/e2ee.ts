@@ -91,3 +91,20 @@ export function decryptBytes(ciphertext: Uint8Array, nonce: string, conversation
   if (!opened) throw new Error("Faylni ochib bo'lmadi");
   return opened;
 }
+
+/**
+ * Builds a shareable invite string that bundles the server-issued invite code
+ * with the conversation's symmetric key (never sent to the server) so that
+ * whoever joins via this link can decrypt the conversation's history.
+ */
+export function encodeInviteLink(inviteCode: string, conversationKey: string): string {
+  return `${inviteCode}.${conversationKey}`;
+}
+
+/** Parses an invite string produced by `encodeInviteLink`. Returns null if malformed. */
+export function decodeInviteLink(invite: string): { code: string; key: string } | null {
+  const trimmed = invite.trim();
+  const dot = trimmed.indexOf(".");
+  if (dot <= 0 || dot === trimmed.length - 1) return null;
+  return { code: trimmed.slice(0, dot), key: trimmed.slice(dot + 1) };
+}

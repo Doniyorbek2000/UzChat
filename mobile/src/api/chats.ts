@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Conversation, Message, MessageReaction, MessageType, ParticipantRole } from "../types";
+import { Conversation, InvitePreview, Message, MessageReaction, MessageType, ParticipantRole } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -70,6 +70,22 @@ export const chatsApi = {
 
   leave(conversationId: string) {
     return apiClient.post(`/conversations/${conversationId}/leave`);
+  },
+
+  createInviteLink(conversationId: string) {
+    return apiClient.post<{ inviteCode: string }>(`/conversations/${conversationId}/invite-link`).then((r) => r.data);
+  },
+
+  revokeInviteLink(conversationId: string) {
+    return apiClient.delete(`/conversations/${conversationId}/invite-link`);
+  },
+
+  getInvitePreview(code: string) {
+    return apiClient.get<InvitePreview>(`/conversations/invite/${code}`).then((r) => r.data);
+  },
+
+  joinByInvite(code: string, input: { wrappedKey: string; wrappedKeyNonce: string; keySenderPublicKey: string }) {
+    return apiClient.post<Conversation>(`/conversations/invite/${code}/join`, input).then((r) => r.data);
   },
 
   listMessages(conversationId: string, before?: string, limit = 30) {

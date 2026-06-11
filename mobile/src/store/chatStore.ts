@@ -4,7 +4,9 @@ import { contactsApi } from "../api/contacts";
 import { getSocket } from "../socket/socket";
 import { useAuthStore } from "./authStore";
 import {
+  decodeInviteLink,
   decryptMessage,
+  encodeInviteLink,
   encryptMessage,
   generateConversationKey,
   unwrapConversationKey,
@@ -86,6 +88,9 @@ interface ChatState {
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;
   updateParticipantRole: (conversationId: string, userId: string, role: ParticipantRole) => Promise<void>;
   leaveGroup: (conversationId: string) => Promise<void>;
+  createInviteLink: (conversationId: string) => Promise<string>;
+  revokeInviteLink: (conversationId: string) => Promise<void>;
+  joinConversationByInvite: (invite: string) => Promise<Conversation>;
 }
 
 function dropConversation<T>(record: Record<string, T>, conversationId: string): Record<string, T> {
@@ -602,6 +607,47 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
+  createInviteLink: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) throw new Error("Suhbat topilmadi");
+
+    const { inviteCode } = await chatsApi.createInviteLink(conversationId);
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, inviteCode }),
+    }));
+
+    const conversationKey = get().getConversationKey(conversation);
+    return encodeInviteLink(inviteCode, conversationKey);
+  },
+
+  revokeInviteLink: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+
+    await chatsApi.revokeInviteLink(conversationId);
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, inviteCode: null }),
+    }));
+  },
+
+  joinConversationByInvite: async (invite) => {
+    const decoded = decodeInviteLink(invite);
+    if (!decoded) throw new Error("Taklif havolasi noto'g'ri");
+
+    const { keyPair } = useAuthStore.getState();
+    if (!keyPair) throw new Error("Avtorizatsiyadan o'tilmagan");
+
+    const wrapped = wrapConversationKey(decoded.key, keyPair.publicKey, keyPair.privateKey);
+    const conversation = await chatsApi.joinByInvite(decoded.code, {
+      wrappedKey: wrapped.wrappedKey,
+      wrappedKeyNonce: wrapped.wrappedKeyNonce,
+      keySenderPublicKey: keyPair.publicKey,
+    });
+
+    set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
+    return conversation;
+  },
+
   setTyping: (conversationId, isTyping) => {
     getSocket()?.emit("typing", { conversationId, isTyping });
   },
@@ -688,6 +734,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
               isMuted: existing.isMuted,
               isArchived: existing.isArchived,
               markedUnread: existing.markedUnread,
+              inviteCode: existing.inviteCode,
             }
           : conversation;
         return { conversations: upsertConversation(state.conversations, merged) };
