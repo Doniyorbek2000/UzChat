@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -32,6 +32,16 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredConversations = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return conversations;
+    return conversations.filter((item) => {
+      const display = getConversationDisplay(item, user!.id, contactAliases);
+      return display.title.toLowerCase().includes(query);
+    });
+  }, [conversations, contactAliases, user, search]);
 
   const toggleSelect = (target: Conversation) => {
     if (sending) return;
@@ -86,14 +96,32 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
+      {conversations.length > 0 && (
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Qidirish"
+            placeholderTextColor={colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch("")} hitSlop={8}>
+              <Text style={styles.searchClear}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
       <FlatList
-        data={conversations}
+        data={filteredConversations}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Suhbatlar yo'q</Text>
+            <Text style={styles.emptyText}>{conversations.length === 0 ? "Suhbatlar yo'q" : "Hech narsa topilmadi"}</Text>
           </View>
         }
       />
@@ -126,6 +154,20 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   title: { fontSize: 16, color: colors.text, flex: 1 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    paddingHorizontal: 12,
+    height: 40,
+    gap: 8,
+  },
+  searchIcon: { fontSize: 14 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
+  searchClear: { fontSize: 14, color: colors.textSecondary, paddingHorizontal: 4 },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },
   checkbox: {
