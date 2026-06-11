@@ -36,7 +36,7 @@ export function NewChatScreen({ navigation }: Props) {
   const onSavedMessages = async () => {
     try {
       const conversation = await getOrCreateSavedMessages();
-      navigation.replace("ChatRoom", { conversationId: conversation.id, title: "Saqlangan xabarlar" });
+      navigation.replace("ChatRoom", { conversationId: conversation.id, title: "Shaxsiy yozuvlar" });
     } catch (err: any) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Ochib bo'lmadi");
     }
@@ -72,9 +72,9 @@ export function NewChatScreen({ navigation }: Props) {
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionRow} onPress={onSavedMessages}>
         <View style={styles.groupIcon}>
-          <Text style={styles.groupIconText}>🔖</Text>
+          <Text style={styles.groupIconText}>📝</Text>
         </View>
-        <Text style={styles.actionText}>Saqlangan xabarlar</Text>
+        <Text style={styles.actionText}>Shaxsiy yozuvlar</Text>
       </TouchableOpacity>
 
       <FlatList

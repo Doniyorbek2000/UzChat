@@ -6,7 +6,7 @@ export function getConversationDisplay(
   contactAliases: Record<string, string> = {}
 ) {
   if (conversation.isSelf) {
-    return { title: "Saqlangan xabarlar", avatarUrl: null as string | null, otherUser: null as User | null };
+    return { title: "Shaxsiy yozuvlar", avatarUrl: null as string | null, otherUser: null as User | null };
   }
 
   if (conversation.type === "GROUP") {
