@@ -237,6 +237,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [editingMessage, setEditingMessage] = useState<DecryptedMessage | null>(null);
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
   const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
+  const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
@@ -1066,6 +1067,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   key={emoji}
                   style={[styles.reactionBadge, userIds.includes(user!.id) && styles.reactionBadgeActive]}
                   onPress={() => toggleReaction(conversationId, item.id, emoji).catch(() => {})}
+                  onLongPress={() => setReactionDetailsMessage(item)}
                 >
                   <Text style={styles.reactionBadgeText}>
                     {emoji} {userIds.length}
@@ -1441,6 +1443,40 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               })()}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setSeenByMessage(null)}>
+            <Text style={styles.actionButtonText}>Yopish</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    <Modal
+      visible={!!reactionDetailsMessage}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setReactionDetailsMessage(null)}
+    >
+      <Pressable style={styles.actionBackdrop} onPress={() => setReactionDetailsMessage(null)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Reaksiyalar</Text>
+          <ScrollView style={styles.seenByList}>
+            {reactionDetailsMessage &&
+              groupReactions(reactionDetailsMessage.reactions).map(({ emoji, userIds }) => (
+                <View key={emoji}>
+                  <Text style={styles.seenBySectionLabel}>
+                    {emoji} {userIds.length}
+                  </Text>
+                  {userIds.map((uid) => {
+                    const participant = conversation?.participants.find((p) => p.userId === uid);
+                    return (
+                      <View key={uid} style={styles.seenByRow}>
+                        <Avatar uri={participant?.user.avatarUrl} name={getAuthorName(uid)} size={36} />
+                        <Text style={styles.seenByName}>{getAuthorName(uid)}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              ))}
+          </ScrollView>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setReactionDetailsMessage(null)}>
             <Text style={styles.actionButtonText}>Yopish</Text>
           </TouchableOpacity>
         </Pressable>
