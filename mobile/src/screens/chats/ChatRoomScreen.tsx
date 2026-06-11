@@ -221,6 +221,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
+  const setVoiceRecording = useChatStore((s) => s.setVoiceRecording);
+  const recordingUsers = useChatStore((s) => s.recordingUsers[conversationId]);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const loadDrafts = useChatStore((s) => s.loadDrafts);
@@ -541,6 +543,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     markRead(conversationId).catch(() => {});
   }, [conversationId, markRead, messages.length]);
 
+  useEffect(() => {
+    return () => {
+      setVoiceRecording(conversationId, false);
+    };
+  }, [conversationId, setVoiceRecording]);
+
   const conversationKey = conversation ? getConversationKey(conversation) : null;
 
   const scrollToLatest = () => listRef.current?.scrollToOffset({ offset: 0, animated: true });
@@ -821,12 +829,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     await recorder.prepareToRecordAsync();
     recorder.record();
     setRecording(true);
+    setVoiceRecording(conversationId, true);
   };
 
   const cancelRecording = async () => {
     await recorder.stop();
     await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
     setRecording(false);
+    setVoiceRecording(conversationId, false);
   };
 
   const sendRecording = async () => {
@@ -834,6 +844,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     await recorder.stop();
     await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
     setRecording(false);
+    setVoiceRecording(conversationId, false);
 
     const uri = recorder.uri;
     if (!uri || durationMs < 1000) return;
@@ -1094,6 +1105,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const typingCount = typingUsers?.size ?? 0;
+  const recordingCount = recordingUsers?.size ?? 0;
   const invertedData = [...messages].reverse();
 
   return (
@@ -1146,7 +1158,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           ) : null
         }
       />
-      {typingCount > 0 && <Text style={styles.typing}>yozmoqda...</Text>}
+      {recordingCount > 0 ? (
+        <Text style={styles.typing}>🎤 ovozli xabar yozmoqda...</Text>
+      ) : (
+        typingCount > 0 && <Text style={styles.typing}>yozmoqda...</Text>
+      )}
       {editingMessage && (
         <View style={styles.replyPreviewBar}>
           <View style={styles.replyBar} />

@@ -62,6 +62,7 @@ interface ChatState {
   hasMoreByConversation: Record<string, boolean>;
   scheduledMessagesByConversation: Record<string, DecryptedMessage[]>;
   typingUsers: Record<string, Set<string>>;
+  recordingUsers: Record<string, Set<string>>;
   onlineUsers: Set<string>;
   listenersRegistered: boolean;
   drafts: Record<string, string>;
@@ -129,6 +130,7 @@ interface ChatState {
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
+  setVoiceRecording: (conversationId: string, isRecording: boolean) => void;
   setupSocketListeners: () => void;
   addParticipant: (conversationId: string, target: User) => Promise<void>;
   updateGroupInfo: (
@@ -241,6 +243,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   hasMoreByConversation: {},
   scheduledMessagesByConversation: {},
   typingUsers: {},
+  recordingUsers: {},
   onlineUsers: new Set(),
   listenersRegistered: false,
   drafts: {},
@@ -1035,6 +1038,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     getSocket()?.emit("typing", { conversationId, isTyping });
   },
 
+  setVoiceRecording: (conversationId, isRecording) => {
+    getSocket()?.emit("voice-recording", { conversationId, isRecording });
+  },
+
   setupSocketListeners: () => {
     if (get().listenersRegistered) return;
     const socket = getSocket();
@@ -1191,6 +1198,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (isTyping) current.add(userId);
         else current.delete(userId);
         return { typingUsers: { ...state.typingUsers, [conversationId]: current } };
+      });
+    });
+
+    socket.on("voice-recording", ({ conversationId, userId, isRecording }: { conversationId: string; userId: string; isRecording: boolean }) => {
+      set((state) => {
+        const current = new Set(state.recordingUsers[conversationId] ?? []);
+        if (isRecording) current.add(userId);
+        else current.delete(userId);
+        return { recordingUsers: { ...state.recordingUsers, [conversationId]: current } };
       });
     });
 

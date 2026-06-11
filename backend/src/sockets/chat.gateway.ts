@@ -30,6 +30,19 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
     }
   });
 
+  socket.on("voice-recording", async (payload: { conversationId: string; isRecording: boolean }) => {
+    try {
+      await chatsService.assertParticipant(socket.userId, payload.conversationId);
+      socket.to(`conversation:${payload.conversationId}`).emit("voice-recording", {
+        conversationId: payload.conversationId,
+        userId: socket.userId,
+        isRecording: !!payload.isRecording,
+      });
+    } catch {
+      // ignore voice-recording events for conversations the user is not part of
+    }
+  });
+
   socket.on("message:read", async (payload: { conversationId: string }) => {
     try {
       await messagesService.markRead(socket.userId, payload.conversationId);
