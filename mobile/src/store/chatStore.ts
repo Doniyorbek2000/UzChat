@@ -27,6 +27,8 @@ import {
   MessageType,
   MuteDuration,
   ParticipantRole,
+  PollMeta,
+  PollVote,
   ReplyToSnapshot,
   RestrictDuration,
   User,
@@ -37,6 +39,8 @@ export interface DecryptedMessage extends Message {
   meta: MediaMeta | null;
   // for CONTACT messages: the shared contact's profile info
   contactMeta: ContactCardMeta | null;
+  // for POLL messages: the question and options
+  pollMeta?: PollMeta | null;
   decryptFailed: boolean;
   replyPreview?: ReplyPreview | null;
 }
@@ -88,6 +92,14 @@ interface ChatState {
   cancelScheduledMessage: (conversationId: string, messageId: string) => Promise<void>;
   sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
   sendContactMessage: (conversationId: string, contact: User, replyToId?: string) => Promise<void>;
+  sendPollMessage: (
+    conversationId: string,
+    question: string,
+    options: string[],
+    multipleChoice: boolean,
+    replyToId?: string
+  ) => Promise<void>;
+  votePoll: (conversationId: string, messageId: string, optionIds: string[]) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   hideMessageForMe: (conversationId: string, messageId: string) => Promise<void>;
   editMessage: (conversationId: string, messageId: string, text: string, mentions?: string[]) => Promise<void>;
@@ -147,6 +159,10 @@ export function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSna
       const meta = JSON.parse(plaintext) as ContactCardMeta;
       return { ...base, text: meta.displayName };
     }
+    if (replyTo.type === "POLL") {
+      const meta = JSON.parse(plaintext) as PollMeta;
+      return { ...base, text: meta.question };
+    }
     if (MEDIA_TYPES.includes(replyTo.type)) {
       const meta = JSON.parse(plaintext) as MediaMeta;
       return { ...base, text: meta.caption ?? null };
@@ -177,6 +193,15 @@ export function decryptToMessage(conversationKey: string, message: Message): Dec
       return { ...message, text: contactMeta.displayName, meta: null, contactMeta, decryptFailed: false, replyPreview };
     } catch {
       return { ...message, text: null, meta: null, contactMeta: null, decryptFailed: true, replyPreview };
+    }
+  }
+
+  if (message.type === "POLL") {
+    try {
+      const pollMeta = JSON.parse(plaintext) as PollMeta;
+      return { ...message, text: pollMeta.question, meta: null, contactMeta: null, pollMeta, decryptFailed: false, replyPreview };
+    } catch {
+      return { ...message, text: null, meta: null, contactMeta: null, pollMeta: null, decryptFailed: true, replyPreview };
     }
   }
 
@@ -457,6 +482,47 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
+  sendPollMessage: async (conversationId, question, options, multipleChoice, replyToId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) throw new Error("Suhbat topilmadi");
+
+    const key = get().getConversationKey(conversation);
+    const meta: PollMeta = {
+      question,
+      options: options.map((text, i) => ({ id: String(i), text })),
+      multipleChoice,
+    };
+    const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), key);
+
+    const message = await chatsApi.sendMessage(conversationId, { type: "POLL", ciphertext, nonce, replyToId });
+    const decrypted = decryptToMessage(key, message);
+
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      if (existing.some((m) => m.id === decrypted.id)) return state;
+      return {
+        messagesByConversation: { ...state.messagesByConversation, [conversationId]: [...existing, decrypted] },
+        conversations: upsertConversation(
+          state.conversations,
+          { ...conversation, lastMessage: message, updatedAt: message.createdAt }
+        ),
+      };
+    });
+  },
+
+  votePoll: async (conversationId, messageId, optionIds) => {
+    const { votes } = await chatsApi.votePoll(conversationId, messageId, optionIds);
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      return {
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, pollVotes: votes } : m)),
+        },
+      };
+    });
+  },
+
   deleteMessage: async (conversationId, messageId) => {
     const updated = await chatsApi.deleteMessage(conversationId, messageId);
     set((state) => {
@@ -573,6 +639,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } else if (message.type === "CONTACT" && message.contactMeta) {
       const { ciphertext, nonce } = encryptMessage(JSON.stringify(message.contactMeta), targetKey);
       sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "CONTACT", ciphertext, nonce, forwardedFromName });
+    } else if (message.type === "POLL" && message.pollMeta) {
+      const { ciphertext, nonce } = encryptMessage(JSON.stringify(message.pollMeta), targetKey);
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "POLL", ciphertext, nonce, forwardedFromName });
     } else {
       const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
       sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce, forwardedFromName });
@@ -1051,6 +1120,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
             messagesByConversation: {
               ...state.messagesByConversation,
               [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+            },
+          };
+        });
+      }
+    );
+
+    socket.on(
+      "message:pollVote",
+      ({ conversationId, messageId, votes }: { conversationId: string; messageId: string; votes: PollVote[] }) => {
+        set((state) => {
+          const existing = state.messagesByConversation[conversationId] ?? [];
+          return {
+            messagesByConversation: {
+              ...state.messagesByConversation,
+              [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, pollVotes: votes } : m)),
             },
           };
         });

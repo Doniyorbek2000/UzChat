@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Conversation, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, RestrictDuration } from "../types";
+import { Conversation, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -164,6 +164,15 @@ export const chatsApi = {
   toggleStar(conversationId: string, messageId: string) {
     return apiClient
       .put<{ starred: boolean }>(`/conversations/${conversationId}/messages/${messageId}/star`)
+      .then((r) => r.data);
+  },
+
+  votePoll(conversationId: string, messageId: string, optionIds: string[]) {
+    return apiClient
+      .put<{ messageId: string; votes: PollVote[] }>(
+        `/conversations/${conversationId}/messages/${messageId}/poll-vote`,
+        { optionIds }
+      )
       .then((r) => r.data);
   },
 

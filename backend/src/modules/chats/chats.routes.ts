@@ -14,7 +14,7 @@ import {
   updatePreferencesSchema,
 } from "./chats.schema";
 import { messagesController } from "../messages/messages.controller";
-import { editMessageSchema, sendMessageSchema, setReactionSchema } from "../messages/messages.schema";
+import { editMessageSchema, sendMessageSchema, setReactionSchema, votePollSchema } from "../messages/messages.schema";
 
 export const chatsRouter = Router();
 
@@ -68,3 +68,8 @@ chatsRouter.put(
   messagesController.setReaction
 );
 chatsRouter.put("/:id/messages/:messageId/star", messagesController.toggleStar);
+chatsRouter.put(
+  "/:id/messages/:messageId/poll-vote",
+  validateBody(votePollSchema),
+  messagesController.votePoll
+);

@@ -25,6 +25,7 @@ enum MessageType {
   AUDIO
   FILE
   CONTACT
+  POLL
   SYSTEM
 }
 
@@ -77,6 +78,7 @@ model User {
   messages         Message[]
   reactions        MessageReaction[]
   starredMessages  MessageStar[]
+  pollVotes        PollVote[]
   sentContacts     Contact[]                  @relation("ContactOwner")
   receivedContacts Contact[]                  @relation("ContactTarget")
   blockedUsers     BlockedUser[]              @relation("BlockOwner")
@@ -243,6 +245,7 @@ model Message {
 
   reactions MessageReaction[]
   stars     MessageStar[]
+  pollVotes PollVote[]
 
   pinnedInConversation Conversation? @relation("PinnedMessage")
 
@@ -294,6 +297,23 @@ model MessageStar {
 
   @@unique([messageId, userId])
   @@index([userId])
+}
+
+// A user's vote(s) on a POLL message. The poll question and option text are
+// part of the message's E2EE ciphertext; the server only sees which opaque
+// option IDs each user picked, so it can tally and broadcast results.
+model PollVote {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  optionIds String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([messageId, userId])
+  @@index([messageId])
 }
 
 model PushToken {

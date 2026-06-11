@@ -25,18 +25,24 @@ const reactionSelect = {
   select: { userId: true, emoji: true },
 } as const;
 
+const pollVoteSelect = {
+  select: { userId: true, optionIds: true },
+} as const;
+
 const MEDIA_LABELS: Partial<Record<Message["type"], string>> = {
   IMAGE: "🖼 Rasm",
   VIDEO: "🎬 Video",
   AUDIO: "🎵 Ovozli xabar",
   FILE: "📄 Fayl",
   CONTACT: "👤 Kontakt",
+  POLL: "📊 So'rovnoma",
 };
 
 function messageInclude(userId: string) {
   return {
     replyTo: replyToSelect,
     reactions: reactionSelect,
+    pollVotes: pollVoteSelect,
     stars: { where: { userId }, select: { id: true } },
   } as const;
 }
@@ -324,6 +330,27 @@ export const messagesService = {
     return prisma.messageReaction.findMany({ where: { messageId }, ...reactionSelect });
   },
 
+  async votePoll(userId: string, conversationId: string, messageId: string, optionIds: string[]) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.type !== MessageType.POLL) throw Errors.badRequest("Bu xabar so'rovnoma emas");
+    if (message.deletedAt) throw Errors.badRequest("O'chirilgan so'rovnomaga ovoz berib bo'lmaydi");
+
+    if (optionIds.length === 0) {
+      await prisma.pollVote.deleteMany({ where: { messageId, userId } });
+    } else {
+      await prisma.pollVote.upsert({
+        where: { messageId_userId: { messageId, userId } },
+        create: { messageId, userId, optionIds },
+        update: { optionIds },
+      });
+    }
+
+    return prisma.pollVote.findMany({ where: { messageId }, ...pollVoteSelect });
+  },
+
   async toggleStar(userId: string, conversationId: string, messageId: string) {
     await chatsService.assertParticipant(userId, conversationId);
 
@@ -348,7 +375,7 @@ export const messagesService = {
     const stars = await prisma.messageStar.findMany({
       where: { userId, message: { deletedAt: null, NOT: { hiddenFor: { has: userId } } } },
       orderBy: { createdAt: "desc" },
-      include: { message: { include: { replyTo: replyToSelect, reactions: reactionSelect } } },
+      include: { message: { include: { replyTo: replyToSelect, reactions: reactionSelect, pollVotes: pollVoteSelect } } },
     });
 
     return stars.map((s) => {

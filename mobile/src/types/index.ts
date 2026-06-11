@@ -33,7 +33,7 @@ export type LoginResult = ({ requires2FA?: false } & { user: AuthUser } & AuthTo
 
 export type ConversationType = "DIRECT" | "GROUP";
 export type ParticipantRole = "OWNER" | "ADMIN" | "MEMBER";
-export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "CONTACT" | "SYSTEM";
+export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "CONTACT" | "POLL" | "SYSTEM";
 
 export interface ConversationParticipant {
   userId: string;
@@ -46,6 +46,12 @@ export interface ConversationParticipant {
 export interface MessageReaction {
   userId: string;
   emoji: string;
+}
+
+/** A user's vote on a POLL message: which opaque option IDs they picked. */
+export interface PollVote {
+  userId: string;
+  optionIds: string[];
 }
 
 export interface ReplyToSnapshot {
@@ -69,6 +75,7 @@ export interface Message {
   replyToId: string | null;
   replyTo?: ReplyToSnapshot | null;
   reactions: MessageReaction[];
+  pollVotes: PollVote[];
   mentions: string[];
   forwardedFromName: string | null;
   isStarred: boolean;
@@ -169,6 +176,13 @@ export interface ContactCardMeta {
   username: string;
   displayName: string;
   avatarUrl: string | null;
+}
+
+/** Encrypted alongside the message ciphertext for POLL messages: question + options. */
+export interface PollMeta {
+  question: string;
+  options: { id: string; text: string }[];
+  multipleChoice: boolean;
 }
 
 /** A user-defined chat list tab (Telegram-style folder) grouping a subset of conversations. */

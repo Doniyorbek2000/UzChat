@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const sendMessageSchema = z
   .object({
-    type: z.enum(["TEXT", "IMAGE", "VIDEO", "AUDIO", "FILE", "CONTACT"]).default("TEXT"),
+    type: z.enum(["TEXT", "IMAGE", "VIDEO", "AUDIO", "FILE", "CONTACT", "POLL"]).default("TEXT"),
     // base64 NaCl secretbox ciphertext, encrypted client-side with the conversation key
     ciphertext: z.string().min(1),
     nonce: z.string().min(1),
@@ -35,7 +35,15 @@ export const editMessageSchema = z.object({
   mentions: z.array(z.string().uuid()).max(50).optional(),
 });
 
+// optionIds reference the option list inside the poll's encrypted content,
+// which the server can't read - they're treated as opaque strings here.
+// An empty array retracts the user's vote.
+export const votePollSchema = z.object({
+  optionIds: z.array(z.string().min(1).max(50)).max(20),
+});
+
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type ListMessagesQuery = z.infer<typeof listMessagesQuerySchema>;
 export type SetReactionInput = z.infer<typeof setReactionSchema>;
 export type EditMessageInput = z.infer<typeof editMessageSchema>;
+export type VotePollInput = z.infer<typeof votePollSchema>;

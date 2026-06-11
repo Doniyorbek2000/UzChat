@@ -14,6 +14,7 @@ import {
   Modal,
   Pressable,
   Linking,
+  Switch,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
@@ -38,6 +39,7 @@ import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { ContactCardBubble } from "../../components/ContactCardBubble";
+import { PollBubble } from "../../components/PollBubble";
 import { Avatar } from "../../components/Avatar";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { extractFirstUrl } from "../../utils/linkPreview";
@@ -57,6 +59,7 @@ const REPLY_TYPE_LABELS: Partial<Record<MessageType, string>> = {
   AUDIO: "🎵 Ovozli xabar",
   FILE: "📄 Fayl",
   CONTACT: "👤 Kontakt",
+  POLL: "📊 So'rovnoma",
 };
 
 function getPreviewLabel(item: { type: MessageType; text: string | null; deletedAt: string | null }) {
@@ -180,6 +183,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const loadOlderMessages = useChatStore((s) => s.loadOlderMessages);
   const sendTextMessage = useChatStore((s) => s.sendTextMessage);
   const sendMediaMessage = useChatStore((s) => s.sendMediaMessage);
+  const sendPollMessage = useChatStore((s) => s.sendPollMessage);
   const deleteMessage = useChatStore((s) => s.deleteMessage);
   const hideMessageForMe = useChatStore((s) => s.hideMessageForMe);
   const editMessage = useChatStore((s) => s.editMessage);
@@ -216,6 +220,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
+  const [pollModalVisible, setPollModalVisible] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
+  const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const wallpaperId = useWallpaperStore((s) => s.getWallpaperId(conversationId));
@@ -662,8 +670,42 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       { text: "🖼 Rasm", onPress: pickImage },
       { text: "📄 Fayl", onPress: pickFile },
       { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
+      { text: "📊 So'rovnoma", onPress: openPollModal },
       { text: "Bekor qilish", style: "cancel" },
     ]);
+  };
+
+  const openPollModal = () => {
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+    setPollMultipleChoice(false);
+    setPollModalVisible(true);
+  };
+
+  const onChangePollOption = (index: number, value: string) => {
+    setPollOptions((prev) => prev.map((o, i) => (i === index ? value : o)));
+  };
+
+  const onAddPollOption = () => {
+    setPollOptions((prev) => (prev.length < 10 ? [...prev, ""] : prev));
+  };
+
+  const onRemovePollOption = (index: number) => {
+    setPollOptions((prev) => (prev.length > 2 ? prev.filter((_, i) => i !== index) : prev));
+  };
+
+  const onSubmitPoll = async () => {
+    const question = pollQuestion.trim();
+    const options = pollOptions.map((o) => o.trim()).filter((o) => o.length > 0);
+    if (!question || options.length < 2) return;
+
+    setPollModalVisible(false);
+    try {
+      await sendPollMessage(conversationId, question, options, pollMultipleChoice);
+      scrollToLatest();
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rovnomani yuborib bo'lmadi");
+    }
   };
 
   const startRecording = async () => {
@@ -848,6 +890,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       content = <MediaFileBubble message={item} conversationKey={conversationKey} />;
     } else if (item.type === "CONTACT") {
       content = <ContactCardBubble message={item} navigation={navigation} />;
+    } else if (item.type === "POLL") {
+      content = <PollBubble message={item} conversationId={conversationId} />;
     } else {
       content = renderMessageText(item.text ?? "", conversation?.participants ?? []);
     }
@@ -1354,6 +1398,69 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         />
       </View>
     </Modal>
+    <Modal visible={pollModalVisible} animationType="slide" onRequestClose={() => setPollModalVisible(false)}>
+      <KeyboardAvoidingView
+        style={styles.pollContainer}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View style={styles.searchHeader}>
+          <TouchableOpacity onPress={() => setPollModalVisible(false)}>
+            <Text style={styles.searchClose}>Bekor qilish</Text>
+          </TouchableOpacity>
+          <Text style={styles.pollHeaderTitle}>Yangi so'rovnoma</Text>
+          <TouchableOpacity
+            onPress={onSubmitPoll}
+            disabled={!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2}
+          >
+            <Text
+              style={[
+                styles.searchClose,
+                (!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2) && styles.pollSendDisabled,
+              ]}
+            >
+              Yuborish
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={styles.pollBody} keyboardShouldPersistTaps="handled">
+          <Text style={styles.pollLabel}>Savol</Text>
+          <TextInput
+            style={styles.pollInput}
+            value={pollQuestion}
+            onChangeText={setPollQuestion}
+            placeholder="Savolingizni yozing"
+            placeholderTextColor={colors.textSecondary}
+            multiline
+          />
+          <Text style={styles.pollLabel}>Variantlar</Text>
+          {pollOptions.map((option, index) => (
+            <View key={index} style={styles.pollOptionRow}>
+              <TextInput
+                style={[styles.pollInput, styles.pollOptionInput]}
+                value={option}
+                onChangeText={(value) => onChangePollOption(index, value)}
+                placeholder={`Variant ${index + 1}`}
+                placeholderTextColor={colors.textSecondary}
+              />
+              {pollOptions.length > 2 && (
+                <TouchableOpacity onPress={() => onRemovePollOption(index)} hitSlop={8}>
+                  <Text style={styles.pollRemoveOption}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+          {pollOptions.length < 10 && (
+            <TouchableOpacity onPress={onAddPollOption}>
+              <Text style={styles.pollAddOption}>+ Variant qo'shish</Text>
+            </TouchableOpacity>
+          )}
+          <View style={styles.pollSwitchRow}>
+            <Text style={styles.pollSwitchLabel}>Bir nechta javob</Text>
+            <Switch value={pollMultipleChoice} onValueChange={setPollMultipleChoice} trackColor={{ true: colors.primary }} />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Modal>
     </>
   );
 }
@@ -1587,4 +1694,25 @@ const styles = StyleSheet.create({
   searchLoadMore: { padding: 16, alignItems: "center" },
   searchLoadMoreText: { color: colors.primary, fontWeight: "600" },
   searchEmpty: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 48 },
+  pollContainer: { flex: 1, backgroundColor: colors.background },
+  pollHeaderTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
+  pollSendDisabled: { color: colors.textSecondary },
+  pollBody: { flex: 1, padding: 16 },
+  pollLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 6, marginTop: 12 },
+  pollInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.text,
+  },
+  pollOptionRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
+  pollOptionInput: { flex: 1, marginTop: 0 },
+  pollRemoveOption: { fontSize: 18, color: colors.textSecondary, padding: 4 },
+  pollAddOption: { color: colors.primary, fontWeight: "600", fontSize: 15, marginTop: 12 },
+  pollSwitchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 24 },
+  pollSwitchLabel: { fontSize: 15, color: colors.text },
 });

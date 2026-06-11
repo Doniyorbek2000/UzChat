@@ -86,6 +86,17 @@ export const messagesController = {
     }
   },
 
+  async votePoll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      const votes = await messagesService.votePoll(req.user!.sub, conversationId, messageId, req.body.optionIds);
+      getIo().to(`conversation:${conversationId}`).emit("message:pollVote", { conversationId, messageId, votes });
+      res.json({ messageId, votes });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async toggleStar(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;
