@@ -150,17 +150,29 @@ function groupReactions(reactions: MessageReaction[]) {
 const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
 const EVERYONE_MENTION = "@hammasi";
 
-// WhatsApp-style inline formatting: *bold*, _italic_, ~strikethrough~, `code`.
+// WhatsApp/Telegram-style inline formatting: *bold*, _italic_, ~strikethrough~, `code`, ||spoiler||.
 // Each marker must hug non-space content so things like "5 * 3" are left alone.
 const FORMAT_PATTERN =
-  /(\*(?:[^\s*](?:[^*\n]*[^\s*])?)\*|_(?:[^\s_](?:[^_\n]*[^\s_])?)_|~(?:[^\s~](?:[^~\n]*[^\s~])?)~|`(?:[^\s`](?:[^`\n]*[^\s`])?)`)/g;
+  /(\*(?:[^\s*](?:[^*\n]*[^\s*])?)\*|_(?:[^\s_](?:[^_\n]*[^\s_])?)_|~(?:[^\s~](?:[^~\n]*[^\s~])?)~|`(?:[^\s`](?:[^`\n]*[^\s`])?)`|\|\|(?:[^\s|](?:[^|\n]*[^\s|])?)\|\|)/g;
+
+function SpoilerText({ text }: { text: string }) {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <Text onPress={() => setRevealed(true)} style={revealed ? undefined : styles.spoilerHidden}>
+      {text}
+    </Text>
+  );
+}
 
 function renderFormattedSegment(text: string, keyPrefix: string) {
   const parts = text.split(FORMAT_PATTERN);
   return parts.map((part, i) => {
     if (i % 2 === 0) return part;
-    const inner = part.slice(1, -1);
     const key = `${keyPrefix}-${i}`;
+    if (part.startsWith("||") && part.endsWith("||")) {
+      return <SpoilerText key={key} text={part.slice(2, -2)} />;
+    }
+    const inner = part.slice(1, -1);
     switch (part[0]) {
       case "*":
         return (
@@ -1866,6 +1878,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     borderRadius: 3,
     paddingHorizontal: 3,
+  },
+  spoilerHidden: {
+    backgroundColor: colors.textSecondary,
+    color: "transparent",
+    borderRadius: 3,
   },
   mentionPickerTitle: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 8 },
   seenByList: { maxHeight: 320 },
