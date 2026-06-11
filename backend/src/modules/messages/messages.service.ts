@@ -5,7 +5,7 @@ import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { isUserOnline } from "../../sockets";
 import { pushService } from "../push/push.service";
-import { chatsService } from "../chats/chats.service";
+import { chatsService, isParticipantMuted } from "../chats/chats.service";
 import { contactsService } from "../contacts/contacts.service";
 import { uploadsDir } from "../media/upload";
 import { EditMessageInput, ListMessagesQuery, SendMessageInput } from "./messages.schema";
@@ -75,17 +75,18 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   const sender = conversation.participants.find((p) => p.userId === senderId)?.user;
   if (!sender) return;
 
-  const recipientIds = conversation.participants
-    .map((p) => p.userId)
-    .filter((id) => id !== senderId && !isUserOnline(id));
-  if (recipientIds.length === 0) return;
+  const recipients = conversation.participants.filter((p) => p.userId !== senderId && !isUserOnline(p.userId));
+  if (recipients.length === 0) return;
 
   const contentLabel = MEDIA_LABELS[message.type] ?? "Yangi xabar";
   const isGroup = conversation.type === "GROUP";
   const title = isGroup ? conversation.title ?? "Guruh" : sender.displayName;
 
-  const mentionedIds = recipientIds.filter((id) => message.mentions.includes(id));
-  const regularIds = recipientIds.filter((id) => !message.mentions.includes(id));
+  // Muted conversations are silenced, except for messages that @-mention the recipient.
+  const mentionedIds = recipients.filter((p) => message.mentions.includes(p.userId)).map((p) => p.userId);
+  const regularIds = recipients
+    .filter((p) => !message.mentions.includes(p.userId) && !isParticipantMuted(p))
+    .map((p) => p.userId);
 
   if (mentionedIds.length > 0) {
     await pushService.sendToUsers(mentionedIds, {

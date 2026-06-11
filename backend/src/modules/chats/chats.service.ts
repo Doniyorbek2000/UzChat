@@ -44,7 +44,7 @@ const RESTRICTION_DURATIONS_MS: Record<"1h" | "1d" | "1w", number> = {
 const FAR_FUTURE = new Date("9999-12-31T23:59:59.999Z");
 
 /** A conversation is muted if muted indefinitely, or muted until a time still in the future. */
-function isParticipantMuted(p: { isMuted: boolean; mutedUntil: Date | null }): boolean {
+export function isParticipantMuted(p: { isMuted: boolean; mutedUntil: Date | null }): boolean {
   return p.isMuted || (p.mutedUntil !== null && p.mutedUntil.getTime() > Date.now());
 }
 
