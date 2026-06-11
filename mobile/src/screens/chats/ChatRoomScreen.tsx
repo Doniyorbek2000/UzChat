@@ -78,6 +78,46 @@ function groupReactions(reactions: MessageReaction[]) {
 const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
 const EVERYONE_MENTION = "@hammasi";
 
+// WhatsApp-style inline formatting: *bold*, _italic_, ~strikethrough~, `code`.
+// Each marker must hug non-space content so things like "5 * 3" are left alone.
+const FORMAT_PATTERN =
+  /(\*(?:[^\s*](?:[^*\n]*[^\s*])?)\*|_(?:[^\s_](?:[^_\n]*[^\s_])?)_|~(?:[^\s~](?:[^~\n]*[^\s~])?)~|`(?:[^\s`](?:[^`\n]*[^\s`])?)`)/g;
+
+function renderFormattedSegment(text: string, keyPrefix: string) {
+  const parts = text.split(FORMAT_PATTERN);
+  return parts.map((part, i) => {
+    if (i % 2 === 0) return part;
+    const inner = part.slice(1, -1);
+    const key = `${keyPrefix}-${i}`;
+    switch (part[0]) {
+      case "*":
+        return (
+          <Text key={key} style={styles.boldText}>
+            {inner}
+          </Text>
+        );
+      case "_":
+        return (
+          <Text key={key} style={styles.italicText}>
+            {inner}
+          </Text>
+        );
+      case "~":
+        return (
+          <Text key={key} style={styles.strikeText}>
+            {inner}
+          </Text>
+        );
+      default:
+        return (
+          <Text key={key} style={styles.codeText}>
+            {inner}
+          </Text>
+        );
+    }
+  });
+}
+
 function escapeRegExp(text: string) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -116,7 +156,7 @@ function renderMessageText(text: string, participants: ConversationParticipant[]
             </Text>
           );
         }
-        return part;
+        return renderFormattedSegment(part, `${i}`);
       })}
     </Text>
   );
@@ -1069,6 +1109,15 @@ const styles = StyleSheet.create({
   messageText: { fontSize: 16, color: colors.text },
   mentionText: { color: colors.primary, fontWeight: "600" },
   linkText: { color: colors.primary, textDecorationLine: "underline" },
+  boldText: { fontWeight: "700" },
+  italicText: { fontStyle: "italic" },
+  strikeText: { textDecorationLine: "line-through" },
+  codeText: {
+    fontFamily: Platform.select({ ios: "Courier", android: "monospace", default: "monospace" }),
+    backgroundColor: colors.border,
+    borderRadius: 3,
+    paddingHorizontal: 3,
+  },
   mentionPickerTitle: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 8 },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
   messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
