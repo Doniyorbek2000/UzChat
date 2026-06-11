@@ -296,6 +296,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
   const [pendingMentions, setPendingMentions] = useState<string[]>([]);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
@@ -625,6 +626,37 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     return contactAliases[senderId] ?? conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
   };
 
+  const mentionSuggestions =
+    mentionQuery !== null
+      ? [
+          ...(EVERYONE_MENTION.slice(1).startsWith(mentionQuery.toLowerCase())
+            ? [
+                {
+                  key: "everyone",
+                  username: EVERYONE_MENTION.slice(1),
+                  label: EVERYONE_MENTION,
+                  name: "Barcha a'zolar",
+                  avatarUrl: null as string | null,
+                  userIds: (conversation?.participants ?? []).map((p) => p.userId).filter((id) => id !== user?.id),
+                },
+              ]
+            : []),
+          ...(conversation?.participants ?? [])
+            .filter(
+              (p) =>
+                p.userId !== user?.id && p.user.username.toLowerCase().startsWith(mentionQuery.toLowerCase())
+            )
+            .map((p) => ({
+              key: p.userId,
+              username: p.user.username,
+              label: `@${p.user.username}`,
+              name: contactAliases[p.userId] ?? p.user.displayName,
+              avatarUrl: p.user.avatarUrl,
+              userIds: [p.userId],
+            })),
+        ].slice(0, 5)
+      : [];
+
   const pinnedMessages = conversation?.pinnedMessages ?? [];
   const latestPinned = pinnedMessages[0] ?? null;
   const pinnedPreview = latestPinned && conversationKey ? decryptReplyPreview(conversationKey, latestPinned) : null;
@@ -771,6 +803,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onChangeText = (value: string) => {
     setText(value);
     setTyping(conversationId, value.length > 0);
+    if (isGroup) {
+      const match = value.match(/(?:^|\s)@(\w*)$/);
+      setMentionQuery(match ? match[1] : null);
+    }
+  };
+
+  const onSelectMentionSuggestion = (username: string, userIds: string[]) => {
+    setText((prev) => prev.replace(/@(\w*)$/, `@${username} `));
+    setPendingMentions((prev) => Array.from(new Set([...prev, ...userIds])));
+    setMentionQuery(null);
   };
 
   const pickImage = async () => {
@@ -1279,37 +1321,58 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.inputRow}>
-          <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage}>
-            {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
-          </TouchableOpacity>
-          {isGroup && (
-            <TouchableOpacity style={styles.attachButton} onPress={() => setMentionPickerVisible(true)} disabled={sending}>
-              <Text style={styles.attachIcon}>@</Text>
-            </TouchableOpacity>
+        <>
+          {mentionSuggestions.length > 0 && (
+            <View style={styles.mentionSuggestions}>
+              {mentionSuggestions.map((suggestion) => (
+                <TouchableOpacity
+                  key={suggestion.key}
+                  style={styles.mentionSuggestionRow}
+                  onPress={() => onSelectMentionSuggestion(suggestion.username, suggestion.userIds)}
+                >
+                  <Avatar uri={suggestion.avatarUrl} name={suggestion.name} size={28} />
+                  <Text style={styles.mentionSuggestionLabel} numberOfLines={1}>
+                    {suggestion.label}
+                  </Text>
+                  <Text style={styles.mentionSuggestionName} numberOfLines={1}>
+                    {suggestion.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           )}
-          <TextInput
-            style={styles.input}
-            value={text}
-            onChangeText={onChangeText}
-            placeholder="Xabar yozing..."
-            multiline
-          />
-          {text.trim() ? (
-            <TouchableOpacity
-              style={styles.sendButton}
-              onPress={() => onSend()}
-              onLongPress={onScheduleSend}
-              disabled={!!editingMessage}
-            >
-              <Text style={styles.sendText}>Yuborish</Text>
+          <View style={styles.inputRow}>
+            <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage}>
+              {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
             </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.attachButton} onPress={startRecording} disabled={sending || !!editingMessage}>
-              <Text style={styles.attachIcon}>🎤</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            {isGroup && (
+              <TouchableOpacity style={styles.attachButton} onPress={() => setMentionPickerVisible(true)} disabled={sending}>
+                <Text style={styles.attachIcon}>@</Text>
+              </TouchableOpacity>
+            )}
+            <TextInput
+              style={styles.input}
+              value={text}
+              onChangeText={onChangeText}
+              placeholder="Xabar yozing..."
+              multiline
+            />
+            {text.trim() ? (
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={() => onSend()}
+                onLongPress={onScheduleSend}
+                disabled={!!editingMessage}
+              >
+                <Text style={styles.sendText}>Yuborish</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.attachButton} onPress={startRecording} disabled={sending || !!editingMessage}>
+                <Text style={styles.attachIcon}>🎤</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </>
       )}
     </KeyboardAvoidingView>
     <Modal visible={!!actionMessage} transparent animationType="fade" onRequestClose={() => setActionMessage(null)}>
@@ -1963,6 +2026,29 @@ const styles = StyleSheet.create({
   headerTitleText: { fontSize: 17, fontWeight: "600", color: colors.text },
   headerSubtitle: { fontSize: 12, color: colors.textSecondary },
   typing: { paddingHorizontal: 16, paddingBottom: 4, color: colors.textSecondary, fontSize: 12 },
+  mentionSuggestions: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+    maxHeight: 220,
+  },
+  mentionSuggestionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 10,
+  },
+  mentionSuggestionLabel: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.primary,
+  },
+  mentionSuggestionName: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
