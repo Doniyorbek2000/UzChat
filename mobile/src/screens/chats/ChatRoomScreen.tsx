@@ -202,6 +202,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [replyingTo, setReplyingTo] = useState<DecryptedMessage | null>(null);
   const [editingMessage, setEditingMessage] = useState<DecryptedMessage | null>(null);
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
   const [pendingMentions, setPendingMentions] = useState<string[]>([]);
   const [searchVisible, setSearchVisible] = useState(false);
@@ -289,8 +291,43 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   useEffect(() => {
+    if (selectionMode) {
+      const canBulkDelete = [...selectedIds].some((id) => {
+        const m = messages.find((msg) => msg.id === id);
+        return (
+          m && m.senderId === user?.id && !m.deletedAt && Date.now() - new Date(m.createdAt).getTime() <= RECALL_WINDOW_MS
+        );
+      });
+      navigation.setOptions({
+        title: `${selectedIds.size} ta tanlandi`,
+        headerTitle: undefined,
+        headerLeft: () => (
+          <TouchableOpacity onPress={exitSelectionMode} hitSlop={8}>
+            <Text style={styles.headerInfoIcon}>✕</Text>
+          </TouchableOpacity>
+        ),
+        headerRight: () => (
+          <View style={styles.headerActions}>
+            <TouchableOpacity onPress={onBulkForward} hitSlop={8}>
+              <Text style={styles.headerInfoIcon}>➡️</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onBulkStar()} hitSlop={8}>
+              <Text style={styles.headerInfoIcon}>⭐</Text>
+            </TouchableOpacity>
+            {canBulkDelete && (
+              <TouchableOpacity onPress={onBulkDelete} hitSlop={8}>
+                <Text style={styles.headerInfoIcon}>🗑</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ),
+      });
+      return;
+    }
+
     navigation.setOptions({
       title,
+      headerLeft: undefined,
       headerTitle: presenceLabel
         ? () => (
             <View style={styles.headerTitleContainer}>
@@ -323,7 +360,19 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </View>
       ),
     });
-  }, [navigation, title, conversationId, conversation?.type, conversation?.isBlocked, presenceLabel, otherUser]);
+  }, [
+    navigation,
+    title,
+    conversationId,
+    conversation?.type,
+    conversation?.isBlocked,
+    presenceLabel,
+    otherUser,
+    selectionMode,
+    selectedIds,
+    messages,
+    user?.id,
+  ]);
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
@@ -627,7 +676,79 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const onLongPress = (item: DecryptedMessage) => {
     if (item.deletedAt) return;
+    if (selectionMode) return;
     setActionMessage(item);
+  };
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const enterSelectionMode = (messageId: string) => {
+    setSelectionMode(true);
+    setSelectedIds(new Set([messageId]));
+  };
+
+  const toggleSelected = (messageId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) next.delete(messageId);
+      else next.add(messageId);
+      if (next.size === 0) setSelectionMode(false);
+      return next;
+    });
+  };
+
+  const onPressMessage = (item: DecryptedMessage) => {
+    if (!selectionMode || item.deletedAt) return;
+    toggleSelected(item.id);
+  };
+
+  const onBulkForward = () => {
+    const ids = [...selectedIds].filter((id) => {
+      const message = messages.find((m) => m.id === id);
+      return message && !message.deletedAt && !message.decryptFailed;
+    });
+    if (ids.length === 0) return;
+    exitSelectionMode();
+    navigation.navigate("ForwardMessage", { conversationId, messageIds: ids });
+  };
+
+  const onBulkStar = async () => {
+    const items = messages.filter((m) => selectedIds.has(m.id) && !m.deletedAt);
+    if (items.length === 0) return;
+    const allStarred = items.every((m) => m.isStarred);
+    for (const item of items) {
+      if (item.isStarred === allStarred) {
+        await toggleStar(conversationId, item.id).catch(() => {});
+      }
+    }
+    exitSelectionMode();
+  };
+
+  const onBulkDelete = () => {
+    const eligible = messages.filter(
+      (m) =>
+        selectedIds.has(m.id) &&
+        m.senderId === user?.id &&
+        !m.deletedAt &&
+        Date.now() - new Date(m.createdAt).getTime() <= RECALL_WINDOW_MS
+    );
+    if (eligible.length === 0) return;
+    Alert.alert("Tanlangan xabarlarni o'chirish", `${eligible.length} ta xabar barcha ishtirokchilardan o'chiriladi`, [
+      { text: "Bekor qilish", style: "cancel" },
+      {
+        text: "O'chirish",
+        style: "destructive",
+        onPress: async () => {
+          for (const item of eligible) {
+            await deleteMessage(conversationId, item.id).catch(() => {});
+          }
+          exitSelectionMode();
+        },
+      },
+    ]);
   };
 
   const onEndReached = async () => {
@@ -665,12 +786,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const linkUrl =
       !item.deletedAt && !item.decryptFailed && item.type === "TEXT" ? extractFirstUrl(item.text ?? "") : null;
 
+    const selected = selectedIds.has(item.id);
+
     return (
       <TouchableOpacity
         activeOpacity={0.8}
+        onPress={() => onPressMessage(item)}
         onLongPress={() => onLongPress(item)}
         style={[styles.bubbleRow, isOwn ? styles.bubbleRowSelf : styles.bubbleRowOther]}
       >
+        {selectionMode && !item.deletedAt && (
+          <View style={[styles.selectCheckbox, selected && styles.selectCheckboxSelected]}>
+            {selected && <Text style={styles.selectCheckmark}>✓</Text>}
+          </View>
+        )}
         <View
           style={[
             styles.bubble,
@@ -891,6 +1020,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           >
             <Text style={styles.actionButtonText}>↩️ Javob berish</Text>
           </TouchableOpacity>
+          {actionMessage && !actionMessage.deletedAt && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                if (actionMessage) enterSelectionMode(actionMessage.id);
+                setActionMessage(null);
+              }}
+            >
+              <Text style={styles.actionButtonText}>☑️ Tanlash</Text>
+            </TouchableOpacity>
+          )}
           {actionMessage &&
             actionMessage.type === "TEXT" &&
             !actionMessage.decryptFailed &&
@@ -955,7 +1095,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => {
-                navigation.navigate("ForwardMessage", { conversationId, messageId: actionMessage.id });
+                navigation.navigate("ForwardMessage", { conversationId, messageIds: [actionMessage.id] });
                 setActionMessage(null);
               }}
             >
@@ -1084,9 +1224,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   list: { padding: 12, flexGrow: 1 },
   loadingMore: { marginVertical: 12 },
-  bubbleRow: { flexDirection: "row", marginVertical: 4 },
+  bubbleRow: { flexDirection: "row", marginVertical: 4, alignItems: "center" },
   bubbleRowSelf: { justifyContent: "flex-end" },
   bubbleRowOther: { justifyContent: "flex-start" },
+  selectCheckbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  selectCheckboxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  selectCheckmark: { color: "#fff", fontSize: 13, fontWeight: "700" },
   bubble: { maxWidth: "78%", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
   bubbleSelf: { backgroundColor: colors.bubbleSelf, borderTopRightRadius: 2 },
   bubbleOther: { backgroundColor: colors.bubbleOther, borderTopLeftRadius: 2 },

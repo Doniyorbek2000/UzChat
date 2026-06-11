@@ -12,7 +12,7 @@ import { getConversationDisplay } from "../../utils/conversation";
 type Props = NativeStackScreenProps<RootStackParamList, "ForwardMessage">;
 
 export function ForwardMessageScreen({ route, navigation }: Props) {
-  const { conversationId, messageId } = route.params;
+  const { conversationId, messageIds } = route.params;
   const conversations = useChatStore((s) => s.conversations);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const forwardMessage = useChatStore((s) => s.forwardMessage);
@@ -35,7 +35,9 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
     setSending(true);
     try {
       for (const targetId of selectedIds) {
-        await forwardMessage(conversationId, messageId, targetId);
+        for (const messageId of messageIds) {
+          await forwardMessage(conversationId, messageId, targetId);
+        }
       }
       navigation.goBack();
     } catch {
