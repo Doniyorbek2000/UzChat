@@ -159,6 +159,9 @@ model Conversation {
   // GROUP only: minimum seconds a MEMBER must wait between their messages; 0 disables it.
   slowModeSeconds Int @default(0)
 
+  // DIRECT only: a "Saved Messages" conversation with a single participant (the owner themself).
+  isSelf Boolean @default(false)
+
   participants ConversationParticipant[]
   messages     Message[]
 }

@@ -75,6 +75,7 @@ interface ChatState {
   toggleStar: (conversationId: string, messageId: string) => Promise<void>;
   forwardMessage: (sourceConversationId: string, messageId: string, targetConversationId: string) => Promise<void>;
   createDirectConversation: (target: User) => Promise<Conversation>;
+  getOrCreateSavedMessages: () => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
   markRead: (conversationId: string) => Promise<void>;
   togglePin: (conversationId: string) => Promise<void>;
@@ -489,6 +490,29 @@ export const useChatStore = create<ChatState>((set, get) => ({
       userId: u.id,
       ...wrapConversationKey(conversationKey, u.publicKey, keyPair.privateKey),
     }));
+
+    const conversation = await chatsApi.create({
+      type: "DIRECT",
+      keySenderPublicKey: keyPair.publicKey,
+      participants,
+    });
+
+    conversationKeyCache[conversation.id] = conversationKey;
+    set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
+    return conversation;
+  },
+
+  getOrCreateSavedMessages: async () => {
+    const existing = get().conversations.find((c) => c.isSelf);
+    if (existing) return existing;
+
+    const { user, keyPair } = useAuthStore.getState();
+    if (!user || !keyPair) throw new Error("Avtorizatsiyadan o'tilmagan");
+
+    const conversationKey = generateConversationKey();
+    const participants = [
+      { userId: user.id, ...wrapConversationKey(conversationKey, user.publicKey, keyPair.privateKey) },
+    ];
 
     const conversation = await chatsApi.create({
       type: "DIRECT",

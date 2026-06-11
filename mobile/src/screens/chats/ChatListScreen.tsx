@@ -118,6 +118,7 @@ export function ChatListScreen({ navigation }: Props) {
         <Avatar
           uri={display.avatarUrl}
           name={display.title}
+          icon={item.isSelf ? "🔖" : undefined}
           online={!!display.otherUser && onlineUsers.has(display.otherUser.id)}
         />
         <View style={styles.content}>

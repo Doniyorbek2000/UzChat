@@ -5,6 +5,10 @@ export function getConversationDisplay(
   currentUserId: string,
   contactAliases: Record<string, string> = {}
 ) {
+  if (conversation.isSelf) {
+    return { title: "Saqlangan xabarlar", avatarUrl: null as string | null, otherUser: null as User | null };
+  }
+
   if (conversation.type === "GROUP") {
     return { title: conversation.title ?? "Guruh", avatarUrl: conversation.avatarUrl, otherUser: null as User | null };
   }

@@ -13,11 +13,21 @@ export const createConversationSchema = z
     title: z.string().min(1).max(64).optional(),
     // public key of the creator's device, used to wrap the symmetric key for everyone
     keySenderPublicKey: z.string().min(1),
-    participants: z.array(participantKeySchema).min(2),
+    participants: z.array(participantKeySchema).min(1),
   })
-  .refine((data) => data.type === "GROUP" || data.participants.length === 2, {
+  .refine((data) => data.type !== "GROUP" || data.participants.length >= 2, {
+    message: "Guruhda kamida 2 ta ishtirokchi bo'lishi kerak",
+    path: ["participants"],
+  })
+  // DIRECT conversations have exactly 2 participants, except a "Saved Messages"
+  // self-conversation which has only the owner as its sole participant.
+  .refine((data) => data.type === "GROUP" || data.participants.length === 1 || data.participants.length === 2, {
     message: "DIRECT suhbatda aniq 2 ta ishtirokchi bo'lishi kerak",
     path: ["participants"],
+  })
+  .refine((data) => data.type === "GROUP" || data.participants.length !== 1 || data.title === undefined, {
+    message: "Saqlangan xabarlar uchun nom kerak emas",
+    path: ["title"],
   })
   .refine((data) => data.type === "DIRECT" || !!data.title, {
     message: "Guruh nomi kiritilishi shart",

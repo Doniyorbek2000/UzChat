@@ -308,7 +308,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <TouchableOpacity onPress={() => navigation.navigate("GroupInfo", { conversationId })} hitSlop={8}>
               <Text style={styles.headerInfoIcon}>ℹ️</Text>
             </TouchableOpacity>
-          ) : conversation?.type === "DIRECT" ? (
+          ) : conversation?.type === "DIRECT" && !conversation.isSelf ? (
             <TouchableOpacity onPress={onChatMenu} hitSlop={8}>
               <Text style={styles.headerInfoIcon}>⋮</Text>
             </TouchableOpacity>

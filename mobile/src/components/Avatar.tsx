@@ -6,9 +6,11 @@ interface Props {
   name: string;
   size?: number;
   online?: boolean;
+  // Renders this emoji instead of an initial letter (e.g. 🔖 for "Saved Messages").
+  icon?: string;
 }
 
-export function Avatar({ uri, name, size = 48, online }: Props) {
+export function Avatar({ uri, name, size = 48, online, icon }: Props) {
   const dimension = { width: size, height: size, borderRadius: size / 4 };
   const badgeSize = Math.max(10, size / 4);
   const badge = online ? (
@@ -33,7 +35,11 @@ export function Avatar({ uri, name, size = 48, online }: Props) {
   return (
     <View>
       <View style={[styles.placeholder, dimension]}>
-        <Text style={[styles.initial, { fontSize: size / 2 }]}>{initial}</Text>
+        {icon ? (
+          <Text style={{ fontSize: size / 2 }}>{icon}</Text>
+        ) : (
+          <Text style={[styles.initial, { fontSize: size / 2 }]}>{initial}</Text>
+        )}
       </View>
       {badge}
     </View>

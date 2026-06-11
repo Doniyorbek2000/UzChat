@@ -85,7 +85,12 @@ export const chatsService = {
       );
     }
 
-    if (input.type === "DIRECT") {
+    if (input.type === "DIRECT" && input.participants.length === 1) {
+      const existing = await prisma.conversation.findFirst({
+        where: { type: ConversationType.DIRECT, isSelf: true, participants: { some: { userId } } },
+      });
+      if (existing) return chatsService.getConversation(userId, existing.id);
+    } else if (input.type === "DIRECT") {
       const otherId = participantIds.find((id) => id !== userId)!;
       const existing = await prisma.conversation.findFirst({
         where: {
@@ -104,6 +109,7 @@ export const chatsService = {
       data: {
         type: input.type === "GROUP" ? ConversationType.GROUP : ConversationType.DIRECT,
         title: input.title,
+        isSelf: input.type === "DIRECT" && input.participants.length === 1,
         participants: {
           create: input.participants.map((p) => ({
             userId: p.userId,
@@ -168,6 +174,7 @@ export const chatsService = {
         disappearingSeconds: p.conversation.disappearingSeconds,
         onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
         slowModeSeconds: p.conversation.slowModeSeconds,
+        isSelf: p.conversation.isSelf,
         pinnedMessage: p.conversation.pinnedMessage,
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
@@ -230,6 +237,7 @@ export const chatsService = {
       disappearingSeconds: participant.conversation.disappearingSeconds,
       onlyAdminsCanSend: participant.conversation.onlyAdminsCanSend,
       slowModeSeconds: participant.conversation.slowModeSeconds,
+      isSelf: participant.conversation.isSelf,
       pinnedMessage: participant.conversation.pinnedMessage,
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,

@@ -97,6 +97,8 @@ export interface Conversation {
   onlyAdminsCanSend: boolean;
   // GROUP only: minimum seconds a member must wait between their messages; 0 disables it.
   slowModeSeconds: number;
+  // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
+  isSelf: boolean;
   pinnedMessage: ReplyToSnapshot | null;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;

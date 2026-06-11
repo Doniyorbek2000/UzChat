@@ -85,7 +85,7 @@ export function StarredMessagesScreen({ navigation }: Props) {
         onPress={() => navigation.navigate("ChatRoom", { conversationId: conversation.id, title: display.title })}
         onLongPress={() => onUnstar(item)}
       >
-        <Avatar uri={display.avatarUrl} name={display.title} />
+        <Avatar uri={display.avatarUrl} name={display.title} icon={conversation.isSelf ? "🔖" : undefined} />
         <View style={styles.content}>
           <View style={styles.topRow}>
             <Text style={styles.title} numberOfLines={1}>

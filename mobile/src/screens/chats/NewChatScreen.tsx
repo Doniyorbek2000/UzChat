@@ -14,6 +14,7 @@ export function NewChatScreen({ navigation }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
+  const getOrCreateSavedMessages = useChatStore((s) => s.getOrCreateSavedMessages);
 
   useEffect(() => {
     contactsApi
@@ -29,6 +30,15 @@ export function NewChatScreen({ navigation }: Props) {
       navigation.replace("ChatRoom", { conversationId: conversation.id, title: contact.user.displayName });
     } catch (err: any) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Suhbat yaratib bo'lmadi");
+    }
+  };
+
+  const onSavedMessages = async () => {
+    try {
+      const conversation = await getOrCreateSavedMessages();
+      navigation.replace("ChatRoom", { conversationId: conversation.id, title: "Saqlangan xabarlar" });
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Ochib bo'lmadi");
     }
   };
 
@@ -59,6 +69,12 @@ export function NewChatScreen({ navigation }: Props) {
           <Text style={styles.groupIconText}>🔗</Text>
         </View>
         <Text style={styles.actionText}>Havola orqali qo'shilish</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.actionRow} onPress={onSavedMessages}>
+        <View style={styles.groupIcon}>
+          <Text style={styles.groupIconText}>🔖</Text>
+        </View>
+        <Text style={styles.actionText}>Saqlangan xabarlar</Text>
       </TouchableOpacity>
 
       <FlatList
