@@ -41,8 +41,8 @@ function messageInclude(userId: string) {
   } as const;
 }
 
-function formatMessage<T extends { stars: { id: string }[] }>(message: T) {
-  const { stars, ...rest } = message;
+function formatMessage<T extends { stars: { id: string }[]; hiddenFor?: string[] }>(message: T) {
+  const { stars, hiddenFor, ...rest } = message;
   return { ...rest, isStarred: stars.length > 0 };
 }
 
@@ -186,6 +186,7 @@ export const messagesService = {
     const messages = await prisma.message.findMany({
       where: {
         conversationId,
+        NOT: { hiddenFor: { has: userId } },
         ...(Object.keys(createdAtFilter).length ? { createdAt: createdAtFilter } : {}),
       },
       orderBy: { createdAt: "desc" },
@@ -208,6 +209,7 @@ export const messagesService = {
         conversationId,
         type: { in: [MessageType.IMAGE, MessageType.VIDEO, MessageType.AUDIO, MessageType.FILE] },
         deletedAt: null,
+        NOT: { hiddenFor: { has: userId } },
         ...(Object.keys(createdAtFilter).length ? { createdAt: createdAtFilter } : {}),
       },
       orderBy: { createdAt: "desc" },
@@ -232,6 +234,19 @@ export const messagesService = {
     return prisma.message.update({
       where: { id: messageId },
       data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date() },
+    });
+  },
+
+  async hideMessageForMe(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.hiddenFor.includes(userId)) return;
+
+    await prisma.message.update({
+      where: { id: messageId },
+      data: { hiddenFor: { push: userId } },
     });
   },
 
@@ -311,12 +326,15 @@ export const messagesService = {
 
   async listStarred(userId: string) {
     const stars = await prisma.messageStar.findMany({
-      where: { userId, message: { deletedAt: null } },
+      where: { userId, message: { deletedAt: null, NOT: { hiddenFor: { has: userId } } } },
       orderBy: { createdAt: "desc" },
       include: { message: { include: { replyTo: replyToSelect, reactions: reactionSelect } } },
     });
 
-    return stars.map((s) => ({ ...s.message, isStarred: true }));
+    return stars.map((s) => {
+      const { hiddenFor, ...rest } = s.message;
+      return { ...rest, isStarred: true };
+    });
   },
 
   // Soft-deletes messages whose disappearing-messages timer has elapsed.

@@ -51,6 +51,7 @@ chatsRouter.get("/:id/media", messagesController.listMedia);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);
 chatsRouter.post("/:id/read", messagesController.markRead);
 chatsRouter.delete("/:id/messages/:messageId", messagesController.remove);
+chatsRouter.post("/:id/messages/:messageId/hide", messagesController.hideForMe);
 chatsRouter.patch("/:id/messages/:messageId", validateBody(editMessageSchema), messagesController.edit);
 chatsRouter.put(
   "/:id/messages/:messageId/reactions",

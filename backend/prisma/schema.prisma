@@ -242,6 +242,10 @@ model Message {
   // time), the message is auto-deleted once this time passes.
   expiresAt DateTime?
 
+  // User IDs who chose "delete for me": the message is hidden from their view
+  // only, other participants are unaffected.
+  hiddenFor String[] @default([])
+
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@index([replyToId])

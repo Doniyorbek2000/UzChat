@@ -53,6 +53,15 @@ export const messagesController = {
     }
   },
 
+  async hideForMe(req: Request, res: Response, next: NextFunction) {
+    try {
+      await messagesService.hideMessageForMe(req.user!.sub, req.params.id, req.params.messageId);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async edit(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;

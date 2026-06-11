@@ -178,6 +178,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const sendTextMessage = useChatStore((s) => s.sendTextMessage);
   const sendMediaMessage = useChatStore((s) => s.sendMediaMessage);
   const deleteMessage = useChatStore((s) => s.deleteMessage);
+  const hideMessageForMe = useChatStore((s) => s.hideMessageForMe);
   const editMessage = useChatStore((s) => s.editMessage);
   const toggleReaction = useChatStore((s) => s.toggleReaction);
   const toggleStar = useChatStore((s) => s.toggleStar);
@@ -319,6 +320,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.headerInfoIcon}>🗑</Text>
               </TouchableOpacity>
             )}
+            <TouchableOpacity onPress={onBulkHideForMe} hitSlop={8}>
+              <Text style={styles.headerInfoIcon}>🙈</Text>
+            </TouchableOpacity>
           </View>
         ),
       });
@@ -674,6 +678,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     ]);
   };
 
+  const onHideForMe = (item: DecryptedMessage) => {
+    Alert.alert("Xabarni mendan o'chirish", "Bu xabar faqat siz uchun o'chiriladi, boshqalar uni ko'rishda davom etadi", [
+      { text: "Bekor qilish", style: "cancel" },
+      { text: "O'chirish", style: "destructive", onPress: () => hideMessageForMe(conversationId, item.id).catch(() => {}) },
+    ]);
+  };
+
   const onLongPress = (item: DecryptedMessage) => {
     if (item.deletedAt) return;
     if (selectionMode) return;
@@ -744,6 +755,24 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         onPress: async () => {
           for (const item of eligible) {
             await deleteMessage(conversationId, item.id).catch(() => {});
+          }
+          exitSelectionMode();
+        },
+      },
+    ]);
+  };
+
+  const onBulkHideForMe = () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    Alert.alert("Tanlangan xabarlarni mendan o'chirish", `${ids.length} ta xabar faqat siz uchun o'chiriladi`, [
+      { text: "Bekor qilish", style: "cancel" },
+      {
+        text: "O'chirish",
+        style: "destructive",
+        onPress: async () => {
+          for (const id of ids) {
+            await hideMessageForMe(conversationId, id).catch(() => {});
           }
           exitSelectionMode();
         },
@@ -1116,6 +1145,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🗑 O'chirish</Text>
               </TouchableOpacity>
             )}
+          {actionMessage && !actionMessage.deletedAt && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                onHideForMe(message);
+              }}
+            >
+              <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🙈 Mendan o'chirish</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.actionButton} onPress={() => setActionMessage(null)}>
             <Text style={styles.actionButtonText}>Bekor qilish</Text>
           </TouchableOpacity>

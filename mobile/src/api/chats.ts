@@ -128,6 +128,10 @@ export const chatsApi = {
     return apiClient.delete<Message>(`/conversations/${conversationId}/messages/${messageId}`).then((r) => r.data);
   },
 
+  hideMessageForMe(conversationId: string, messageId: string) {
+    return apiClient.post(`/conversations/${conversationId}/messages/${messageId}/hide`);
+  },
+
   editMessage(conversationId: string, messageId: string, input: { ciphertext: string; nonce: string; mentions?: string[] }) {
     return apiClient.patch<Message>(`/conversations/${conversationId}/messages/${messageId}`, input).then((r) => r.data);
   },

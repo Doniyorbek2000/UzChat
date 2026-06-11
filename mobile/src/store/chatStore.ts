@@ -79,6 +79,7 @@ interface ChatState {
   sendMediaMessage: (conversationId: string, asset: MediaAsset, type: MessageType, replyToId?: string) => Promise<void>;
   sendContactMessage: (conversationId: string, contact: User, replyToId?: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
+  hideMessageForMe: (conversationId: string, messageId: string) => Promise<void>;
   editMessage: (conversationId: string, messageId: string, text: string, mentions?: string[]) => Promise<void>;
   toggleReaction: (conversationId: string, messageId: string, emoji: string) => Promise<void>;
   toggleStar: (conversationId: string, messageId: string) => Promise<void>;
@@ -414,6 +415,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
           [conversationId]: existing.map((m) =>
             m.id === messageId ? { ...m, ...updated, text: null, meta: null, contactMeta: null, decryptFailed: false } : m
           ),
+        },
+      };
+    });
+  },
+
+  hideMessageForMe: async (conversationId, messageId) => {
+    await chatsApi.hideMessageForMe(conversationId, messageId);
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      return {
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: existing.filter((m) => m.id !== messageId),
         },
       };
     });
