@@ -99,6 +99,44 @@ function isEmojiOnlyMessage(text: string): boolean {
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
+const MORE_REACTIONS = [
+  "👎",
+  "🔥",
+  "🥰",
+  "👏",
+  "🤔",
+  "🤯",
+  "😱",
+  "🤬",
+  "🎉",
+  "🤩",
+  "🤮",
+  "💩",
+  "👌",
+  "🤡",
+  "🥱",
+  "🥴",
+  "😍",
+  "💯",
+  "🤣",
+  "🍌",
+  "🏆",
+  "💔",
+  "🤨",
+  "😐",
+  "🍓",
+  "💋",
+  "🙈",
+  "😇",
+  "🤝",
+  "🤗",
+  "🎅",
+  "💅",
+  "🆒",
+  "👀",
+  "😴",
+];
+
 function groupReactions(reactions: MessageReaction[]) {
   const groups = new Map<string, string[]>();
   for (const r of reactions) {
@@ -241,6 +279,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
   const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
   const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
+  const [moreReactionsMessage, setMoreReactionsMessage] = useState<DecryptedMessage | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
@@ -1277,6 +1316,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
               </TouchableOpacity>
             ))}
+            <TouchableOpacity
+              style={styles.reactionPickerOption}
+              onPress={() => {
+                setMoreReactionsMessage(actionMessage);
+                setActionMessage(null);
+              }}
+            >
+              <Text style={styles.reactionPickerMore}>➕</Text>
+            </TouchableOpacity>
           </View>
           <TouchableOpacity
             style={styles.actionButton}
@@ -1433,6 +1481,32 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <TouchableOpacity style={styles.actionButton} onPress={() => setActionMessage(null)}>
             <Text style={styles.actionButtonText}>Bekor qilish</Text>
           </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    <Modal
+      visible={!!moreReactionsMessage}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setMoreReactionsMessage(null)}
+    >
+      <Pressable style={styles.actionBackdrop} onPress={() => setMoreReactionsMessage(null)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Reaksiya tanlang</Text>
+          <View style={styles.moreReactionsGrid}>
+            {MORE_REACTIONS.map((emoji) => (
+              <TouchableOpacity
+                key={emoji}
+                style={styles.reactionPickerOption}
+                onPress={() => {
+                  if (moreReactionsMessage) toggleReaction(conversationId, moreReactionsMessage.id, emoji).catch(() => {});
+                  setMoreReactionsMessage(null);
+                }}
+              >
+                <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </Pressable>
       </Pressable>
     </Modal>
@@ -1843,6 +1917,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   reactionPickerEmoji: { fontSize: 26 },
+  reactionPickerMore: { fontSize: 22, color: colors.textSecondary },
+  moreReactionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    paddingBottom: 16,
+  },
   actionButton: { paddingVertical: 14, alignItems: "center" },
   actionButtonText: { fontSize: 16, color: colors.text },
   actionButtonDanger: { color: colors.danger },
