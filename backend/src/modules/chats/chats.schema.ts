@@ -60,8 +60,13 @@ export const updatePreferencesSchema = z
     { message: "Hech narsa o'zgartirilmadi" }
   );
 
+export const setPinnedMessageSchema = z.object({
+  messageId: z.string().uuid().nullable(),
+});
+
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
 export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
+export type SetPinnedMessageInput = z.infer<typeof setPinnedMessageSchema>;

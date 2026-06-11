@@ -83,6 +83,16 @@ export const chatsController = {
     }
   },
 
+  async setPinnedMessage(req: Request, res: Response, next: NextFunction) {
+    try {
+      const conversation = await chatsService.setPinnedMessage(req.user!.sub, req.params.id, req.body.messageId);
+      getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async removeParticipant(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;

@@ -122,6 +122,9 @@ model Conversation {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
+  pinnedMessageId String?  @unique
+  pinnedMessage   Message? @relation("PinnedMessage", fields: [pinnedMessageId], references: [id], onDelete: SetNull)
+
   participants ConversationParticipant[]
   messages     Message[]
 }
@@ -183,6 +186,8 @@ model Message {
 
   reactions MessageReaction[]
   stars     MessageStar[]
+
+  pinnedInConversation Conversation? @relation("PinnedMessage")
 
   createdAt DateTime  @default(now())
   editedAt  DateTime?

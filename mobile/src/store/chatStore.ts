@@ -73,6 +73,7 @@ interface ChatState {
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
   clearHistory: (conversationId: string) => Promise<void>;
+  setPinnedMessage: (conversationId: string, messageId: string | null) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
@@ -92,7 +93,7 @@ function dropConversation<T>(record: Record<string, T>, conversationId: string):
 
 const conversationKeyCache: Record<string, string> = {};
 
-function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSnapshot): ReplyPreview {
+export function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSnapshot): ReplyPreview {
   const base = { id: replyTo.id, senderId: replyTo.senderId, type: replyTo.type, deletedAt: replyTo.deletedAt };
   if (replyTo.deletedAt) return { ...base, text: null };
 
@@ -493,6 +494,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
+  setPinnedMessage: async (conversationId, messageId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.setPinnedMessage(conversationId, messageId);
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
   blockUser: async (userId) => {
     await contactsApi.block(userId);
     set((state) => ({
@@ -663,13 +673,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
     socket.on("conversation:updated", (conversation: Conversation) => {
       set((state) => {
         const existing = state.conversations.find((c) => c.id === conversation.id);
-        // The broadcaster's wrapped key is meaningless to us; keep our own.
+        // The broadcaster's wrapped key and per-participant preferences are meaningless to us; keep our own.
         const merged = existing
           ? {
               ...conversation,
               wrappedKey: existing.wrappedKey,
               wrappedKeyNonce: existing.wrappedKeyNonce,
               keySenderPublicKey: existing.keySenderPublicKey,
+              lastReadAt: existing.lastReadAt,
+              isPinned: existing.isPinned,
+              isMuted: existing.isMuted,
+              isArchived: existing.isArchived,
+              markedUnread: existing.markedUnread,
             }
           : conversation;
         return { conversations: upsertConversation(state.conversations, merged) };

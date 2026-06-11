@@ -18,6 +18,18 @@ const userSummarySelect = {
   lastSeenAt: true,
 } as const;
 
+const pinnedMessageSelect = {
+  select: {
+    id: true,
+    senderId: true,
+    type: true,
+    ciphertext: true,
+    nonce: true,
+    mediaUrl: true,
+    deletedAt: true,
+  },
+} as const;
+
 export const chatsService = {
   async createConversation(userId: string, input: CreateConversationInput) {
     if (!input.participants.some((p) => p.userId === userId)) {
@@ -76,6 +88,7 @@ export const chatsService = {
             include: {
               participants: { include: { user: { select: userSummarySelect } } },
               messages: { orderBy: { createdAt: "desc" }, take: 1 },
+              pinnedMessage: pinnedMessageSelect,
             },
           },
         },
@@ -103,6 +116,7 @@ export const chatsService = {
         isArchived: p.isArchived,
         markedUnread: p.markedUnread,
         isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
+        pinnedMessage: p.conversation.pinnedMessage,
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
           role: cp.role,
@@ -122,7 +136,10 @@ export const chatsService = {
       where: { conversationId_userId: { conversationId, userId } },
       include: {
         conversation: {
-          include: { participants: { include: { user: { select: userSummarySelect } } } },
+          include: {
+            participants: { include: { user: { select: userSummarySelect } } },
+            pinnedMessage: pinnedMessageSelect,
+          },
         },
       },
     });
@@ -149,6 +166,7 @@ export const chatsService = {
       isArchived: participant.isArchived,
       markedUnread: participant.markedUnread,
       isBlocked,
+      pinnedMessage: participant.conversation.pinnedMessage,
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,
@@ -181,6 +199,23 @@ export const chatsService = {
       where: { id: participant.id },
       data: { clearedAt: new Date() },
     });
+  },
+
+  async setPinnedMessage(userId: string, conversationId: string, messageId: string | null) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    if (messageId) {
+      const message = await prisma.message.findUnique({ where: { id: messageId } });
+      if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+      if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni qadab bo'lmaydi");
+    }
+
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { pinnedMessageId: messageId },
+    });
+
+    return chatsService.getConversation(userId, conversationId);
   },
 
   async addParticipant(userId: string, conversationId: string, input: AddParticipantInput) {

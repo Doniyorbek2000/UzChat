@@ -77,6 +77,7 @@ export interface Conversation {
   isArchived: boolean;
   markedUnread: boolean;
   isBlocked: boolean;
+  pinnedMessage: ReplyToSnapshot | null;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;
 }

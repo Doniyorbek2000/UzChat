@@ -26,7 +26,7 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
-import { useChatStore, DecryptedMessage } from "../../store/chatStore";
+import { useChatStore, DecryptedMessage, decryptReplyPreview } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { ConversationParticipant, MessageReaction, MessageType } from "../../types";
 import { colors } from "../../theme/colors";
@@ -110,6 +110,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const blockUser = useChatStore((s) => s.blockUser);
   const unblockUser = useChatStore((s) => s.unblockUser);
   const clearHistory = useChatStore((s) => s.clearHistory);
+  const setPinnedMessage = useChatStore((s) => s.setPinnedMessage);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
@@ -268,6 +269,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const getAuthorName = (senderId: string) => {
     if (senderId === user?.id) return "Siz";
     return conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
+  };
+
+  const pinnedPreview =
+    conversation?.pinnedMessage && conversationKey
+      ? decryptReplyPreview(conversationKey, conversation.pinnedMessage)
+      : null;
+
+  const onUnpin = () => {
+    Alert.alert("Qadalgan xabar", "Xabarni qadashdan olib tashlansinmi?", [
+      { text: "Bekor qilish", style: "cancel" },
+      { text: "Olib tashlash", style: "destructive", onPress: () => setPinnedMessage(conversationId, null).catch(() => {}) },
+    ]);
   };
 
   const onSend = async () => {
@@ -551,6 +564,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
+      {pinnedPreview && (
+        <TouchableOpacity style={styles.pinnedBar} onPress={onUnpin}>
+          <Text style={styles.pinnedIcon}>📌</Text>
+          <View style={styles.replyContent}>
+            <Text style={styles.replyAuthor} numberOfLines={1}>
+              {getAuthorName(pinnedPreview.senderId)}
+            </Text>
+            <Text style={styles.replyText} numberOfLines={1}>
+              {getPreviewLabel(pinnedPreview)}
+            </Text>
+          </View>
+          <Text style={styles.pinnedClose}>✕</Text>
+        </TouchableOpacity>
+      )}
       <FlatList
         ref={listRef}
         data={invertedData}
@@ -724,6 +751,21 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </Text>
             </TouchableOpacity>
           )}
+          {actionMessage && !actionMessage.deletedAt && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                const isPinned = conversation?.pinnedMessage?.id === message.id;
+                setPinnedMessage(conversationId, isPinned ? null : message.id).catch(() => {});
+              }}
+            >
+              <Text style={styles.actionButtonText}>
+                {conversation?.pinnedMessage?.id === actionMessage.id ? "📌 Qadashni bekor qilish" : "📌 Qadash"}
+              </Text>
+            </TouchableOpacity>
+          )}
           {actionMessage && !actionMessage.decryptFailed && (
             <TouchableOpacity
               style={styles.actionButton}
@@ -811,6 +853,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   replyPreviewClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
+  pinnedBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+    gap: 8,
+  },
+  pinnedIcon: { fontSize: 14 },
+  pinnedClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   messageText: { fontSize: 16, color: colors.text },
   mentionText: { color: colors.primary, fontWeight: "600" },
   mentionPickerTitle: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 8 },
