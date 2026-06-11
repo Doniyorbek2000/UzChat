@@ -105,6 +105,7 @@ export const chatsService = {
         id: p.conversation.id,
         type: p.conversation.type,
         title: p.conversation.title,
+        description: p.conversation.description,
         avatarUrl: p.conversation.avatarUrl,
         updatedAt: p.conversation.updatedAt,
         wrappedKey: p.wrappedKey,
@@ -155,6 +156,7 @@ export const chatsService = {
       id: participant.conversation.id,
       type: participant.conversation.type,
       title: participant.conversation.title,
+      description: participant.conversation.description,
       avatarUrl: participant.conversation.avatarUrl,
       updatedAt: participant.conversation.updatedAt,
       wrappedKey: participant.wrappedKey,
@@ -280,6 +282,7 @@ export const chatsService = {
       data: {
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
+        ...(input.description !== undefined ? { description: input.description } : {}),
       },
     });
 

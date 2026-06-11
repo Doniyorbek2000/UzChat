@@ -35,10 +35,12 @@ export const updateConversationSchema = z
   .object({
     title: z.string().min(1).max(64).optional(),
     avatarUrl: z.string().url().optional(),
+    description: z.string().max(500).nullable().optional(),
   })
-  .refine((data) => data.title !== undefined || data.avatarUrl !== undefined, {
-    message: "Hech narsa o'zgartirilmadi",
-  });
+  .refine(
+    (data) => data.title !== undefined || data.avatarUrl !== undefined || data.description !== undefined,
+    { message: "Hech narsa o'zgartirilmadi" }
+  );
 
 export const updateParticipantRoleSchema = z.object({
   role: z.enum(["OWNER", "ADMIN", "MEMBER"]),

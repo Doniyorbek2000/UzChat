@@ -29,6 +29,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const clearHistory = useChatStore((s) => s.clearHistory);
 
   const [title, setTitle] = useState(conversation?.title ?? "");
+  const [description, setDescription] = useState(conversation?.description ?? "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   if (!conversation) return null;
@@ -48,6 +49,20 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     } catch (err: any) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
       setTitle(conversation.title ?? "");
+    }
+  };
+
+  const onSaveDescription = async () => {
+    const trimmed = description.trim();
+    if (trimmed === (conversation.description ?? "")) {
+      setDescription(conversation.description ?? "");
+      return;
+    }
+    try {
+      await updateGroupInfo(conversationId, { description: trimmed || null });
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
+      setDescription(conversation.description ?? "");
     }
   };
 
@@ -183,6 +198,26 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       </View>
 
+      {(canManage || conversation.description) && (
+        <View style={styles.descriptionSection}>
+          <Text style={styles.descriptionLabel}>Tavsif</Text>
+          {canManage ? (
+            <TextInput
+              style={styles.descriptionInput}
+              value={description}
+              onChangeText={setDescription}
+              onBlur={onSaveDescription}
+              placeholder="Guruh haqida ma'lumot qo'shing"
+              placeholderTextColor={colors.textSecondary}
+              multiline
+              maxLength={500}
+            />
+          ) : (
+            <Text style={styles.descriptionText}>{conversation.description}</Text>
+          )}
+        </View>
+      )}
+
       <FlatList
         data={conversation.participants}
         keyExtractor={(item) => item.userId}
@@ -245,6 +280,16 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   memberCount: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  descriptionSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  descriptionLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4, fontWeight: "600" },
+  descriptionText: { fontSize: 15, color: colors.text, lineHeight: 20 },
+  descriptionInput: { fontSize: 15, color: colors.text, lineHeight: 20, padding: 0 },
   addButton: { paddingVertical: 14, paddingHorizontal: 16 },
   addButtonText: { color: colors.primary, fontSize: 15, fontWeight: "600" },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },

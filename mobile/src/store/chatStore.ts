@@ -79,7 +79,10 @@ interface ChatState {
   setTyping: (conversationId: string, isTyping: boolean) => void;
   setupSocketListeners: () => void;
   addParticipant: (conversationId: string, target: User) => Promise<void>;
-  updateGroupInfo: (conversationId: string, input: { title?: string; avatarUrl?: string }) => Promise<void>;
+  updateGroupInfo: (
+    conversationId: string,
+    input: { title?: string; avatarUrl?: string; description?: string | null }
+  ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;
   updateParticipantRole: (conversationId: string, userId: string, role: ParticipantRole) => Promise<void>;
   leaveGroup: (conversationId: string) => Promise<void>;

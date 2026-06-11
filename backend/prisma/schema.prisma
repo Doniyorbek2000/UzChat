@@ -115,12 +115,14 @@ model BlockedUser {
 }
 
 model Conversation {
-  id        String           @id @default(uuid())
-  type      ConversationType
-  title     String?
-  avatarUrl String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id          String           @id @default(uuid())
+  type        ConversationType
+  title       String?
+  // Group description/announcement, shown to all members.
+  description String?
+  avatarUrl   String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   pinnedMessageId String?  @unique
   pinnedMessage   Message? @relation("PinnedMessage", fields: [pinnedMessageId], references: [id], onDelete: SetNull)
