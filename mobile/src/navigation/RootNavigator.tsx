@@ -28,12 +28,14 @@ import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { PrivacySettingsScreen } from "../screens/profile/PrivacySettingsScreen";
 import { AppLockSettingsScreen } from "../screens/profile/AppLockSettingsScreen";
 import { TwoFactorSettingsScreen } from "../screens/profile/TwoFactorSettingsScreen";
+import { ChatTextSizeScreen } from "../screens/profile/ChatTextSizeScreen";
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { useAuthStore } from "../store/authStore";
 import { useAppLockStore } from "../store/appLockStore";
 import { useChatStore } from "../store/chatStore";
 import { useWallpaperStore } from "../store/wallpaperStore";
+import { useChatSettingsStore } from "../store/chatSettingsStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
 import { colors } from "../theme/colors";
@@ -69,11 +71,13 @@ export function RootNavigator() {
   const lockApp = useAppLockStore((s) => s.lock);
 
   const wallpaperBootstrap = useWallpaperStore((s) => s.bootstrap);
+  const chatSettingsBootstrap = useChatSettingsStore((s) => s.bootstrap);
 
   useEffect(() => {
     bootstrap();
     wallpaperBootstrap();
-  }, [bootstrap, wallpaperBootstrap]);
+    chatSettingsBootstrap();
+  }, [bootstrap, wallpaperBootstrap, chatSettingsBootstrap]);
 
   useEffect(() => {
     if (isAuthenticated) appLockBootstrap();
@@ -145,6 +149,7 @@ export function RootNavigator() {
             <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: "Maxfiylik" }} />
             <Stack.Screen name="AppLockSettings" component={AppLockSettingsScreen} options={{ title: "Ilovani qulflash" }} />
             <Stack.Screen name="TwoFactorSettings" component={TwoFactorSettingsScreen} options={{ title: "Ikki bosqichli tekshiruv" }} />
+            <Stack.Screen name="ChatTextSize" component={ChatTextSizeScreen} options={{ title: "Matn hajmi" }} />
             <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />
           </Stack.Navigator>
         ) : (

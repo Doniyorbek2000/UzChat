@@ -48,6 +48,7 @@ export type RootStackParamList = {
   AppLockSettings: undefined;
   TwoFactorSettings: undefined;
   ActiveSessions: undefined;
+  ChatTextSize: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

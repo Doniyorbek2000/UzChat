@@ -33,6 +33,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage, decryptReplyPreview } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { useWallpaperStore } from "../../store/wallpaperStore";
+import { useChatSettingsStore } from "../../store/chatSettingsStore";
 import { getWallpaperColor } from "../../theme/wallpapers";
 import { ConversationParticipant, MessageReaction, MessageType, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
@@ -220,11 +221,11 @@ function highlightMatch(text: string, query: string) {
   );
 }
 
-function renderMessageText(text: string, participants: ConversationParticipant[]) {
+function renderMessageText(text: string, participants: ConversationParticipant[], fontScale = 1) {
   const usernames = new Set(participants.map((p) => p.user.username));
   const parts = text.split(TOKEN_PATTERN);
   return (
-    <Text style={styles.messageText}>
+    <Text style={[styles.messageText, { fontSize: 16 * fontScale }]}>
       {parts.map((part, i) => {
         if (part === EVERYONE_MENTION || (part.startsWith("@") && usernames.has(part.slice(1)))) {
           return (
@@ -318,6 +319,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const wallpaperId = useWallpaperStore((s) => s.getWallpaperId(conversationId));
   const wallpaperColor = getWallpaperColor(wallpaperId);
+  const fontScale = useChatSettingsStore((s) => s.fontScale);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
 
@@ -1117,7 +1119,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } else if (isSticker) {
       content = <Text style={styles.stickerText}>{item.text}</Text>;
     } else {
-      content = renderMessageText(item.text ?? "", conversation?.participants ?? []);
+      content = renderMessageText(item.text ?? "", conversation?.participants ?? [], fontScale);
     }
 
     const linkUrl =
@@ -1170,7 +1172,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             !item.decryptFailed &&
             !!item.text &&
             (item.type === "FILE" || (item.type === "IMAGE" && !item.viewOnce) || item.type === "VIDEO") && (
-              <View style={styles.mediaCaption}>{renderMessageText(item.text, conversation?.participants ?? [])}</View>
+              <View style={styles.mediaCaption}>{renderMessageText(item.text, conversation?.participants ?? [], fontScale)}</View>
             )}
           {linkUrl && <LinkPreviewCard url={linkUrl} />}
           {!item.deletedAt && item.reactions.length > 0 && (
