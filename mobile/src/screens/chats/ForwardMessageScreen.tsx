@@ -16,30 +16,46 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const forwardMessage = useChatStore((s) => s.forwardMessage);
   const user = useAuthStore((s) => s.user);
-  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sending, setSending] = useState(false);
 
-  const onSelect = async (target: Conversation) => {
-    if (sendingId) return;
-    setSendingId(target.id);
+  const toggleSelect = (target: Conversation) => {
+    if (sending) return;
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(target.id)) next.delete(target.id);
+      else next.add(target.id);
+      return next;
+    });
+  };
+
+  const onSend = async () => {
+    if (sending || selectedIds.size === 0) return;
+    setSending(true);
     try {
-      await forwardMessage(conversationId, messageId, target.id);
+      for (const targetId of selectedIds) {
+        await forwardMessage(conversationId, messageId, targetId);
+      }
       navigation.goBack();
     } catch {
       Alert.alert("Xatolik", "Xabarni yo'naltirib bo'lmadi");
     } finally {
-      setSendingId(null);
+      setSending(false);
     }
   };
 
   const renderItem = ({ item }: { item: Conversation }) => {
     const display = getConversationDisplay(item, user!.id);
+    const selected = selectedIds.has(item.id);
     return (
-      <TouchableOpacity style={styles.row} onPress={() => onSelect(item)} disabled={!!sendingId}>
+      <TouchableOpacity style={styles.row} onPress={() => toggleSelect(item)} disabled={sending}>
         <Avatar uri={display.avatarUrl} name={display.title} />
         <Text style={styles.title} numberOfLines={1}>
           {display.title}
         </Text>
-        {sendingId === item.id && <ActivityIndicator color={colors.primary} />}
+        <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
+          {selected && <Text style={styles.checkboxIcon}>✓</Text>}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -57,6 +73,15 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
           </View>
         }
       />
+      {selectedIds.size > 0 && (
+        <TouchableOpacity style={styles.sendButton} onPress={onSend} disabled={sending}>
+          {sending ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.sendButtonText}>Yuborish ({selectedIds.size})</Text>
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -68,4 +93,23 @@ const styles = StyleSheet.create({
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  checkboxIcon: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  sendButton: {
+    margin: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  sendButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });
