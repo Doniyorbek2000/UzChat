@@ -25,7 +25,7 @@ export type MainTabParamList = {
 
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
-  ChatRoom: { conversationId: string; title: string };
+  ChatRoom: { conversationId: string; title: string; highlightMessageId?: string };
   NewChat: undefined;
   NewGroup: undefined;
   AddContact: undefined;

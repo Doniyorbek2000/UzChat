@@ -81,6 +81,7 @@ interface ChatState {
   getConversationKey: (conversation: Conversation) => string;
   loadMessages: (conversationId: string) => Promise<void>;
   loadOlderMessages: (conversationId: string) => Promise<void>;
+  searchAllMessages: (query: string) => Promise<{ conversationId: string; message: DecryptedMessage }[]>;
   sendTextMessage: (
     conversationId: string,
     text: string,
@@ -354,6 +355,34 @@ export const useChatStore = create<ChatState>((set, get) => ({
       },
       hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: older.length === PAGE_SIZE },
     }));
+  },
+
+  searchAllMessages: async (query) => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+
+    const results: { conversationId: string; message: DecryptedMessage }[] = [];
+
+    await Promise.all(
+      get().conversations.map(async (conversation) => {
+        try {
+          const key = get().getConversationKey(conversation);
+          const messages = await chatsApi.listMessages(conversation.id, undefined, 50);
+          for (const m of messages) {
+            if (m.type !== "TEXT" || m.deletedAt) continue;
+            const decrypted = decryptToMessage(key, m);
+            if (!decrypted.decryptFailed && (decrypted.text ?? "").toLowerCase().includes(q)) {
+              results.push({ conversationId: conversation.id, message: decrypted });
+            }
+          }
+        } catch {
+          // skip conversations whose messages can't be loaded/decrypted
+        }
+      })
+    );
+
+    results.sort((a, b) => new Date(b.message.createdAt).getTime() - new Date(a.message.createdAt).getTime());
+    return results.slice(0, 30);
   },
 
   sendTextMessage: async (conversationId, text, replyToId, mentions, scheduledFor) => {

@@ -1,9 +1,9 @@
 import { useCallback, useEffect } from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Alert } from "react-native";
+import { View, Text, TextInput, FlatList, TouchableOpacity, ScrollView, StyleSheet, RefreshControl, Alert, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useState } from "react";
 import { MainTabScreenProps } from "../../navigation/types";
-import { useChatStore } from "../../store/chatStore";
+import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
@@ -37,10 +37,13 @@ export function ChatListScreen({ navigation }: Props) {
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const folders = useChatStore((s) => s.folders);
   const loadFolders = useChatStore((s) => s.loadFolders);
+  const searchAllMessages = useChatStore((s) => s.searchAllMessages);
   const user = useAuthStore((s) => s.user);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+  const [messageResults, setMessageResults] = useState<{ conversationId: string; message: DecryptedMessage }[]>([]);
+  const [searchingMessages, setSearchingMessages] = useState(false);
 
   useEffect(() => {
     setupSocketListeners();
@@ -66,6 +69,23 @@ export function ChatListScreen({ navigation }: Props) {
       setActiveFolderId(null);
     }
   }, [folders, activeFolderId]);
+
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setMessageResults([]);
+      setSearchingMessages(false);
+      return;
+    }
+    setSearchingMessages(true);
+    const timer = setTimeout(() => {
+      searchAllMessages(q)
+        .then(setMessageResults)
+        .catch(() => setMessageResults([]))
+        .finally(() => setSearchingMessages(false));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchAllMessages]);
 
   const renderPreview = (conversation: Conversation): string => {
     const lastMessage = conversation.lastMessage;
@@ -160,6 +180,46 @@ export function ChatListScreen({ navigation }: Props) {
     );
   };
 
+  const renderMessageResult = (item: { conversationId: string; message: DecryptedMessage }) => {
+    const conversation = conversations.find((c) => c.id === item.conversationId);
+    if (!conversation) return null;
+    const display = getConversationDisplay(conversation, user!.id, contactAliases);
+    const senderName =
+      item.message.senderId === user?.id
+        ? "Siz"
+        : (contactAliases[item.message.senderId] ??
+          conversation.participants.find((p) => p.userId === item.message.senderId)?.user.displayName ??
+          "");
+
+    return (
+      <TouchableOpacity
+        key={item.message.id}
+        style={styles.row}
+        onPress={() =>
+          navigation.navigate("ChatRoom", {
+            conversationId: conversation.id,
+            title: display.title,
+            highlightMessageId: item.message.id,
+          })
+        }
+      >
+        <Avatar uri={display.avatarUrl} name={display.title} icon={conversation.isSelf ? "📝" : undefined} />
+        <View style={styles.content}>
+          <View style={styles.topRow}>
+            <Text style={styles.title} numberOfLines={1}>
+              {display.title}
+            </Text>
+            <Text style={styles.time}>{formatTime(item.message.createdAt)}</Text>
+          </View>
+          <Text style={styles.preview} numberOfLines={1}>
+            {conversation.type === "GROUP" && senderName ? `${senderName}: ` : ""}
+            {item.message.text}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const visibleConversations = conversations.filter((c) => !c.isArchived);
   const archivedCount = conversations.length - visibleConversations.length;
 
@@ -237,6 +297,22 @@ export function ChatListScreen({ navigation }: Props) {
             </TouchableOpacity>
           ) : null
         }
+        ListFooterComponent={
+          query.length >= 2 ? (
+            <View>
+              <Text style={styles.sectionHeader}>Xabarlar</Text>
+              {searchingMessages ? (
+                <ActivityIndicator color={colors.primary} style={styles.messageSearchLoader} />
+              ) : messageResults.length > 0 ? (
+                messageResults.map((item) => renderMessageResult(item))
+              ) : (
+                <View style={styles.empty}>
+                  <Text style={styles.emptyText}>Mos xabar topilmadi</Text>
+                </View>
+              )}
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>{query ? "Hech narsa topilmadi" : "Hali suhbatlar yo'q"}</Text>
@@ -284,6 +360,15 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 14 },
   searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
   searchClear: { fontSize: 14, color: colors.textSecondary, paddingHorizontal: 4 },
+  sectionHeader: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  messageSearchLoader: { marginTop: 12 },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   content: { flex: 1 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

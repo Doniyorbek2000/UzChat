@@ -174,7 +174,7 @@ function renderMessageText(text: string, participants: ConversationParticipant[]
 }
 
 export function ChatRoomScreen({ route, navigation }: Props) {
-  const { conversationId, title } = route.params;
+  const { conversationId, title, highlightMessageId } = route.params;
   const user = useAuthStore((s) => s.user);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const conversation = useChatStore((s) => s.conversations.find((c) => c.id === conversationId));
@@ -440,6 +440,33 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [conversationId, loadMessages]);
+
+  useEffect(() => {
+    if (!highlightMessageId || loading) return;
+    let cancelled = false;
+
+    const run = async () => {
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const state = useChatStore.getState();
+        const current = state.messagesByConversation[conversationId] ?? [];
+        const index = [...current].reverse().findIndex((m) => m.id === highlightMessageId);
+        if (index >= 0) {
+          setTimeout(() => listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.4 }), 100);
+          setHighlightedMessageId(highlightMessageId);
+          setTimeout(() => setHighlightedMessageId((id) => (id === highlightMessageId ? null : id)), 1500);
+          break;
+        }
+        if (!state.hasMoreByConversation[conversationId] || cancelled) break;
+        await loadOlderMessages(conversationId);
+      }
+      if (!cancelled) navigation.setParams({ highlightMessageId: undefined });
+    };
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [highlightMessageId, loading, conversationId, loadOlderMessages, navigation]);
 
   useEffect(() => {
     loadScheduledMessages(conversationId).catch(() => {});
