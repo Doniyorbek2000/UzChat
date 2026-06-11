@@ -74,6 +74,15 @@ export const chatsController = {
     }
   },
 
+  async clearHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      await chatsService.clearHistory(req.user!.sub, req.params.id);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async removeParticipant(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;

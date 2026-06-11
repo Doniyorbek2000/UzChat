@@ -26,6 +26,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const removeParticipant = useChatStore((s) => s.removeParticipant);
   const updateParticipantRole = useChatStore((s) => s.updateParticipantRole);
   const leaveGroup = useChatStore((s) => s.leaveGroup);
+  const clearHistory = useChatStore((s) => s.clearHistory);
 
   const [title, setTitle] = useState(conversation?.title ?? "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -132,6 +133,17 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     Alert.alert(participant.user.displayName, undefined, options);
   };
 
+  const onClearHistory = () => {
+    Alert.alert(
+      "Suhbatni tozalash",
+      "Barcha xabarlar faqat sizning ko'rinishingizdan o'chiriladi. Davom etilsinmi?",
+      [
+        { text: "Bekor qilish", style: "cancel" },
+        { text: "Tozalash", style: "destructive", onPress: () => clearHistory(conversationId).catch(() => {}) },
+      ]
+    );
+  };
+
   const onLeave = () => {
     Alert.alert("Guruhdan chiqish", "Haqiqatan ham guruhdan chiqmoqchimisiz?", [
       { text: "Bekor qilish", style: "cancel" },
@@ -201,6 +213,10 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         )}
       />
 
+      <TouchableOpacity style={styles.clearButton} onPress={onClearHistory}>
+        <Text style={styles.clearButtonText}>🗑 Suhbatni tozalash</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.leaveButton} onPress={onLeave}>
         <Text style={styles.leaveButtonText}>Guruhdan chiqish</Text>
       </TouchableOpacity>
@@ -235,6 +251,8 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, color: colors.text, flex: 1 },
   roleBadge: { fontSize: 12, color: colors.primary, fontWeight: "600" },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
+  clearButton: { paddingVertical: 16, alignItems: "center" },
+  clearButtonText: { color: colors.text, fontSize: 16, fontWeight: "600" },
   leaveButton: { paddingVertical: 16, alignItems: "center" },
   leaveButtonText: { color: colors.danger, fontSize: 16, fontWeight: "600" },
 });

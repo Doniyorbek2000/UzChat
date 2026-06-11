@@ -21,6 +21,7 @@ chatsRouter.post("/", validateBody(createConversationSchema), chatsController.cr
 chatsRouter.get("/:id", chatsController.get);
 chatsRouter.patch("/:id", validateBody(updateConversationSchema), chatsController.update);
 chatsRouter.patch("/:id/preferences", validateBody(updatePreferencesSchema), chatsController.updatePreferences);
+chatsRouter.post("/:id/clear", chatsController.clearHistory);
 chatsRouter.post("/:id/leave", chatsController.leave);
 chatsRouter.post("/:id/participants", validateBody(addParticipantSchema), chatsController.addParticipant);
 chatsRouter.delete("/:id/participants/:userId", chatsController.removeParticipant);

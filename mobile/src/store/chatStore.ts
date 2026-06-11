@@ -72,6 +72,7 @@ interface ChatState {
   toggleMute: (conversationId: string) => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
+  clearHistory: (conversationId: string) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
@@ -479,6 +480,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
       }));
     }
+  },
+
+  clearHistory: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    await chatsApi.clearHistory(conversationId);
+    set((state) => ({
+      messagesByConversation: { ...state.messagesByConversation, [conversationId]: [] },
+      hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: false },
+      conversations: upsertConversation(state.conversations, { ...conversation, lastMessage: null }),
+    }));
   },
 
   blockUser: async (userId) => {

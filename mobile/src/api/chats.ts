@@ -48,6 +48,10 @@ export const chatsApi = {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}/preferences`, input).then((r) => r.data);
   },
 
+  clearHistory(conversationId: string) {
+    return apiClient.post(`/conversations/${conversationId}/clear`);
+  },
+
   removeParticipant(conversationId: string, userId: string) {
     return apiClient.delete<Conversation>(`/conversations/${conversationId}/participants/${userId}`).then((r) => r.data);
   },

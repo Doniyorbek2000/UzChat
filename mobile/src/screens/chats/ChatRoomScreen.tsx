@@ -109,6 +109,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const toggleStar = useChatStore((s) => s.toggleStar);
   const blockUser = useChatStore((s) => s.blockUser);
   const unblockUser = useChatStore((s) => s.unblockUser);
+  const clearHistory = useChatStore((s) => s.clearHistory);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
@@ -158,6 +159,30 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
   };
 
+  const onClearHistory = () => {
+    Alert.alert(
+      "Suhbatni tozalash",
+      "Barcha xabarlar faqat sizning ko'rinishingizdan o'chiriladi. Davom etilsinmi?",
+      [
+        { text: "Bekor qilish", style: "cancel" },
+        { text: "Tozalash", style: "destructive", onPress: () => clearHistory(conversationId).catch(() => {}) },
+      ]
+    );
+  };
+
+  const onChatMenu = () => {
+    if (!otherUser) return;
+    Alert.alert(otherUser.displayName, undefined, [
+      { text: "🗑 Suhbatni tozalash", onPress: onClearHistory },
+      {
+        text: conversation?.isBlocked ? "Blokdan chiqarish" : "Bloklash",
+        style: conversation?.isBlocked ? "default" : "destructive",
+        onPress: onToggleBlock,
+      },
+      { text: "Bekor qilish", style: "cancel" },
+    ]);
+  };
+
   useEffect(() => {
     navigation.setOptions({
       title,
@@ -182,7 +207,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             )
           : conversation?.type === "DIRECT"
             ? () => (
-                <TouchableOpacity onPress={onToggleBlock} hitSlop={8}>
+                <TouchableOpacity onPress={onChatMenu} hitSlop={8}>
                   <Text style={styles.headerInfoIcon}>⋮</Text>
                 </TouchableOpacity>
               )

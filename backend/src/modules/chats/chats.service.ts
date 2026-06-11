@@ -109,7 +109,10 @@ export const chatsService = {
           user: cp.user,
           lastReadAt: cp.lastReadAt,
         })),
-        lastMessage: p.conversation.messages[0] ?? null,
+        lastMessage:
+          p.clearedAt && p.conversation.messages[0] && p.conversation.messages[0].createdAt <= p.clearedAt
+            ? null
+            : p.conversation.messages[0] ?? null,
       };
     });
   },
@@ -169,6 +172,15 @@ export const chatsService = {
     });
 
     return chatsService.getConversation(userId, conversationId);
+  },
+
+  async clearHistory(userId: string, conversationId: string) {
+    const participant = await chatsService.assertParticipant(userId, conversationId);
+
+    await prisma.conversationParticipant.update({
+      where: { id: participant.id },
+      data: { clearedAt: new Date() },
+    });
   },
 
   async addParticipant(userId: string, conversationId: string, input: AddParticipantInput) {

@@ -142,12 +142,16 @@ export const messagesService = {
   },
 
   async listMessages(userId: string, conversationId: string, query: ListMessagesQuery) {
-    await chatsService.assertParticipant(userId, conversationId);
+    const participant = await chatsService.assertParticipant(userId, conversationId);
+
+    const createdAtFilter: { lt?: Date; gt?: Date } = {};
+    if (query.before) createdAtFilter.lt = new Date(query.before);
+    if (participant.clearedAt) createdAtFilter.gt = participant.clearedAt;
 
     const messages = await prisma.message.findMany({
       where: {
         conversationId,
-        ...(query.before ? { createdAt: { lt: new Date(query.before) } } : {}),
+        ...(Object.keys(createdAtFilter).length ? { createdAt: createdAtFilter } : {}),
       },
       orderBy: { createdAt: "desc" },
       take: query.limit,

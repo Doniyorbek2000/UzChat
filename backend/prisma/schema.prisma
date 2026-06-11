@@ -150,6 +150,8 @@ model ConversationParticipant {
   isArchived   Boolean   @default(false)
   // User manually flagged this conversation as unread; cleared on next markRead.
   markedUnread Boolean   @default(false)
+  // Messages created at or before this time are hidden from this user only.
+  clearedAt    DateTime?
 
   @@unique([conversationId, userId])
   @@index([userId])
