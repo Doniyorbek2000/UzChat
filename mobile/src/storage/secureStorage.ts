@@ -50,6 +50,13 @@ export const secureStorage = {
     ]);
   },
 
+  async clearKeyPair() {
+    await Promise.all([
+      SecureStore.deleteItemAsync(KEYS.publicKey),
+      SecureStore.deleteItemAsync(KEYS.privateKey),
+    ]);
+  },
+
   /** SHA-256 hash of the app-lock PIN, or null if app lock is not configured. */
   async getAppLockPinHash() {
     return SecureStore.getItemAsync(KEYS.appLockPinHash);

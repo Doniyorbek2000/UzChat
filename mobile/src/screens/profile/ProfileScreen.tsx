@@ -14,6 +14,7 @@ export function ProfileScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const logout = useAuthStore((s) => s.logout);
+  const deleteAccount = useAuthStore((s) => s.deleteAccount);
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
   const [saving, setSaving] = useState(false);
@@ -66,6 +67,35 @@ export function ProfileScreen({ navigation }: Props) {
       { text: "Bekor qilish", style: "cancel" },
       { text: "Chiqish", style: "destructive", onPress: () => logout() },
     ]);
+  };
+
+  const onDeleteAccount = () => {
+    Alert.alert(
+      "Hisobni o'chirish",
+      "Hisobingiz, suhbatlaringiz va barcha xabarlaringiz butunlay o'chiriladi. Bu amalni ortga qaytarib bo'lmaydi.",
+      [
+        { text: "Bekor qilish", style: "cancel" },
+        {
+          text: "Davom etish",
+          style: "destructive",
+          onPress: () => {
+            Alert.prompt(
+              "Joriy parolni kiriting",
+              "Hisobni butunlay o'chirish uchun parolingizni tasdiqlang",
+              async (password) => {
+                if (!password) return;
+                try {
+                  await deleteAccount(password);
+                } catch (err: any) {
+                  Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Hisobni o'chirib bo'lmadi");
+                }
+              },
+              "secure-text"
+            );
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -136,6 +166,10 @@ export function ProfileScreen({ navigation }: Props) {
       <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
         <Text style={styles.logoutText}>Chiqish</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.deleteAccountButton} onPress={onDeleteAccount}>
+        <Text style={styles.deleteAccountText}>Hisobni o'chirish</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -182,4 +216,6 @@ const styles = StyleSheet.create({
   menuRowArrow: { fontSize: 18, color: colors.textSecondary },
   logoutButton: { marginTop: 32, alignItems: "center", paddingVertical: 14 },
   logoutText: { color: colors.danger, fontSize: 16, fontWeight: "600" },
+  deleteAccountButton: { alignItems: "center", paddingVertical: 14, marginBottom: 16 },
+  deleteAccountText: { color: colors.textSecondary, fontSize: 13 },
 });

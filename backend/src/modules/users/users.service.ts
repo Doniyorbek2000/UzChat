@@ -1,8 +1,16 @@
+import { ConversationType } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import { filterLastSeenSingle, getContactIds, filterLastSeen } from "../../utils/lastSeen";
-import { ChangePasswordInput, DisableTwoFactorInput, SetTwoFactorInput, UpdateProfileInput } from "./users.schema";
+import { chatsService } from "../chats/chats.service";
+import {
+  ChangePasswordInput,
+  DeleteAccountInput,
+  DisableTwoFactorInput,
+  SetTwoFactorInput,
+  UpdateProfileInput,
+} from "./users.schema";
 
 const profileSelect = {
   id: true,
@@ -105,5 +113,30 @@ export const usersService = {
     if (!valid) throw Errors.badRequest("Joriy parol noto'g'ri");
 
     await prisma.user.update({ where: { id: userId }, data: { twoFactorHash: null, twoFactorHint: null } });
+  },
+
+  async deleteAccount(userId: string, { currentPassword }: DeleteAccountInput) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
+    if (!user) throw Errors.notFound("Foydalanuvchi");
+
+    const valid = await verifyPassword(currentPassword, user.passwordHash);
+    if (!valid) throw Errors.badRequest("Joriy parol noto'g'ri");
+
+    // Leave every group first so ownership transfers/empty-group cleanup happen
+    // the same way they would via the regular "leave group" flow.
+    const groups = await prisma.conversationParticipant.findMany({
+      where: { userId, conversation: { type: ConversationType.GROUP } },
+      select: { conversationId: true },
+    });
+
+    const leaveResults: { conversationId: string; deleted: boolean; newOwnerId: string | null }[] = [];
+    for (const { conversationId } of groups) {
+      const result = await chatsService.leaveConversation(userId, conversationId);
+      leaveResults.push({ conversationId, ...result });
+    }
+
+    await prisma.user.delete({ where: { id: userId } });
+
+    return { leaveResults };
   },
 };

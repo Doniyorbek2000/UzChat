@@ -2,7 +2,13 @@ import { Router } from "express";
 import { usersController } from "./users.controller";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
-import { changePasswordSchema, disableTwoFactorSchema, setTwoFactorSchema, updateProfileSchema } from "./users.schema";
+import {
+  changePasswordSchema,
+  deleteAccountSchema,
+  disableTwoFactorSchema,
+  setTwoFactorSchema,
+  updateProfileSchema,
+} from "./users.schema";
 
 export const usersRouter = Router();
 
@@ -13,5 +19,6 @@ usersRouter.patch("/me", validateBody(updateProfileSchema), usersController.upda
 usersRouter.patch("/me/password", validateBody(changePasswordSchema), usersController.changePassword);
 usersRouter.put("/me/two-factor", validateBody(setTwoFactorSchema), usersController.setTwoFactor);
 usersRouter.delete("/me/two-factor", validateBody(disableTwoFactorSchema), usersController.disableTwoFactor);
+usersRouter.delete("/me", validateBody(deleteAccountSchema), usersController.deleteAccount);
 usersRouter.get("/search", usersController.search);
 usersRouter.get("/:id", usersController.getById);

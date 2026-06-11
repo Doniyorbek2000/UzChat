@@ -30,6 +30,7 @@ interface AuthState {
   ) => Promise<{ requires2FA: true; pendingToken: string; hint: string | null } | { requires2FA: false }>;
   completeTwoFactorLogin: (pendingToken: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: (currentPassword: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -125,6 +126,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await useAppLockStore.getState().reset();
     disconnectSocket();
     set({ user: null, isAuthenticated: false });
+  },
+
+  deleteAccount: async (currentPassword) => {
+    await usersApi.deleteAccount(currentPassword);
+    await unregisterPushNotificationsAsync().catch(() => {});
+    await secureStorage.clearTokens();
+    await secureStorage.clearKeyPair();
+    await useAppLockStore.getState().reset();
+    disconnectSocket();
+    set({ user: null, keyPair: null, isAuthenticated: false });
   },
 
   refreshProfile: async () => {

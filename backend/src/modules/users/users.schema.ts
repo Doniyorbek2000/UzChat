@@ -29,7 +29,12 @@ export const disableTwoFactorSchema = z.object({
   currentPassword: z.string().min(1, "Joriy parol kiritilishi shart"),
 });
 
+export const deleteAccountSchema = z.object({
+  currentPassword: z.string().min(1, "Joriy parol kiritilishi shart"),
+});
+
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type SetTwoFactorInput = z.infer<typeof setTwoFactorSchema>;
 export type DisableTwoFactorInput = z.infer<typeof disableTwoFactorSchema>;
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;

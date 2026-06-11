@@ -36,4 +36,8 @@ export const usersApi = {
   disableTwoFactor(currentPassword: string) {
     return apiClient.delete("/users/me/two-factor", { data: { currentPassword } });
   },
+
+  deleteAccount(currentPassword: string) {
+    return apiClient.delete("/users/me", { data: { currentPassword } });
+  },
 };
