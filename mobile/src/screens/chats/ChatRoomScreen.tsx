@@ -33,7 +33,7 @@ import { useChatStore, DecryptedMessage, decryptReplyPreview } from "../../store
 import { useAuthStore } from "../../store/authStore";
 import { useWallpaperStore } from "../../store/wallpaperStore";
 import { getWallpaperColor } from "../../theme/wallpapers";
-import { ConversationParticipant, MessageReaction, MessageType } from "../../types";
+import { ConversationParticipant, MessageReaction, MessageType, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ViewOnceImageBubble } from "../../components/ViewOnceImageBubble";
@@ -50,10 +50,20 @@ import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 import { exportConversation } from "../../utils/chatExport";
+import { reportsApi } from "../../api/reports";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
+
+const REPORT_REASONS: { value: ReportReason; label: string }[] = [
+  { value: "SPAM", label: "Spam" },
+  { value: "HARASSMENT", label: "Tazyiq/bezovta qilish" },
+  { value: "VIOLENCE", label: "Zo'ravonlik" },
+  { value: "ILLEGAL_CONTENT", label: "Noqonuniy kontent" },
+  { value: "IMPERSONATION", label: "Soxta profil" },
+  { value: "OTHER", label: "Boshqa" },
+];
 
 const REPLY_TYPE_LABELS: Partial<Record<MessageType, string>> = {
   IMAGE: "🖼 Rasm",
@@ -319,6 +329,21 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     );
   };
 
+  const reportUser = (reportedUserId: string, reportConversationId?: string, messageId?: string) => {
+    Alert.alert("Shikoyat sababi", "Nima uchun shikoyat qilmoqchisiz?", [
+      ...REPORT_REASONS.map((option) => ({
+        text: option.label,
+        onPress: () => {
+          reportsApi
+            .create({ reportedUserId, conversationId: reportConversationId, messageId, reason: option.value })
+            .then(() => Alert.alert("Yuborildi", "Shikoyatingiz qabul qilindi"))
+            .catch(() => Alert.alert("Xatolik", "Shikoyatni yuborib bo'lmadi"));
+        },
+      })),
+      { text: "Bekor qilish", style: "cancel" as const },
+    ]);
+  };
+
   const onChatMenu = () => {
     if (!otherUser) return;
     Alert.alert(otherUserDisplayName, undefined, [
@@ -334,6 +359,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         style: conversation?.isBlocked ? "default" : "destructive",
         onPress: onToggleBlock,
       },
+      { text: "🚩 Foydalanuvchini shikoyat qilish", style: "destructive", onPress: () => reportUser(otherUser.id, conversationId) },
       { text: "Bekor qilish", style: "cancel" },
     ]);
   };
@@ -1342,6 +1368,21 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🙈 Mendan o'chirish</Text>
             </TouchableOpacity>
           )}
+          {actionMessage &&
+            actionMessage.senderId !== user?.id &&
+            !actionMessage.deletedAt &&
+            !actionMessage.decryptFailed && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  reportUser(message.senderId, conversationId, message.id);
+                }}
+              >
+                <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🚩 Xabarni shikoyat qilish</Text>
+              </TouchableOpacity>
+            )}
           <TouchableOpacity style={styles.actionButton} onPress={() => setActionMessage(null)}>
             <Text style={styles.actionButtonText}>Bekor qilish</Text>
           </TouchableOpacity>

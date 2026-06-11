@@ -11,6 +11,7 @@ import { chatsRouter } from "./modules/chats/chats.routes";
 import { mediaRouter } from "./modules/media/media.routes";
 import { pushRouter } from "./modules/push/push.routes";
 import { foldersRouter } from "./modules/folders/folders.routes";
+import { reportsRouter } from "./modules/reports/reports.routes";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 
@@ -34,6 +35,7 @@ export function createApp() {
   app.use("/media", apiRateLimiter, mediaRouter);
   app.use("/push", apiRateLimiter, pushRouter);
   app.use("/chat-folders", apiRateLimiter, foldersRouter);
+  app.use("/reports", apiRateLimiter, reportsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

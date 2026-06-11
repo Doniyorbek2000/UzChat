@@ -1,3 +1,4 @@
+export type ReportReason = "SPAM" | "HARASSMENT" | "VIOLENCE" | "ILLEGAL_CONTENT" | "IMPERSONATION" | "OTHER";
 export type LastSeenPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
 export type GroupAddPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
 // "1h"/"8h"/"1d"/"1w": mute for that duration; "forever": mute indefinitely; "off": unmute.

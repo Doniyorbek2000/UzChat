@@ -47,6 +47,15 @@ enum GroupAddPrivacy {
   NOBODY
 }
 
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  VIOLENCE
+  ILLEGAL_CONTENT
+  IMPERSONATION
+  OTHER
+}
+
 model User {
   id           String   @id @default(uuid())
   phone        String   @unique
@@ -85,9 +94,29 @@ model User {
   blockedByUsers   BlockedUser[]              @relation("BlockTarget")
   pushTokens       PushToken[]
   chatFolders      ChatFolder[]
+  reportsMade      Report[]                   @relation("ReportReporter")
+  reportsReceived  Report[]                   @relation("ReportReported")
 
   @@index([username])
   @@index([phone])
+}
+
+// A user-submitted report about another user (optionally about a specific
+// message), kept for manual moderation review. Never shown back to users.
+model Report {
+  id             String       @id @default(uuid())
+  reporterId     String
+  reporter       User         @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserId String
+  reportedUser   User         @relation("ReportReported", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  conversationId String?
+  messageId      String?
+  reason         ReportReason
+  description    String?
+  createdAt      DateTime     @default(now())
+
+  @@index([reportedUserId])
+  @@index([reporterId])
 }
 
 model RefreshToken {
