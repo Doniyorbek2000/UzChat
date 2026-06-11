@@ -118,6 +118,10 @@ export const messagesService = {
 
     const mentions = await resolveMentions(conversationId, userId, input.mentions);
 
+    const expiresAt = conversation?.disappearingSeconds
+      ? new Date(Date.now() + conversation.disappearingSeconds * 1000)
+      : null;
+
     const message = await prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
         data: {
@@ -129,6 +133,7 @@ export const messagesService = {
           mediaUrl: input.mediaUrl,
           replyToId: input.replyToId,
           mentions,
+          expiresAt,
         },
         include: messageInclude(userId),
       });
@@ -260,5 +265,23 @@ export const messagesService = {
     });
 
     return stars.map((s) => ({ ...s.message, isStarred: true }));
+  },
+
+  // Soft-deletes messages whose disappearing-messages timer has elapsed.
+  async expireDueMessages() {
+    const due = await prisma.message.findMany({
+      where: { expiresAt: { lte: new Date() }, deletedAt: null },
+      select: { id: true, conversationId: true },
+    });
+    if (due.length === 0) return [];
+
+    return Promise.all(
+      due.map((m) =>
+        prisma.message.update({
+          where: { id: m.id },
+          data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date(), expiresAt: null },
+        })
+      )
+    );
   },
 };

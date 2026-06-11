@@ -8,6 +8,7 @@ import {
   joinByInviteSchema,
   setPinnedMessageSchema,
   updateConversationSchema,
+  updateDisappearingMessagesSchema,
   updateParticipantRoleSchema,
   updatePreferencesSchema,
 } from "./chats.schema";
@@ -24,6 +25,11 @@ chatsRouter.get("/:id", chatsController.get);
 chatsRouter.patch("/:id", validateBody(updateConversationSchema), chatsController.update);
 chatsRouter.patch("/:id/preferences", validateBody(updatePreferencesSchema), chatsController.updatePreferences);
 chatsRouter.put("/:id/pinned-message", validateBody(setPinnedMessageSchema), chatsController.setPinnedMessage);
+chatsRouter.put(
+  "/:id/disappearing-messages",
+  validateBody(updateDisappearingMessagesSchema),
+  chatsController.setDisappearingMessages
+);
 chatsRouter.post("/:id/invite-link", chatsController.createInviteLink);
 chatsRouter.delete("/:id/invite-link", chatsController.revokeInviteLink);
 chatsRouter.get("/invite/:code", chatsController.getInvitePreview);

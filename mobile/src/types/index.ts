@@ -80,6 +80,8 @@ export interface Conversation {
   isBlocked: boolean;
   // The current group's invite code (only visible to OWNER/ADMIN), or null.
   inviteCode: string | null;
+  // New messages auto-delete this many seconds after being sent; null disables it.
+  disappearingSeconds: number | null;
   pinnedMessage: ReplyToSnapshot | null;
   participants: ConversationParticipant[];
   lastMessage?: Message | null;

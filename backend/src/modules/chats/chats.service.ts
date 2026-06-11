@@ -11,6 +11,7 @@ import {
   UpdatePreferencesInput,
 } from "./chats.schema";
 
+
 const userSummarySelect = {
   id: true,
   username: true,
@@ -120,6 +121,7 @@ export const chatsService = {
         markedUnread: p.markedUnread,
         isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
         inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
+        disappearingSeconds: p.conversation.disappearingSeconds,
         pinnedMessage: p.conversation.pinnedMessage,
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
@@ -172,6 +174,7 @@ export const chatsService = {
       markedUnread: participant.markedUnread,
       isBlocked,
       inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
+      disappearingSeconds: participant.conversation.disappearingSeconds,
       pinnedMessage: participant.conversation.pinnedMessage,
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
@@ -220,6 +223,28 @@ export const chatsService = {
       where: { id: conversationId },
       data: { pinnedMessageId: messageId },
     });
+
+    return chatsService.getConversation(userId, conversationId);
+  },
+
+  async setDisappearingMessages(userId: string, conversationId: string, disappearingSeconds: number | null) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester) throw Errors.forbidden();
+    if (
+      conversation.type === ConversationType.GROUP &&
+      requester.role !== ParticipantRole.OWNER &&
+      requester.role !== ParticipantRole.ADMIN
+    ) {
+      throw Errors.forbidden();
+    }
+
+    await prisma.conversation.update({ where: { id: conversationId }, data: { disappearingSeconds } });
 
     return chatsService.getConversation(userId, conversationId);
   },

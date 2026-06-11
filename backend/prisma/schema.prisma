@@ -130,6 +130,9 @@ model Conversation {
   // Shareable code allowing anyone to join a GROUP conversation; null means invites are disabled.
   inviteCode String? @unique
 
+  // New messages auto-delete this many seconds after being sent; null disables it.
+  disappearingSeconds Int?
+
   participants ConversationParticipant[]
   messages     Message[]
 }
@@ -198,9 +201,14 @@ model Message {
   editedAt  DateTime?
   deletedAt DateTime?
 
+  // When set (based on the conversation's disappearing-messages setting at send
+  // time), the message is auto-deleted once this time passes.
+  expiresAt DateTime?
+
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@index([replyToId])
+  @@index([expiresAt])
 }
 
 model MessageReaction {

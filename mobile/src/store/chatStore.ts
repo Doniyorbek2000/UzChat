@@ -76,6 +76,7 @@ interface ChatState {
   toggleUnread: (conversationId: string) => Promise<void>;
   clearHistory: (conversationId: string) => Promise<void>;
   setPinnedMessage: (conversationId: string, messageId: string | null) => Promise<void>;
+  setDisappearingMessages: (conversationId: string, disappearingSeconds: number | null) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
@@ -506,6 +507,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
     const updated = await chatsApi.setPinnedMessage(conversationId, messageId);
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
+  setDisappearingMessages: async (conversationId, disappearingSeconds) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.setDisappearingMessages(conversationId, disappearingSeconds);
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));

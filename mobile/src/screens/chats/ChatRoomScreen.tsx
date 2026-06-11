@@ -35,6 +35,7 @@ import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { formatDuration } from "../../utils/mediaFile";
 import { formatTime } from "../../utils/conversation";
+import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
@@ -111,6 +112,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const unblockUser = useChatStore((s) => s.unblockUser);
   const clearHistory = useChatStore((s) => s.clearHistory);
   const setPinnedMessage = useChatStore((s) => s.setPinnedMessage);
+  const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
@@ -171,10 +173,31 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     );
   };
 
+  const onSetDisappearingMessages = () => {
+    Alert.alert(
+      "O'chiriladigan xabarlar",
+      "Yangi xabarlar belgilangan vaqtdan so'ng avtomatik o'chiriladi",
+      [
+        ...DISAPPEARING_MESSAGE_OPTIONS.map((option) => ({
+          text: option.label,
+          onPress: () =>
+            setDisappearingMessages(conversationId, option.value).catch(() => {
+              Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+            }),
+        })),
+        { text: "Bekor qilish", style: "cancel" as const },
+      ]
+    );
+  };
+
   const onChatMenu = () => {
     if (!otherUser) return;
     Alert.alert(otherUser.displayName, undefined, [
       { text: "🗑 Suhbatni tozalash", onPress: onClearHistory },
+      {
+        text: `⏳ O'chiriladigan xabarlar (${formatDisappearingDuration(conversation?.disappearingSeconds ?? null)})`,
+        onPress: onSetDisappearingMessages,
+      },
       {
         text: conversation?.isBlocked ? "Blokdan chiqarish" : "Bloklash",
         style: conversation?.isBlocked ? "default" : "destructive",

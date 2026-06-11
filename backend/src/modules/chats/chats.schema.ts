@@ -72,6 +72,13 @@ export const joinByInviteSchema = z.object({
   keySenderPublicKey: z.string().min(1),
 });
 
+// 90 days, the longest supported disappearing-messages duration.
+const MAX_DISAPPEARING_SECONDS = 90 * 24 * 60 * 60;
+
+export const updateDisappearingMessagesSchema = z.object({
+  disappearingSeconds: z.number().int().positive().max(MAX_DISAPPEARING_SECONDS).nullable(),
+});
+
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
@@ -79,3 +86,4 @@ export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSch
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
 export type SetPinnedMessageInput = z.infer<typeof setPinnedMessageSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
+export type UpdateDisappearingMessagesInput = z.infer<typeof updateDisappearingMessagesSchema>;

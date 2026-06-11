@@ -9,6 +9,7 @@ import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { encodeInviteLink } from "../../crypto/e2ee";
+import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { ConversationParticipant, ParticipantRole } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
@@ -30,6 +31,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const clearHistory = useChatStore((s) => s.clearHistory);
   const createInviteLink = useChatStore((s) => s.createInviteLink);
   const revokeInviteLink = useChatStore((s) => s.revokeInviteLink);
+  const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
 
   const [title, setTitle] = useState(conversation?.title ?? "");
@@ -91,6 +93,23 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       { text: "Yo'q", style: "cancel" },
       { text: "Ha, bekor qilish", style: "destructive", onPress: () => revokeInviteLink(conversationId).catch(() => {}) },
     ]);
+  };
+
+  const onSetDisappearingMessages = () => {
+    Alert.alert(
+      "O'chiriladigan xabarlar",
+      "Yangi xabarlar belgilangan vaqtdan so'ng avtomatik o'chiriladi",
+      [
+        ...DISAPPEARING_MESSAGE_OPTIONS.map((option) => ({
+          text: option.label,
+          onPress: () =>
+            setDisappearingMessages(conversationId, option.value).catch(() => {
+              Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+            }),
+        })),
+        { text: "Bekor qilish", style: "cancel" as const },
+      ]
+    );
   };
 
   const onChangeAvatar = async () => {
@@ -260,6 +279,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
               <Text style={[styles.inviteText, { color: colors.danger }]}>Havolani bekor qilish</Text>
             </TouchableOpacity>
           )}
+          <TouchableOpacity style={styles.inviteRow} onPress={onSetDisappearingMessages}>
+            <Text style={styles.inviteIcon}>⏳</Text>
+            <Text style={styles.inviteText}>O'chiriladigan xabarlar</Text>
+            <Text style={styles.inviteValue}>{formatDisappearingDuration(conversation.disappearingSeconds)}</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -342,6 +366,7 @@ const styles = StyleSheet.create({
   inviteRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
   inviteIcon: { fontSize: 18 },
   inviteText: { fontSize: 15, color: colors.text, flex: 1 },
+  inviteValue: { fontSize: 14, color: colors.textSecondary },
   addButton: { paddingVertical: 14, paddingHorizontal: 16 },
   addButtonText: { color: colors.primary, fontSize: 15, fontWeight: "600" },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },

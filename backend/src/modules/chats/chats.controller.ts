@@ -93,6 +93,20 @@ export const chatsController = {
     }
   },
 
+  async setDisappearingMessages(req: Request, res: Response, next: NextFunction) {
+    try {
+      const conversation = await chatsService.setDisappearingMessages(
+        req.user!.sub,
+        req.params.id,
+        req.body.disappearingSeconds
+      );
+      getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async createInviteLink(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await chatsService.createInviteLink(req.user!.sub, req.params.id);
