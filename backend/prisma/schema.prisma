@@ -93,8 +93,13 @@ model RefreshToken {
   token     String    @unique
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Captured from the User-Agent header at login, shown in the "Active
+  // sessions" list to help identify the device.
+  userAgent String?
   expiresAt DateTime
   createdAt DateTime  @default(now())
+  // Bumped each time this session's access token is refreshed.
+  lastUsedAt DateTime @default(now())
   revokedAt DateTime?
 
   @@index([userId])

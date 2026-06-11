@@ -3,6 +3,7 @@ import { authController } from "./auth.controller";
 import { validateBody } from "../../utils/validate";
 import { loginSchema, refreshSchema, requestOtpSchema, verifyOtpSchema, verifyTwoFactorSchema } from "./auth.schema";
 import { authRateLimiter } from "../../middleware/rateLimit.middleware";
+import { requireAuth } from "../../middleware/auth.middleware";
 
 export const authRouter = Router();
 
@@ -27,3 +28,7 @@ authRouter.post(
 );
 authRouter.post("/refresh", validateBody(refreshSchema), authController.refresh);
 authRouter.post("/logout", validateBody(refreshSchema), authController.logout);
+
+authRouter.get("/sessions", requireAuth, authController.listSessions);
+authRouter.delete("/sessions/:id", requireAuth, authController.revokeSession);
+authRouter.post("/sessions/revoke-others", requireAuth, authController.revokeOtherSessions);

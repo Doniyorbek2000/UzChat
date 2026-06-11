@@ -27,6 +27,7 @@ import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { PrivacySettingsScreen } from "../screens/profile/PrivacySettingsScreen";
 import { AppLockSettingsScreen } from "../screens/profile/AppLockSettingsScreen";
 import { TwoFactorSettingsScreen } from "../screens/profile/TwoFactorSettingsScreen";
+import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { useAuthStore } from "../store/authStore";
 import { useAppLockStore } from "../store/appLockStore";
@@ -132,6 +133,7 @@ export function RootNavigator() {
             <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: "Maxfiylik" }} />
             <Stack.Screen name="AppLockSettings" component={AppLockSettingsScreen} options={{ title: "Ilovani qulflash" }} />
             <Stack.Screen name="TwoFactorSettings" component={TwoFactorSettingsScreen} options={{ title: "Ikki bosqichli tekshiruv" }} />
+            <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

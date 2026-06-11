@@ -178,3 +178,12 @@ export interface ChatFolder {
   order: number;
   conversationIds: string[];
 }
+
+/** A logged-in device/client, backed by a refresh token on the server. */
+export interface Session {
+  id: string;
+  userAgent: string | null;
+  createdAt: string;
+  lastUsedAt: string;
+  isCurrent: boolean;
+}

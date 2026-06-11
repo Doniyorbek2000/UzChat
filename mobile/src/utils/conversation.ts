@@ -40,3 +40,10 @@ export function formatTime(iso: string): string {
   }
   return date.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
 }
+
+export function formatDateTime(iso: string): string {
+  const date = new Date(iso);
+  const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const day = date.toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" });
+  return `${day}, ${time}`;
+}

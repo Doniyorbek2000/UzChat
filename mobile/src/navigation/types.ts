@@ -46,6 +46,7 @@ export type RootStackParamList = {
   PrivacySettings: undefined;
   AppLockSettings: undefined;
   TwoFactorSettings: undefined;
+  ActiveSessions: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

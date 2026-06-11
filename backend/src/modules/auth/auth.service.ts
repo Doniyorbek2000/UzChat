@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import {
@@ -28,14 +29,17 @@ function msFromExpiresIn(expiresIn: string): number {
   return value * unitMs;
 }
 
-async function issueTokens(user: { id: string; username: string }) {
-  const accessToken = signAccessToken({ sub: user.id, username: user.username });
-  const refreshToken = signRefreshToken({ sub: user.id, username: user.username });
+async function issueTokens(user: { id: string; username: string }, userAgent?: string | null) {
+  const sid = crypto.randomUUID();
+  const accessToken = signAccessToken({ sub: user.id, username: user.username, sid });
+  const refreshToken = signRefreshToken({ sub: user.id, username: user.username, sid });
 
   await prisma.refreshToken.create({
     data: {
+      id: sid,
       token: refreshToken,
       userId: user.id,
+      userAgent: userAgent ?? null,
       expiresAt: new Date(Date.now() + msFromExpiresIn(env.jwt.refreshExpiresIn)),
     },
   });
@@ -84,7 +88,7 @@ export const authService = {
     await sendOtpSms(phone, code);
   },
 
-  async verifyOtpAndRegister(input: VerifyOtpInput) {
+  async verifyOtpAndRegister(input: VerifyOtpInput, userAgent?: string | null) {
     const { phone, code, username, displayName, password, publicKey } = input;
 
     const otp = await prisma.otpCode.findFirst({
@@ -120,11 +124,11 @@ export const authService = {
 
     await prisma.otpCode.delete({ where: { id: otp.id } });
 
-    const tokens = await issueTokens(user);
+    const tokens = await issueTokens(user, userAgent);
     return { user: toPublicUser(user), ...tokens };
   },
 
-  async login({ phone, password }: LoginInput) {
+  async login({ phone, password }: LoginInput, userAgent?: string | null) {
     const user = await prisma.user.findUnique({ where: { phone } });
     if (!user) throw Errors.invalidCredentials();
 
@@ -138,11 +142,11 @@ export const authService = {
 
     await prisma.user.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });
 
-    const tokens = await issueTokens(user);
+    const tokens = await issueTokens(user, userAgent);
     return { user: toPublicUser(user), ...tokens };
   },
 
-  async verifyTwoFactor({ pendingToken, password }: VerifyTwoFactorInput) {
+  async verifyTwoFactor({ pendingToken, password }: VerifyTwoFactorInput, userAgent?: string | null) {
     let payload;
     try {
       payload = verifyTwoFactorPendingToken(pendingToken);
@@ -158,11 +162,11 @@ export const authService = {
 
     await prisma.user.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });
 
-    const tokens = await issueTokens(user);
+    const tokens = await issueTokens(user, userAgent);
     return { user: toPublicUser(user), ...tokens };
   },
 
-  async refresh(refreshToken: string) {
+  async refresh(refreshToken: string, userAgent?: string | null) {
     let payload;
     try {
       payload = verifyRefreshToken(refreshToken);
@@ -170,23 +174,64 @@ export const authService = {
       throw Errors.unauthorized();
     }
 
-    const stored = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
-    if (!stored || stored.revokedAt || stored.expiresAt < new Date()) {
+    if (!payload.sid) throw Errors.unauthorized();
+
+    const stored = await prisma.refreshToken.findUnique({ where: { id: payload.sid } });
+    if (!stored || stored.token !== refreshToken || stored.revokedAt || stored.expiresAt < new Date()) {
       throw Errors.unauthorized();
     }
 
     const user = await prisma.user.findUnique({ where: { id: payload.sub } });
     if (!user) throw Errors.unauthorized();
 
-    await prisma.refreshToken.update({ where: { id: stored.id }, data: { revokedAt: new Date() } });
+    const accessToken = signAccessToken({ sub: user.id, username: user.username, sid: stored.id });
+    const newRefreshToken = signRefreshToken({ sub: user.id, username: user.username, sid: stored.id });
 
-    const tokens = await issueTokens(user);
-    return tokens;
+    await prisma.refreshToken.update({
+      where: { id: stored.id },
+      data: {
+        token: newRefreshToken,
+        expiresAt: new Date(Date.now() + msFromExpiresIn(env.jwt.refreshExpiresIn)),
+        lastUsedAt: new Date(),
+        ...(userAgent ? { userAgent } : {}),
+      },
+    });
+
+    return { accessToken, refreshToken: newRefreshToken };
   },
 
   async logout(refreshToken: string) {
     await prisma.refreshToken.updateMany({
       where: { token: refreshToken, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  },
+
+  async listSessions(userId: string, currentSessionId?: string) {
+    const sessions = await prisma.refreshToken.findMany({
+      where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { lastUsedAt: "desc" },
+    });
+    return sessions.map((s) => ({
+      id: s.id,
+      userAgent: s.userAgent,
+      createdAt: s.createdAt,
+      lastUsedAt: s.lastUsedAt,
+      isCurrent: s.id === currentSessionId,
+    }));
+  },
+
+  async revokeSession(userId: string, sessionId: string) {
+    const session = await prisma.refreshToken.findUnique({ where: { id: sessionId } });
+    if (!session || session.userId !== userId || session.revokedAt) {
+      throw Errors.notFound("Seans");
+    }
+    await prisma.refreshToken.update({ where: { id: sessionId }, data: { revokedAt: new Date() } });
+  },
+
+  async revokeOtherSessions(userId: string, currentSessionId: string) {
+    await prisma.refreshToken.updateMany({
+      where: { userId, id: { not: currentSessionId }, revokedAt: null },
       data: { revokedAt: new Date() },
     });
   },

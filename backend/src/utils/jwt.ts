@@ -5,6 +5,8 @@ import { env } from "../config/env";
 export interface AccessTokenPayload {
   sub: string;
   username: string;
+  // Identifies the RefreshToken row this token's session belongs to.
+  sid: string;
 }
 
 export function signAccessToken(payload: AccessTokenPayload): string {

@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { AuthTokens, AuthUser, LoginResult } from "../types";
+import { AuthTokens, AuthUser, LoginResult, Session } from "../types";
 
 export const authApi = {
   requestRegisterOtp(phone: string) {
@@ -31,5 +31,17 @@ export const authApi = {
 
   logout(refreshToken: string) {
     return apiClient.post("/auth/logout", { refreshToken });
+  },
+
+  listSessions() {
+    return apiClient.get<Session[]>("/auth/sessions").then((r) => r.data);
+  },
+
+  revokeSession(id: string) {
+    return apiClient.delete(`/auth/sessions/${id}`);
+  },
+
+  revokeOtherSessions() {
+    return apiClient.post("/auth/sessions/revoke-others");
   },
 };
