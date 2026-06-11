@@ -97,7 +97,8 @@ interface ChatState {
     asset: MediaAsset,
     type: MessageType,
     replyToId?: string,
-    viewOnce?: boolean
+    viewOnce?: boolean,
+    caption?: string
   ) => Promise<void>;
   viewOnceMedia: (conversationId: string, messageId: string) => Promise<void>;
   sendContactMessage: (conversationId: string, contact: User, replyToId?: string) => Promise<void>;
@@ -459,7 +460,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  sendMediaMessage: async (conversationId, asset, type, replyToId, viewOnce) => {
+  sendMediaMessage: async (conversationId, asset, type, replyToId, viewOnce, caption) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
@@ -474,6 +475,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       width: asset.width,
       height: asset.height,
       duration: asset.duration,
+      caption: caption || undefined,
     };
     const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), key);
 

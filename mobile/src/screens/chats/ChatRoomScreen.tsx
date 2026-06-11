@@ -15,6 +15,7 @@ import {
   Pressable,
   Linking,
   Switch,
+  Image,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
@@ -251,6 +252,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pendingMedia, setPendingMedia] = useState<{
+    uri: string;
+    name: string;
+    mimeType: string;
+    width?: number;
+    height?: number;
+    type: "IMAGE" | "FILE";
+  } | null>(null);
+  const [mediaCaption, setMediaCaption] = useState("");
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
@@ -722,37 +732,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (result.canceled || !result.assets[0]) return;
 
     const asset = result.assets[0];
-    Alert.alert("Rasmni yuborish", "Qanday yuborilsin?", [
-      { text: "Oddiy rasm", onPress: () => sendImageAsset(asset, false) },
-      { text: "🔥 Bir martalik", onPress: () => sendImageAsset(asset, true) },
-      { text: "Bekor qilish", style: "cancel" },
-    ]);
-  };
-
-  const sendImageAsset = async (asset: ImagePicker.ImagePickerAsset, viewOnce: boolean) => {
-    const replyToId = replyingTo?.id;
-    setReplyingTo(null);
-    setSending(true);
-    try {
-      await sendMediaMessage(
-        conversationId,
-        {
-          uri: asset.uri,
-          name: asset.fileName ?? `photo-${Date.now()}.jpg`,
-          mimeType: asset.mimeType ?? "image/jpeg",
-          width: asset.width,
-          height: asset.height,
-        },
-        "IMAGE",
-        replyToId,
-        viewOnce
-      );
-      scrollToLatest();
-    } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Rasmni yuborib bo'lmadi");
-    } finally {
-      setSending(false);
-    }
+    setMediaCaption("");
+    setPendingMedia({
+      uri: asset.uri,
+      name: asset.fileName ?? `photo-${Date.now()}.jpg`,
+      mimeType: asset.mimeType ?? "image/jpeg",
+      width: asset.width,
+      height: asset.height,
+      type: "IMAGE",
+    });
   };
 
   const pickFile = async () => {
@@ -760,23 +748,32 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (result.canceled || !result.assets[0]) return;
 
     const asset = result.assets[0];
+    setMediaCaption("");
+    setPendingMedia({
+      uri: asset.uri,
+      name: asset.name,
+      mimeType: asset.mimeType ?? "application/octet-stream",
+      type: "FILE",
+    });
+  };
+
+  const sendPendingMedia = async (viewOnce: boolean) => {
+    if (!pendingMedia) return;
+    const { type, ...asset } = pendingMedia;
+    const caption = mediaCaption.trim();
     const replyToId = replyingTo?.id;
     setReplyingTo(null);
+    setPendingMedia(null);
+    setMediaCaption("");
     setSending(true);
     try {
-      await sendMediaMessage(
-        conversationId,
-        {
-          uri: asset.uri,
-          name: asset.name,
-          mimeType: asset.mimeType ?? "application/octet-stream",
-        },
-        "FILE",
-        replyToId
-      );
+      await sendMediaMessage(conversationId, asset, type, replyToId, viewOnce, caption || undefined);
       scrollToLatest();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Faylni yuborib bo'lmadi");
+      Alert.alert(
+        "Xatolik",
+        err?.response?.data?.error?.message ?? (type === "IMAGE" ? "Rasmni yuborib bo'lmadi" : "Faylni yuborib bo'lmadi")
+      );
     } finally {
       setSending(false);
     }
@@ -1076,6 +1073,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )}
           {content}
+          {!item.deletedAt &&
+            !item.decryptFailed &&
+            !!item.text &&
+            (item.type === "FILE" || (item.type === "IMAGE" && !item.viewOnce) || item.type === "VIDEO") && (
+              <View style={styles.mediaCaption}>{renderMessageText(item.text, conversation?.participants ?? [])}</View>
+            )}
           {linkUrl && <LinkPreviewCard url={linkUrl} />}
           {!item.deletedAt && item.reactions.length > 0 && (
             <View style={styles.reactionsRow}>
@@ -1669,6 +1672,50 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </View>
       </View>
     </Modal>
+    <Modal visible={!!pendingMedia} transparent animationType="fade" onRequestClose={() => setPendingMedia(null)}>
+      <KeyboardAvoidingView
+        style={styles.mediaPreviewBackdrop}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View style={styles.mediaPreviewSheet}>
+          {pendingMedia?.type === "IMAGE" ? (
+            <Image source={{ uri: pendingMedia.uri }} style={styles.mediaPreviewImage} resizeMode="contain" />
+          ) : (
+            <View style={styles.mediaPreviewFile}>
+              <Text style={styles.mediaPreviewFileIcon}>📄</Text>
+              <Text style={styles.mediaPreviewFileName} numberOfLines={2}>
+                {pendingMedia?.name}
+              </Text>
+            </View>
+          )}
+          <TextInput
+            style={styles.mediaCaptionInput}
+            placeholder="Izoh qo'shish..."
+            placeholderTextColor={colors.textSecondary}
+            value={mediaCaption}
+            onChangeText={setMediaCaption}
+            multiline
+          />
+          <View style={styles.mediaPreviewActions}>
+            <TouchableOpacity style={styles.mediaPreviewCancel} onPress={() => setPendingMedia(null)} disabled={sending}>
+              <Text style={styles.mediaPreviewCancelText}>Bekor qilish</Text>
+            </TouchableOpacity>
+            {pendingMedia?.type === "IMAGE" && (
+              <TouchableOpacity
+                style={styles.mediaPreviewViewOnce}
+                onPress={() => sendPendingMedia(true)}
+                disabled={sending}
+              >
+                <Text style={styles.mediaPreviewViewOnceText}>🔥</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.mediaPreviewSend} onPress={() => sendPendingMedia(false)} disabled={sending}>
+              {sending ? <ActivityIndicator color="#fff" /> : <Text style={styles.mediaPreviewSendText}>Yuborish</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
     </>
   );
 }
@@ -1936,4 +1983,58 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   exportText: { fontSize: 14, color: colors.text },
+  mediaCaption: { marginTop: 6 },
+  mediaPreviewBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
+  mediaPreviewSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
+  mediaPreviewImage: {
+    width: "100%",
+    height: 280,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+  },
+  mediaPreviewFile: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 16,
+  },
+  mediaPreviewFileIcon: { fontSize: 32 },
+  mediaPreviewFileName: { flex: 1, fontSize: 15, color: colors.text },
+  mediaCaptionInput: {
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: colors.text,
+    maxHeight: 100,
+  },
+  mediaPreviewActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  mediaPreviewCancel: { paddingVertical: 12, paddingHorizontal: 8 },
+  mediaPreviewCancelText: { color: colors.textSecondary, fontSize: 15, fontWeight: "600" },
+  mediaPreviewViewOnce: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  mediaPreviewViewOnceText: { fontSize: 20 },
+  mediaPreviewSend: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  mediaPreviewSendText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });
