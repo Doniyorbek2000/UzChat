@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { ConversationType, GroupAddPrivacy, ParticipantRole } from "@prisma/client";
+import { ConversationType, GroupAddPrivacy, MessagePrivacy, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { getContactIds, filterLastSeen } from "../../utils/lastSeen";
@@ -115,6 +115,9 @@ export const chatsService = {
       if (existing && existing.participants.length === 2) {
         return chatsService.getConversation(userId, existing.id);
       }
+
+      const otherUser = users.find((u) => u.id === otherId)!;
+      await chatsService.assertCanMessage(userId, otherUser);
     }
 
     const conversation = await prisma.conversation.create({
@@ -468,6 +471,20 @@ export const chatsService = {
       }
       if (target.groupAddPrivacy === GroupAddPrivacy.CONTACTS && !contactIds.has(target.id)) {
         throw Errors.forbidden(`${target.displayName} foydalanuvchisini faqat uning kontaktlari guruhga qo'sha oladi`);
+      }
+    }
+  },
+
+  /** Throws if `senderId` may not start a new direct conversation with `target`, per their messagePrivacy. */
+  async assertCanMessage(senderId: string, target: { id: string; displayName: string; messagePrivacy: MessagePrivacy }) {
+    if (target.id === senderId) return;
+    if (target.messagePrivacy === MessagePrivacy.NOBODY) {
+      throw Errors.forbidden(`${target.displayName} foydalanuvchisi xabarlarni hech kimdan qabul qilmaydi`);
+    }
+    if (target.messagePrivacy === MessagePrivacy.CONTACTS) {
+      const contactIds = await getContactIds(senderId);
+      if (!contactIds.has(target.id)) {
+        throw Errors.forbidden(`${target.displayName} foydalanuvchisi faqat o'z kontaktlaridan xabar qabul qiladi`);
       }
     }
   },

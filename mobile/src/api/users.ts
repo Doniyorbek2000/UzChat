@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { AuthUser, GroupAddPrivacy, LastSeenPrivacy, User } from "../types";
+import { AuthUser, GroupAddPrivacy, LastSeenPrivacy, MessagePrivacy, User } from "../types";
 
 export const usersApi = {
   me() {
@@ -12,6 +12,7 @@ export const usersApi = {
     avatarUrl?: string;
     lastSeenPrivacy?: LastSeenPrivacy;
     groupAddPrivacy?: GroupAddPrivacy;
+    messagePrivacy?: MessagePrivacy;
     readReceiptsEnabled?: boolean;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);

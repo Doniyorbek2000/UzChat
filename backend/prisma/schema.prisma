@@ -47,6 +47,12 @@ enum GroupAddPrivacy {
   NOBODY
 }
 
+enum MessagePrivacy {
+  EVERYONE
+  CONTACTS
+  NOBODY
+}
+
 enum ReportReason {
   SPAM
   HARASSMENT
@@ -72,6 +78,9 @@ model User {
   lastSeenPrivacy LastSeenPrivacy @default(EVERYONE)
   // Who can add this user to a group directly (without an invite link).
   groupAddPrivacy GroupAddPrivacy @default(EVERYONE)
+  // Who can start a new direct conversation with this user. Doesn't affect
+  // conversations that already exist.
+  messagePrivacy MessagePrivacy @default(EVERYONE)
   // When false, this user's read receipts ("seen" status) are hidden from
   // others in direct chats, and they likewise can't see others' read receipts.
   readReceiptsEnabled Boolean @default(true)

@@ -5,7 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
 import { colors } from "../../theme/colors";
-import { GroupAddPrivacy, LastSeenPrivacy } from "../../types";
+import { GroupAddPrivacy, LastSeenPrivacy, MessagePrivacy } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PrivacySettings">;
 
@@ -19,6 +19,12 @@ const GROUP_ADD_OPTIONS: { value: GroupAddPrivacy; label: string; description: s
   { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi sizni guruhga qo'sha oladi" },
   { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz sizni guruhga qo'sha oladi" },
   { value: "NOBODY", label: "Hech kim", description: "Sizni hech kim guruhga qo'sha olmaydi, faqat taklif havolasi orqali qo'shilishingiz mumkin" },
+];
+
+const MESSAGE_PRIVACY_OPTIONS: { value: MessagePrivacy; label: string; description: string }[] = [
+  { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi sizga yangi xabar yozishni boshlay oladi" },
+  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz siz bilan yangi suhbat boshlay oladi" },
+  { value: "NOBODY", label: "Hech kim", description: "Hech kim siz bilan yangi suhbat boshlay olmaydi. Mavjud suhbatlaringizga ta'sir qilmaydi" },
 ];
 
 export function PrivacySettingsScreen({}: Props) {
@@ -46,6 +52,19 @@ export function PrivacySettingsScreen({}: Props) {
     setSaving(`groupAdd:${value}`);
     try {
       await usersApi.updateMe({ groupAddPrivacy: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectMessagePrivacy = async (value: MessagePrivacy) => {
+    if (value === user.messagePrivacy || saving) return;
+    setSaving(`messagePrivacy:${value}`);
+    try {
+      await usersApi.updateMe({ messagePrivacy: value });
       await refreshProfile();
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
@@ -99,6 +118,26 @@ export function PrivacySettingsScreen({}: Props) {
               <Text style={styles.rowDescription}>{option.description}</Text>
             </View>
             {saving === `groupAdd:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Kim menga yangi xabar yoza oladi</Text>
+      {MESSAGE_PRIVACY_OPTIONS.map((option) => {
+        const selected = user.messagePrivacy === option.value;
+        return (
+          <TouchableOpacity key={option.value} style={styles.row} onPress={() => onSelectMessagePrivacy(option.value)} disabled={!!saving}>
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+              <Text style={styles.rowDescription}>{option.description}</Text>
+            </View>
+            {saving === `messagePrivacy:${option.value}` ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
               <View style={[styles.radio, selected && styles.radioSelected]}>

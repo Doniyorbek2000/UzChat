@@ -23,6 +23,7 @@ const profileSelect = {
   lastSeenAt: true,
   lastSeenPrivacy: true,
   groupAddPrivacy: true,
+  messagePrivacy: true,
   readReceiptsEnabled: true,
   twoFactorHash: true,
   twoFactorHint: true,
