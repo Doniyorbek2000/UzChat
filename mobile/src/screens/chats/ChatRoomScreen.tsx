@@ -48,6 +48,7 @@ import { formatTime } from "../../utils/conversation";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { setActiveConversationId } from "../../utils/pushNotifications";
+import { exportConversation } from "../../utils/chatExport";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
@@ -225,6 +226,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const wallpaperId = useWallpaperStore((s) => s.getWallpaperId(conversationId));
   const wallpaperColor = getWallpaperColor(wallpaperId);
@@ -256,6 +258,24 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         { text: "Bekor qilish", style: "cancel" },
         { text: "Bloklash", style: "destructive", onPress: () => blockUser(otherUser.id).catch(() => {}) },
       ]);
+    }
+  };
+
+  const onExportChat = async () => {
+    if (!conversation || !user || exporting) return;
+    setExporting(true);
+    try {
+      await exportConversation({
+        conversation,
+        conversationKey: getConversationKey(conversation),
+        conversationTitle: otherUserDisplayName || "Suhbat",
+        currentUserId: user.id,
+        contactAliases,
+      });
+    } catch {
+      Alert.alert("Xatolik", "Suhbatni eksport qilib bo'lmadi");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -291,6 +311,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (!otherUser) return;
     Alert.alert(otherUserDisplayName, undefined, [
       { text: "🖼 Umumiy media", onPress: () => navigation.navigate("SharedMedia", { conversationId }) },
+      { text: "📤 Suhbatni eksport qilish", onPress: onExportChat },
       { text: "🗑 Suhbatni tozalash", onPress: onClearHistory },
       {
         text: `⏳ O'chiriladigan xabarlar (${formatDisappearingDuration(conversation?.disappearingSeconds ?? null)})`,
@@ -1461,6 +1482,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </ScrollView>
       </KeyboardAvoidingView>
     </Modal>
+    <Modal visible={exporting} transparent animationType="fade">
+      <View style={styles.exportOverlay}>
+        <View style={styles.exportBox}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.exportText}>Eksport qilinmoqda...</Text>
+        </View>
+      </View>
+    </Modal>
     </>
   );
 }
@@ -1715,4 +1744,14 @@ const styles = StyleSheet.create({
   pollAddOption: { color: colors.primary, fontWeight: "600", fontSize: 15, marginTop: 12 },
   pollSwitchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 24 },
   pollSwitchLabel: { fontSize: 15, color: colors.text },
+  exportOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
+  exportBox: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    paddingVertical: 24,
+    paddingHorizontal: 32,
+    alignItems: "center",
+    gap: 12,
+  },
+  exportText: { fontSize: 14, color: colors.text },
 });

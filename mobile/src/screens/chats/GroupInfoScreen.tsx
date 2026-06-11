@@ -19,6 +19,7 @@ import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
+import { exportConversation } from "../../utils/chatExport";
 import { encodeInviteLink } from "../../crypto/e2ee";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SLOW_MODE_OPTIONS, formatSlowModeDuration } from "../../utils/slowMode";
@@ -53,6 +54,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const [description, setDescription] = useState(conversation?.description ?? "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   if (!conversation) return null;
 
@@ -285,6 +287,24 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     Alert.alert(contactAliases[participant.userId] ?? participant.user.displayName, undefined, options);
   };
 
+  const onExportChat = async () => {
+    if (!user || exporting) return;
+    setExporting(true);
+    try {
+      await exportConversation({
+        conversation,
+        conversationKey: getConversationKey(conversation),
+        conversationTitle: conversation.title ?? "Suhbat",
+        currentUserId: user.id,
+        contactAliases,
+      });
+    } catch {
+      Alert.alert("Xatolik", "Suhbatni eksport qilib bo'lmadi");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const onClearHistory = () => {
     Alert.alert(
       "Suhbatni tozalash",
@@ -362,6 +382,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         >
           <Text style={styles.inviteIcon}>🖼</Text>
           <Text style={styles.inviteText}>Umumiy media</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.inviteRow} onPress={onExportChat} disabled={exporting}>
+          <Text style={styles.inviteIcon}>📤</Text>
+          <Text style={styles.inviteText}>Suhbatni eksport qilish</Text>
+          {exporting && <ActivityIndicator color={colors.primary} size="small" />}
         </TouchableOpacity>
       </View>
 
