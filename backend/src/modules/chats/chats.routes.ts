@@ -47,6 +47,7 @@ chatsRouter.patch(
 chatsRouter.get("/starred/messages", messagesController.listStarred);
 
 chatsRouter.get("/:id/messages", messagesController.list);
+chatsRouter.get("/:id/media", messagesController.listMedia);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);
 chatsRouter.post("/:id/read", messagesController.markRead);
 chatsRouter.delete("/:id/messages/:messageId", messagesController.remove);

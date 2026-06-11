@@ -193,6 +193,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onChatMenu = () => {
     if (!otherUser) return;
     Alert.alert(otherUser.displayName, undefined, [
+      { text: "🖼 Umumiy media", onPress: () => navigation.navigate("SharedMedia", { conversationId }) },
       { text: "🗑 Suhbatni tozalash", onPress: onClearHistory },
       {
         text: `⏳ O'chiriladigan xabarlar (${formatDisappearingDuration(conversation?.disappearingSeconds ?? null)})`,

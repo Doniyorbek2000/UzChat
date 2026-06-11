@@ -1,4 +1,4 @@
-import { ConversationType, Message } from "@prisma/client";
+import { ConversationType, Message, MessageType } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { isUserOnline } from "../../sockets";
@@ -164,6 +164,28 @@ export const messagesService = {
     });
 
     return messages.reverse().map(formatMessage);
+  },
+
+  async listMedia(userId: string, conversationId: string, query: ListMessagesQuery) {
+    const participant = await chatsService.assertParticipant(userId, conversationId);
+
+    const createdAtFilter: { lt?: Date; gt?: Date } = {};
+    if (query.before) createdAtFilter.lt = new Date(query.before);
+    if (participant.clearedAt) createdAtFilter.gt = participant.clearedAt;
+
+    const messages = await prisma.message.findMany({
+      where: {
+        conversationId,
+        type: { in: [MessageType.IMAGE, MessageType.VIDEO, MessageType.AUDIO, MessageType.FILE] },
+        deletedAt: null,
+        ...(Object.keys(createdAtFilter).length ? { createdAt: createdAtFilter } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      take: query.limit,
+      include: messageInclude(userId),
+    });
+
+    return messages.map(formatMessage);
   },
 
   async deleteMessage(userId: string, conversationId: string, messageId: string) {

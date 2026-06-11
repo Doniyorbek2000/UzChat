@@ -100,6 +100,12 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
+  listMedia(conversationId: string, before?: string, limit = 30) {
+    return apiClient
+      .get<Message[]>(`/conversations/${conversationId}/media`, { params: { before, limit } })
+      .then((r) => r.data);
+  },
+
   sendMessage(conversationId: string, input: SendMessageInput) {
     return apiClient.post<Message>(`/conversations/${conversationId}/messages`, input).then((r) => r.data);
   },

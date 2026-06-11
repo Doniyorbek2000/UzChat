@@ -118,7 +118,7 @@ export function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSna
   }
 }
 
-function decryptToMessage(conversationKey: string, message: Message): DecryptedMessage {
+export function decryptToMessage(conversationKey: string, message: Message): DecryptedMessage {
   const replyPreview = message.replyTo ? decryptReplyPreview(conversationKey, message.replyTo) : null;
 
   if (message.deletedAt) {

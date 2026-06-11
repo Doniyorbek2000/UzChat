@@ -264,6 +264,16 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       )}
 
+      <View style={styles.inviteSection}>
+        <TouchableOpacity
+          style={styles.inviteRow}
+          onPress={() => navigation.navigate("SharedMedia", { conversationId })}
+        >
+          <Text style={styles.inviteIcon}>🖼</Text>
+          <Text style={styles.inviteText}>Umumiy media</Text>
+        </TouchableOpacity>
+      </View>
+
       {canManage && (
         <View style={styles.inviteSection}>
           <TouchableOpacity style={styles.inviteRow} onPress={onShareInviteLink} disabled={inviteLoading}>

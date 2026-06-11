@@ -24,6 +24,16 @@ export const messagesController = {
     }
   },
 
+  async listMedia(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = listMessagesQuerySchema.parse(req.query);
+      const messages = await messagesService.listMedia(req.user!.sub, req.params.id, query);
+      res.json(messages);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async markRead(req: Request, res: Response, next: NextFunction) {
     try {
       await messagesService.markRead(req.user!.sub, req.params.id);
