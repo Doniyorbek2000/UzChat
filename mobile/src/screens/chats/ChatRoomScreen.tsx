@@ -270,7 +270,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       : otherUser.lastSeenAt
         ? `Oxirgi marta: ${formatTime(otherUser.lastSeenAt)}`
         : ""
-    : "";
+    : conversation?.type === "GROUP"
+      ? (() => {
+          const total = conversation.participants.length;
+          const onlineCount = conversation.participants.filter((p) => onlineUsers.has(p.userId)).length;
+          return onlineCount > 0 ? `${total} a'zo, ${onlineCount} onlayn` : `${total} a'zo`;
+        })()
+      : "";
 
   const onToggleBlock = () => {
     if (!otherUser) return;
