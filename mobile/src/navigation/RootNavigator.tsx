@@ -36,6 +36,7 @@ import { useAppLockStore } from "../store/appLockStore";
 import { useChatStore } from "../store/chatStore";
 import { useWallpaperStore } from "../store/wallpaperStore";
 import { useChatSettingsStore } from "../store/chatSettingsStore";
+import { useRecentEmojiStore } from "../store/recentEmojiStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
 import { colors } from "../theme/colors";
@@ -72,12 +73,14 @@ export function RootNavigator() {
 
   const wallpaperBootstrap = useWallpaperStore((s) => s.bootstrap);
   const chatSettingsBootstrap = useChatSettingsStore((s) => s.bootstrap);
+  const recentEmojiBootstrap = useRecentEmojiStore((s) => s.bootstrap);
 
   useEffect(() => {
     bootstrap();
     wallpaperBootstrap();
     chatSettingsBootstrap();
-  }, [bootstrap, wallpaperBootstrap, chatSettingsBootstrap]);
+    recentEmojiBootstrap();
+  }, [bootstrap, wallpaperBootstrap, chatSettingsBootstrap, recentEmojiBootstrap]);
 
   useEffect(() => {
     if (isAuthenticated) appLockBootstrap();

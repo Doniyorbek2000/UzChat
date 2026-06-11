@@ -34,6 +34,7 @@ import { useChatStore, DecryptedMessage, decryptReplyPreview } from "../../store
 import { useAuthStore } from "../../store/authStore";
 import { useWallpaperStore } from "../../store/wallpaperStore";
 import { useChatSettingsStore } from "../../store/chatSettingsStore";
+import { useRecentEmojiStore } from "../../store/recentEmojiStore";
 import { getWallpaperColor } from "../../theme/wallpapers";
 import { ConversationParticipant, MessageReaction, MessageType, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
@@ -97,8 +98,6 @@ function isEmojiOnlyMessage(text: string): boolean {
   const stripped = text.replace(/\s+/g, "");
   return stripped.length > 0 && stripped.length <= 30 && EMOJI_ONLY_PATTERN.test(stripped);
 }
-
-const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 const MORE_REACTIONS = [
   "👎",
@@ -320,6 +319,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const wallpaperId = useWallpaperStore((s) => s.getWallpaperId(conversationId));
   const wallpaperColor = getWallpaperColor(wallpaperId);
   const fontScale = useChatSettingsStore((s) => s.fontScale);
+  const recentEmojis = useRecentEmojiStore((s) => s.recentEmojis);
+  const recordEmoji = useRecentEmojiStore((s) => s.recordEmoji);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
 
@@ -1395,12 +1396,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       <Pressable style={styles.actionBackdrop} onPress={() => setActionMessage(null)}>
         <Pressable style={styles.actionSheet}>
           <View style={styles.reactionPickerRow}>
-            {QUICK_REACTIONS.map((emoji) => (
+            {recentEmojis.map((emoji) => (
               <TouchableOpacity
                 key={emoji}
                 style={styles.reactionPickerOption}
                 onPress={() => {
                   if (actionMessage) toggleReaction(conversationId, actionMessage.id, emoji).catch(() => {});
+                  recordEmoji(emoji).catch(() => {});
                   setActionMessage(null);
                 }}
               >
@@ -1591,6 +1593,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 style={styles.reactionPickerOption}
                 onPress={() => {
                   if (moreReactionsMessage) toggleReaction(conversationId, moreReactionsMessage.id, emoji).catch(() => {});
+                  recordEmoji(emoji).catch(() => {});
                   setMoreReactionsMessage(null);
                 }}
               >
