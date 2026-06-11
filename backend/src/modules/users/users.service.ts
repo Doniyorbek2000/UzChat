@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { UpdateProfileInput } from "./users.schema";
+import { hashPassword, verifyPassword } from "../../utils/password";
+import { ChangePasswordInput, UpdateProfileInput } from "./users.schema";
 
 const profileSelect = {
   id: true,
@@ -56,5 +57,16 @@ export const usersService = {
       take: 20,
     });
     return users;
+  },
+
+  async changePassword(userId: string, { currentPassword, newPassword }: ChangePasswordInput) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
+    if (!user) throw Errors.notFound("Foydalanuvchi");
+
+    const valid = await verifyPassword(currentPassword, user.passwordHash);
+    if (!valid) throw Errors.badRequest("Joriy parol noto'g'ri");
+
+    const passwordHash = await hashPassword(newPassword);
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
   },
 };

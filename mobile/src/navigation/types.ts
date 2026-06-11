@@ -33,6 +33,7 @@ export type RootStackParamList = {
   StarredMessages: undefined;
   ArchivedChats: undefined;
   BlockedUsers: undefined;
+  ChangePassword: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

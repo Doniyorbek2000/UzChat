@@ -20,6 +20,15 @@ export const usersController = {
     }
   },
 
+  async changePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      await usersService.changePassword(req.user!.sub, req.body);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const profile = await usersService.getPublicProfile(req.user!.sub, req.params.id);

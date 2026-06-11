@@ -17,4 +17,8 @@ export const usersApi = {
   getById(id: string) {
     return apiClient.get<User>(`/users/${id}`).then((r) => r.data);
   },
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return apiClient.patch("/users/me/password", { currentPassword, newPassword });
+  },
 };

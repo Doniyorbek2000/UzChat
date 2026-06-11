@@ -18,6 +18,7 @@ import { StarredMessagesScreen } from "../screens/chats/StarredMessagesScreen";
 import { ArchivedChatsScreen } from "../screens/chats/ArchivedChatsScreen";
 import { BlockedUsersScreen } from "../screens/contacts/BlockedUsersScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
+import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { useAuthStore } from "../store/authStore";
 import { useChatStore } from "../store/chatStore";
 import { getConversationDisplay } from "../utils/conversation";
@@ -91,6 +92,7 @@ export function RootNavigator() {
           <Stack.Screen name="ArchivedChats" component={ArchivedChatsScreen} options={{ title: "Arxivlangan suhbatlar" }} />
           <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
           <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />
         </Stack.Navigator>
       ) : (
         <AuthNavigator />

@@ -10,7 +10,7 @@ const usernameSchema = z
   .max(24, "Username 24 ta belgidan oshmasligi kerak")
   .regex(/^[a-zA-Z0-9_]+$/, "Username faqat harf, raqam va '_' belgisidan iborat bo'lishi mumkin");
 
-const passwordSchema = z
+export const passwordSchema = z
   .string()
   .min(8, "Parol kamida 8 ta belgidan iborat bo'lishi kerak")
   .max(128, "Parol juda uzun");
