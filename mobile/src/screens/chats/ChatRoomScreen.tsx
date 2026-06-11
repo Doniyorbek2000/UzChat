@@ -77,6 +77,24 @@ function groupReactions(reactions: MessageReaction[]) {
 
 const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
 
+function escapeRegExp(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightMatch(text: string, query: string) {
+  if (!query) return text;
+  const parts = text.split(new RegExp(`(${escapeRegExp(query)})`, "gi"));
+  return parts.map((part, i) =>
+    part.toLowerCase() === query ? (
+      <Text key={i} style={styles.searchHighlight}>
+        {part}
+      </Text>
+    ) : (
+      part
+    )
+  );
+}
+
 function renderMessageText(text: string, participants: ConversationParticipant[]) {
   const usernames = new Set(participants.map((p) => p.user.username));
   const parts = text.split(TOKEN_PATTERN);
@@ -140,6 +158,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
   const [pendingMentions, setPendingMentions] = useState<string[]>([]);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchLoadingMore, setSearchLoadingMore] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
@@ -232,20 +254,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )
         : undefined,
-      headerRight:
-        conversation?.type === "GROUP"
-          ? () => (
-              <TouchableOpacity onPress={() => navigation.navigate("GroupInfo", { conversationId })} hitSlop={8}>
-                <Text style={styles.headerInfoIcon}>ℹ️</Text>
-              </TouchableOpacity>
-            )
-          : conversation?.type === "DIRECT"
-            ? () => (
-                <TouchableOpacity onPress={onChatMenu} hitSlop={8}>
-                  <Text style={styles.headerInfoIcon}>⋮</Text>
-                </TouchableOpacity>
-              )
-            : undefined,
+      headerRight: () => (
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={() => setSearchVisible(true)} hitSlop={8}>
+            <Text style={styles.headerInfoIcon}>🔍</Text>
+          </TouchableOpacity>
+          {conversation?.type === "GROUP" ? (
+            <TouchableOpacity onPress={() => navigation.navigate("GroupInfo", { conversationId })} hitSlop={8}>
+              <Text style={styles.headerInfoIcon}>ℹ️</Text>
+            </TouchableOpacity>
+          ) : conversation?.type === "DIRECT" ? (
+            <TouchableOpacity onPress={onChatMenu} hitSlop={8}>
+              <Text style={styles.headerInfoIcon}>⋮</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ),
     });
   }, [navigation, title, conversationId, conversation?.type, conversation?.isBlocked, presenceLabel, otherUser]);
 
@@ -314,6 +338,37 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       { text: "Bekor qilish", style: "cancel" },
       { text: "Olib tashlash", style: "destructive", onPress: () => setPinnedMessage(conversationId, null).catch(() => {}) },
     ]);
+  };
+
+  const trimmedSearchQuery = searchQuery.trim().toLowerCase();
+  const searchResults = trimmedSearchQuery
+    ? messages
+        .filter(
+          (m) =>
+            m.type === "TEXT" &&
+            !m.deletedAt &&
+            !m.decryptFailed &&
+            (m.text ?? "").toLowerCase().includes(trimmedSearchQuery)
+        )
+        .reverse()
+    : [];
+
+  const onLoadMoreSearchResults = async () => {
+    if (searchLoadingMore || !hasMore) return;
+    setSearchLoadingMore(true);
+    await loadOlderMessages(conversationId).catch(() => {});
+    setSearchLoadingMore(false);
+  };
+
+  const onSelectSearchResult = (message: DecryptedMessage) => {
+    setSearchVisible(false);
+    setSearchQuery("");
+    const index = invertedData.findIndex((m) => m.id === message.id);
+    if (index >= 0) {
+      listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.4 });
+    }
+    setHighlightedMessageId(message.id);
+    setTimeout(() => setHighlightedMessageId((id) => (id === message.id ? null : id)), 1500);
   };
 
   const onSend = async () => {
@@ -542,7 +597,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         onLongPress={() => onLongPress(item)}
         style={[styles.bubbleRow, isOwn ? styles.bubbleRowSelf : styles.bubbleRowOther]}
       >
-        <View style={[styles.bubble, isOwn ? styles.bubbleSelf : styles.bubbleOther, item.deletedAt && styles.bubbleDeleted]}>
+        <View
+          style={[
+            styles.bubble,
+            isOwn ? styles.bubbleSelf : styles.bubbleOther,
+            item.deletedAt && styles.bubbleDeleted,
+            item.id === highlightedMessageId && styles.bubbleHighlighted,
+          ]}
+        >
           {isGroup && !isOwn && sender && <Text style={styles.senderName}>{sender.displayName}</Text>}
           {item.replyPreview && (
             <View style={styles.replyBox}>
@@ -624,6 +686,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         contentContainerStyle={styles.list}
         onEndReachedThreshold={0.3}
         onEndReached={onEndReached}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => listRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.4 }), 200);
+        }}
         ListFooterComponent={loadingMore ? <ActivityIndicator style={styles.loadingMore} color={colors.primary} /> : null}
         ListEmptyComponent={
           !loading ? (
@@ -858,6 +923,70 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </Pressable>
       </Pressable>
     </Modal>
+    <Modal
+      visible={searchVisible}
+      animationType="slide"
+      onRequestClose={() => setSearchVisible(false)}
+    >
+      <View style={styles.searchContainer}>
+        <View style={styles.searchHeader}>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Xabarlarni qidirish"
+            placeholderTextColor={colors.textSecondary}
+            autoFocus
+            returnKeyType="search"
+          />
+          <TouchableOpacity
+            onPress={() => {
+              setSearchVisible(false);
+              setSearchQuery("");
+            }}
+            hitSlop={8}
+          >
+            <Text style={styles.searchClose}>Yopish</Text>
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          data={searchResults}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.searchResult} onPress={() => onSelectSearchResult(item)}>
+              {isGroup && (
+                <Text style={styles.searchResultAuthor} numberOfLines={1}>
+                  {getAuthorName(item.senderId)}
+                </Text>
+              )}
+              <Text style={styles.searchResultText} numberOfLines={2}>
+                {highlightMatch(item.text ?? "", trimmedSearchQuery)}
+              </Text>
+              <Text style={styles.searchResultTime}>{formatTime(item.createdAt)}</Text>
+            </TouchableOpacity>
+          )}
+          ItemSeparatorComponent={() => <View style={styles.searchSeparator} />}
+          ListFooterComponent={
+            trimmedSearchQuery && searchResults.length === 0 && hasMore ? (
+              <TouchableOpacity style={styles.searchLoadMore} onPress={onLoadMoreSearchResults} disabled={searchLoadingMore}>
+                {searchLoadingMore ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={styles.searchLoadMoreText}>Eski xabarlarni qidirish</Text>
+                )}
+              </TouchableOpacity>
+            ) : null
+          }
+          ListEmptyComponent={
+            trimmedSearchQuery ? (
+              <View style={styles.searchEmpty}>
+                <Text style={styles.emptyText}>Hech narsa topilmadi</Text>
+              </View>
+            ) : null
+          }
+        />
+      </View>
+    </Modal>
     </>
   );
 }
@@ -873,6 +1002,7 @@ const styles = StyleSheet.create({
   bubbleSelf: { backgroundColor: colors.bubbleSelf, borderTopRightRadius: 2 },
   bubbleOther: { backgroundColor: colors.bubbleOther, borderTopLeftRadius: 2 },
   bubbleDeleted: { opacity: 0.6 },
+  bubbleHighlighted: { borderWidth: 2, borderColor: colors.primary },
   senderName: { fontSize: 12, fontWeight: "600", color: colors.primaryDark, marginBottom: 2 },
   replyBox: { flexDirection: "row", marginBottom: 6, opacity: 0.85 },
   replyBar: { width: 3, borderRadius: 2, backgroundColor: colors.primary, marginRight: 6 },
@@ -955,6 +1085,7 @@ const styles = StyleSheet.create({
   actionButtonText: { fontSize: 16, color: colors.text },
   actionButtonDanger: { color: colors.danger },
   headerInfoIcon: { fontSize: 20, marginRight: 12 },
+  headerActions: { flexDirection: "row", alignItems: "center" },
   headerTitleContainer: { alignItems: "center" },
   headerTitleText: { fontSize: 17, fontWeight: "600", color: colors.text },
   headerSubtitle: { fontSize: 12, color: colors.textSecondary },
@@ -1021,4 +1152,32 @@ const styles = StyleSheet.create({
   sendText: { color: "#fff", fontWeight: "600" },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 48, transform: [{ scaleY: -1 }] },
   emptyText: { color: colors.textSecondary },
+  searchContainer: { flex: 1, backgroundColor: colors.background },
+  searchHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: colors.text,
+  },
+  searchClose: { color: colors.primary, fontWeight: "600", fontSize: 15 },
+  searchResult: { paddingHorizontal: 16, paddingVertical: 12 },
+  searchResultAuthor: { fontSize: 12, color: colors.primary, fontWeight: "600", marginBottom: 2 },
+  searchResultText: { fontSize: 15, color: colors.text },
+  searchResultTime: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
+  searchHighlight: { backgroundColor: colors.primary, color: "#fff", fontWeight: "700" },
+  searchSeparator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
+  searchLoadMore: { padding: 16, alignItems: "center" },
+  searchLoadMoreText: { color: colors.primary, fontWeight: "600" },
+  searchEmpty: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 48 },
 });
