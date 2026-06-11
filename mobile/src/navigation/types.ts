@@ -35,6 +35,7 @@ export type RootStackParamList = {
   ArchivedChats: undefined;
   ChatFolders: undefined;
   EditChatFolder: { folderId: string };
+  ChatWallpaper: { conversationId: string };
   BlockedUsers: undefined;
   ChangePassword: undefined;
   PrivacySettings: undefined;

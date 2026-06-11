@@ -19,6 +19,7 @@ import { StarredMessagesScreen } from "../screens/chats/StarredMessagesScreen";
 import { ArchivedChatsScreen } from "../screens/chats/ArchivedChatsScreen";
 import { ChatFoldersScreen } from "../screens/chats/ChatFoldersScreen";
 import { EditChatFolderScreen } from "../screens/chats/EditChatFolderScreen";
+import { ChatWallpaperScreen } from "../screens/chats/ChatWallpaperScreen";
 import { BlockedUsersScreen } from "../screens/contacts/BlockedUsersScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
@@ -28,6 +29,7 @@ import { LockScreen } from "../screens/LockScreen";
 import { useAuthStore } from "../store/authStore";
 import { useAppLockStore } from "../store/appLockStore";
 import { useChatStore } from "../store/chatStore";
+import { useWallpaperStore } from "../store/wallpaperStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData } from "../utils/pushNotifications";
 import { colors } from "../theme/colors";
@@ -61,9 +63,12 @@ export function RootNavigator() {
   const appLockBootstrap = useAppLockStore((s) => s.bootstrap);
   const lockApp = useAppLockStore((s) => s.lock);
 
+  const wallpaperBootstrap = useWallpaperStore((s) => s.bootstrap);
+
   useEffect(() => {
     bootstrap();
-  }, [bootstrap]);
+    wallpaperBootstrap();
+  }, [bootstrap, wallpaperBootstrap]);
 
   useEffect(() => {
     if (isAuthenticated) appLockBootstrap();
@@ -117,6 +122,7 @@ export function RootNavigator() {
             <Stack.Screen name="ArchivedChats" component={ArchivedChatsScreen} options={{ title: "Arxivlangan suhbatlar" }} />
             <Stack.Screen name="ChatFolders" component={ChatFoldersScreen} options={{ title: "Papkalar" }} />
             <Stack.Screen name="EditChatFolder" component={EditChatFolderScreen} options={{ title: "Suhbatlarni tanlash" }} />
+            <Stack.Screen name="ChatWallpaper" component={ChatWallpaperScreen} options={{ title: "Suhbat foni" }} />
             <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
             <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />

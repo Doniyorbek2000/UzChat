@@ -29,6 +29,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage, decryptReplyPreview } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
+import { useWallpaperStore } from "../../store/wallpaperStore";
+import { getWallpaperColor } from "../../theme/wallpapers";
 import { ConversationParticipant, MessageReaction, MessageType } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
@@ -207,6 +209,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
+  const wallpaperId = useWallpaperStore((s) => s.getWallpaperId(conversationId));
+  const wallpaperColor = getWallpaperColor(wallpaperId);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
 
@@ -303,6 +307,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={() => setSearchVisible(true)} hitSlop={8}>
             <Text style={styles.headerInfoIcon}>🔍</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("ChatWallpaper", { conversationId })} hitSlop={8}>
+            <Text style={styles.headerInfoIcon}>🖼</Text>
           </TouchableOpacity>
           {conversation?.type === "GROUP" ? (
             <TouchableOpacity onPress={() => navigation.navigate("GroupInfo", { conversationId })} hitSlop={8}>
@@ -731,7 +738,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   return (
     <>
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: wallpaperColor }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
