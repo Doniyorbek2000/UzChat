@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore } from "../../store/chatStore";
@@ -16,8 +27,10 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const forwardMessage = useChatStore((s) => s.forwardMessage);
+  const sendTextMessage = useChatStore((s) => s.sendTextMessage);
   const user = useAuthStore((s) => s.user);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
 
   const toggleSelect = (target: Conversation) => {
@@ -33,10 +46,14 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
   const onSend = async () => {
     if (sending || selectedIds.size === 0) return;
     setSending(true);
+    const trimmedComment = comment.trim();
     try {
       for (const targetId of selectedIds) {
         for (const messageId of messageIds) {
           await forwardMessage(conversationId, messageId, targetId);
+        }
+        if (trimmedComment) {
+          await sendTextMessage(targetId, trimmedComment);
         }
       }
       navigation.goBack();
@@ -64,7 +81,11 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
       <FlatList
         data={conversations}
         keyExtractor={(item) => item.id}
@@ -77,15 +98,26 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
         }
       />
       {selectedIds.size > 0 && (
-        <TouchableOpacity style={styles.sendButton} onPress={onSend} disabled={sending}>
-          {sending ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.sendButtonText}>Yuborish ({selectedIds.size})</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.footer}>
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Izoh qo'shish (ixtiyoriy)"
+            placeholderTextColor={colors.textSecondary}
+            value={comment}
+            onChangeText={setComment}
+            multiline
+            editable={!sending}
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={onSend} disabled={sending}>
+            {sending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.sendButtonText}>Yuborish ({selectedIds.size})</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -107,8 +139,17 @@ const styles = StyleSheet.create({
   },
   checkboxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   checkboxIcon: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  footer: { padding: 12, gap: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  commentInput: {
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: colors.text,
+    maxHeight: 100,
+  },
   sendButton: {
-    margin: 12,
     backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 14,
