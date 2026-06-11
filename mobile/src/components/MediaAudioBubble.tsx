@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { downloadAndDecryptFile, formatDuration } from "../utils/mediaFile";
 import { DecryptedMessage } from "../store/chatStore";
+import { usePlaybackSpeedStore } from "../store/playbackSpeedStore";
 import { colors } from "../theme/colors";
 
 interface Props {
@@ -16,6 +17,13 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
   const [error, setError] = useState(false);
   const player = useAudioPlayer(localUri);
   const status = useAudioPlayerStatus(player);
+  const speed = usePlaybackSpeedStore((s) => s.speed);
+  const cycleSpeed = usePlaybackSpeedStore((s) => s.cycleSpeed);
+
+  useEffect(() => {
+    if (!localUri) return;
+    player.setPlaybackRate(speed, "high");
+  }, [localUri, speed, player]);
 
   useEffect(() => {
     if (!meta || !message.mediaUrl) return;
@@ -61,6 +69,9 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
         <View style={[styles.progress, { width: `${progress * 100}%` }]} />
       </View>
       <Text style={styles.duration}>{formatDuration(remaining)}</Text>
+      <Pressable style={styles.speedButton} onPress={cycleSpeed} hitSlop={8}>
+        <Text style={styles.speedText}>{speed}x</Text>
+      </Pressable>
     </Pressable>
   );
 }
@@ -94,4 +105,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   duration: { fontSize: 12, color: colors.textSecondary, minWidth: 32, textAlign: "right" },
+  speedButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: colors.border,
+  },
+  speedText: { fontSize: 11, fontWeight: "600", color: colors.textSecondary },
 });
