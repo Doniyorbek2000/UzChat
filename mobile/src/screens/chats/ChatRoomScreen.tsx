@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
+  Linking,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
@@ -33,6 +34,8 @@ import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
+import { LinkPreviewCard } from "../../components/LinkPreviewCard";
+import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
 import { formatTime } from "../../utils/conversation";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
@@ -72,24 +75,30 @@ function groupReactions(reactions: MessageReaction[]) {
   return [...groups.entries()].map(([emoji, userIds]) => ({ emoji, userIds }));
 }
 
-const MENTION_PATTERN = /(@[a-zA-Z0-9_]+)/g;
+const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
 
 function renderMessageText(text: string, participants: ConversationParticipant[]) {
   const usernames = new Set(participants.map((p) => p.user.username));
-  if (usernames.size === 0) return <Text style={styles.messageText}>{text}</Text>;
-
-  const parts = text.split(MENTION_PATTERN);
+  const parts = text.split(TOKEN_PATTERN);
   return (
     <Text style={styles.messageText}>
-      {parts.map((part, i) =>
-        part.startsWith("@") && usernames.has(part.slice(1)) ? (
-          <Text key={i} style={styles.mentionText}>
-            {part}
-          </Text>
-        ) : (
-          part
-        )
-      )}
+      {parts.map((part, i) => {
+        if (part.startsWith("@") && usernames.has(part.slice(1))) {
+          return (
+            <Text key={i} style={styles.mentionText}>
+              {part}
+            </Text>
+          );
+        }
+        if (/^https?:\/\//.test(part)) {
+          return (
+            <Text key={i} style={styles.linkText} onPress={() => Linking.openURL(part)}>
+              {part}
+            </Text>
+          );
+        }
+        return part;
+      })}
     </Text>
   );
 }
@@ -524,6 +533,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       content = renderMessageText(item.text ?? "", conversation?.participants ?? []);
     }
 
+    const linkUrl =
+      !item.deletedAt && !item.decryptFailed && item.type === "TEXT" ? extractFirstUrl(item.text ?? "") : null;
+
     return (
       <TouchableOpacity
         activeOpacity={0.8}
@@ -546,6 +558,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )}
           {content}
+          {linkUrl && <LinkPreviewCard url={linkUrl} />}
           {!item.deletedAt && item.reactions.length > 0 && (
             <View style={styles.reactionsRow}>
               {groupReactions(item.reactions).map(({ emoji, userIds }) => (
@@ -891,6 +904,7 @@ const styles = StyleSheet.create({
   pinnedClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   messageText: { fontSize: 16, color: colors.text },
   mentionText: { color: colors.primary, fontWeight: "600" },
+  linkText: { color: colors.primary, textDecorationLine: "underline" },
   mentionPickerTitle: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 8 },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
   messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
