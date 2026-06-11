@@ -26,6 +26,10 @@ export const contactsApi = {
     return apiClient.delete(`/contacts/${contactId}`);
   },
 
+  updateAlias(contactId: string, alias: string | null) {
+    return apiClient.patch<{ id: string; alias: string | null }>(`/contacts/${contactId}`, { alias }).then((r) => r.data);
+  },
+
   block(userId: string) {
     return apiClient.post(`/contacts/blocked/${userId}`);
   },

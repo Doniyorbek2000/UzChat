@@ -82,6 +82,14 @@ export const contactsService = {
     await prisma.contact.delete({ where: { id: contactId } });
   },
 
+  async updateAlias(userId: string, contactId: string, alias: string | null) {
+    const contact = await prisma.contact.findUnique({ where: { id: contactId } });
+    if (!contact || contact.ownerId !== userId) throw Errors.notFound("Kontakt");
+
+    const updated = await prisma.contact.update({ where: { id: contactId }, data: { alias } });
+    return { id: updated.id, alias: updated.alias };
+  },
+
   async blockUser(ownerId: string, targetUserId: string) {
     if (targetUserId === ownerId) throw Errors.badRequest("O'zingizni bloklay olmaysiz");
     const target = await prisma.user.findUnique({ where: { id: targetUserId } });

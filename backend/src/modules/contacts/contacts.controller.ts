@@ -56,6 +56,15 @@ export const contactsController = {
     }
   },
 
+  async updateAlias(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await contactsService.updateAlias(req.user!.sub, req.params.contactId, req.body.alias);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async block(req: Request, res: Response, next: NextFunction) {
     try {
       await contactsService.blockUser(req.user!.sub, req.params.userId);

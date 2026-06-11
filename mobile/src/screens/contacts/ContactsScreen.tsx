@@ -1,5 +1,16 @@
 import { useCallback, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+} from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { MainTabScreenProps } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
@@ -13,6 +24,9 @@ export function ContactsScreen({ navigation }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [requests, setRequests] = useState<ContactRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aliasContact, setAliasContact] = useState<Contact | null>(null);
+  const [aliasInput, setAliasInput] = useState("");
+  const [savingAlias, setSavingAlias] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -40,6 +54,13 @@ export function ContactsScreen({ navigation }: Props) {
   const onLongPressContact = (item: Contact) => {
     Alert.alert(item.alias ?? item.user.displayName, undefined, [
       {
+        text: "✏️ Taxallus qo'yish",
+        onPress: () => {
+          setAliasInput(item.alias ?? "");
+          setAliasContact(item);
+        },
+      },
+      {
         text: "🚫 Bloklash",
         style: "destructive",
         onPress: () => {
@@ -61,6 +82,21 @@ export function ContactsScreen({ navigation }: Props) {
       },
       { text: "Bekor qilish", style: "cancel" },
     ]);
+  };
+
+  const onSaveAlias = async () => {
+    if (!aliasContact) return;
+    setSavingAlias(true);
+    try {
+      const trimmed = aliasInput.trim();
+      const updated = await contactsApi.updateAlias(aliasContact.id, trimmed.length > 0 ? trimmed : null);
+      setContacts((prev) => prev.map((c) => (c.id === updated.id ? { ...c, alias: updated.alias } : c)));
+      setAliasContact(null);
+    } catch {
+      Alert.alert("Xatolik", "Taxallusni saqlab bo'lmadi");
+    } finally {
+      setSavingAlias(false);
+    }
   };
 
   if (loading) {
@@ -115,6 +151,32 @@ export function ContactsScreen({ navigation }: Props) {
           </View>
         }
       />
+
+      <Modal visible={!!aliasContact} transparent animationType="fade" onRequestClose={() => setAliasContact(null)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setAliasContact(null)}>
+          <Pressable style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Taxallus qo'yish</Text>
+            <Text style={styles.modalSubtitle}>{aliasContact?.user.displayName}</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={aliasInput}
+              onChangeText={setAliasInput}
+              placeholder={aliasContact?.user.displayName}
+              placeholderTextColor={colors.textSecondary}
+              autoFocus
+              maxLength={64}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setAliasContact(null)}>
+                <Text style={styles.modalCancelText}>Bekor qilish</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveAlias} disabled={savingAlias}>
+                {savingAlias ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -155,4 +217,29 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   declineText: { color: colors.textSecondary, fontSize: 12, fontWeight: "600" },
+  modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center", padding: 24 },
+  modalCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, width: "100%" },
+  modalTitle: { fontSize: 16, fontWeight: "700", color: colors.text },
+  modalSubtitle: { fontSize: 13, color: colors.textSecondary, marginTop: 2, marginBottom: 12 },
+  modalInput: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 16 },
+  modalCancelButton: { paddingVertical: 10, paddingHorizontal: 16 },
+  modalCancelText: { color: colors.textSecondary, fontSize: 15, fontWeight: "600" },
+  modalSaveButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    minWidth: 88,
+    alignItems: "center",
+  },
+  modalSaveText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });

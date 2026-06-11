@@ -2,7 +2,7 @@ import { Router } from "express";
 import { contactsController } from "./contacts.controller";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
-import { addContactSchema } from "./contacts.schema";
+import { addContactSchema, updateContactSchema } from "./contacts.schema";
 
 export const contactsRouter = Router();
 
@@ -16,4 +16,5 @@ contactsRouter.post("/requests/:requestId/decline", contactsController.decline);
 contactsRouter.get("/blocked", contactsController.listBlocked);
 contactsRouter.post("/blocked/:userId", contactsController.block);
 contactsRouter.delete("/blocked/:userId", contactsController.unblock);
+contactsRouter.patch("/:contactId", validateBody(updateContactSchema), contactsController.updateAlias);
 contactsRouter.delete("/:contactId", contactsController.remove);
