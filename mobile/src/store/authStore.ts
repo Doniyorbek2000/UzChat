@@ -6,6 +6,7 @@ import { secureStorage } from "../storage/secureStorage";
 import { generateKeyPair, KeyPair } from "../crypto/e2ee";
 import { connectSocket, disconnectSocket } from "../socket/socket";
 import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from "../utils/pushNotifications";
+import { useAppLockStore } from "./appLockStore";
 import { AuthUser } from "../types";
 
 interface AuthState {
@@ -103,6 +104,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     }
     await secureStorage.clearTokens();
+    await useAppLockStore.getState().reset();
     disconnectSocket();
     set({ user: null, isAuthenticated: false });
   },

@@ -5,6 +5,7 @@ const KEYS = {
   refreshToken: "uzchat.refreshToken",
   privateKey: "uzchat.e2ee.privateKey",
   publicKey: "uzchat.e2ee.publicKey",
+  appLockPinHash: "uzchat.appLock.pinHash",
 } as const;
 
 export const secureStorage = {
@@ -47,5 +48,18 @@ export const secureStorage = {
         keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
       }),
     ]);
+  },
+
+  /** SHA-256 hash of the app-lock PIN, or null if app lock is not configured. */
+  async getAppLockPinHash() {
+    return SecureStore.getItemAsync(KEYS.appLockPinHash);
+  },
+
+  async setAppLockPinHash(hash: string) {
+    await SecureStore.setItemAsync(KEYS.appLockPinHash, hash);
+  },
+
+  async clearAppLockPinHash() {
+    await SecureStore.deleteItemAsync(KEYS.appLockPinHash);
   },
 };

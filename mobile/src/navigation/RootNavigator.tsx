@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, AppState, View } from "react-native";
 import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Notifications from "expo-notifications";
@@ -20,7 +20,10 @@ import { BlockedUsersScreen } from "../screens/contacts/BlockedUsersScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { PrivacySettingsScreen } from "../screens/profile/PrivacySettingsScreen";
+import { AppLockSettingsScreen } from "../screens/profile/AppLockSettingsScreen";
+import { LockScreen } from "../screens/LockScreen";
 import { useAuthStore } from "../store/authStore";
+import { useAppLockStore } from "../store/appLockStore";
 import { useChatStore } from "../store/chatStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData } from "../utils/pushNotifications";
@@ -50,10 +53,25 @@ export function RootNavigator() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const bootstrap = useAuthStore((s) => s.bootstrap);
+  const appLockReady = useAppLockStore((s) => s.isReady);
+  const isLocked = useAppLockStore((s) => s.isLocked);
+  const appLockBootstrap = useAppLockStore((s) => s.bootstrap);
+  const lockApp = useAppLockStore((s) => s.lock);
 
   useEffect(() => {
     bootstrap();
   }, [bootstrap]);
+
+  useEffect(() => {
+    if (isAuthenticated) appLockBootstrap();
+  }, [isAuthenticated, appLockBootstrap]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "background") lockApp();
+    });
+    return () => subscription.remove();
+  }, [lockApp]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -69,7 +87,7 @@ export function RootNavigator() {
     return () => subscription.remove();
   }, [isAuthenticated]);
 
-  if (isLoading) {
+  if (isLoading || (isAuthenticated && !appLockReady)) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -78,28 +96,32 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
-      {isAuthenticated ? (
-        <Stack.Navigator>
-          <Stack.Screen name="MainTabs" component={MainNavigator} options={{ title: "UzChat" }} />
-          <Stack.Screen name="ChatRoom" component={ChatRoomScreen} options={{ title: "" }} />
-          <Stack.Screen name="NewChat" component={NewChatScreen} options={{ title: "Yangi suhbat" }} />
-          <Stack.Screen name="NewGroup" component={NewGroupScreen} options={{ title: "Yangi guruh" }} />
-          <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{ title: "Guruh ma'lumoti" }} />
-          <Stack.Screen name="AddGroupMember" component={AddGroupMemberScreen} options={{ title: "A'zo qo'shish" }} />
-          <Stack.Screen name="JoinGroup" component={JoinGroupScreen} options={{ title: "Havola orqali qo'shilish" }} />
-          <Stack.Screen name="ForwardMessage" component={ForwardMessageScreen} options={{ title: "Yo'naltirish" }} />
-          <Stack.Screen name="SharedMedia" component={SharedMediaScreen} options={{ title: "Umumiy media" }} />
-          <Stack.Screen name="StarredMessages" component={StarredMessagesScreen} options={{ title: "Saqlangan xabarlar" }} />
-          <Stack.Screen name="ArchivedChats" component={ArchivedChatsScreen} options={{ title: "Arxivlangan suhbatlar" }} />
-          <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
-          <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />
-          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />
-          <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: "Maxfiylik" }} />
-        </Stack.Navigator>
-      ) : (
-        <AuthNavigator />
-      )}
-    </NavigationContainer>
+    <>
+      <NavigationContainer ref={navigationRef}>
+        {isAuthenticated ? (
+          <Stack.Navigator>
+            <Stack.Screen name="MainTabs" component={MainNavigator} options={{ title: "UzChat" }} />
+            <Stack.Screen name="ChatRoom" component={ChatRoomScreen} options={{ title: "" }} />
+            <Stack.Screen name="NewChat" component={NewChatScreen} options={{ title: "Yangi suhbat" }} />
+            <Stack.Screen name="NewGroup" component={NewGroupScreen} options={{ title: "Yangi guruh" }} />
+            <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{ title: "Guruh ma'lumoti" }} />
+            <Stack.Screen name="AddGroupMember" component={AddGroupMemberScreen} options={{ title: "A'zo qo'shish" }} />
+            <Stack.Screen name="JoinGroup" component={JoinGroupScreen} options={{ title: "Havola orqali qo'shilish" }} />
+            <Stack.Screen name="ForwardMessage" component={ForwardMessageScreen} options={{ title: "Yo'naltirish" }} />
+            <Stack.Screen name="SharedMedia" component={SharedMediaScreen} options={{ title: "Umumiy media" }} />
+            <Stack.Screen name="StarredMessages" component={StarredMessagesScreen} options={{ title: "Saqlangan xabarlar" }} />
+            <Stack.Screen name="ArchivedChats" component={ArchivedChatsScreen} options={{ title: "Arxivlangan suhbatlar" }} />
+            <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
+            <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />
+            <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: "Maxfiylik" }} />
+            <Stack.Screen name="AppLockSettings" component={AppLockSettingsScreen} options={{ title: "Ilovani qulflash" }} />
+          </Stack.Navigator>
+        ) : (
+          <AuthNavigator />
+        )}
+      </NavigationContainer>
+      {isAuthenticated && isLocked && <LockScreen />}
+    </>
   );
 }
