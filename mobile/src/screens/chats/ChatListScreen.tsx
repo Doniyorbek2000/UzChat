@@ -23,6 +23,8 @@ const MEDIA_LABELS: Record<string, string> = {
 export function ChatListScreen({ navigation }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const loadConversations = useChatStore((s) => s.loadConversations);
+  const contactAliases = useChatStore((s) => s.contactAliases);
+  const loadContactAliases = useChatStore((s) => s.loadContactAliases);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const setupSocketListeners = useChatStore((s) => s.setupSocketListeners);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
@@ -44,12 +46,13 @@ export function ChatListScreen({ navigation }: Props) {
   useFocusEffect(
     useCallback(() => {
       loadConversations().catch(() => {});
-    }, [loadConversations])
+      loadContactAliases().catch(() => {});
+    }, [loadConversations, loadContactAliases])
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadConversations().catch(() => {});
+    await Promise.all([loadConversations().catch(() => {}), loadContactAliases().catch(() => {})]);
     setRefreshing(false);
   };
 
@@ -89,7 +92,7 @@ export function ChatListScreen({ navigation }: Props) {
   };
 
   const renderItem = ({ item }: { item: Conversation }) => {
-    const display = getConversationDisplay(item, user!.id);
+    const display = getConversationDisplay(item, user!.id, contactAliases);
     const unread = isConversationUnread(item, user!.id);
     return (
       <TouchableOpacity
@@ -137,7 +140,7 @@ export function ChatListScreen({ navigation }: Props) {
   const query = searchQuery.trim().toLowerCase();
   const filteredConversations = query
     ? visibleConversations.filter((c) => {
-        const display = getConversationDisplay(c, user!.id);
+        const display = getConversationDisplay(c, user!.id, contactAliases);
         if (display.title.toLowerCase().includes(query)) return true;
         return c.participants.some(
           (p) =>

@@ -40,7 +40,8 @@ async function navigateToConversation(conversationId?: string) {
     conversation = useChatStore.getState().conversations.find((c) => c.id === conversationId);
   }
 
-  const title = conversation ? getConversationDisplay(conversation, userId).title : "";
+  const contactAliases = useChatStore.getState().contactAliases;
+  const title = conversation ? getConversationDisplay(conversation, userId, contactAliases).title : "";
   navigationRef.navigate("ChatRoom", { conversationId, title });
 }
 

@@ -124,6 +124,7 @@ function renderMessageText(text: string, participants: ConversationParticipant[]
 export function ChatRoomScreen({ route, navigation }: Props) {
   const { conversationId, title } = route.params;
   const user = useAuthStore((s) => s.user);
+  const contactAliases = useChatStore((s) => s.contactAliases);
   const conversation = useChatStore((s) => s.conversations.find((c) => c.id === conversationId));
   const messages = useChatStore((s) => s.messagesByConversation[conversationId] ?? []);
   const hasMore = useChatStore((s) => s.hasMoreByConversation[conversationId] ?? false);
@@ -169,6 +170,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const otherParticipant =
     conversation?.type === "DIRECT" ? conversation.participants.find((p) => p.userId !== user?.id) : null;
   const otherUser = otherParticipant?.user ?? null;
+  const otherUserDisplayName = otherUser ? (contactAliases[otherUser.id] ?? otherUser.displayName) : "";
   const isOtherOnline = otherUser ? onlineUsers.has(otherUser.id) : false;
   const presenceLabel = otherUser
     ? isOtherOnline
@@ -181,12 +183,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onToggleBlock = () => {
     if (!otherUser) return;
     if (conversation?.isBlocked) {
-      Alert.alert("Blokdan chiqarish", `${otherUser.displayName} blokdan chiqarilsinmi?`, [
+      Alert.alert("Blokdan chiqarish", `${otherUserDisplayName} blokdan chiqarilsinmi?`, [
         { text: "Bekor qilish", style: "cancel" },
         { text: "Blokdan chiqarish", onPress: () => unblockUser(otherUser.id).catch(() => {}) },
       ]);
     } else {
-      Alert.alert("Bloklash", `${otherUser.displayName} bloklansinmi? U sizga xabar yubora olmaydi.`, [
+      Alert.alert("Bloklash", `${otherUserDisplayName} bloklansinmi? U sizga xabar yubora olmaydi.`, [
         { text: "Bekor qilish", style: "cancel" },
         { text: "Bloklash", style: "destructive", onPress: () => blockUser(otherUser.id).catch(() => {}) },
       ]);
@@ -223,7 +225,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const onChatMenu = () => {
     if (!otherUser) return;
-    Alert.alert(otherUser.displayName, undefined, [
+    Alert.alert(otherUserDisplayName, undefined, [
       { text: "🖼 Umumiy media", onPress: () => navigation.navigate("SharedMedia", { conversationId }) },
       { text: "🗑 Suhbatni tozalash", onPress: onClearHistory },
       {
@@ -325,7 +327,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const getAuthorName = (senderId: string) => {
     if (senderId === user?.id) return "Siz";
-    return conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
+    return contactAliases[senderId] ?? conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
   };
 
   const pinnedPreview =
@@ -605,7 +607,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             item.id === highlightedMessageId && styles.bubbleHighlighted,
           ]}
         >
-          {isGroup && !isOwn && sender && <Text style={styles.senderName}>{sender.displayName}</Text>}
+          {isGroup && !isOwn && sender && (
+            <Text style={styles.senderName}>{contactAliases[sender.id] ?? sender.displayName}</Text>
+          )}
           {item.replyPreview && (
             <View style={styles.replyBox}>
               <View style={styles.replyBar} />
@@ -913,7 +917,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             .map((p) => (
               <TouchableOpacity key={p.userId} style={styles.actionButton} onPress={() => onMentionUser(p)}>
                 <Text style={styles.actionButtonText}>
-                  {p.user.displayName} <Text style={styles.mentionText}>@{p.user.username}</Text>
+                  {contactAliases[p.userId] ?? p.user.displayName}{" "}
+                  <Text style={styles.mentionText}>@{p.user.username}</Text>
                 </Text>
               </TouchableOpacity>
             ))}

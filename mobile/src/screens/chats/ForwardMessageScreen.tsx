@@ -14,6 +14,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "ForwardMessage">;
 export function ForwardMessageScreen({ route, navigation }: Props) {
   const { conversationId, messageId } = route.params;
   const conversations = useChatStore((s) => s.conversations);
+  const contactAliases = useChatStore((s) => s.contactAliases);
   const forwardMessage = useChatStore((s) => s.forwardMessage);
   const user = useAuthStore((s) => s.user);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -45,7 +46,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
   };
 
   const renderItem = ({ item }: { item: Conversation }) => {
-    const display = getConversationDisplay(item, user!.id);
+    const display = getConversationDisplay(item, user!.id, contactAliases);
     const selected = selectedIds.has(item.id);
     return (
       <TouchableOpacity style={styles.row} onPress={() => toggleSelect(item)} disabled={sending}>

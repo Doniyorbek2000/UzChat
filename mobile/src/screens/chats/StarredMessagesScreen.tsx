@@ -24,6 +24,7 @@ const MEDIA_LABELS: Partial<Record<MessageType, string>> = {
 export function StarredMessagesScreen({ navigation }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const loadConversations = useChatStore((s) => s.loadConversations);
+  const contactAliases = useChatStore((s) => s.contactAliases);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const toggleStar = useChatStore((s) => s.toggleStar);
   const user = useAuthStore((s) => s.user);
@@ -69,11 +70,13 @@ export function StarredMessagesScreen({ navigation }: Props) {
   const renderItem = ({ item }: { item: Message }) => {
     const conversation = conversations.find((c) => c.id === item.conversationId);
     if (!conversation) return null;
-    const display = getConversationDisplay(conversation, user!.id);
+    const display = getConversationDisplay(conversation, user!.id, contactAliases);
     const senderName =
       item.senderId === user?.id
         ? "Siz"
-        : conversation.participants.find((p) => p.userId === item.senderId)?.user.displayName ?? "";
+        : contactAliases[item.senderId] ??
+          conversation.participants.find((p) => p.userId === item.senderId)?.user.displayName ??
+          "";
 
     return (
       <TouchableOpacity

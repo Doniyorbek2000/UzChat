@@ -24,6 +24,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const { conversationId } = route.params;
   const user = useAuthStore((s) => s.user);
   const conversation = useChatStore((s) => s.conversations.find((c) => c.id === conversationId));
+  const contactAliases = useChatStore((s) => s.contactAliases);
   const updateGroupInfo = useChatStore((s) => s.updateGroupInfo);
   const removeParticipant = useChatStore((s) => s.removeParticipant);
   const updateParticipantRole = useChatStore((s) => s.updateParticipantRole);
@@ -164,7 +165,8 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       options.push({
         text: "Egalikni topshirish",
         onPress: () => {
-          Alert.alert("Egalikni topshirish", `${participant.user.displayName}ga guruh egaligini topshirasizmi?`, [
+          const participantName = contactAliases[participant.userId] ?? participant.user.displayName;
+          Alert.alert("Egalikni topshirish", `${participantName}ga guruh egaligini topshirasizmi?`, [
             { text: "Bekor qilish", style: "cancel" },
             {
               text: "Topshirish",
@@ -191,7 +193,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
 
     options.push({ text: "Bekor qilish", style: "cancel" });
 
-    Alert.alert(participant.user.displayName, undefined, options);
+    Alert.alert(contactAliases[participant.userId] ?? participant.user.displayName, undefined, options);
   };
 
   const onClearHistory = () => {
@@ -319,7 +321,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           >
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
             <Text style={styles.name}>
-              {item.user.displayName}
+              {contactAliases[item.userId] ?? item.user.displayName}
               {item.userId === user?.id ? " (Siz)" : ""}
             </Text>
             {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{ROLE_LABELS[item.role]}</Text>}

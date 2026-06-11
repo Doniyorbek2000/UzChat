@@ -53,8 +53,10 @@ interface ChatState {
   onlineUsers: Set<string>;
   listenersRegistered: boolean;
   drafts: Record<string, string>;
+  contactAliases: Record<string, string>;
 
   loadConversations: () => Promise<void>;
+  loadContactAliases: () => Promise<void>;
   loadDrafts: () => Promise<void>;
   setDraft: (conversationId: string, text: string) => Promise<void>;
   getConversationKey: (conversation: Conversation) => string;
@@ -161,10 +163,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
   onlineUsers: new Set(),
   listenersRegistered: false,
   drafts: {},
+  contactAliases: {},
 
   loadConversations: async () => {
     const conversations = await chatsApi.list();
     set({ conversations });
+  },
+
+  loadContactAliases: async () => {
+    const contacts = await contactsApi.list();
+    const contactAliases: Record<string, string> = {};
+    for (const contact of contacts) {
+      if (contact.alias) contactAliases[contact.user.id] = contact.alias;
+    }
+    set({ contactAliases });
   },
 
   loadDrafts: async () => {

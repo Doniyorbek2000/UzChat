@@ -1,13 +1,17 @@
 import { Conversation, User } from "../types";
 
-export function getConversationDisplay(conversation: Conversation, currentUserId: string) {
+export function getConversationDisplay(
+  conversation: Conversation,
+  currentUserId: string,
+  contactAliases: Record<string, string> = {}
+) {
   if (conversation.type === "GROUP") {
     return { title: conversation.title ?? "Guruh", avatarUrl: conversation.avatarUrl, otherUser: null as User | null };
   }
 
   const other = conversation.participants.find((p) => p.userId !== currentUserId)?.user ?? null;
   return {
-    title: other?.displayName ?? "Foydalanuvchi",
+    title: (other && contactAliases[other.id]) || other?.displayName || "Foydalanuvchi",
     avatarUrl: other?.avatarUrl ?? null,
     otherUser: other,
   };
