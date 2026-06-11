@@ -29,6 +29,24 @@ export const usersController = {
     }
   },
 
+  async setTwoFactor(req: Request, res: Response, next: NextFunction) {
+    try {
+      await usersService.setTwoFactor(req.user!.sub, req.body);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async disableTwoFactor(req: Request, res: Response, next: NextFunction) {
+    try {
+      await usersService.disableTwoFactor(req.user!.sub, req.body);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
       const profile = await usersService.getPublicProfile(req.user!.sub, req.params.id);

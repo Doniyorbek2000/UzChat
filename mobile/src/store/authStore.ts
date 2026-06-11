@@ -24,7 +24,11 @@ interface AuthState {
     displayName: string;
     password: string;
   }) => Promise<void>;
-  login: (phone: string, password: string) => Promise<void>;
+  login: (
+    phone: string,
+    password: string
+  ) => Promise<{ requires2FA: true; pendingToken: string; hint: string | null } | { requires2FA: false }>;
+  completeTwoFactorLogin: (pendingToken: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -86,7 +90,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (phone, password) => {
     const keyPair = await ensureKeyPair();
-    const { user, accessToken, refreshToken } = await authApi.login(phone, password);
+    const result = await authApi.login(phone, password);
+    if (result.requires2FA) {
+      return { requires2FA: true, pendingToken: result.pendingToken, hint: result.hint };
+    }
+    const { user, accessToken, refreshToken } = result;
+    await secureStorage.setTokens(accessToken, refreshToken);
+    connectSocket(accessToken);
+    set({ user, keyPair, isAuthenticated: true });
+    registerForPushNotificationsAsync().catch(() => {});
+    return { requires2FA: false };
+  },
+
+  completeTwoFactorLogin: async (pendingToken, password) => {
+    const keyPair = await ensureKeyPair();
+    const { user, accessToken, refreshToken } = await authApi.verifyTwoFactor(pendingToken, password);
     await secureStorage.setTokens(accessToken, refreshToken);
     connectSocket(accessToken);
     set({ user, keyPair, isAuthenticated: true });

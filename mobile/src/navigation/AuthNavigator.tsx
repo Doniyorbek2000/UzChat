@@ -3,6 +3,7 @@ import { AuthStackParamList } from "./types";
 import { LoginScreen } from "../screens/auth/LoginScreen";
 import { RegisterScreen } from "../screens/auth/RegisterScreen";
 import { VerifyOtpScreen } from "../screens/auth/VerifyOtpScreen";
+import { TwoFactorLoginScreen } from "../screens/auth/TwoFactorLoginScreen";
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -15,6 +16,11 @@ export function AuthNavigator() {
         name="VerifyOtp"
         component={VerifyOtpScreen}
         options={{ headerShown: true, title: "Tasdiqlash" }}
+      />
+      <Stack.Screen
+        name="TwoFactorLogin"
+        component={TwoFactorLoginScreen}
+        options={{ headerShown: true, title: "Ikki bosqichli tekshiruv" }}
       />
     </Stack.Navigator>
   );

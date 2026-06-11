@@ -18,12 +18,16 @@ export interface AuthUser extends User {
   lastSeenPrivacy: LastSeenPrivacy;
   groupAddPrivacy: GroupAddPrivacy;
   readReceiptsEnabled: boolean;
+  twoFactorEnabled: boolean;
+  twoFactorHint: string | null;
 }
 
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
 }
+
+export type LoginResult = ({ requires2FA?: false } & { user: AuthUser } & AuthTokens) | { requires2FA: true; pendingToken: string; hint: string | null };
 
 export type ConversationType = "DIRECT" | "GROUP";
 export type ParticipantRole = "OWNER" | "ADMIN" | "MEMBER";

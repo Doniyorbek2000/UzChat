@@ -128,6 +128,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("TwoFactorSettings")}>
+        <Text style={styles.menuRowText}>🛡️ Ikki bosqichli tekshiruv</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
         <Text style={styles.logoutText}>Chiqish</Text>
       </TouchableOpacity>

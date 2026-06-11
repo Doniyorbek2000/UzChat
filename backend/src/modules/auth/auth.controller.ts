@@ -29,6 +29,15 @@ export const authController = {
     }
   },
 
+  async verifyTwoFactor(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await authService.verifyTwoFactor(req.body);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await authService.refresh(req.body.refreshToken);

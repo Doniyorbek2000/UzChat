@@ -11,6 +11,10 @@ export type AuthStackParamList = {
     username: string;
     password: string;
   };
+  TwoFactorLogin: {
+    pendingToken: string;
+    hint: string | null;
+  };
 };
 
 export type MainTabParamList = {
@@ -40,6 +44,7 @@ export type RootStackParamList = {
   ChangePassword: undefined;
   PrivacySettings: undefined;
   AppLockSettings: undefined;
+  TwoFactorSettings: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

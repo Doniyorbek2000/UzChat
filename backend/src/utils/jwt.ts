@@ -28,3 +28,21 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
 export function verifyRefreshToken(token: string): AccessTokenPayload {
   return jwt.verify(token, env.jwt.refreshSecret) as AccessTokenPayload;
 }
+
+export interface TwoFactorPendingPayload {
+  sub: string;
+  type: "2fa-pending";
+}
+
+// Short-lived token issued after the account password is verified, exchanged
+// for normal access/refresh tokens once the two-step verification password
+// is also confirmed.
+export function signTwoFactorPendingToken(userId: string): string {
+  return jwt.sign({ sub: userId, type: "2fa-pending" }, env.jwt.accessSecret, { expiresIn: "5m" });
+}
+
+export function verifyTwoFactorPendingToken(token: string): TwoFactorPendingPayload {
+  const payload = jwt.verify(token, env.jwt.accessSecret) as TwoFactorPendingPayload;
+  if (payload.type !== "2fa-pending") throw new Error("Invalid token type");
+  return payload;
+}

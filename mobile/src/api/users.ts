@@ -28,4 +28,12 @@ export const usersApi = {
   changePassword(currentPassword: string, newPassword: string) {
     return apiClient.patch("/users/me/password", { currentPassword, newPassword });
   },
+
+  setTwoFactor(currentPassword: string, twoFactorPassword: string, hint?: string) {
+    return apiClient.put("/users/me/two-factor", { currentPassword, twoFactorPassword, hint });
+  },
+
+  disableTwoFactor(currentPassword: string) {
+    return apiClient.delete("/users/me/two-factor", { data: { currentPassword } });
+  },
 };

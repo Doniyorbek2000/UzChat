@@ -5,23 +5,21 @@ import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 
-type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
+type Props = NativeStackScreenProps<AuthStackParamList, "TwoFactorLogin">;
 
-export function LoginScreen({ navigation }: Props) {
-  const login = useAuthStore((s) => s.login);
-  const [phone, setPhone] = useState("+998");
+export function TwoFactorLoginScreen({ route }: Props) {
+  const { pendingToken, hint } = route.params;
+  const completeTwoFactorLogin = useAuthStore((s) => s.completeTwoFactorLogin);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
+    if (!password) return;
     setLoading(true);
     try {
-      const result = await login(phone.trim(), password);
-      if (result.requires2FA) {
-        navigation.navigate("TwoFactorLogin", { pendingToken: result.pendingToken, hint: result.hint });
-      }
+      await completeTwoFactorLogin(pendingToken, password);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kirishda xatolik yuz berdi");
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Parol noto'g'ri");
     } finally {
       setLoading(false);
     }
@@ -29,31 +27,21 @@ export function LoginScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>UzChat</Text>
-      <Text style={styles.subtitle}>Hisobingizga kiring</Text>
+      <Text style={styles.title}>Ikki bosqichli tekshiruv</Text>
+      <Text style={styles.subtitle}>Hisobingiz uchun qo'shimcha (bulutli) parolni kiriting</Text>
+      {hint && <Text style={styles.hint}>Maslahat: {hint}</Text>}
 
       <TextInput
         style={styles.input}
-        placeholder="+998901234567"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Parol"
+        placeholder="Qo'shimcha parol"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        autoFocus
       />
 
       <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kirish</Text>}
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={styles.link}>Hisobingiz yo'qmi? Ro'yxatdan o'ting</Text>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
       </TouchableOpacity>
     </View>
   );
@@ -61,8 +49,9 @@ export function LoginScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: colors.background },
-  title: { fontSize: 36, fontWeight: "700", color: colors.primary, textAlign: "center", marginBottom: 8 },
-  subtitle: { fontSize: 16, color: colors.textSecondary, textAlign: "center", marginBottom: 32 },
+  title: { fontSize: 24, fontWeight: "700", color: colors.text, textAlign: "center", marginBottom: 8 },
+  subtitle: { fontSize: 14, color: colors.textSecondary, textAlign: "center", marginBottom: 16 },
+  hint: { fontSize: 13, color: colors.textSecondary, textAlign: "center", marginBottom: 16, fontStyle: "italic" },
   input: {
     backgroundColor: colors.surface,
     borderRadius: 8,
@@ -81,5 +70,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  link: { color: colors.primary, textAlign: "center", marginTop: 20, fontSize: 14 },
 });

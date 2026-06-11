@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { AuthTokens, AuthUser } from "../types";
+import { AuthTokens, AuthUser, LoginResult } from "../types";
 
 export const authApi = {
   requestRegisterOtp(phone: string) {
@@ -20,7 +20,13 @@ export const authApi = {
   },
 
   login(phone: string, password: string) {
-    return apiClient.post<{ user: AuthUser } & AuthTokens>("/auth/login", { phone, password }).then((r) => r.data);
+    return apiClient.post<LoginResult>("/auth/login", { phone, password }).then((r) => r.data);
+  },
+
+  verifyTwoFactor(pendingToken: string, password: string) {
+    return apiClient
+      .post<{ user: AuthUser } & AuthTokens>("/auth/login/2fa", { pendingToken, password })
+      .then((r) => r.data);
   },
 
   logout(refreshToken: string) {

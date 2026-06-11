@@ -1,6 +1,12 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../../utils/jwt";
+import {
+  signAccessToken,
+  signRefreshToken,
+  signTwoFactorPendingToken,
+  verifyRefreshToken,
+  verifyTwoFactorPendingToken,
+} from "../../utils/jwt";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import {
   generateOtpCode,
@@ -10,7 +16,7 @@ import {
   sendOtpSms,
   verifyOtpCode,
 } from "../../utils/otp";
-import { LoginInput, RequestOtpInput, VerifyOtpInput } from "./auth.schema";
+import { LoginInput, RequestOtpInput, VerifyOtpInput, VerifyTwoFactorInput } from "./auth.schema";
 import { env } from "../../config/env";
 
 function msFromExpiresIn(expiresIn: string): number {
@@ -124,6 +130,31 @@ export const authService = {
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) throw Errors.invalidCredentials();
+
+    if (user.twoFactorHash) {
+      const pendingToken = signTwoFactorPendingToken(user.id);
+      return { requires2FA: true as const, pendingToken, hint: user.twoFactorHint };
+    }
+
+    await prisma.user.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });
+
+    const tokens = await issueTokens(user);
+    return { user: toPublicUser(user), ...tokens };
+  },
+
+  async verifyTwoFactor({ pendingToken, password }: VerifyTwoFactorInput) {
+    let payload;
+    try {
+      payload = verifyTwoFactorPendingToken(pendingToken);
+    } catch {
+      throw Errors.unauthorized();
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user || !user.twoFactorHash) throw Errors.unauthorized();
+
+    const valid = await verifyPassword(password, user.twoFactorHash);
+    if (!valid) throw Errors.badRequest("Ikki bosqichli parol noto'g'ri");
 
     await prisma.user.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });
 

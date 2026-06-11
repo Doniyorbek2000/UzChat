@@ -25,6 +25,7 @@ import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { PrivacySettingsScreen } from "../screens/profile/PrivacySettingsScreen";
 import { AppLockSettingsScreen } from "../screens/profile/AppLockSettingsScreen";
+import { TwoFactorSettingsScreen } from "../screens/profile/TwoFactorSettingsScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { useAuthStore } from "../store/authStore";
 import { useAppLockStore } from "../store/appLockStore";
@@ -128,6 +129,7 @@ export function RootNavigator() {
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />
             <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: "Maxfiylik" }} />
             <Stack.Screen name="AppLockSettings" component={AppLockSettingsScreen} options={{ title: "Ilovani qulflash" }} />
+            <Stack.Screen name="TwoFactorSettings" component={TwoFactorSettingsScreen} options={{ title: "Ikki bosqichli tekshiruv" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

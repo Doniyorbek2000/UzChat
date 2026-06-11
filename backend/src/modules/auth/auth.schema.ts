@@ -38,7 +38,13 @@ export const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
+export const verifyTwoFactorSchema = z.object({
+  pendingToken: z.string().min(1),
+  password: z.string().min(1, "Parol kiritilishi shart"),
+});
+
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;
+export type VerifyTwoFactorInput = z.infer<typeof verifyTwoFactorSchema>;
