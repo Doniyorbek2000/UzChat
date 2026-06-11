@@ -56,6 +56,12 @@ export interface ReplyPreview {
 const MEDIA_TYPES: MessageType[] = ["IMAGE", "VIDEO", "AUDIO", "FILE"];
 const PAGE_SIZE = 30;
 
+// For anonymous polls, the realtime broadcast hides every voter's identity
+// (including our own), while votePoll's own response keeps ours visible. Skip
+// broadcasts that arrive shortly after our own vote so they don't clobber it.
+const SELF_VOTE_GRACE_MS = 3000;
+const recentSelfPollVotes = new Map<string, number>();
+
 interface ChatState {
   conversations: Conversation[];
   messagesByConversation: Record<string, DecryptedMessage[]>;
@@ -107,6 +113,7 @@ interface ChatState {
     question: string,
     options: string[],
     multipleChoice: boolean,
+    anonymous: boolean,
     replyToId?: string
   ) => Promise<void>;
   votePoll: (conversationId: string, messageId: string, optionIds: string[]) => Promise<void>;
@@ -547,7 +554,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
-  sendPollMessage: async (conversationId, question, options, multipleChoice, replyToId) => {
+  sendPollMessage: async (conversationId, question, options, multipleChoice, anonymous, replyToId) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
@@ -556,10 +563,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
       question,
       options: options.map((text, i) => ({ id: String(i), text })),
       multipleChoice,
+      anonymous,
     };
     const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), key);
 
-    const message = await chatsApi.sendMessage(conversationId, { type: "POLL", ciphertext, nonce, replyToId });
+    const message = await chatsApi.sendMessage(conversationId, {
+      type: "POLL",
+      ciphertext,
+      nonce,
+      replyToId,
+      pollAnonymous: anonymous,
+    });
     const decrypted = decryptToMessage(key, message);
 
     set((state) => {
@@ -577,6 +591,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   votePoll: async (conversationId, messageId, optionIds) => {
     const { votes } = await chatsApi.votePoll(conversationId, messageId, optionIds);
+    recentSelfPollVotes.set(messageId, Date.now());
     set((state) => {
       const existing = state.messagesByConversation[conversationId] ?? [];
       return {
@@ -1250,6 +1265,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
     socket.on(
       "message:pollVote",
       ({ conversationId, messageId, votes }: { conversationId: string; messageId: string; votes: PollVote[] }) => {
+        const recentAt = recentSelfPollVotes.get(messageId);
+        if (recentAt && Date.now() - recentAt < SELF_VOTE_GRACE_MS) return;
         set((state) => {
           const existing = state.messagesByConversation[conversationId] ?? [];
           return {

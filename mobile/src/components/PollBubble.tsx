@@ -60,6 +60,7 @@ export function PollBubble({ message, conversationId }: Props) {
       <Text style={styles.footer}>
         {totalVoters === 0 ? "Hali ovoz yo'q" : `${totalVoters} ovoz`}
         {meta.multipleChoice ? " · Bir nechta javob mumkin" : ""}
+        {meta.anonymous ? " · 🔒 Anonim" : ""}
       </Text>
     </View>
   );

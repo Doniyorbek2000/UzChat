@@ -20,6 +20,8 @@ export interface SendMessageInput {
   scheduledFor?: string;
   // "View once" (IMAGE only): media is deleted server-side after the recipient views it.
   viewOnce?: boolean;
+  // POLL only: hides who voted for what from other participants.
+  pollAnonymous?: boolean;
 }
 
 export const chatsApi = {

@@ -304,6 +304,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
+  const [pollAnonymous, setPollAnonymous] = useState(false);
   const [pendingMedia, setPendingMedia] = useState<{
     uri: string;
     name: string;
@@ -894,6 +895,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPollQuestion("");
     setPollOptions(["", ""]);
     setPollMultipleChoice(false);
+    setPollAnonymous(false);
     setPollModalVisible(true);
   };
 
@@ -916,7 +918,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
     setPollModalVisible(false);
     try {
-      await sendPollMessage(conversationId, question, options, pollMultipleChoice);
+      await sendPollMessage(conversationId, question, options, pollMultipleChoice, pollAnonymous);
       scrollToLatest();
     } catch (err: any) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rovnomani yuborib bo'lmadi");
@@ -1831,6 +1833,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <View style={styles.pollSwitchRow}>
             <Text style={styles.pollSwitchLabel}>Bir nechta javob</Text>
             <Switch value={pollMultipleChoice} onValueChange={setPollMultipleChoice} trackColor={{ true: colors.primary }} />
+          </View>
+          <View style={styles.pollSwitchRow}>
+            <Text style={styles.pollSwitchLabel}>Anonim so'rovnoma</Text>
+            <Switch value={pollAnonymous} onValueChange={setPollAnonymous} trackColor={{ true: colors.primary }} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

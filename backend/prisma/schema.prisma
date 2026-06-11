@@ -309,6 +309,10 @@ model Message {
   viewOnce Boolean   @default(false)
   viewedAt DateTime?
 
+  // POLL only: when true, other participants' identities are hidden from each
+  // other's pollVotes - only vote counts and the viewer's own vote are visible.
+  pollAnonymous Boolean @default(false)
+
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@index([replyToId])

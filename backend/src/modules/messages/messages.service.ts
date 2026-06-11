@@ -50,9 +50,31 @@ function messageInclude(userId: string) {
   } as const;
 }
 
-function formatMessage<T extends { stars: { id: string }[]; hiddenFor?: string[] }>(message: T) {
+// Hides other participants' identities from an anonymous poll's votes, keeping
+// only the viewer's own vote (if any) and the raw counts/optionIds intact.
+// Pass viewerId null to anonymize every vote, including the viewer's own.
+function anonymizePollVotes<V extends { userId: string; optionIds: string[] }>(
+  votes: V[],
+  viewerId: string | null
+): (Omit<V, "userId"> & { userId: string | null })[] {
+  return votes.map((v) => (v.userId === viewerId ? v : { ...v, userId: null }));
+}
+
+function formatMessage<
+  T extends {
+    stars: { id: string }[];
+    hiddenFor?: string[];
+    type: MessageType;
+    pollAnonymous?: boolean;
+    pollVotes?: { userId: string; optionIds: string[] }[];
+  }
+>(message: T, viewerId: string) {
   const { stars, hiddenFor, ...rest } = message;
-  return { ...rest, isStarred: stars.length > 0 };
+  const pollVotes =
+    rest.type === MessageType.POLL && rest.pollAnonymous && rest.pollVotes
+      ? anonymizePollVotes(rest.pollVotes, viewerId)
+      : rest.pollVotes;
+  return { ...rest, pollVotes, isStarred: stars.length > 0 };
 }
 
 async function resolveMentions(conversationId: string, userId: string, mentions: string[] | undefined) {
@@ -224,6 +246,7 @@ export const messagesService = {
           expiresAt,
           scheduledFor: isScheduled ? new Date(input.scheduledFor!) : null,
           viewOnce: input.viewOnce ?? false,
+          pollAnonymous: input.pollAnonymous ?? false,
         },
         include: messageInclude(userId),
       });
@@ -237,7 +260,7 @@ export const messagesService = {
       notifyParticipants(userId, conversationId, message).catch(() => {});
     }
 
-    return formatMessage(message);
+    return formatMessage(message, userId);
   },
 
   async listMessages(userId: string, conversationId: string, query: ListMessagesQuery) {
@@ -259,7 +282,7 @@ export const messagesService = {
       include: messageInclude(userId),
     });
 
-    return messages.reverse().map(formatMessage);
+    return messages.reverse().map((m) => formatMessage(m, userId));
   },
 
   async listMedia(userId: string, conversationId: string, query: ListMessagesQuery) {
@@ -284,7 +307,7 @@ export const messagesService = {
       include: messageInclude(userId),
     });
 
-    return messages.map(formatMessage);
+    return messages.map((m) => formatMessage(m, userId));
   },
 
   async deleteMessage(userId: string, conversationId: string, messageId: string) {
@@ -333,7 +356,9 @@ export const messagesService = {
       if (!conversation?.isSelf) throw Errors.forbidden();
     }
 
-    if (message.viewedAt) return formatMessage({ ...message, reactions: [], pollVotes: [], replyTo: null, stars: [] });
+    if (message.viewedAt) {
+      return formatMessage({ ...message, reactions: [], pollVotes: [], replyTo: null, stars: [] }, userId);
+    }
 
     const updated = await prisma.message.update({
       where: { id: messageId },
@@ -346,7 +371,7 @@ export const messagesService = {
       await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
     }
 
-    return formatMessage(updated);
+    return formatMessage(updated, userId);
   },
 
   async editMessage(userId: string, conversationId: string, messageId: string, input: EditMessageInput) {
@@ -368,7 +393,7 @@ export const messagesService = {
       include: messageInclude(userId),
     });
 
-    return formatMessage(updated);
+    return formatMessage(updated, userId);
   },
 
   async markRead(userId: string, conversationId: string) {
@@ -422,7 +447,14 @@ export const messagesService = {
       });
     }
 
-    return prisma.pollVote.findMany({ where: { messageId }, ...pollVoteSelect });
+    const votes = await prisma.pollVote.findMany({ where: { messageId }, ...pollVoteSelect });
+    if (!message.pollAnonymous) {
+      return { responseVotes: votes, broadcastVotes: votes };
+    }
+    return {
+      responseVotes: anonymizePollVotes(votes, userId),
+      broadcastVotes: anonymizePollVotes(votes, null),
+    };
   },
 
   async toggleStar(userId: string, conversationId: string, messageId: string) {
@@ -454,7 +486,9 @@ export const messagesService = {
 
     return stars.map((s) => {
       const { hiddenFor, ...rest } = s.message;
-      return { ...rest, isStarred: true };
+      const pollVotes =
+        rest.type === MessageType.POLL && rest.pollAnonymous ? anonymizePollVotes(rest.pollVotes, userId) : rest.pollVotes;
+      return { ...rest, pollVotes, isStarred: true };
     });
   },
 
@@ -485,7 +519,7 @@ export const messagesService = {
       include: messageInclude(userId),
     });
 
-    return messages.map(formatMessage);
+    return messages.map((m) => formatMessage(m, userId));
   },
 
   async cancelScheduledMessage(userId: string, conversationId: string, messageId: string) {
@@ -524,7 +558,7 @@ export const messagesService = {
       await prisma.conversation.update({ where: { id: m.conversationId }, data: { updatedAt: new Date() } });
 
       notifyParticipants(m.senderId, m.conversationId, updated).catch(() => {});
-      published.push(formatMessage(updated));
+      published.push(formatMessage(updated, m.senderId));
     }
     return published;
   },

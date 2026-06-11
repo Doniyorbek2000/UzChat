@@ -52,9 +52,10 @@ export interface MessageReaction {
   emoji: string;
 }
 
-/** A user's vote on a POLL message: which opaque option IDs they picked. */
+/** A user's vote on a POLL message: which opaque option IDs they picked.
+ * userId is null for other participants' votes on an anonymous poll. */
 export interface PollVote {
-  userId: string;
+  userId: string | null;
   optionIds: string[];
 }
 
@@ -197,6 +198,8 @@ export interface PollMeta {
   question: string;
   options: { id: string; text: string }[];
   multipleChoice: boolean;
+  // When true, other participants' identities are hidden from pollVotes.
+  anonymous: boolean;
 }
 
 /** A user-defined chat list tab (Telegram-style folder) grouping a subset of conversations. */

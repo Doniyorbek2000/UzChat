@@ -16,6 +16,8 @@ export const sendMessageSchema = z
     scheduledFor: z.string().datetime().optional(),
     // "View once": media is deleted after the recipient views it (IMAGE only).
     viewOnce: z.boolean().optional(),
+    // POLL only: hides who voted for what from other participants.
+    pollAnonymous: z.boolean().optional(),
   })
   .refine((data) => !data.scheduledFor || new Date(data.scheduledFor).getTime() > Date.now(), {
     message: "Yuborish vaqti kelajakda bo'lishi kerak",
@@ -24,6 +26,10 @@ export const sendMessageSchema = z
   .refine((data) => !data.viewOnce || data.type === "IMAGE", {
     message: "Bir martalik ko'rish faqat rasmlar uchun mavjud",
     path: ["viewOnce"],
+  })
+  .refine((data) => !data.pollAnonymous || data.type === "POLL", {
+    message: "Anonim rejim faqat so'rovnomalar uchun mavjud",
+    path: ["pollAnonymous"],
   });
 
 export const listMessagesQuerySchema = z.object({
