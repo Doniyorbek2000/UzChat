@@ -33,6 +33,12 @@ enum ContactStatus {
   BLOCKED
 }
 
+enum LastSeenPrivacy {
+  EVERYONE
+  CONTACTS
+  NOBODY
+}
+
 model User {
   id           String   @id @default(uuid())
   phone        String   @unique
@@ -45,6 +51,8 @@ model User {
   // The matching private key never leaves the user's device.
   publicKey    String
   lastSeenAt   DateTime @default(now())
+  // Who can see this user's lastSeenAt timestamp.
+  lastSeenPrivacy LastSeenPrivacy @default(EVERYONE)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

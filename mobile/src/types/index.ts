@@ -1,3 +1,5 @@
+export type LastSeenPrivacy = "EVERYONE" | "CONTACTS" | "NOBODY";
+
 export interface User {
   id: string;
   username: string;
@@ -5,11 +7,12 @@ export interface User {
   avatarUrl: string | null;
   bio?: string | null;
   publicKey: string;
-  lastSeenAt?: string;
+  lastSeenAt?: string | null;
 }
 
 export interface AuthUser extends User {
   phone: string;
+  lastSeenPrivacy: LastSeenPrivacy;
 }
 
 export interface AuthTokens {

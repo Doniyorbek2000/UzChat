@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { ConversationType, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
+import { getContactIds, filterLastSeen } from "../../utils/lastSeen";
 import { contactsService } from "../contacts/contacts.service";
 import {
   AddParticipantInput,
@@ -19,6 +20,7 @@ const userSummarySelect = {
   avatarUrl: true,
   publicKey: true,
   lastSeenAt: true,
+  lastSeenPrivacy: true,
 } as const;
 
 const pinnedMessageSelect = {
@@ -83,7 +85,7 @@ export const chatsService = {
   },
 
   async listConversations(userId: string) {
-    const [participations, blocked] = await Promise.all([
+    const [participations, blocked, contactIds] = await Promise.all([
       prisma.conversationParticipant.findMany({
         where: { userId },
         include: {
@@ -98,6 +100,7 @@ export const chatsService = {
         orderBy: [{ pinnedAt: { sort: "desc", nulls: "last" } }, { conversation: { updatedAt: "desc" } }],
       }),
       prisma.blockedUser.findMany({ where: { ownerId: userId }, select: { blockedId: true } }),
+      getContactIds(userId),
     ]);
 
     const blockedIds = new Set(blocked.map((b) => b.blockedId));
@@ -127,7 +130,7 @@ export const chatsService = {
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
           role: cp.role,
-          user: cp.user,
+          user: filterLastSeen(userId, cp.user, contactIds),
           lastReadAt: cp.lastReadAt,
         })),
         lastMessage:
@@ -158,6 +161,8 @@ export const chatsService = {
       if (other) isBlocked = await contactsService.hasBlocked(userId, other.userId);
     }
 
+    const contactIds = await getContactIds(userId);
+
     return {
       id: participant.conversation.id,
       type: participant.conversation.type,
@@ -181,7 +186,7 @@ export const chatsService = {
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,
-        user: cp.user,
+        user: filterLastSeen(userId, cp.user, contactIds),
         lastReadAt: cp.lastReadAt,
       })),
     };

@@ -118,6 +118,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("PrivacySettings")}>
+        <Text style={styles.menuRowText}>🕒 Oxirgi marta onlayn</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
         <Text style={styles.logoutText}>Chiqish</Text>
       </TouchableOpacity>

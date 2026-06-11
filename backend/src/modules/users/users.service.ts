@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { hashPassword, verifyPassword } from "../../utils/password";
+import { filterLastSeenSingle, getContactIds, filterLastSeen } from "../../utils/lastSeen";
 import { ChangePasswordInput, UpdateProfileInput } from "./users.schema";
 
 const profileSelect = {
@@ -12,6 +13,7 @@ const profileSelect = {
   bio: true,
   publicKey: true,
   lastSeenAt: true,
+  lastSeenPrivacy: true,
   createdAt: true,
 } as const;
 
@@ -23,6 +25,7 @@ const publicSelect = {
   bio: true,
   publicKey: true,
   lastSeenAt: true,
+  lastSeenPrivacy: true,
 } as const;
 
 export const usersService = {
@@ -40,8 +43,7 @@ export const usersService = {
   async getPublicProfile(userId: string, targetId: string) {
     const user = await prisma.user.findUnique({ where: { id: targetId }, select: publicSelect });
     if (!user) throw Errors.notFound("Foydalanuvchi");
-    if (user.id === userId) return user;
-    return user;
+    return filterLastSeenSingle(userId, user);
   },
 
   async searchUsers(currentUserId: string, query: string) {
@@ -56,7 +58,8 @@ export const usersService = {
       select: publicSelect,
       take: 20,
     });
-    return users;
+    const contactIds = await getContactIds(currentUserId);
+    return users.map((u) => filterLastSeen(currentUserId, u, contactIds));
   },
 
   async changePassword(userId: string, { currentPassword, newPassword }: ChangePasswordInput) {

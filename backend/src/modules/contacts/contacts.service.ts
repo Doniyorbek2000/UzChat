@@ -1,6 +1,7 @@
 import { ContactStatus } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
+import { filterLastSeen, filterLastSeenSingle, getContactIds } from "../../utils/lastSeen";
 
 const userSummarySelect = {
   id: true,
@@ -10,6 +11,7 @@ const userSummarySelect = {
   bio: true,
   publicKey: true,
   lastSeenAt: true,
+  lastSeenPrivacy: true,
 } as const;
 
 export const contactsService = {
@@ -31,7 +33,7 @@ export const contactsService = {
       data: { ownerId, targetId: target.id, status: ContactStatus.PENDING },
       include: { target: { select: userSummarySelect } },
     });
-    return contact;
+    return { ...contact, target: await filterLastSeenSingle(ownerId, contact.target) };
   },
 
   async listIncomingRequests(userId: string) {
@@ -40,7 +42,8 @@ export const contactsService = {
       include: { owner: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
     });
-    return requests;
+    const contactIds = await getContactIds(userId);
+    return requests.map((r) => ({ ...r, owner: filterLastSeen(userId, r.owner, contactIds) }));
   },
 
   async acceptRequest(userId: string, requestId: string) {
@@ -73,7 +76,8 @@ export const contactsService = {
       include: { target: { select: userSummarySelect } },
       orderBy: { target: { displayName: "asc" } },
     });
-    return contacts.map((c) => ({ id: c.id, alias: c.alias, user: c.target }));
+    const contactIds = await getContactIds(userId);
+    return contacts.map((c) => ({ id: c.id, alias: c.alias, user: filterLastSeen(userId, c.target, contactIds) }));
   },
 
   async removeContact(userId: string, contactId: string) {
@@ -112,7 +116,8 @@ export const contactsService = {
       include: { blocked: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
     });
-    return blocked.map((b) => ({ id: b.id, user: b.blocked }));
+    const contactIds = await getContactIds(ownerId);
+    return blocked.map((b) => ({ id: b.id, user: filterLastSeen(ownerId, b.blocked, contactIds) }));
   },
 
   async hasBlocked(ownerId: string, targetUserId: string) {
