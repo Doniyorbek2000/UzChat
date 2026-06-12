@@ -216,6 +216,7 @@ export const chatsService = {
         requireAdminApproval: p.conversation.requireAdminApproval,
         membersCanAddMembers: p.conversation.membersCanAddMembers,
         membersCanPinMessages: p.conversation.membersCanPinMessages,
+        membersCanChangeInfo: p.conversation.membersCanChangeInfo,
         isSelf: p.conversation.isSelf,
         pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
         participants: p.conversation.participants.map((cp) => ({
@@ -290,6 +291,7 @@ export const chatsService = {
       requireAdminApproval: participant.conversation.requireAdminApproval,
       membersCanAddMembers: participant.conversation.membersCanAddMembers,
       membersCanPinMessages: participant.conversation.membersCanPinMessages,
+      membersCanChangeInfo: participant.conversation.membersCanChangeInfo,
       isSelf: participant.conversation.isSelf,
       pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
       participants: participant.conversation.participants.map((cp) => ({
@@ -742,7 +744,13 @@ export const chatsService = {
     }
 
     const requester = conversation.participants.find((p) => p.userId === userId);
-    if (!requester || requester.role === ParticipantRole.MEMBER) throw Errors.forbidden();
+    if (!requester) throw Errors.forbidden();
+    const isManager = requester.role === ParticipantRole.OWNER || requester.role === ParticipantRole.ADMIN;
+    if (!isManager) {
+      const infoOnlyFields: (keyof UpdateConversationInput)[] = ["title", "avatarUrl", "description"];
+      const onlyInfoFields = Object.keys(input).every((key) => infoOnlyFields.includes(key as keyof UpdateConversationInput));
+      if (!onlyInfoFields || !conversation.membersCanChangeInfo) throw Errors.forbidden();
+    }
 
     await prisma.conversation.update({
       where: { id: conversationId },
@@ -756,6 +764,7 @@ export const chatsService = {
         ...(input.requireAdminApproval !== undefined ? { requireAdminApproval: input.requireAdminApproval } : {}),
         ...(input.membersCanAddMembers !== undefined ? { membersCanAddMembers: input.membersCanAddMembers } : {}),
         ...(input.membersCanPinMessages !== undefined ? { membersCanPinMessages: input.membersCanPinMessages } : {}),
+        ...(input.membersCanChangeInfo !== undefined ? { membersCanChangeInfo: input.membersCanChangeInfo } : {}),
       },
     });
 
@@ -842,6 +851,20 @@ export const chatsService = {
           input.membersCanPinMessages
             ? `${name} a'zolarga xabarlarni qadashga ruxsat berdi`
             : `${name} a'zolarga xabarlarni qadashni man qildi`
+        )
+      );
+    }
+    if (
+      input.membersCanChangeInfo !== undefined &&
+      input.membersCanChangeInfo !== conversation.membersCanChangeInfo
+    ) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.membersCanChangeInfo
+            ? `${name} a'zolarga guruh ma'lumotlarini tahrirlashga ruxsat berdi`
+            : `${name} a'zolarga guruh ma'lumotlarini tahrirlashni man qildi`
         )
       );
     }

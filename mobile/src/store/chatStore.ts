@@ -156,6 +156,7 @@ interface ChatState {
       requireAdminApproval?: boolean;
       membersCanAddMembers?: boolean;
       membersCanPinMessages?: boolean;
+      membersCanChangeInfo?: boolean;
     }
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;

@@ -74,6 +74,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const me = conversation.participants.find((p) => p.userId === user?.id);
   const isOwner = me?.role === "OWNER";
   const canManage = isOwner || me?.role === "ADMIN";
+  const canEditInfo = canManage || conversation.membersCanChangeInfo;
 
   const onSaveTitle = async () => {
     const trimmed = title.trim();
@@ -213,6 +214,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleMembersCanChangeInfo = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { membersCanChangeInfo: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onSetSlowMode = () => {
     Alert.alert(
       "Sekin rejim",
@@ -231,7 +240,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   };
 
   const onChangeAvatar = async () => {
-    if (!canManage || uploadingAvatar) return;
+    if (!canEditInfo || uploadingAvatar) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert("Ruxsat kerak", "Avatar tanlash uchun galereyaga ruxsat bering");
@@ -423,7 +432,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onChangeAvatar} disabled={!canManage || uploadingAvatar}>
+        <TouchableOpacity onPress={onChangeAvatar} disabled={!canEditInfo || uploadingAvatar}>
           <Avatar uri={conversation.avatarUrl} name={conversation.title ?? "Guruh"} size={72} />
           {uploadingAvatar && (
             <View style={styles.avatarOverlay}>
@@ -432,7 +441,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           )}
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          {canManage ? (
+          {canEditInfo ? (
             <TextInput style={styles.titleInput} value={title} onChangeText={setTitle} onBlur={onSaveTitle} />
           ) : (
             <Text style={styles.title}>{conversation.title}</Text>
@@ -441,10 +450,10 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      {(canManage || conversation.description) && (
+      {(canEditInfo || conversation.description) && (
         <View style={styles.descriptionSection}>
           <Text style={styles.descriptionLabel}>Tavsif</Text>
-          {canManage ? (
+          {canEditInfo ? (
             <TextInput
               style={styles.descriptionInput}
               value={description}
@@ -572,6 +581,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteIcon}>📌</Text>
             <Text style={styles.inviteText}>A'zolar xabarlarni qadashi mumkin</Text>
             <Switch value={conversation.membersCanPinMessages} onValueChange={onToggleMembersCanPinMessages} />
+          </View>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>✏️</Text>
+            <Text style={styles.inviteText}>A'zolar guruh ma'lumotlarini tahrirlashi mumkin</Text>
+            <Switch value={conversation.membersCanChangeInfo} onValueChange={onToggleMembersCanChangeInfo} />
           </View>
         </View>
       )}

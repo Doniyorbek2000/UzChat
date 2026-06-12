@@ -58,6 +58,7 @@ export const chatsApi = {
       requireAdminApproval?: boolean;
       membersCanAddMembers?: boolean;
       membersCanPinMessages?: boolean;
+      membersCanChangeInfo?: boolean;
     }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);

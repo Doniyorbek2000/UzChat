@@ -148,6 +148,9 @@ export interface Conversation {
   membersCanAddMembers: boolean;
   // GROUP only: when true, regular members (not just owner/admins) can pin/unpin messages.
   membersCanPinMessages: boolean;
+  // GROUP only: when true, regular members (not just owner/admins) can edit the
+  // group's title, photo, and description.
+  membersCanChangeInfo: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.

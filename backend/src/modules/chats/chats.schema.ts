@@ -55,6 +55,7 @@ export const updateConversationSchema = z
     requireAdminApproval: z.boolean().optional(),
     membersCanAddMembers: z.boolean().optional(),
     membersCanPinMessages: z.boolean().optional(),
+    membersCanChangeInfo: z.boolean().optional(),
   })
   .refine(
     (data) =>
@@ -66,7 +67,8 @@ export const updateConversationSchema = z
       data.noForwards !== undefined ||
       data.requireAdminApproval !== undefined ||
       data.membersCanAddMembers !== undefined ||
-      data.membersCanPinMessages !== undefined,
+      data.membersCanPinMessages !== undefined ||
+      data.membersCanChangeInfo !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 
