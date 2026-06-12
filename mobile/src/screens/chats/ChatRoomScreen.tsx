@@ -203,15 +203,28 @@ function highlightMatch(text: string, query: string) {
   );
 }
 
-function renderMessageText(text: string, participants: ConversationParticipant[], fontScale = 1) {
-  const usernames = new Set(participants.map((p) => p.user.username));
+function renderMessageText(
+  text: string,
+  participants: ConversationParticipant[],
+  fontScale: number,
+  navigation: Props["navigation"]
+) {
+  const usernameToId = new Map(participants.map((p) => [p.user.username, p.userId]));
   const parts = text.split(TOKEN_PATTERN);
   return (
     <Text style={[styles.messageText, { fontSize: 16 * fontScale }]}>
       {parts.map((part, i) => {
-        if (part === EVERYONE_MENTION || (part.startsWith("@") && usernames.has(part.slice(1)))) {
+        if (part === EVERYONE_MENTION) {
           return (
             <Text key={i} style={styles.mentionText}>
+              {part}
+            </Text>
+          );
+        }
+        if (part.startsWith("@") && usernameToId.has(part.slice(1))) {
+          const userId = usernameToId.get(part.slice(1))!;
+          return (
+            <Text key={i} style={styles.mentionText} onPress={() => navigation.navigate("UserProfile", { userId })}>
               {part}
             </Text>
           );
@@ -1226,7 +1239,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } else if (isSticker) {
       content = <Text style={styles.stickerText}>{item.text}</Text>;
     } else {
-      content = renderMessageText(item.text ?? "", conversation?.participants ?? [], fontScale);
+      content = renderMessageText(item.text ?? "", conversation?.participants ?? [], fontScale, navigation);
     }
 
     const linkUrl =
@@ -1281,7 +1294,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             !item.decryptFailed &&
             !!item.text &&
             (item.type === "FILE" || (item.type === "IMAGE" && !item.viewOnce) || item.type === "VIDEO") && (
-              <View style={styles.mediaCaption}>{renderMessageText(item.text, conversation?.participants ?? [], fontScale)}</View>
+              <View style={styles.mediaCaption}>
+                {renderMessageText(item.text, conversation?.participants ?? [], fontScale, navigation)}
+              </View>
             )}
           {linkUrl && <LinkPreviewCard url={linkUrl} />}
           {!item.deletedAt && item.reactions.length > 0 && (
