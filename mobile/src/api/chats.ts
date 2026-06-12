@@ -209,6 +209,14 @@ export const chatsApi = {
     return apiClient.patch<Message>(`/conversations/${conversationId}/messages/${messageId}`, input).then((r) => r.data);
   },
 
+  getEditHistory(conversationId: string, messageId: string) {
+    return apiClient
+      .get<{ ciphertext: string; nonce: string; editedAt: string }[]>(
+        `/conversations/${conversationId}/messages/${messageId}/history`
+      )
+      .then((r) => r.data);
+  },
+
   setReaction(conversationId: string, messageId: string, emoji: string) {
     return apiClient
       .put<{ messageId: string; reactions: MessageReaction[] }>(

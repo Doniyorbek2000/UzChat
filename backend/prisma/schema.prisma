@@ -348,10 +348,11 @@ model Message {
   replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies   Message[] @relation("MessageReplies")
 
-  reactions MessageReaction[]
-  stars     MessageStar[]
-  pollVotes PollVote[]
-  pins      PinnedMessage[]
+  reactions   MessageReaction[]
+  stars       MessageStar[]
+  pollVotes   PollVote[]
+  pins        PinnedMessage[]
+  editHistory MessageEditHistory[]
 
   createdAt DateTime  @default(now())
   editedAt  DateTime?
@@ -395,6 +396,19 @@ model MessageReaction {
   createdAt DateTime @default(now())
 
   @@unique([messageId, userId])
+  @@index([messageId])
+}
+
+// Snapshot of a message's content before it was overwritten by an edit, so
+// participants can review what a message used to say.
+model MessageEditHistory {
+  id         String   @id @default(uuid())
+  messageId  String
+  message    Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  ciphertext String
+  nonce      String
+  editedAt   DateTime
+
   @@index([messageId])
 }
 

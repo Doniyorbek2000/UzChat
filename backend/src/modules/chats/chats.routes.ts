@@ -73,6 +73,7 @@ chatsRouter.delete("/:id/messages/:messageId", messagesController.remove);
 chatsRouter.post("/:id/messages/:messageId/hide", messagesController.hideForMe);
 chatsRouter.post("/:id/messages/:messageId/view", messagesController.view);
 chatsRouter.patch("/:id/messages/:messageId", validateBody(editMessageSchema), messagesController.edit);
+chatsRouter.get("/:id/messages/:messageId/history", messagesController.getEditHistory);
 chatsRouter.put(
   "/:id/messages/:messageId/reactions",
   validateBody(setReactionSchema),

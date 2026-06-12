@@ -33,6 +33,8 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage, decryptReplyPreview } from "../../store/chatStore";
+import { chatsApi } from "../../api/chats";
+import { decryptMessage } from "../../crypto/e2ee";
 import { useAuthStore } from "../../store/authStore";
 import { useWallpaperStore } from "../../store/wallpaperStore";
 import { useChatSettingsStore } from "../../store/chatSettingsStore";
@@ -293,6 +295,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
   const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
   const [moreReactionsMessage, setMoreReactionsMessage] = useState<DecryptedMessage | null>(null);
+  const [editHistoryMessage, setEditHistoryMessage] = useState<DecryptedMessage | null>(null);
+  const [editHistoryEntries, setEditHistoryEntries] = useState<{ text: string; editedAt: string }[]>([]);
+  const [loadingEditHistory, setLoadingEditHistory] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
@@ -854,6 +859,23 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setEditingMessage(null);
     setPendingMentions([]);
     setText("");
+  };
+
+  const onShowEditHistory = async (item: DecryptedMessage) => {
+    setEditHistoryMessage(item);
+    setEditHistoryEntries([]);
+    if (!conversationKey) return;
+    setLoadingEditHistory(true);
+    try {
+      const history = await chatsApi.getEditHistory(conversationId, item.id);
+      setEditHistoryEntries(
+        history.map((h) => ({ text: decryptMessage(h.ciphertext, h.nonce, conversationKey), editedAt: h.editedAt }))
+      );
+    } catch {
+      setEditHistoryEntries([]);
+    } finally {
+      setLoadingEditHistory(false);
+    }
   };
 
   const onMentionUser = (participant: ConversationParticipant) => {
@@ -1674,6 +1696,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.actionButtonText}>✏️ Tahrirlash</Text>
               </TouchableOpacity>
             )}
+          {actionMessage && actionMessage.editedAt && !actionMessage.deletedAt && !actionMessage.decryptFailed && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                onShowEditHistory(message);
+              }}
+            >
+              <Text style={styles.actionButtonText}>🕘 Tahrirlash tarixi</Text>
+            </TouchableOpacity>
+          )}
           {actionMessage && !actionMessage.deletedAt && (
             <TouchableOpacity
               style={styles.actionButton}
@@ -1877,6 +1911,56 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               ))}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setReactionDetailsMessage(null)}>
+            <Text style={styles.actionButtonText}>Yopish</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    <Modal
+      visible={!!editHistoryMessage}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setEditHistoryMessage(null)}
+    >
+      <Pressable style={styles.actionBackdrop} onPress={() => setEditHistoryMessage(null)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Tahrirlash tarixi</Text>
+          <ScrollView style={styles.seenByList}>
+            {loadingEditHistory ? (
+              <ActivityIndicator color={colors.primary} style={styles.editHistoryLoader} />
+            ) : (
+              <>
+                {editHistoryEntries.map((entry, index) => (
+                  <View key={index} style={styles.editHistoryRow}>
+                    <Text style={styles.editHistoryTime}>
+                      {new Date(entry.editedAt).toLocaleString([], {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Text>
+                    <Text style={styles.editHistoryText}>{entry.text}</Text>
+                  </View>
+                ))}
+                {editHistoryMessage && (
+                  <View style={styles.editHistoryRow}>
+                    <Text style={styles.editHistoryTime}>
+                      {new Date(editHistoryMessage.editedAt!).toLocaleString([], {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      (joriy)
+                    </Text>
+                    <Text style={styles.editHistoryText}>{editHistoryMessage.text}</Text>
+                  </View>
+                )}
+              </>
+            )}
+          </ScrollView>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setEditHistoryMessage(null)}>
             <Text style={styles.actionButtonText}>Yopish</Text>
           </TouchableOpacity>
         </Pressable>
@@ -2223,6 +2307,14 @@ const styles = StyleSheet.create({
   seenBySectionLabel: { fontSize: 13, fontWeight: "600", color: colors.textSecondary, marginTop: 12, marginBottom: 6 },
   seenByRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 6 },
   seenByName: { fontSize: 15, color: colors.text },
+  editHistoryLoader: { marginVertical: 24 },
+  editHistoryRow: {
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  editHistoryTime: { fontSize: 11, color: colors.textSecondary, marginBottom: 4 },
+  editHistoryText: { fontSize: 15, color: colors.text, lineHeight: 20 },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
   messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
   messageTime: { fontSize: 10, color: colors.textSecondary },

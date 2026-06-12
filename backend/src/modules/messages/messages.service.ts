@@ -467,6 +467,15 @@ export const messagesService = {
 
     const mentions = await resolveMentions(conversationId, userId, input.mentions);
 
+    await prisma.messageEditHistory.create({
+      data: {
+        messageId,
+        ciphertext: message.ciphertext,
+        nonce: message.nonce,
+        editedAt: message.editedAt ?? message.createdAt,
+      },
+    });
+
     const updated = await prisma.message.update({
       where: { id: messageId },
       data: { ciphertext: input.ciphertext, nonce: input.nonce, mentions, editedAt: new Date() },
@@ -474,6 +483,20 @@ export const messagesService = {
     });
 
     return formatMessage(updated, userId);
+  },
+
+  async getEditHistory(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+
+    const history = await prisma.messageEditHistory.findMany({
+      where: { messageId },
+      orderBy: { editedAt: "asc" },
+    });
+
+    return history.map((h) => ({ ciphertext: h.ciphertext, nonce: h.nonce, editedAt: h.editedAt }));
   },
 
   async markRead(userId: string, conversationId: string) {

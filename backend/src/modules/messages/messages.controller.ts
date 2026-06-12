@@ -99,6 +99,16 @@ export const messagesController = {
     }
   },
 
+  async getEditHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      const history = await messagesService.getEditHistory(req.user!.sub, conversationId, messageId);
+      res.json(history);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async setReaction(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;
