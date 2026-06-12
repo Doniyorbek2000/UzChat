@@ -79,3 +79,20 @@ export async function updateAppBadgeCount(conversations: Conversation[], userId:
 export async function clearAppBadgeCount(): Promise<void> {
   await Notifications.setBadgeCountAsync(0).catch(() => {});
 }
+
+/** Fires an immediate local notification so the user can preview their current sound/vibration settings. */
+export async function sendTestNotification(): Promise<boolean> {
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+  if (existingStatus !== "granted") {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+  if (finalStatus !== "granted") return false;
+
+  await Notifications.scheduleNotificationAsync({
+    content: { title: "UzChat", body: "Bu sinov bildirishnomasi", sound: true },
+    trigger: null,
+  });
+  return true;
+}

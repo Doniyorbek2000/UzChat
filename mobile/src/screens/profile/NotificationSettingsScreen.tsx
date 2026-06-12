@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, Alert, ActivityIndicator, Switch } from "react-native";
+import { View, Text, StyleSheet, Alert, ActivityIndicator, Switch, TouchableOpacity } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
+import { sendTestNotification } from "../../utils/pushNotifications";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NotificationSettings">;
@@ -12,6 +13,7 @@ export function NotificationSettingsScreen({}: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const [saving, setSaving] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
 
   if (!user) return null;
 
@@ -28,6 +30,19 @@ export function NotificationSettingsScreen({}: Props) {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
     } finally {
       setSaving(null);
+    }
+  };
+
+  const onTestNotification = async () => {
+    if (testing) return;
+    setTesting(true);
+    try {
+      const sent = await sendTestNotification();
+      if (!sent) Alert.alert("Ruxsat kerak", "Bildirishnomalarga ruxsat berilmagan");
+    } catch {
+      Alert.alert("Xatolik", "Sinov bildirishnomasini yuborib bo'lmadi");
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -103,6 +118,14 @@ export function NotificationSettingsScreen({}: Props) {
           />
         )}
       </View>
+
+      <TouchableOpacity style={styles.testButton} onPress={onTestNotification} disabled={testing}>
+        {testing ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Text style={styles.testButtonText}>🔔 Sinov bildirishnomasini yuborish</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 }
@@ -122,4 +145,12 @@ const styles = StyleSheet.create({
   rowText: { flex: 1 },
   rowLabel: { fontSize: 16, color: colors.text, fontWeight: "600" },
   rowDescription: { fontSize: 13, color: colors.textSecondary, marginTop: 4, lineHeight: 18 },
+  testButton: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  testButtonText: { fontSize: 15, fontWeight: "600", color: colors.primary },
 });
