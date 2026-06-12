@@ -1254,6 +1254,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     navigation.setParams({ highlightMessageId: next.id });
   };
 
+  // The oldest incoming message that was still unread when this screen opened, used to
+  // render a "new messages" separator above it (markRead fires immediately, so we rely
+  // on the frozen initialLastReadAtRef snapshot rather than the live value).
+  const firstUnreadMessageId =
+    initialLastReadAtCapturedRef.current && initialLastReadAtRef.current
+      ? messages.find(
+          (m) => m.senderId !== user?.id && new Date(m.createdAt) > new Date(initialLastReadAtRef.current!)
+        )?.id ?? null
+      : null;
+
   const renderItem = ({ item, index }: { item: DecryptedMessage; index: number }) => {
     const previousItem = invertedData[index + 1];
     const showDateSeparator =
@@ -1263,11 +1273,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         <Text style={styles.dateSeparatorText}>{formatDateSeparator(item.createdAt)}</Text>
       </View>
     ) : null;
+    const unreadSeparator =
+      item.id === firstUnreadMessageId ? (
+        <View style={styles.unreadSeparatorRow}>
+          <View style={styles.unreadSeparatorLine} />
+          <Text style={styles.unreadSeparatorText}>Yangi xabarlar</Text>
+          <View style={styles.unreadSeparatorLine} />
+        </View>
+      ) : null;
 
     if (item.type === "SYSTEM") {
       return (
         <>
           {dateSeparator}
+          {unreadSeparator}
           <View style={styles.systemMessageRow}>
             <Text style={styles.systemMessageText}>{item.text}</Text>
           </View>
@@ -1320,6 +1339,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     return (
       <>
         {dateSeparator}
+        {unreadSeparator}
         <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => onPressMessage(item)}
@@ -2263,6 +2283,24 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     overflow: "hidden",
+  },
+  unreadSeparatorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+    paddingHorizontal: 16,
+  },
+  unreadSeparatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.danger,
+    opacity: 0.4,
+  },
+  unreadSeparatorText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.danger,
+    marginHorizontal: 8,
   },
   selectCheckbox: {
     width: 22,
