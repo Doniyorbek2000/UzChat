@@ -7,6 +7,7 @@ import {
   createConversationSchema,
   createInviteLinkSchema,
   joinByInviteSchema,
+  setNoForwardsSchema,
   updateConversationSchema,
   updateDisappearingMessagesSchema,
   updateParticipantRestrictionSchema,
@@ -33,6 +34,7 @@ chatsRouter.put(
   validateBody(updateDisappearingMessagesSchema),
   chatsController.setDisappearingMessages
 );
+chatsRouter.put("/:id/no-forwards", validateBody(setNoForwardsSchema), chatsController.setNoForwards);
 chatsRouter.post("/:id/invite-link", validateBody(createInviteLinkSchema), chatsController.createInviteLink);
 chatsRouter.delete("/:id/invite-link", chatsController.revokeInviteLink);
 chatsRouter.get("/invite/:code", chatsController.getInvitePreview);

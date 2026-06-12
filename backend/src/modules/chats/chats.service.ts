@@ -423,6 +423,39 @@ export const chatsService = {
     return chatsService.getConversation(userId, conversationId);
   },
 
+  /**
+   * DIRECT only: either participant can toggle "restrict saving content" to
+   * prevent both sides from forwarding, copying, or exporting messages.
+   */
+  async setNoForwards(userId: string, conversationId: string, noForwards: boolean) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.DIRECT) {
+      throw Errors.badRequest("Bu amal faqat shaxsiy suhbatlar uchun mavjud");
+    }
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester) throw Errors.forbidden();
+
+    let systemMessage = null;
+    if (noForwards !== conversation.noForwards) {
+      await prisma.conversation.update({ where: { id: conversationId }, data: { noForwards } });
+      const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+      systemMessage = await createSystemMessage(
+        conversationId,
+        userId,
+        noForwards
+          ? `${actor?.displayName} nusxalash va yo'naltirishni man qildi`
+          : `${actor?.displayName} nusxalash va yo'naltirishga ruxsat berdi`
+      );
+    }
+
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
+  },
+
   async assertGroupManager(userId: string, conversationId: string) {
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },

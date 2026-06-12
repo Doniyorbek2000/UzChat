@@ -141,6 +141,21 @@ export const chatsController = {
     }
   },
 
+  async setNoForwards(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { conversation, systemMessage } = await chatsService.setNoForwards(
+        req.user!.sub,
+        req.params.id,
+        req.body.noForwards
+      );
+      getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
+      if (systemMessage) getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async createInviteLink(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await chatsService.createInviteLink(req.user!.sub, req.params.id, req.body);

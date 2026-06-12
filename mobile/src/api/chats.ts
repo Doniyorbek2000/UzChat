@@ -97,6 +97,10 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
+  setNoForwards(conversationId: string, noForwards: boolean) {
+    return apiClient.put<Conversation>(`/conversations/${conversationId}/no-forwards`, { noForwards }).then((r) => r.data);
+  },
+
   removeParticipant(conversationId: string, userId: string) {
     return apiClient.delete<Conversation>(`/conversations/${conversationId}/participants/${userId}`).then((r) => r.data);
   },

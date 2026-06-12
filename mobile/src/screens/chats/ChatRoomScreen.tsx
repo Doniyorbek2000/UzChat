@@ -265,6 +265,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const pinMessage = useChatStore((s) => s.pinMessage);
   const unpinMessage = useChatStore((s) => s.unpinMessage);
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
+  const setNoForwards = useChatStore((s) => s.setNoForwards);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
@@ -430,6 +431,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       {
         text: `⏳ O'chiriladigan xabarlar (${formatDisappearingDuration(conversation?.disappearingSeconds ?? null)})`,
         onPress: onSetDisappearingMessages,
+      },
+      {
+        text: conversation?.noForwards
+          ? "🔓 Nusxalash va yo'naltirishga ruxsat berish"
+          : "🔒 Nusxalash va yo'naltirishni man qilish",
+        onPress: () => setNoForwards(conversationId, !conversation?.noForwards).catch(() => {}),
       },
       {
         text: conversation?.isBlocked ? "Blokdan chiqarish" : "Bloklash",
@@ -685,7 +692,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
   const canMentionEveryone = !conversation || conversation.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
   const canForwardOrCopy =
-    !conversation || conversation.type !== "GROUP" || !conversation.noForwards || myRole === "OWNER" || myRole === "ADMIN";
+    !conversation ||
+    !conversation.noForwards ||
+    (conversation.type === "GROUP" && (myRole === "OWNER" || myRole === "ADMIN"));
   const canManagePins =
     !conversation ||
     conversation.type !== "GROUP" ||

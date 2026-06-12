@@ -121,6 +121,10 @@ export const updateDisappearingMessagesSchema = z.object({
   disappearingSeconds: z.number().int().positive().max(MAX_DISAPPEARING_SECONDS).nullable(),
 });
 
+export const setNoForwardsSchema = z.object({
+  noForwards: z.boolean(),
+});
+
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;

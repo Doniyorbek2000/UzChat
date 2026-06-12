@@ -138,6 +138,7 @@ interface ChatState {
   unpinMessage: (conversationId: string, messageId: string) => Promise<void>;
   unpinAllMessages: (conversationId: string) => Promise<void>;
   setDisappearingMessages: (conversationId: string, disappearingSeconds: number | null) => Promise<void>;
+  setNoForwards: (conversationId: string, noForwards: boolean) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
@@ -935,6 +936,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
     const updated = await chatsApi.setDisappearingMessages(conversationId, disappearingSeconds);
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
+  setNoForwards: async (conversationId, noForwards) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.setNoForwards(conversationId, noForwards);
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));
