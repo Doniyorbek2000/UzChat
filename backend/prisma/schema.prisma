@@ -81,6 +81,8 @@ model User {
   // Who can start a new direct conversation with this user. Doesn't affect
   // conversations that already exist.
   messagePrivacy MessagePrivacy @default(EVERYONE)
+  // Who can find this user by their exact phone number via search.
+  phoneNumberPrivacy LastSeenPrivacy @default(EVERYONE)
   // When false, this user's read receipts ("seen" status) are hidden from
   // others in direct chats, and they likewise can't see others' read receipts.
   readReceiptsEnabled Boolean @default(true)

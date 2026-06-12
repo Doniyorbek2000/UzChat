@@ -22,6 +22,7 @@ export interface AuthUser extends User {
   lastSeenPrivacy: LastSeenPrivacy;
   groupAddPrivacy: GroupAddPrivacy;
   messagePrivacy: MessagePrivacy;
+  phoneNumberPrivacy: LastSeenPrivacy;
   readReceiptsEnabled: boolean;
   typingIndicatorsEnabled: boolean;
   twoFactorEnabled: boolean;

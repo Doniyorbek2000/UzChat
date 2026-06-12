@@ -27,6 +27,12 @@ const MESSAGE_PRIVACY_OPTIONS: { value: MessagePrivacy; label: string; descripti
   { value: "NOBODY", label: "Hech kim", description: "Hech kim siz bilan yangi suhbat boshlay olmaydi. Mavjud suhbatlaringizga ta'sir qilmaydi" },
 ];
 
+const PHONE_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
+  { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi telefon raqamingiz orqali sizni topa oladi" },
+  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz telefon raqamingiz orqali sizni topa oladi" },
+  { value: "NOBODY", label: "Hech kim", description: "Hech kim telefon raqamingiz orqali sizni topa olmaydi" },
+];
+
 export function PrivacySettingsScreen({}: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
@@ -65,6 +71,19 @@ export function PrivacySettingsScreen({}: Props) {
     setSaving(`messagePrivacy:${value}`);
     try {
       await usersApi.updateMe({ messagePrivacy: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectPhonePrivacy = async (value: LastSeenPrivacy) => {
+    if (value === user.phoneNumberPrivacy || saving) return;
+    setSaving(`phonePrivacy:${value}`);
+    try {
+      await usersApi.updateMe({ phoneNumberPrivacy: value });
       await refreshProfile();
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
@@ -151,6 +170,26 @@ export function PrivacySettingsScreen({}: Props) {
               <Text style={styles.rowDescription}>{option.description}</Text>
             </View>
             {saving === `messagePrivacy:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Telefon raqami orqali kim meni topa oladi</Text>
+      {PHONE_PRIVACY_OPTIONS.map((option) => {
+        const selected = user.phoneNumberPrivacy === option.value;
+        return (
+          <TouchableOpacity key={option.value} style={styles.row} onPress={() => onSelectPhonePrivacy(option.value)} disabled={!!saving}>
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+              <Text style={styles.rowDescription}>{option.description}</Text>
+            </View>
+            {saving === `phonePrivacy:${option.value}` ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
               <View style={[styles.radio, selected && styles.radioSelected]}>

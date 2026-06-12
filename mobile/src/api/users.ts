@@ -14,6 +14,7 @@ export const usersApi = {
     lastSeenPrivacy?: LastSeenPrivacy;
     groupAddPrivacy?: GroupAddPrivacy;
     messagePrivacy?: MessagePrivacy;
+    phoneNumberPrivacy?: LastSeenPrivacy;
     readReceiptsEnabled?: boolean;
     typingIndicatorsEnabled?: boolean;
   }) {

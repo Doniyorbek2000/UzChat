@@ -24,6 +24,7 @@ const profileSelect = {
   lastSeenPrivacy: true,
   groupAddPrivacy: true,
   messagePrivacy: true,
+  phoneNumberPrivacy: true,
   readReceiptsEnabled: true,
   typingIndicatorsEnabled: true,
   twoFactorHash: true,
@@ -78,11 +79,20 @@ export const usersService = {
           { phone: query },
         ],
       },
-      select: publicSelect,
+      select: { ...publicSelect, phone: true, phoneNumberPrivacy: true },
       take: 20,
     });
     const contactIds = await getContactIds(currentUserId);
-    return users.map((u) => filterLastSeen(currentUserId, u, contactIds));
+    return users
+      .filter((u) => {
+        // Only the phone-search match is gated by phoneNumberPrivacy; a
+        // username match is always visible regardless of this setting.
+        if (u.phone !== query) return true;
+        if (u.phoneNumberPrivacy === "NOBODY") return false;
+        if (u.phoneNumberPrivacy === "CONTACTS") return contactIds.has(u.id);
+        return true;
+      })
+      .map(({ phone, phoneNumberPrivacy, ...u }) => filterLastSeen(currentUserId, u, contactIds));
   },
 
   async changePassword(userId: string, { currentPassword, newPassword }: ChangePasswordInput) {

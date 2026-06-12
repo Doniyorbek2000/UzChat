@@ -9,6 +9,7 @@ export const updateProfileSchema = z.object({
   lastSeenPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   groupAddPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   messagePrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
+  phoneNumberPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   readReceiptsEnabled: z.boolean().optional(),
   typingIndicatorsEnabled: z.boolean().optional(),
 });
