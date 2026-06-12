@@ -983,17 +983,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const pickFile = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: "*/*", copyToCacheDirectory: true });
-    if (result.canceled || !result.assets[0]) return;
+    const result = await DocumentPicker.getDocumentAsync({ type: "*/*", copyToCacheDirectory: true, multiple: true });
+    if (result.canceled || result.assets.length === 0) return;
 
-    const asset = result.assets[0];
-    setMediaCaption("");
-    setPendingMedia({
+    const items: PendingMediaItem[] = result.assets.map((asset) => ({
       uri: asset.uri,
       name: asset.name,
       mimeType: asset.mimeType ?? "application/octet-stream",
       type: "FILE",
-    });
+    }));
+
+    setMediaCaption("");
+    setPendingMedia(items[0]);
+    setPendingMediaQueue(items.slice(1));
+    setPendingMediaTotal(items.length);
   };
 
   const cancelPendingMedia = () => {
