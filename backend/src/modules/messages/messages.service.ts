@@ -79,12 +79,24 @@ function formatMessage<
 
 async function resolveMentions(conversationId: string, userId: string, mentions: string[] | undefined) {
   if (!mentions?.length) return [];
-  const participants = await prisma.conversationParticipant.findMany({
-    where: { conversationId },
-    select: { userId: true },
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { type: true, participants: { select: { userId: true, role: true } } },
   });
-  const participantIds = new Set(participants.map((p) => p.userId));
-  return mentions.filter((id) => id !== userId && participantIds.has(id));
+  if (!conversation) return [];
+
+  const participantIds = new Set(conversation.participants.map((p) => p.userId));
+  const resolved = mentions.filter((id) => id !== userId && participantIds.has(id));
+
+  // Mentioning every other participant at once ("@hammasi") is reserved for the
+  // owner/admins so regular members can't mass-notify the whole group.
+  const senderRole = conversation.participants.find((p) => p.userId === userId)?.role;
+  const mentionsEveryone = conversation.participants.length > 2 && resolved.length >= conversation.participants.length - 1;
+  if (conversation.type === ConversationType.GROUP && senderRole === "MEMBER" && mentionsEveryone) {
+    throw Errors.forbidden("Faqat guruh egasi va adminlar hammani eslatishi mumkin");
+  }
+
+  return resolved;
 }
 
 async function notifyParticipants(senderId: string, conversationId: string, message: Message) {

@@ -635,10 +635,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     return contactAliases[senderId] ?? conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
   };
 
+  const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
+  const canMentionEveryone = !conversation || conversation.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
+
   const mentionSuggestions =
     mentionQuery !== null
       ? [
-          ...(EVERYONE_MENTION.slice(1).startsWith(mentionQuery.toLowerCase())
+          ...(canMentionEveryone && EVERYONE_MENTION.slice(1).startsWith(mentionQuery.toLowerCase())
             ? [
                 {
                   key: "everyone",
@@ -1099,7 +1102,6 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const isGroup = conversation?.type === "GROUP";
-  const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
   const canSend = !isGroup || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
 
   const renderItem = ({ item }: { item: DecryptedMessage }) => {
@@ -1689,11 +1691,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       <Pressable style={styles.actionBackdrop} onPress={() => setMentionPickerVisible(false)}>
         <Pressable style={styles.actionSheet}>
           <Text style={styles.mentionPickerTitle}>Kimnidir eslatish</Text>
-          <TouchableOpacity style={styles.actionButton} onPress={onMentionEveryone}>
-            <Text style={styles.actionButtonText}>
-              <Text style={styles.mentionText}>{EVERYONE_MENTION}</Text> (barcha a'zolar)
-            </Text>
-          </TouchableOpacity>
+          {canMentionEveryone && (
+            <TouchableOpacity style={styles.actionButton} onPress={onMentionEveryone}>
+              <Text style={styles.actionButtonText}>
+                <Text style={styles.mentionText}>{EVERYONE_MENTION}</Text> (barcha a'zolar)
+              </Text>
+            </TouchableOpacity>
+          )}
           {conversation?.participants
             .filter((p) => p.userId !== user?.id)
             .map((p) => (
