@@ -52,6 +52,14 @@ export function isParticipantMuted(p: { isMuted: boolean; mutedUntil: Date | nul
   return p.isMuted || (p.mutedUntil !== null && p.mutedUntil.getTime() > Date.now());
 }
 
+/** Renders a disappearing-messages duration for the system message, matching the mobile app's labels. */
+function formatDisappearingDuration(seconds: number): string {
+  const DAY = 24 * 60 * 60;
+  if (seconds === DAY) return "24 soat";
+  if (seconds % DAY === 0) return `${seconds / DAY} kun`;
+  return `${Math.round(seconds / DAY)} kun`;
+}
+
 /** An invite link is usable if its code hasn't expired and hasn't hit its usage limit. */
 function isInviteLinkUsable(conversation: {
   inviteCodeExpiresAt: Date | null;
@@ -443,9 +451,20 @@ export const chatsService = {
       throw Errors.forbidden();
     }
 
-    await prisma.conversation.update({ where: { id: conversationId }, data: { disappearingSeconds } });
+    let systemMessage = null;
+    if (disappearingSeconds !== conversation.disappearingSeconds) {
+      await prisma.conversation.update({ where: { id: conversationId }, data: { disappearingSeconds } });
+      const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+      systemMessage = await createSystemMessage(
+        conversationId,
+        userId,
+        disappearingSeconds
+          ? `${actor?.displayName} o'chiriladigan xabarlar taymerini ${formatDisappearingDuration(disappearingSeconds)}ga o'rnatdi`
+          : `${actor?.displayName} o'chiriladigan xabarlar taymerini o'chirdi`
+      );
+    }
 
-    return chatsService.getConversation(userId, conversationId);
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
   },
 
   /**

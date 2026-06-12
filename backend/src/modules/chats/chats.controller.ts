@@ -138,12 +138,13 @@ export const chatsController = {
 
   async setDisappearingMessages(req: Request, res: Response, next: NextFunction) {
     try {
-      const conversation = await chatsService.setDisappearingMessages(
+      const { conversation, systemMessage } = await chatsService.setDisappearingMessages(
         req.user!.sub,
         req.params.id,
         req.body.disappearingSeconds
       );
       getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
+      if (systemMessage) getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
       res.json(conversation);
     } catch (err) {
       next(err);
