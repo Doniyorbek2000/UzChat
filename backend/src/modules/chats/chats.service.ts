@@ -5,6 +5,7 @@ import { Errors } from "../../utils/errors";
 import { getContactIds, filterLastSeen, filterAvatar } from "../../utils/lastSeen";
 import { contactsService } from "../contacts/contacts.service";
 import { createSystemMessage } from "../messages/systemMessages";
+import { pushService } from "../push/push.service";
 import {
   AddParticipantInput,
   CreateConversationInput,
@@ -212,6 +213,7 @@ export const chatsService = {
         onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
         slowModeSeconds: p.conversation.slowModeSeconds,
         noForwards: p.conversation.noForwards,
+        requireAdminApproval: p.conversation.requireAdminApproval,
         isSelf: p.conversation.isSelf,
         pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
         participants: p.conversation.participants.map((cp) => ({
@@ -283,6 +285,7 @@ export const chatsService = {
       onlyAdminsCanSend: participant.conversation.onlyAdminsCanSend,
       slowModeSeconds: participant.conversation.slowModeSeconds,
       noForwards: participant.conversation.noForwards,
+      requireAdminApproval: participant.conversation.requireAdminApproval,
       isSelf: participant.conversation.isSelf,
       pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
       participants: participant.conversation.participants.map((cp) => ({
@@ -463,32 +466,132 @@ export const chatsService = {
     if (!conversation) throw Errors.notFound("Taklif havolasi");
 
     const alreadyMember = conversation.participants.some((p) => p.userId === userId);
-    let systemMessage = null;
-    if (!alreadyMember) {
-      if (!isInviteLinkUsable(conversation)) throw Errors.notFound("Taklif havolasi");
-
-      await prisma.$transaction([
-        prisma.conversationParticipant.create({
-          data: {
-            conversationId: conversation.id,
-            userId,
-            role: ParticipantRole.MEMBER,
-            wrappedKey: input.wrappedKey,
-            wrappedKeyNonce: input.wrappedKeyNonce,
-            keySenderPublicKey: input.keySenderPublicKey,
-          },
-        }),
-        prisma.conversation.update({
-          where: { id: conversation.id },
-          data: { inviteCodeUseCount: { increment: 1 } },
-        }),
-      ]);
-
-      const joiner = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
-      systemMessage = await createSystemMessage(conversation.id, userId, `${joiner?.displayName} guruhga qo'shildi`);
+    if (alreadyMember) {
+      return {
+        pending: false as const,
+        conversation: await chatsService.getConversation(userId, conversation.id),
+        alreadyMember: true,
+        systemMessage: null,
+      };
     }
 
-    return { conversation: await chatsService.getConversation(userId, conversation.id), alreadyMember, systemMessage };
+    if (!isInviteLinkUsable(conversation)) throw Errors.notFound("Taklif havolasi");
+
+    if (conversation.requireAdminApproval) {
+      await prisma.groupJoinRequest.upsert({
+        where: { conversationId_userId: { conversationId: conversation.id, userId } },
+        update: {
+          wrappedKey: input.wrappedKey,
+          wrappedKeyNonce: input.wrappedKeyNonce,
+          keySenderPublicKey: input.keySenderPublicKey,
+        },
+        create: {
+          conversationId: conversation.id,
+          userId,
+          wrappedKey: input.wrappedKey,
+          wrappedKeyNonce: input.wrappedKeyNonce,
+          keySenderPublicKey: input.keySenderPublicKey,
+        },
+      });
+
+      const requester = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+      const managerIds = conversation.participants
+        .filter((p) => p.role === ParticipantRole.OWNER || p.role === ParticipantRole.ADMIN)
+        .map((p) => p.userId);
+      await pushService.sendToUsers(managerIds, {
+        title: "Guruhga qo'shilish so'rovi",
+        body: `${requester?.displayName} "${conversation.title}" guruhiga qo'shilishni so'rayapti`,
+        data: { type: "group_join_request", conversationId: conversation.id },
+      });
+
+      return { pending: true as const, conversationId: conversation.id, managerIds };
+    }
+
+    await prisma.$transaction([
+      prisma.conversationParticipant.create({
+        data: {
+          conversationId: conversation.id,
+          userId,
+          role: ParticipantRole.MEMBER,
+          wrappedKey: input.wrappedKey,
+          wrappedKeyNonce: input.wrappedKeyNonce,
+          keySenderPublicKey: input.keySenderPublicKey,
+        },
+      }),
+      prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { inviteCodeUseCount: { increment: 1 } },
+      }),
+    ]);
+
+    const joiner = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+    const systemMessage = await createSystemMessage(conversation.id, userId, `${joiner?.displayName} guruhga qo'shildi`);
+
+    return {
+      pending: false as const,
+      conversation: await chatsService.getConversation(userId, conversation.id),
+      alreadyMember: false,
+      systemMessage,
+    };
+  },
+
+  async listJoinRequests(userId: string, conversationId: string) {
+    await chatsService.assertGroupManager(userId, conversationId);
+
+    const requests = await prisma.groupJoinRequest.findMany({
+      where: { conversationId },
+      include: { user: { select: userSummarySelect } },
+      orderBy: { createdAt: "desc" },
+    });
+    const contactIds = await getContactIds(userId);
+    return requests.map((r) => ({
+      id: r.id,
+      user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, r.user, contactIds), contactIds)),
+      createdAt: r.createdAt,
+    }));
+  },
+
+  async approveJoinRequest(userId: string, conversationId: string, requestId: string) {
+    await chatsService.assertGroupManager(userId, conversationId);
+
+    const request = await prisma.groupJoinRequest.findUnique({ where: { id: requestId } });
+    if (!request || request.conversationId !== conversationId) throw Errors.notFound("So'rov");
+
+    await prisma.$transaction([
+      prisma.conversationParticipant.create({
+        data: {
+          conversationId,
+          userId: request.userId,
+          role: ParticipantRole.MEMBER,
+          wrappedKey: request.wrappedKey,
+          wrappedKeyNonce: request.wrappedKeyNonce,
+          keySenderPublicKey: request.keySenderPublicKey,
+        },
+      }),
+      prisma.conversation.update({
+        where: { id: conversationId },
+        data: { inviteCodeUseCount: { increment: 1 } },
+      }),
+      prisma.groupJoinRequest.delete({ where: { id: requestId } }),
+    ]);
+
+    const joiner = await prisma.user.findUnique({ where: { id: request.userId }, select: { displayName: true } });
+    const systemMessage = await createSystemMessage(conversationId, request.userId, `${joiner?.displayName} guruhga qo'shildi`);
+
+    return {
+      conversation: await chatsService.getConversation(userId, conversationId),
+      systemMessage,
+      newParticipantId: request.userId,
+    };
+  },
+
+  async declineJoinRequest(userId: string, conversationId: string, requestId: string) {
+    await chatsService.assertGroupManager(userId, conversationId);
+
+    const request = await prisma.groupJoinRequest.findUnique({ where: { id: requestId } });
+    if (!request || request.conversationId !== conversationId) throw Errors.notFound("So'rov");
+
+    await prisma.groupJoinRequest.delete({ where: { id: requestId } });
   },
 
   async addParticipant(userId: string, conversationId: string, input: AddParticipantInput) {
@@ -595,6 +698,7 @@ export const chatsService = {
         ...(input.onlyAdminsCanSend !== undefined ? { onlyAdminsCanSend: input.onlyAdminsCanSend } : {}),
         ...(input.slowModeSeconds !== undefined ? { slowModeSeconds: input.slowModeSeconds } : {}),
         ...(input.noForwards !== undefined ? { noForwards: input.noForwards } : {}),
+        ...(input.requireAdminApproval !== undefined ? { requireAdminApproval: input.requireAdminApproval } : {}),
       },
     });
 

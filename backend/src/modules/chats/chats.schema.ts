@@ -52,6 +52,7 @@ export const updateConversationSchema = z
     onlyAdminsCanSend: z.boolean().optional(),
     slowModeSeconds: z.number().int().min(0).max(MAX_SLOW_MODE_SECONDS).optional(),
     noForwards: z.boolean().optional(),
+    requireAdminApproval: z.boolean().optional(),
   })
   .refine(
     (data) =>
@@ -60,7 +61,8 @@ export const updateConversationSchema = z
       data.description !== undefined ||
       data.onlyAdminsCanSend !== undefined ||
       data.slowModeSeconds !== undefined ||
-      data.noForwards !== undefined,
+      data.noForwards !== undefined ||
+      data.requireAdminApproval !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

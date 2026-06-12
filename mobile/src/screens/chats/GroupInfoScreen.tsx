@@ -189,6 +189,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleRequireAdminApproval = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { requireAdminApproval: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onSetSlowMode = () => {
     Alert.alert(
       "Sekin rejim",
@@ -497,6 +505,18 @@ export function GroupInfoScreen({ route, navigation }: Props) {
               <Text style={[styles.inviteText, { color: colors.danger }]}>Havolani bekor qilish</Text>
             </TouchableOpacity>
           )}
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>🛡️</Text>
+            <Text style={styles.inviteText}>Yangi a'zolarni admin tasdiqlasin</Text>
+            <Switch value={conversation.requireAdminApproval} onValueChange={onToggleRequireAdminApproval} />
+          </View>
+          <TouchableOpacity
+            style={styles.inviteRow}
+            onPress={() => navigation.navigate("JoinRequests", { conversationId })}
+          >
+            <Text style={styles.inviteIcon}>📝</Text>
+            <Text style={styles.inviteText}>Qo'shilish so'rovlari</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.inviteRow} onPress={onSetDisappearingMessages}>
             <Text style={styles.inviteIcon}>⏳</Text>
             <Text style={styles.inviteText}>O'chiriladigan xabarlar</Text>

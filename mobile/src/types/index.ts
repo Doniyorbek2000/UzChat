@@ -140,12 +140,22 @@ export interface Conversation {
   slowModeSeconds: number;
   // GROUP only: when true, MEMBERs can't forward, copy, or export messages from this group.
   noForwards: boolean;
+  // GROUP only: when true, joining via invite link creates a pending request
+  // that an owner/admin must approve.
+  requireAdminApproval: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.
   pinnedMessages: PinnedMessageInfo[];
   participants: ConversationParticipant[];
   lastMessage?: Message | null;
+}
+
+// A pending request to join a GROUP via invite link, awaiting owner/admin approval.
+export interface GroupJoinRequest {
+  id: string;
+  user: User;
+  createdAt: string;
 }
 
 export interface Contact {

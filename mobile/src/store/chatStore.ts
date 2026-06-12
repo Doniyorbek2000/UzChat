@@ -153,6 +153,7 @@ interface ChatState {
       onlyAdminsCanSend?: boolean;
       slowModeSeconds?: number;
       noForwards?: boolean;
+      requireAdminApproval?: boolean;
     }
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;
@@ -161,7 +162,7 @@ interface ChatState {
   leaveGroup: (conversationId: string) => Promise<void>;
   createInviteLink: (conversationId: string, options?: { expiresInSeconds?: number | null; maxUses?: number | null }) => Promise<string>;
   revokeInviteLink: (conversationId: string) => Promise<void>;
-  joinConversationByInvite: (invite: string) => Promise<Conversation>;
+  joinConversationByInvite: (invite: string) => Promise<Conversation | { pending: true }>;
 }
 
 function dropConversation<T>(record: Record<string, T>, conversationId: string): Record<string, T> {
@@ -1094,14 +1095,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!keyPair) throw new Error("Avtorizatsiyadan o'tilmagan");
 
     const wrapped = wrapConversationKey(decoded.key, keyPair.publicKey, keyPair.privateKey);
-    const conversation = await chatsApi.joinByInvite(decoded.code, {
+    const result = await chatsApi.joinByInvite(decoded.code, {
       wrappedKey: wrapped.wrappedKey,
       wrappedKeyNonce: wrapped.wrappedKeyNonce,
       keySenderPublicKey: keyPair.publicKey,
     });
 
-    set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
-    return conversation;
+    if ("pending" in result) return result;
+
+    set((state) => ({ conversations: upsertConversation(state.conversations, result) }));
+    return result;
   },
 
   setTyping: (conversationId, isTyping) => {

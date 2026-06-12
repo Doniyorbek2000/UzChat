@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Conversation, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
+import { Conversation, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -55,6 +55,7 @@ export const chatsApi = {
       onlyAdminsCanSend?: boolean;
       slowModeSeconds?: number;
       noForwards?: boolean;
+      requireAdminApproval?: boolean;
     }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);
@@ -131,7 +132,23 @@ export const chatsApi = {
   },
 
   joinByInvite(code: string, input: { wrappedKey: string; wrappedKeyNonce: string; keySenderPublicKey: string }) {
-    return apiClient.post<Conversation>(`/conversations/invite/${code}/join`, input).then((r) => r.data);
+    return apiClient
+      .post<Conversation | { pending: true }>(`/conversations/invite/${code}/join`, input)
+      .then((r) => r.data);
+  },
+
+  listJoinRequests(conversationId: string) {
+    return apiClient.get<GroupJoinRequest[]>(`/conversations/${conversationId}/join-requests`).then((r) => r.data);
+  },
+
+  approveJoinRequest(conversationId: string, requestId: string) {
+    return apiClient
+      .post<Conversation>(`/conversations/${conversationId}/join-requests/${requestId}/approve`)
+      .then((r) => r.data);
+  },
+
+  declineJoinRequest(conversationId: string, requestId: string) {
+    return apiClient.post(`/conversations/${conversationId}/join-requests/${requestId}/decline`);
   },
 
   listMessages(conversationId: string, before?: string, limit = 30) {

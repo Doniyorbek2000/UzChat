@@ -118,6 +118,7 @@ model User {
   chatFolders      ChatFolder[]
   reportsMade      Report[]                   @relation("ReportReporter")
   reportsReceived  Report[]                   @relation("ReportReported")
+  groupJoinRequests GroupJoinRequest[]
 
   @@index([username])
   @@index([phone])
@@ -235,8 +236,34 @@ model Conversation {
   // DIRECT only: a "Saved Messages" conversation with a single participant (the owner themself).
   isSelf Boolean @default(false)
 
+  // GROUP only: when true, joining via invite link creates a pending
+  // GroupJoinRequest instead of adding the user directly; an owner/admin
+  // must approve it.
+  requireAdminApproval Boolean @default(false)
+
   participants ConversationParticipant[]
   messages     Message[]
+  joinRequests GroupJoinRequest[]
+}
+
+// A pending request to join a GROUP via invite link when the group requires
+// admin approval. Holds the wrapped conversation key the requester generated
+// client-side, applied to a new ConversationParticipant once approved.
+model GroupJoinRequest {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  wrappedKey         String
+  wrappedKeyNonce    String
+  keySenderPublicKey String
+
+  createdAt DateTime @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId])
 }
 
 // Stores the conversation's shared symmetric key, individually wrapped

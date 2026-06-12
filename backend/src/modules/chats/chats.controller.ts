@@ -160,8 +160,17 @@ export const chatsController = {
   async joinByInvite(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.sub;
-      const { conversation, alreadyMember, systemMessage } = await chatsService.joinByInvite(userId, req.params.code, req.body);
+      const result = await chatsService.joinByInvite(userId, req.params.code, req.body);
 
+      if (result.pending) {
+        getIo()
+          .to(result.managerIds.map((id) => `user:${id}`))
+          .emit("conversation:joinRequest", { conversationId: result.conversationId });
+        res.status(202).json({ pending: true });
+        return;
+      }
+
+      const { conversation, alreadyMember, systemMessage } = result;
       if (!alreadyMember) {
         getIo().to(`user:${userId}`).socketsJoin(`conversation:${conversation.id}`);
         getIo()
@@ -172,6 +181,50 @@ export const chatsController = {
       }
 
       res.status(alreadyMember ? 200 : 201).json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async listJoinRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const requests = await chatsService.listJoinRequests(req.user!.sub, req.params.id);
+      res.json(requests);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async approveJoinRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, requestId } = req.params;
+      const { conversation, systemMessage, newParticipantId } = await chatsService.approveJoinRequest(
+        req.user!.sub,
+        id,
+        requestId
+      );
+
+      getIo().to(`user:${newParticipantId}`).socketsJoin(`conversation:${conversation.id}`);
+
+      const newParticipantView = await chatsService.getConversation(newParticipantId, conversation.id);
+      getIo().to(`user:${newParticipantId}`).emit("conversation:new", newParticipantView);
+      getIo()
+        .to(`conversation:${conversation.id}`)
+        .except(`user:${newParticipantId}`)
+        .emit("conversation:updated", conversation);
+      getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async declineJoinRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, requestId } = req.params;
+      await chatsService.declineJoinRequest(req.user!.sub, id, requestId);
+      res.status(204).send();
     } catch (err) {
       next(err);
     }

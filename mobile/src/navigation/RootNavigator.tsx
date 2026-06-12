@@ -12,6 +12,7 @@ import { NewGroupScreen } from "../screens/chats/NewGroupScreen";
 import { GroupInfoScreen } from "../screens/chats/GroupInfoScreen";
 import { AddGroupMemberScreen } from "../screens/chats/AddGroupMemberScreen";
 import { JoinGroupScreen } from "../screens/chats/JoinGroupScreen";
+import { JoinRequestsScreen } from "../screens/chats/JoinRequestsScreen";
 import { ForwardMessageScreen } from "../screens/chats/ForwardMessageScreen";
 import { ShareContactScreen } from "../screens/chats/ShareContactScreen";
 import { SharedMediaScreen } from "../screens/chats/SharedMediaScreen";
@@ -56,6 +57,10 @@ function navigateFromNotification(data?: MessageNotificationData) {
   }
   if (data?.type === "contact_request" || data?.type === "contact_accepted") {
     navigationRef.navigate("MainTabs", { screen: "Contacts" });
+    return;
+  }
+  if (data?.type === "group_join_request" && data.conversationId) {
+    navigationRef.navigate("JoinRequests", { conversationId: data.conversationId });
     return;
   }
   navigateToConversation(data?.conversationId);
@@ -156,6 +161,7 @@ export function RootNavigator() {
             <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{ title: "Guruh ma'lumoti" }} />
             <Stack.Screen name="AddGroupMember" component={AddGroupMemberScreen} options={{ title: "A'zo qo'shish" }} />
             <Stack.Screen name="JoinGroup" component={JoinGroupScreen} options={{ title: "Havola orqali qo'shilish" }} />
+            <Stack.Screen name="JoinRequests" component={JoinRequestsScreen} options={{ title: "Qo'shilish so'rovlari" }} />
             <Stack.Screen name="ForwardMessage" component={ForwardMessageScreen} options={{ title: "Yo'naltirish" }} />
             <Stack.Screen name="ShareContact" component={ShareContactScreen} options={{ title: "Kontakt yuborish" }} />
             <Stack.Screen name="SharedMedia" component={SharedMediaScreen} options={{ title: "Umumiy media" }} />

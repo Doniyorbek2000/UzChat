@@ -40,8 +40,13 @@ export function JoinGroupScreen({ navigation }: Props) {
   const onJoin = async () => {
     setJoining(true);
     try {
-      const conversation = await joinConversationByInvite(invite);
-      navigation.replace("ChatRoom", { conversationId: conversation.id, title: conversation.title ?? "" });
+      const result = await joinConversationByInvite(invite);
+      if ("pending" in result) {
+        Alert.alert("So'rov yuborildi", "Guruhga qo'shilish so'rovingiz adminga yuborildi. Tasdiqlanganda xabar olasiz.");
+        navigation.goBack();
+        return;
+      }
+      navigation.replace("ChatRoom", { conversationId: result.id, title: result.title ?? "" });
     } catch (err: any) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Guruhga qo'shilib bo'lmadi");
     } finally {
