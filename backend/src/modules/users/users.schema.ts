@@ -16,6 +16,7 @@ export const updateProfileSchema = z.object({
   notifyPrivateChats: z.boolean().optional(),
   notifyGroupChats: z.boolean().optional(),
   notifyReactions: z.boolean().optional(),
+  hideNotificationContent: z.boolean().optional(),
 });
 
 export const searchUsersSchema = z.object({

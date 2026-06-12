@@ -15,7 +15,10 @@ export function NotificationSettingsScreen({}: Props) {
 
   if (!user) return null;
 
-  const onToggle = async (key: "notifyPrivateChats" | "notifyGroupChats" | "notifyReactions", value: boolean) => {
+  const onToggle = async (
+    key: "notifyPrivateChats" | "notifyGroupChats" | "notifyReactions" | "hideNotificationContent",
+    value: boolean
+  ) => {
     if (saving) return;
     setSaving(key);
     try {
@@ -78,6 +81,24 @@ export function NotificationSettingsScreen({}: Props) {
           <Switch
             value={user.notifyReactions}
             onValueChange={(v) => onToggle("notifyReactions", v)}
+            trackColor={{ true: colors.primary }}
+          />
+        )}
+      </View>
+
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>Matnni yashirish</Text>
+          <Text style={styles.rowDescription}>
+            Bildirishnomalarda yuboruvchi ismi va xabar matni ko'rsatilmaydi
+          </Text>
+        </View>
+        {saving === "hideNotificationContent" ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Switch
+            value={user.hideNotificationContent}
+            onValueChange={(v) => onToggle("hideNotificationContent", v)}
             trackColor={{ true: colors.primary }}
           />
         )}

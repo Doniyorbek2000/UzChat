@@ -99,12 +99,21 @@ async function resolveMentions(conversationId: string, userId: string, mentions:
   return resolved;
 }
 
+// Shown instead of the sender's name and message preview for recipients who
+// enabled "hide notification content" - reveals only that something happened.
+const HIDDEN_TITLE = "UzChat";
+const HIDDEN_BODY = "Yangi xabar";
+
 async function notifyParticipants(senderId: string, conversationId: string, message: Message, silent: boolean) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
     include: {
       participants: {
-        include: { user: { select: { id: true, displayName: true, notifyPrivateChats: true, notifyGroupChats: true } } },
+        include: {
+          user: {
+            select: { id: true, displayName: true, notifyPrivateChats: true, notifyGroupChats: true, hideNotificationContent: true },
+          },
+        },
       },
     },
   });
@@ -127,45 +136,40 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   }
 
   // Muted conversations are silenced, except for messages that @-mention the recipient.
-  const mentionedIds = recipients.filter((p) => message.mentions.includes(p.userId)).map((p) => p.userId);
-  const replyIds = recipients
-    .filter((p) => p.userId === repliedToSenderId && !message.mentions.includes(p.userId) && !isParticipantMuted(p))
-    .map((p) => p.userId);
-  const regularIds = recipients
-    .filter(
-      (p) =>
-        !message.mentions.includes(p.userId) &&
-        p.userId !== repliedToSenderId &&
-        !isParticipantMuted(p) &&
-        (isGroup ? p.user.notifyGroupChats : p.user.notifyPrivateChats)
-    )
-    .map((p) => p.userId);
+  const mentioned = recipients.filter((p) => message.mentions.includes(p.userId));
+  const replied = recipients.filter(
+    (p) => p.userId === repliedToSenderId && !message.mentions.includes(p.userId) && !isParticipantMuted(p)
+  );
+  const regular = recipients.filter(
+    (p) =>
+      !message.mentions.includes(p.userId) &&
+      p.userId !== repliedToSenderId &&
+      !isParticipantMuted(p) &&
+      (isGroup ? p.user.notifyGroupChats : p.user.notifyPrivateChats)
+  );
 
-  if (mentionedIds.length > 0) {
-    await pushService.sendToUsers(mentionedIds, {
-      title,
-      body: `${sender.displayName} sizni eslatib o'tdi`,
-      data: { conversationId, messageId: message.id, type: "mention" },
-      silent,
-    });
+  const send = async (participants: typeof recipients, body: string, type: string) => {
+    const visible = participants.filter((p) => !p.user.hideNotificationContent).map((p) => p.userId);
+    const hidden = participants.filter((p) => p.user.hideNotificationContent).map((p) => p.userId);
+    const data = { conversationId, messageId: message.id, type };
+    if (visible.length > 0) {
+      await pushService.sendToUsers(visible, { title, body, data, silent });
+    }
+    if (hidden.length > 0) {
+      await pushService.sendToUsers(hidden, { title: HIDDEN_TITLE, body: HIDDEN_BODY, data, silent });
+    }
+  };
+
+  if (mentioned.length > 0) {
+    await send(mentioned, `${sender.displayName} sizni eslatib o'tdi`, "mention");
   }
 
-  if (replyIds.length > 0) {
-    await pushService.sendToUsers(replyIds, {
-      title,
-      body: `${sender.displayName} sizning xabaringizga javob berdi`,
-      data: { conversationId, messageId: message.id, type: "reply" },
-      silent,
-    });
+  if (replied.length > 0) {
+    await send(replied, `${sender.displayName} sizning xabaringizga javob berdi`, "reply");
   }
 
-  if (regularIds.length > 0) {
-    await pushService.sendToUsers(regularIds, {
-      title,
-      body: isGroup ? `${sender.displayName}: ${contentLabel}` : contentLabel,
-      data: { conversationId, messageId: message.id, type: "message" },
-      silent,
-    });
+  if (regular.length > 0) {
+    await send(regular, isGroup ? `${sender.displayName}: ${contentLabel}` : contentLabel, "message");
   }
 }
 
@@ -179,9 +183,18 @@ async function notifyReaction(reactorId: string, conversationId: string, message
 
   const [reactor, recipient] = await Promise.all([
     prisma.user.findUnique({ where: { id: reactorId }, select: { displayName: true } }),
-    prisma.user.findUnique({ where: { id: message.senderId }, select: { notifyReactions: true } }),
+    prisma.user.findUnique({ where: { id: message.senderId }, select: { notifyReactions: true, hideNotificationContent: true } }),
   ]);
   if (!reactor || !recipient?.notifyReactions) return;
+
+  if (recipient.hideNotificationContent) {
+    await pushService.sendToUsers([message.senderId], {
+      title: HIDDEN_TITLE,
+      body: HIDDEN_BODY,
+      data: { conversationId, messageId: message.id, type: "reaction" },
+    });
+    return;
+  }
 
   await pushService.sendToUsers([message.senderId], {
     title: reactor.displayName,
