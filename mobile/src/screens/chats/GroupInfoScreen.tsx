@@ -64,6 +64,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState<{ total: number; media: number; voice: number; files: number } | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
 
   useFocusEffect(
     useCallback(() => {
@@ -80,6 +81,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const isOwner = me?.role === "OWNER";
   const canManage = isOwner || me?.role === "ADMIN";
   const canEditInfo = canManage || conversation.membersCanChangeInfo;
+
+  const memberQuery = memberSearch.trim().toLowerCase();
+  const filteredParticipants = memberQuery
+    ? conversation.participants.filter((p) => {
+        const name = (contactAliases[p.userId] ?? p.user.displayName).toLowerCase();
+        return name.includes(memberQuery) || p.user.username.toLowerCase().includes(memberQuery);
+      })
+    : conversation.participants;
 
   const onSaveTitle = async () => {
     const trimmed = title.trim();
@@ -639,17 +648,38 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       )}
 
       <FlatList
-        data={conversation.participants}
+        data={filteredParticipants}
         keyExtractor={(item) => item.userId}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
-          canManage || conversation.membersCanAddMembers ? (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => navigation.navigate("AddGroupMember", { conversationId })}
-            >
-              <Text style={styles.addButtonText}>+ A'zo qo'shish</Text>
-            </TouchableOpacity>
+          <>
+            {canManage || conversation.membersCanAddMembers ? (
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => navigation.navigate("AddGroupMember", { conversationId })}
+              >
+                <Text style={styles.addButtonText}>+ A'zo qo'shish</Text>
+              </TouchableOpacity>
+            ) : null}
+            {conversation.participants.length > 6 && (
+              <View style={styles.memberSearchBar}>
+                <Text style={styles.memberSearchIcon}>🔍</Text>
+                <TextInput
+                  style={styles.memberSearchInput}
+                  placeholder="A'zoni qidirish"
+                  placeholderTextColor={colors.textSecondary}
+                  value={memberSearch}
+                  onChangeText={setMemberSearch}
+                />
+              </View>
+            )}
+          </>
+        }
+        ListEmptyComponent={
+          memberQuery ? (
+            <View style={styles.memberEmpty}>
+              <Text style={styles.memberEmptyText}>Hech kim topilmadi</Text>
+            </View>
           ) : null
         }
         renderItem={({ item }) => (
@@ -736,6 +766,21 @@ const styles = StyleSheet.create({
   inviteValue: { fontSize: 14, color: colors.textSecondary },
   addButton: { paddingVertical: 14, paddingHorizontal: 16 },
   addButtonText: { color: colors.primary, fontSize: 15, fontWeight: "600" },
+  memberSearchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 38,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    gap: 8,
+  },
+  memberSearchIcon: { fontSize: 14 },
+  memberSearchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
+  memberEmpty: { padding: 24, alignItems: "center" },
+  memberEmptyText: { color: colors.textSecondary, fontSize: 14 },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   name: { fontSize: 16, color: colors.text, flex: 1 },
   roleBadge: { fontSize: 12, color: colors.primary, fontWeight: "600" },
