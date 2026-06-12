@@ -17,6 +17,9 @@ export const usersApi = {
     phoneNumberPrivacy?: LastSeenPrivacy;
     readReceiptsEnabled?: boolean;
     typingIndicatorsEnabled?: boolean;
+    notifyPrivateChats?: boolean;
+    notifyGroupChats?: boolean;
+    notifyReactions?: boolean;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);
   },

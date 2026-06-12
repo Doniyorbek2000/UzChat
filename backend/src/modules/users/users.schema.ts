@@ -12,6 +12,9 @@ export const updateProfileSchema = z.object({
   phoneNumberPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   readReceiptsEnabled: z.boolean().optional(),
   typingIndicatorsEnabled: z.boolean().optional(),
+  notifyPrivateChats: z.boolean().optional(),
+  notifyGroupChats: z.boolean().optional(),
+  notifyReactions: z.boolean().optional(),
 });
 
 export const searchUsersSchema = z.object({

@@ -88,6 +88,12 @@ model User {
   readReceiptsEnabled Boolean @default(true)
   // When false, this user's typing/recording indicators are not sent to others.
   typingIndicatorsEnabled Boolean @default(true)
+  // Global push notification toggles. A muted conversation always stays silent
+  // regardless of these; mentions and replies are still delivered even when
+  // notifyGroupChats/notifyPrivateChats is off.
+  notifyPrivateChats Boolean @default(true)
+  notifyGroupChats   Boolean @default(true)
+  notifyReactions    Boolean @default(true)
   // Optional second ("cloud") password, required after the account password
   // when logging in. Null means two-step verification is disabled.
   twoFactorHash String?

@@ -30,6 +30,7 @@ import { AppLockSettingsScreen } from "../screens/profile/AppLockSettingsScreen"
 import { TwoFactorSettingsScreen } from "../screens/profile/TwoFactorSettingsScreen";
 import { ChatTextSizeScreen } from "../screens/profile/ChatTextSizeScreen";
 import { StorageUsageScreen } from "../screens/profile/StorageUsageScreen";
+import { NotificationSettingsScreen } from "../screens/profile/NotificationSettingsScreen";
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { useAuthStore } from "../store/authStore";
@@ -164,6 +165,7 @@ export function RootNavigator() {
             <Stack.Screen name="TwoFactorSettings" component={TwoFactorSettingsScreen} options={{ title: "Ikki bosqichli tekshiruv" }} />
             <Stack.Screen name="ChatTextSize" component={ChatTextSizeScreen} options={{ title: "Matn hajmi" }} />
             <Stack.Screen name="StorageUsage" component={StorageUsageScreen} options={{ title: "Xotira va kesh" }} />
+            <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ title: "Bildirishnomalar" }} />
             <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />
           </Stack.Navigator>
         ) : (

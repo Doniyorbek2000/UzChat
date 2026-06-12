@@ -102,7 +102,11 @@ async function resolveMentions(conversationId: string, userId: string, mentions:
 async function notifyParticipants(senderId: string, conversationId: string, message: Message, silent: boolean) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
-    include: { participants: { include: { user: { select: { id: true, displayName: true } } } } },
+    include: {
+      participants: {
+        include: { user: { select: { id: true, displayName: true, notifyPrivateChats: true, notifyGroupChats: true } } },
+      },
+    },
   });
   if (!conversation) return;
 
@@ -128,7 +132,13 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
     .filter((p) => p.userId === repliedToSenderId && !message.mentions.includes(p.userId) && !isParticipantMuted(p))
     .map((p) => p.userId);
   const regularIds = recipients
-    .filter((p) => !message.mentions.includes(p.userId) && p.userId !== repliedToSenderId && !isParticipantMuted(p))
+    .filter(
+      (p) =>
+        !message.mentions.includes(p.userId) &&
+        p.userId !== repliedToSenderId &&
+        !isParticipantMuted(p) &&
+        (isGroup ? p.user.notifyGroupChats : p.user.notifyPrivateChats)
+    )
     .map((p) => p.userId);
 
   if (mentionedIds.length > 0) {
@@ -167,8 +177,11 @@ async function notifyReaction(reactorId: string, conversationId: string, message
   });
   if (!participant || isParticipantMuted(participant)) return;
 
-  const reactor = await prisma.user.findUnique({ where: { id: reactorId }, select: { displayName: true } });
-  if (!reactor) return;
+  const [reactor, recipient] = await Promise.all([
+    prisma.user.findUnique({ where: { id: reactorId }, select: { displayName: true } }),
+    prisma.user.findUnique({ where: { id: message.senderId }, select: { notifyReactions: true } }),
+  ]);
+  if (!reactor || !recipient?.notifyReactions) return;
 
   await pushService.sendToUsers([message.senderId], {
     title: reactor.displayName,

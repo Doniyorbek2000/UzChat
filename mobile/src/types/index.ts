@@ -25,6 +25,9 @@ export interface AuthUser extends User {
   phoneNumberPrivacy: LastSeenPrivacy;
   readReceiptsEnabled: boolean;
   typingIndicatorsEnabled: boolean;
+  notifyPrivateChats: boolean;
+  notifyGroupChats: boolean;
+  notifyReactions: boolean;
   twoFactorEnabled: boolean;
   twoFactorHint: string | null;
 }

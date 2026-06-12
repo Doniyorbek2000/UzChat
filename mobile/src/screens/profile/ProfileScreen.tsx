@@ -172,6 +172,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("NotificationSettings")}>
+        <Text style={styles.menuRowText}>🔔 Bildirishnomalar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AppLockSettings")}>
         <Text style={styles.menuRowText}>🔐 Ilovani qulflash</Text>
         <Text style={styles.menuRowArrow}>›</Text>

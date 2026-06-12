@@ -50,6 +50,7 @@ export type RootStackParamList = {
   ActiveSessions: undefined;
   ChatTextSize: undefined;
   StorageUsage: undefined;
+  NotificationSettings: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<
