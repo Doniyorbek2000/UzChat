@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { contactsApi } from "../../api/contacts";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { Contact, ContactRequest } from "../../types";
+import { useContactsStore } from "../../store/contactsStore";
 
 type Props = MainTabScreenProps<"Contacts">;
 
@@ -46,12 +47,17 @@ export function ContactsScreen({ navigation }: Props) {
       .then(([c, r]) => {
         setContacts(c);
         setRequests(r);
+        useContactsStore.getState().setPendingRequestCount(r.length);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   useFocusEffect(load);
+
+  useEffect(() => {
+    useContactsStore.getState().setupSocketListeners();
+  }, []);
 
   const onAccept = async (id: string) => {
     await contactsApi.accept(id).catch(() => {});

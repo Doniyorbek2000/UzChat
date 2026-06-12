@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { contactsService } from "./contacts.service";
+import { getIo } from "../../sockets";
 
 export const contactsController = {
   async sendRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const contact = await contactsService.sendRequest(req.user!.sub, req.body.username);
+      getIo().to(`user:${contact.targetId}`).emit("contact:request");
       res.status(201).json(contact);
     } catch (err) {
       next(err);

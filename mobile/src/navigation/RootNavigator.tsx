@@ -38,6 +38,7 @@ import { useAppLockStore } from "../store/appLockStore";
 import { useChatStore } from "../store/chatStore";
 import { useWallpaperStore } from "../store/wallpaperStore";
 import { useChatSettingsStore } from "../store/chatSettingsStore";
+import { useContactsStore } from "../store/contactsStore";
 import { useRecentEmojiStore } from "../store/recentEmojiStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
@@ -100,6 +101,10 @@ export function RootNavigator() {
   useEffect(() => {
     if (isAuthenticated) appLockBootstrap();
   }, [isAuthenticated, appLockBootstrap]);
+
+  useEffect(() => {
+    if (isAuthenticated) useContactsStore.getState().refreshPendingRequestCount();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
