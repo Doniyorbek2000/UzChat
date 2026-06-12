@@ -211,6 +211,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("About")}>
+        <Text style={styles.menuRowText}>ℹ️ UzChat haqida</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
         <Text style={styles.logoutText}>Chiqish</Text>
       </TouchableOpacity>

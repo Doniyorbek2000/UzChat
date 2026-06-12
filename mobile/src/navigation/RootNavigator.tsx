@@ -37,6 +37,7 @@ import { ChatTextSizeScreen } from "../screens/profile/ChatTextSizeScreen";
 import { StorageUsageScreen } from "../screens/profile/StorageUsageScreen";
 import { NotificationSettingsScreen } from "../screens/profile/NotificationSettingsScreen";
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
+import { AboutScreen } from "../screens/profile/AboutScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { useAuthStore } from "../store/authStore";
 import { useAppLockStore } from "../store/appLockStore";
@@ -190,6 +191,7 @@ export function RootNavigator() {
             <Stack.Screen name="StorageUsage" component={StorageUsageScreen} options={{ title: "Xotira va kesh" }} />
             <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ title: "Bildirishnomalar" }} />
             <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />
+            <Stack.Screen name="About" component={AboutScreen} options={{ title: "UzChat haqida" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />
