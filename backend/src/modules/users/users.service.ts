@@ -55,6 +55,10 @@ export const usersService = {
   },
 
   async updateProfile(userId: string, data: UpdateProfileInput) {
+    if (data.username) {
+      const existing = await prisma.user.findUnique({ where: { username: data.username }, select: { id: true } });
+      if (existing && existing.id !== userId) throw Errors.conflict("Bu username band");
+    }
     const user = await prisma.user.update({ where: { id: userId }, data, select: profileSelect });
     return formatProfile(user);
   },

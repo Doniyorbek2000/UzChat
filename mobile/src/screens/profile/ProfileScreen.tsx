@@ -15,6 +15,7 @@ export function ProfileScreen({ navigation }: Props) {
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const logout = useAuthStore((s) => s.logout);
   const deleteAccount = useAuthStore((s) => s.deleteAccount);
+  const [username, setUsername] = useState(user?.username ?? "");
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
   const [saving, setSaving] = useState(false);
@@ -23,9 +24,14 @@ export function ProfileScreen({ navigation }: Props) {
   if (!user) return null;
 
   const onSave = async () => {
+    const trimmedUsername = username.trim();
+    if (trimmedUsername.length < 3 || trimmedUsername.length > 24 || !/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
+      Alert.alert("Xatolik", "Username 3-24 ta belgidan iborat bo'lib, faqat harf, raqam va '_' belgisini o'z ichiga olishi mumkin");
+      return;
+    }
     setSaving(true);
     try {
-      await usersApi.updateMe({ displayName: displayName.trim(), bio: bio.trim() });
+      await usersApi.updateMe({ username: trimmedUsername, displayName: displayName.trim(), bio: bio.trim() });
       await refreshProfile();
       Alert.alert("Saqlandi", "Profil yangilandi");
     } catch (err: any) {
@@ -113,6 +119,19 @@ export function ProfileScreen({ navigation }: Props) {
           <Text style={styles.username}>@{user.username}</Text>
           <Text style={styles.phone}>{user.phone}</Text>
         </View>
+      </View>
+
+      <Text style={styles.label}>Username</Text>
+      <View style={styles.usernameInputRow}>
+        <Text style={styles.usernamePrefix}>@</Text>
+        <TextInput
+          style={styles.usernameInput}
+          value={username}
+          onChangeText={(t) => setUsername(t.replace(/[^a-zA-Z0-9_]/g, ""))}
+          autoCapitalize="none"
+          autoCorrect={false}
+          maxLength={24}
+        />
       </View>
 
       <Text style={styles.label}>Ism</Text>
@@ -208,6 +227,17 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   bioInput: { minHeight: 80, textAlignVertical: "top" },
+  usernameInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+  },
+  usernamePrefix: { fontSize: 16, color: colors.textSecondary },
+  usernameInput: { flex: 1, fontSize: 16, paddingVertical: 12, color: colors.text },
   button: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 20 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   securityBox: { backgroundColor: colors.background, borderRadius: 8, padding: 16, marginTop: 24 },

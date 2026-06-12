@@ -4,7 +4,7 @@ const phoneSchema = z
   .string()
   .regex(/^\+[1-9]\d{7,14}$/, "Telefon raqam +998901234567 formatida bo'lishi kerak");
 
-const usernameSchema = z
+export const usernameSchema = z
   .string()
   .min(3, "Username kamida 3 ta belgidan iborat bo'lishi kerak")
   .max(24, "Username 24 ta belgidan oshmasligi kerak")

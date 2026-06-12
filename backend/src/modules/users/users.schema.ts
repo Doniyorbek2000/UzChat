@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { passwordSchema } from "../auth/auth.schema";
+import { passwordSchema, usernameSchema } from "../auth/auth.schema";
 
 export const updateProfileSchema = z.object({
+  username: usernameSchema.optional(),
   displayName: z.string().min(1).max(64).optional(),
   bio: z.string().max(256).optional(),
   avatarUrl: z.string().url().optional(),
