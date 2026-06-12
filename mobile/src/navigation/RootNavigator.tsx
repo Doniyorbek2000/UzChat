@@ -46,6 +46,7 @@ import { useWallpaperStore } from "../store/wallpaperStore";
 import { useChatSettingsStore } from "../store/chatSettingsStore";
 import { useContactsStore } from "../store/contactsStore";
 import { useRecentEmojiStore } from "../store/recentEmojiStore";
+import { useVerifiedContactsStore } from "../store/verifiedContactsStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
 import { colors } from "../theme/colors";
@@ -100,13 +101,15 @@ export function RootNavigator() {
   const wallpaperBootstrap = useWallpaperStore((s) => s.bootstrap);
   const chatSettingsBootstrap = useChatSettingsStore((s) => s.bootstrap);
   const recentEmojiBootstrap = useRecentEmojiStore((s) => s.bootstrap);
+  const verifiedContactsBootstrap = useVerifiedContactsStore((s) => s.bootstrap);
 
   useEffect(() => {
     bootstrap();
     wallpaperBootstrap();
     chatSettingsBootstrap();
     recentEmojiBootstrap();
-  }, [bootstrap, wallpaperBootstrap, chatSettingsBootstrap, recentEmojiBootstrap]);
+    verifiedContactsBootstrap();
+  }, [bootstrap, wallpaperBootstrap, chatSettingsBootstrap, recentEmojiBootstrap, verifiedContactsBootstrap]);
 
   useEffect(() => {
     if (isAuthenticated) appLockBootstrap();
