@@ -17,7 +17,7 @@ import {
   sendOtpSms,
   verifyOtpCode,
 } from "../../utils/otp";
-import { LoginInput, RequestOtpInput, VerifyOtpInput, VerifyTwoFactorInput } from "./auth.schema";
+import { LoginInput, RequestOtpInput, VerifyOtpInput, VerifyTwoFactorInput, usernameSchema } from "./auth.schema";
 import { env } from "../../config/env";
 import { pushService } from "../push/push.service";
 import { formatDeviceName } from "../../utils/device";
@@ -82,6 +82,12 @@ function toPublicUser(user: {
 }
 
 export const authService = {
+  async isUsernameAvailable(username: string) {
+    if (!usernameSchema.safeParse(username).success) return false;
+    const existing = await prisma.user.findUnique({ where: { username } });
+    return !existing;
+  },
+
   async requestRegistrationOtp({ phone }: RequestOtpInput) {
     const existing = await prisma.user.findUnique({ where: { phone } });
     if (existing) {

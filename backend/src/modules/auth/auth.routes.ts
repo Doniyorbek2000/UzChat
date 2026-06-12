@@ -2,10 +2,12 @@ import { Router } from "express";
 import { authController } from "./auth.controller";
 import { validateBody } from "../../utils/validate";
 import { loginSchema, refreshSchema, requestOtpSchema, verifyOtpSchema, verifyTwoFactorSchema } from "./auth.schema";
-import { authRateLimiter } from "../../middleware/rateLimit.middleware";
+import { authRateLimiter, apiRateLimiter } from "../../middleware/rateLimit.middleware";
 import { requireAuth } from "../../middleware/auth.middleware";
 
 export const authRouter = Router();
+
+authRouter.get("/check-username", apiRateLimiter, authController.checkUsername);
 
 authRouter.post(
   "/register/request-otp",

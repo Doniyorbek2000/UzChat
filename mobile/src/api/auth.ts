@@ -2,6 +2,12 @@ import { apiClient } from "./client";
 import { AuthTokens, AuthUser, LoginResult, Session } from "../types";
 
 export const authApi = {
+  checkUsername(username: string) {
+    return apiClient
+      .get<{ available: boolean }>("/auth/check-username", { params: { username } })
+      .then((r) => r.data.available);
+  },
+
   requestRegisterOtp(phone: string) {
     return apiClient.post("/auth/register/request-otp", { phone });
   },

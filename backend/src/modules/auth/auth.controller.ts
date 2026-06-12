@@ -2,6 +2,16 @@ import { Request, Response, NextFunction } from "express";
 import { authService } from "./auth.service";
 
 export const authController = {
+  async checkUsername(req: Request, res: Response, next: NextFunction) {
+    try {
+      const username = String(req.query.username ?? "");
+      const available = await authService.isUsernameAvailable(username);
+      res.json({ available });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async requestOtp(req: Request, res: Response, next: NextFunction) {
     try {
       await authService.requestRegistrationOtp(req.body);

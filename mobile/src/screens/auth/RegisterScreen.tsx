@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
+import { authApi } from "../../api/auth";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Register">;
+
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,24}$/;
 
 export function RegisterScreen({ navigation }: Props) {
   const requestRegisterOtp = useAuthStore((s) => s.requestRegisterOtp);
@@ -14,10 +17,35 @@ export function RegisterScreen({ navigation }: Props) {
   const [phone, setPhone] = useState("+998");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (checkTimer.current) clearTimeout(checkTimer.current);
+    const trimmed = username.trim();
+    if (!USERNAME_PATTERN.test(trimmed)) {
+      setUsernameStatus("idle");
+      return;
+    }
+    setUsernameStatus("checking");
+    checkTimer.current = setTimeout(() => {
+      authApi
+        .checkUsername(trimmed)
+        .then((available) => setUsernameStatus(available ? "available" : "taken"))
+        .catch(() => setUsernameStatus("idle"));
+    }, 500);
+    return () => {
+      if (checkTimer.current) clearTimeout(checkTimer.current);
+    };
+  }, [username]);
 
   const onSubmit = async () => {
     if (!displayName || !username || !phone || !password) {
       Alert.alert("Xatolik", "Barcha maydonlarni to'ldiring");
+      return;
+    }
+    if (usernameStatus === "taken") {
+      Alert.alert("Xatolik", "Bu username band");
       return;
     }
     setLoading(true);
@@ -41,13 +69,20 @@ export function RegisterScreen({ navigation }: Props) {
       <Text style={styles.title}>Ro'yxatdan o'tish</Text>
 
       <TextInput style={styles.input} placeholder="Ismingiz" value={displayName} onChangeText={setDisplayName} />
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-      />
+      <View style={styles.usernameWrapper}>
+        <TextInput
+          style={[styles.input, styles.usernameInput]}
+          placeholder="Username"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+        {usernameStatus === "checking" && <ActivityIndicator style={styles.usernameStatusIcon} size="small" color={colors.textSecondary} />}
+        {usernameStatus === "available" && <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>}
+        {usernameStatus === "taken" && <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>}
+      </View>
+      {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
+      {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
       <TextInput
         style={styles.input}
         placeholder="+998901234567"
@@ -97,4 +132,10 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   link: { color: colors.primary, textAlign: "center", marginTop: 20, fontSize: 14 },
+  usernameWrapper: { position: "relative" },
+  usernameInput: { paddingRight: 40 },
+  usernameStatusIcon: { position: "absolute", right: 14, top: 14, fontSize: 18, fontWeight: "700" },
+  usernameAvailable: { color: colors.online },
+  usernameTaken: { color: colors.danger },
+  usernameHint: { fontSize: 12, color: colors.danger, marginTop: -8, marginBottom: 8, marginLeft: 4 },
 });
