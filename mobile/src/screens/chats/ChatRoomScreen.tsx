@@ -1276,7 +1276,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
 
     const isOwn = item.senderId === user?.id;
-    const sender = conversation?.participants.find((p) => p.userId === item.senderId)?.user;
+    const senderParticipant = conversation?.participants.find((p) => p.userId === item.senderId);
+    const sender = senderParticipant?.user;
     const isSticker =
       item.type === "TEXT" && !item.deletedAt && !item.decryptFailed && isEmojiOnlyMessage(item.text ?? "");
 
@@ -1341,7 +1342,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         >
           {isGroup && !isOwn && sender && (
             <TouchableOpacity onPress={() => navigation.navigate("UserProfile", { userId: sender.id })}>
-              <Text style={styles.senderName}>{contactAliases[sender.id] ?? sender.displayName}</Text>
+              <Text style={styles.senderName}>
+                {contactAliases[sender.id] ?? sender.displayName}
+                {senderParticipant?.customTitle && <Text style={styles.senderTitle}> · {senderParticipant.customTitle}</Text>}
+              </Text>
             </TouchableOpacity>
           )}
           {item.forwardedFromName && !item.deletedAt && (
@@ -2280,6 +2284,7 @@ const styles = StyleSheet.create({
   bubbleHighlighted: { borderWidth: 2, borderColor: colors.primary },
   bubbleSticker: { backgroundColor: "transparent", paddingHorizontal: 0, paddingVertical: 0 },
   senderName: { fontSize: 12, fontWeight: "600", color: colors.primaryDark, marginBottom: 2 },
+  senderTitle: { fontSize: 12, fontWeight: "400", color: colors.textSecondary },
   forwardedLabel: { fontSize: 11, color: colors.textSecondary, fontStyle: "italic", marginBottom: 2 },
   replyBox: { flexDirection: "row", marginBottom: 6, opacity: 0.85 },
   replyBar: { width: 3, borderRadius: 2, backgroundColor: colors.primary, marginRight: 6 },

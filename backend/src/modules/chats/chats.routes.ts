@@ -10,6 +10,7 @@ import {
   setNoForwardsSchema,
   updateConversationSchema,
   updateDisappearingMessagesSchema,
+  updateParticipantCustomTitleSchema,
   updateParticipantRestrictionSchema,
   updateParticipantRoleSchema,
   updatePreferencesSchema,
@@ -53,6 +54,11 @@ chatsRouter.patch(
   "/:id/participants/:userId/restrict",
   validateBody(updateParticipantRestrictionSchema),
   chatsController.updateParticipantRestriction
+);
+chatsRouter.patch(
+  "/:id/participants/:userId/title",
+  validateBody(updateParticipantCustomTitleSchema),
+  chatsController.updateParticipantCustomTitle
 );
 
 chatsRouter.get("/:id/join-requests", chatsController.listJoinRequests);

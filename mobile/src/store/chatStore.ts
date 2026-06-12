@@ -170,6 +170,7 @@ interface ChatState {
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;
   updateParticipantRole: (conversationId: string, userId: string, role: ParticipantRole) => Promise<void>;
   restrictParticipant: (conversationId: string, userId: string, restrictFor: RestrictDuration) => Promise<void>;
+  updateParticipantCustomTitle: (conversationId: string, userId: string, customTitle: string | null) => Promise<void>;
   leaveGroup: (conversationId: string) => Promise<void>;
   createInviteLink: (conversationId: string, options?: { expiresInSeconds?: number | null; maxUses?: number | null }) => Promise<string>;
   revokeInviteLink: (conversationId: string) => Promise<void>;
@@ -1055,6 +1056,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   restrictParticipant: async (conversationId, userId, restrictFor) => {
     const updated = await chatsApi.restrictParticipant(conversationId, userId, restrictFor);
+    set((state) => {
+      const existing = state.conversations.find((c) => c.id === conversationId);
+      const merged = existing
+        ? {
+            ...updated,
+            wrappedKey: existing.wrappedKey,
+            wrappedKeyNonce: existing.wrappedKeyNonce,
+            keySenderPublicKey: existing.keySenderPublicKey,
+          }
+        : updated;
+      return { conversations: upsertConversation(state.conversations, merged) };
+    });
+  },
+
+  updateParticipantCustomTitle: async (conversationId, userId, customTitle) => {
+    const updated = await chatsApi.updateParticipantCustomTitle(conversationId, userId, customTitle);
     set((state) => {
       const existing = state.conversations.find((c) => c.id === conversationId);
       const merged = existing

@@ -340,4 +340,15 @@ export const chatsController = {
       next(err);
     }
   },
+
+  async updateParticipantCustomTitle(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, userId } = req.params;
+      const conversation = await chatsService.updateParticipantCustomTitle(req.user!.sub, id, userId, req.body.customTitle);
+      getIo().to(`conversation:${id}`).emit("conversation:updated", conversation);
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

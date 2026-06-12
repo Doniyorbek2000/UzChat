@@ -46,6 +46,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const removeParticipant = useChatStore((s) => s.removeParticipant);
   const updateParticipantRole = useChatStore((s) => s.updateParticipantRole);
   const restrictParticipant = useChatStore((s) => s.restrictParticipant);
+  const updateParticipantCustomTitle = useChatStore((s) => s.updateParticipantCustomTitle);
   const leaveGroup = useChatStore((s) => s.leaveGroup);
   const clearHistory = useChatStore((s) => s.clearHistory);
   const createInviteLink = useChatStore((s) => s.createInviteLink);
@@ -304,6 +305,21 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           onPress: () => updateParticipantRole(conversationId, participant.userId, "MEMBER").catch(() => {
             Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
           }),
+        });
+        options.push({
+          text: participant.customTitle ? "Maxsus unvonni o'zgartirish" : "Maxsus unvon belgilash",
+          onPress: () => {
+            Alert.prompt(
+              "Maxsus unvon",
+              "Adminning ismi yonida ko'rinadigan unvon (masalan, Moderator). Bo'sh qoldirsangiz, \"Admin\" ko'rsatiladi.",
+              (text) =>
+                updateParticipantCustomTitle(conversationId, participant.userId, (text ?? "").trim() || null).catch(() => {
+                  Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                }),
+              "plain-text",
+              participant.customTitle ?? ""
+            );
+          },
         });
       }
       options.push({
@@ -635,7 +651,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
               {contactAliases[item.userId] ?? item.user.displayName}
               {item.userId === user?.id ? " (Siz)" : ""}
             </Text>
-            {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{ROLE_LABELS[item.role]}</Text>}
+            {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{item.customTitle || ROLE_LABELS[item.role]}</Text>}
             {isParticipantRestricted(item) && <Text style={styles.restrictedBadge}>🔇</Text>}
           </TouchableOpacity>
         )}

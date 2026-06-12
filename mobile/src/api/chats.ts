@@ -122,6 +122,12 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
+  updateParticipantCustomTitle(conversationId: string, userId: string, customTitle: string | null) {
+    return apiClient
+      .patch<Conversation>(`/conversations/${conversationId}/participants/${userId}/title`, { customTitle })
+      .then((r) => r.data);
+  },
+
   leave(conversationId: string) {
     return apiClient.post(`/conversations/${conversationId}/leave`);
   },

@@ -83,6 +83,15 @@ export const updateParticipantRestrictionSchema = z.object({
   restrictFor: z.enum(["1h", "1d", "1w", "forever", "off"]),
 });
 
+export const updateParticipantCustomTitleSchema = z.object({
+  // Custom label shown instead of "Admin"/"Owner" for this participant; null clears it.
+  customTitle: z
+    .string()
+    .trim()
+    .max(16, "Unvon 16 ta belgidan oshmasligi kerak")
+    .nullable(),
+});
+
 export const updatePreferencesSchema = z
   .object({
     isPinned: z.boolean().optional(),
@@ -132,6 +141,7 @@ export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
 export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSchema>;
 export type UpdateParticipantRestrictionInput = z.infer<typeof updateParticipantRestrictionSchema>;
+export type UpdateParticipantCustomTitleInput = z.infer<typeof updateParticipantCustomTitleSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
 export type CreateInviteLinkInput = z.infer<typeof createInviteLinkSchema>;

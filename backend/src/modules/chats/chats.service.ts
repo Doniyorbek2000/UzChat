@@ -232,6 +232,7 @@ export const chatsService = {
             user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
             lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
             restrictedUntil: cp.restrictedUntil,
+            customTitle: cp.customTitle,
           })),
           lastMessage:
             p.clearedAt && p.conversation.messages[0] && p.conversation.messages[0].createdAt <= p.clearedAt
@@ -308,6 +309,7 @@ export const chatsService = {
         user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
         lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
         restrictedUntil: cp.restrictedUntil,
+        customTitle: cp.customTitle,
       })),
     };
   },
@@ -1139,6 +1141,33 @@ export const chatsService = {
       targetUserId,
       restrictFor
     );
+
+    return chatsService.getConversation(userId, conversationId);
+  },
+
+  async updateParticipantCustomTitle(userId: string, conversationId: string, targetUserId: string, customTitle: string | null) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.GROUP) {
+      throw Errors.badRequest("Faqat guruhda unvon belgilash mumkin");
+    }
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester || requester.role !== ParticipantRole.OWNER) throw Errors.forbidden();
+
+    const target = conversation.participants.find((p) => p.userId === targetUserId);
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+    if (target.role === ParticipantRole.MEMBER) {
+      throw Errors.badRequest("Faqat admin va guruh egasiga unvon belgilash mumkin");
+    }
+
+    await prisma.conversationParticipant.update({
+      where: { id: target.id },
+      data: { customTitle: customTitle || null },
+    });
 
     return chatsService.getConversation(userId, conversationId);
   },

@@ -51,6 +51,7 @@ export interface ConversationParticipant {
   user: User;
   lastReadAt: string | null;
   restrictedUntil: string | null;
+  customTitle: string | null;
 }
 
 export interface MessageReaction {

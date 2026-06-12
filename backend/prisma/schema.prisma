@@ -344,6 +344,9 @@ model ConversationParticipant {
   // GROUP only: when set and in the future, this MEMBER cannot send messages
   // until this time (admin-imposed restriction).
   restrictedUntil DateTime?
+  // GROUP only: optional custom label shown instead of "Admin"/"Owner" for this
+  // participant (e.g. "Moderator"). Settable by the group owner.
+  customTitle     String?
 
   @@unique([conversationId, userId])
   @@index([userId])
