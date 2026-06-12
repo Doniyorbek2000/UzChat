@@ -39,7 +39,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useWallpaperStore } from "../../store/wallpaperStore";
 import { useChatSettingsStore } from "../../store/chatSettingsStore";
 import { useRecentEmojiStore } from "../../store/recentEmojiStore";
-import { getWallpaperColor } from "../../theme/wallpapers";
+import { getCustomWallpaperUri, getWallpaperColor } from "../../theme/wallpapers";
 import { ConversationParticipant, MessageReaction, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
@@ -330,6 +330,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const wallpaperId = useWallpaperStore((s) => s.getWallpaperId(conversationId));
   const wallpaperColor = getWallpaperColor(wallpaperId);
+  const customWallpaperUri = getCustomWallpaperUri(wallpaperId);
   const fontScale = useChatSettingsStore((s) => s.fontScale);
   const recentEmojis = useRecentEmojiStore((s) => s.recentEmojis);
   const recordEmoji = useRecentEmojiStore((s) => s.recordEmoji);
@@ -1498,10 +1499,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   return (
     <>
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: wallpaperColor }]}
+      style={[styles.container, { backgroundColor: customWallpaperUri ? "transparent" : wallpaperColor }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
+      {customWallpaperUri && (
+        <Image source={{ uri: customWallpaperUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+      )}
       {pinnedPreview && (
         <TouchableOpacity style={styles.pinnedBar} onPress={onPinnedBarPress}>
           <Text style={styles.pinnedIcon}>📌</Text>

@@ -23,3 +23,15 @@ export const CHAT_WALLPAPERS: ChatWallpaper[] = [
 export function getWallpaperColor(wallpaperId: string | undefined): string {
   return CHAT_WALLPAPERS.find((w) => w.id === wallpaperId)?.color ?? colors.background;
 }
+
+// A custom wallpaper (picked from the gallery) is stored as "custom:<local file uri>".
+const CUSTOM_WALLPAPER_PREFIX = "custom:";
+
+export function getCustomWallpaperUri(wallpaperId: string | undefined): string | null {
+  if (!wallpaperId || !wallpaperId.startsWith(CUSTOM_WALLPAPER_PREFIX)) return null;
+  return wallpaperId.slice(CUSTOM_WALLPAPER_PREFIX.length);
+}
+
+export function makeCustomWallpaperId(uri: string): string {
+  return `${CUSTOM_WALLPAPER_PREFIX}${uri}`;
+}
