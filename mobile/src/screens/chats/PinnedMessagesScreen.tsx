@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -31,10 +32,31 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
   const contactAliases = useChatStore((s) => s.contactAliases);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const unpinMessage = useChatStore((s) => s.unpinMessage);
+  const unpinAllMessages = useChatStore((s) => s.unpinAllMessages);
   const user = useAuthStore((s) => s.user);
 
   const pinnedMessages = conversation?.pinnedMessages ?? [];
   const conversationKey = conversation ? getConversationKey(conversation) : null;
+
+  const onUnpinAll = () => {
+    Alert.alert("Hammasini yechish", "Barcha qadalgan xabarlar olib tashlansinmi?", [
+      { text: "Bekor qilish", style: "cancel" },
+      { text: "Olib tashlash", style: "destructive", onPress: () => unpinAllMessages(conversationId).catch(() => {}) },
+    ]);
+  };
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight:
+        pinnedMessages.length > 0
+          ? () => (
+              <TouchableOpacity onPress={onUnpinAll} hitSlop={8}>
+                <Text style={styles.unpinAllButton}>Hammasini yechish</Text>
+              </TouchableOpacity>
+            )
+          : undefined,
+    });
+  }, [navigation, pinnedMessages.length]);
 
   const getAuthorName = (senderId: string) => {
     if (senderId === user?.id) return "Siz";
@@ -98,6 +120,7 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
   preview: { fontSize: 14, color: colors.text, marginTop: 2 },
   unpinIcon: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
+  unpinAllButton: { fontSize: 14, color: colors.danger, fontWeight: "600" },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 12 },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },

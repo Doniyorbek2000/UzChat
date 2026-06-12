@@ -27,6 +27,7 @@ chatsRouter.patch("/:id", validateBody(updateConversationSchema), chatsControlle
 chatsRouter.patch("/:id/preferences", validateBody(updatePreferencesSchema), chatsController.updatePreferences);
 chatsRouter.put("/:id/pinned-messages/:messageId", chatsController.pinMessage);
 chatsRouter.delete("/:id/pinned-messages/:messageId", chatsController.unpinMessage);
+chatsRouter.delete("/:id/pinned-messages", chatsController.unpinAllMessages);
 chatsRouter.put(
   "/:id/disappearing-messages",
   validateBody(updateDisappearingMessagesSchema),

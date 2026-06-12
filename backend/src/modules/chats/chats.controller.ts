@@ -105,6 +105,16 @@ export const chatsController = {
     }
   },
 
+  async unpinAllMessages(req: Request, res: Response, next: NextFunction) {
+    try {
+      const conversation = await chatsService.unpinAllMessages(req.user!.sub, req.params.id);
+      getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async setDisappearingMessages(req: Request, res: Response, next: NextFunction) {
     try {
       const conversation = await chatsService.setDisappearingMessages(

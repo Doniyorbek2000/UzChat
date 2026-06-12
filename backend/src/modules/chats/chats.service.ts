@@ -349,6 +349,14 @@ export const chatsService = {
     return chatsService.getConversation(userId, conversationId);
   },
 
+  async unpinAllMessages(userId: string, conversationId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    await prisma.pinnedMessage.deleteMany({ where: { conversationId } });
+
+    return chatsService.getConversation(userId, conversationId);
+  },
+
   async setDisappearingMessages(userId: string, conversationId: string, disappearingSeconds: number | null) {
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },

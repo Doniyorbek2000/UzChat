@@ -136,6 +136,7 @@ interface ChatState {
   clearHistory: (conversationId: string) => Promise<void>;
   pinMessage: (conversationId: string, messageId: string) => Promise<void>;
   unpinMessage: (conversationId: string, messageId: string) => Promise<void>;
+  unpinAllMessages: (conversationId: string) => Promise<void>;
   setDisappearingMessages: (conversationId: string, disappearingSeconds: number | null) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
@@ -912,6 +913,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
     const updated = await chatsApi.unpinMessage(conversationId, messageId);
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
+  unpinAllMessages: async (conversationId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.unpinAllMessages(conversationId);
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));
