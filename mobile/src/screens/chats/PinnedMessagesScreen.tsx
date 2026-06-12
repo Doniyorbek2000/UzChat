@@ -37,6 +37,8 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
 
   const pinnedMessages = conversation?.pinnedMessages ?? [];
   const conversationKey = conversation ? getConversationKey(conversation) : null;
+  const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
+  const canManagePins = conversation?.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
 
   const onUnpinAll = () => {
     Alert.alert("Hammasini yechish", "Barcha qadalgan xabarlar olib tashlansinmi?", [
@@ -48,7 +50,7 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
   useEffect(() => {
     navigation.setOptions({
       headerRight:
-        pinnedMessages.length > 0
+        pinnedMessages.length > 0 && canManagePins
           ? () => (
               <TouchableOpacity onPress={onUnpinAll} hitSlop={8}>
                 <Text style={styles.unpinAllButton}>Hammasini yechish</Text>
@@ -56,7 +58,7 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
             )
           : undefined,
     });
-  }, [navigation, pinnedMessages.length]);
+  }, [navigation, pinnedMessages.length, canManagePins]);
 
   const getAuthorName = (senderId: string) => {
     if (senderId === user?.id) return "Siz";
@@ -95,9 +97,11 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
                   {preview ? getPreviewLabel(preview) : "🔒 Xabarni ochib bo'lmadi"}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => onUnpin(item)} hitSlop={8}>
-                <Text style={styles.unpinIcon}>✕</Text>
-              </TouchableOpacity>
+              {canManagePins && (
+                <TouchableOpacity onPress={() => onUnpin(item)} hitSlop={8}>
+                  <Text style={styles.unpinIcon}>✕</Text>
+                </TouchableOpacity>
+              )}
             </TouchableOpacity>
           );
         }}

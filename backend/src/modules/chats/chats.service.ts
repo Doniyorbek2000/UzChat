@@ -330,7 +330,7 @@ export const chatsService = {
   },
 
   async pinMessage(userId: string, conversationId: string, messageId: string) {
-    await chatsService.assertParticipant(userId, conversationId);
+    await chatsService.assertCanManagePins(userId, conversationId);
 
     const message = await prisma.message.findUnique({ where: { id: messageId } });
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
@@ -356,7 +356,7 @@ export const chatsService = {
   },
 
   async unpinMessage(userId: string, conversationId: string, messageId: string) {
-    await chatsService.assertParticipant(userId, conversationId);
+    await chatsService.assertCanManagePins(userId, conversationId);
 
     await prisma.pinnedMessage.deleteMany({ where: { conversationId, messageId } });
 
@@ -364,7 +364,7 @@ export const chatsService = {
   },
 
   async unpinAllMessages(userId: string, conversationId: string) {
-    await chatsService.assertParticipant(userId, conversationId);
+    await chatsService.assertCanManagePins(userId, conversationId);
 
     await prisma.pinnedMessage.deleteMany({ where: { conversationId } });
 
@@ -645,6 +645,27 @@ export const chatsService = {
     });
     if (!participant) throw Errors.forbidden();
     return participant;
+  },
+
+  /** In a GROUP, only OWNER/ADMIN can pin/unpin messages; in a DIRECT chat, either participant can. */
+  async assertCanManagePins(userId: string, conversationId: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester) throw Errors.forbidden();
+    if (
+      conversation.type === ConversationType.GROUP &&
+      requester.role !== ParticipantRole.OWNER &&
+      requester.role !== ParticipantRole.ADMIN
+    ) {
+      throw Errors.forbidden();
+    }
+
+    return conversation;
   },
 
   /** Throws if `inviterId` is not allowed to add any of `targets` to a group, per their groupAddPrivacy. */

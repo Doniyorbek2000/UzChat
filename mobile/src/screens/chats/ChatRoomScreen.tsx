@@ -1278,9 +1278,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.pinnedListIcon}>☰</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity onPress={onUnpinLatest} hitSlop={8}>
-            <Text style={styles.pinnedClose}>✕</Text>
-          </TouchableOpacity>
+          {(!isGroup || myRole === "OWNER" || myRole === "ADMIN") && (
+            <TouchableOpacity onPress={onUnpinLatest} hitSlop={8}>
+              <Text style={styles.pinnedClose}>✕</Text>
+            </TouchableOpacity>
+          )}
         </TouchableOpacity>
       )}
       <FlatList
@@ -1518,23 +1520,25 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </Text>
             </TouchableOpacity>
           )}
-          {actionMessage && !actionMessage.deletedAt && (
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => {
-                const message = actionMessage;
-                setActionMessage(null);
-                const isPinned = pinnedMessages.some((pm) => pm.id === message.id);
-                (isPinned ? unpinMessage(conversationId, message.id) : pinMessage(conversationId, message.id)).catch(
-                  () => {}
-                );
-              }}
-            >
-              <Text style={styles.actionButtonText}>
-                {pinnedMessages.some((pm) => pm.id === actionMessage.id) ? "📌 Qadashni bekor qilish" : "📌 Qadash"}
-              </Text>
-            </TouchableOpacity>
-          )}
+          {actionMessage &&
+            !actionMessage.deletedAt &&
+            (!isGroup || myRole === "OWNER" || myRole === "ADMIN") && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  const isPinned = pinnedMessages.some((pm) => pm.id === message.id);
+                  (isPinned ? unpinMessage(conversationId, message.id) : pinMessage(conversationId, message.id)).catch(
+                    () => {}
+                  );
+                }}
+              >
+                <Text style={styles.actionButtonText}>
+                  {pinnedMessages.some((pm) => pm.id === actionMessage.id) ? "📌 Qadashni bekor qilish" : "📌 Qadash"}
+                </Text>
+              </TouchableOpacity>
+            )}
           {actionMessage && isGroup && actionMessage.senderId === user?.id && !actionMessage.deletedAt && (
             <TouchableOpacity
               style={styles.actionButton}
