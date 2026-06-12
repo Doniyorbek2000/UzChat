@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Share } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
@@ -66,6 +66,10 @@ export function ProfileScreen({ navigation }: Props) {
     } finally {
       setUploadingAvatar(false);
     }
+  };
+
+  const onShare = () => {
+    Share.share({ message: `UzChat'da menga qo'shilish uchun: @${user.username}` }).catch(() => {});
   };
 
   const onLogout = () => {
@@ -151,6 +155,11 @@ export function ProfileScreen({ navigation }: Props) {
           xabar matnini ko'rmaydi.
         </Text>
       </View>
+
+      <TouchableOpacity style={styles.menuRow} onPress={onShare}>
+        <Text style={styles.menuRowText}>📤 Profilni ulashish</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("StarredMessages")}>
         <Text style={styles.menuRowText}>⭐ Saqlangan xabarlar</Text>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Share } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
@@ -48,6 +48,11 @@ export function UserProfileScreen({ route, navigation }: Props) {
     }
   };
 
+  const onShare = () => {
+    if (!profile) return;
+    Share.share({ message: `UzChat'da menga qo'shilish uchun: @${profile.username}` }).catch(() => {});
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -93,6 +98,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("CommonGroups", { userId: profile.id })}>
           <Text style={styles.actionIcon}>👥</Text>
           <Text style={styles.actionText}>Umumiy guruhlar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionRow} onPress={onShare}>
+          <Text style={styles.actionIcon}>📤</Text>
+          <Text style={styles.actionText}>Profilni ulashish</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
