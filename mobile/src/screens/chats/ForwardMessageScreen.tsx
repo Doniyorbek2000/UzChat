@@ -10,6 +10,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -31,6 +32,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [comment, setComment] = useState("");
+  const [hideSender, setHideSender] = useState(false);
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -60,7 +62,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
     try {
       for (const targetId of selectedIds) {
         for (const messageId of messageIds) {
-          await forwardMessage(conversationId, messageId, targetId);
+          await forwardMessage(conversationId, messageId, targetId, hideSender);
         }
         if (trimmedComment) {
           await sendTextMessage(targetId, trimmedComment);
@@ -127,6 +129,10 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
       />
       {selectedIds.size > 0 && (
         <View style={styles.footer}>
+          <View style={styles.hideSenderRow}>
+            <Text style={styles.hideSenderText}>Muallifni yashirish</Text>
+            <Switch value={hideSender} onValueChange={setHideSender} disabled={sending} />
+          </View>
           <TextInput
             style={styles.commentInput}
             placeholder="Izoh qo'shish (ixtiyoriy)"
@@ -182,6 +188,8 @@ const styles = StyleSheet.create({
   checkboxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   checkboxIcon: { color: "#fff", fontSize: 14, fontWeight: "700" },
   footer: { padding: 12, gap: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  hideSenderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  hideSenderText: { fontSize: 14, color: colors.text },
   commentInput: {
     backgroundColor: colors.background,
     borderRadius: 10,

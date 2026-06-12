@@ -123,7 +123,12 @@ interface ChatState {
   editMessage: (conversationId: string, messageId: string, text: string, mentions?: string[]) => Promise<void>;
   toggleReaction: (conversationId: string, messageId: string, emoji: string) => Promise<void>;
   toggleStar: (conversationId: string, messageId: string) => Promise<void>;
-  forwardMessage: (sourceConversationId: string, messageId: string, targetConversationId: string) => Promise<void>;
+  forwardMessage: (
+    sourceConversationId: string,
+    messageId: string,
+    targetConversationId: string,
+    hideSender?: boolean
+  ) => Promise<void>;
   createDirectConversation: (target: User) => Promise<Conversation>;
   getOrCreateSavedMessages: () => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
@@ -694,7 +699,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
-  forwardMessage: async (sourceConversationId, messageId, targetConversationId) => {
+  forwardMessage: async (sourceConversationId, messageId, targetConversationId, hideSender) => {
     const sourceConversation = get().conversations.find((c) => c.id === sourceConversationId);
     const targetConversation = get().conversations.find((c) => c.id === targetConversationId);
     if (!sourceConversation || !targetConversation) throw new Error("Suhbat topilmadi");
@@ -707,12 +712,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     const currentUser = useAuthStore.getState().user;
     const aliases = get().contactAliases;
-    const forwardedFromName =
-      message.forwardedFromName ??
-      (message.senderId === currentUser?.id
-        ? currentUser.displayName
-        : aliases[message.senderId] ??
-          sourceConversation.participants.find((p) => p.userId === message.senderId)?.user.displayName);
+    const forwardedFromName = hideSender
+      ? undefined
+      : message.forwardedFromName ??
+        (message.senderId === currentUser?.id
+          ? currentUser.displayName
+          : aliases[message.senderId] ??
+            sourceConversation.participants.find((p) => p.userId === message.senderId)?.user.displayName);
 
     let sentMessage: Message;
     if (MEDIA_TYPES.includes(message.type) && message.mediaUrl && message.meta) {
