@@ -19,6 +19,8 @@ import {
 } from "../../utils/otp";
 import { LoginInput, RequestOtpInput, VerifyOtpInput, VerifyTwoFactorInput } from "./auth.schema";
 import { env } from "../../config/env";
+import { pushService } from "../push/push.service";
+import { formatDeviceName } from "../../utils/device";
 
 function msFromExpiresIn(expiresIn: string): number {
   const match = /^(\d+)([smhd])$/.exec(expiresIn);
@@ -45,6 +47,18 @@ async function issueTokens(user: { id: string; username: string }, userAgent?: s
   });
 
   return { accessToken, refreshToken };
+}
+
+// Alerts the user's other devices that a new session was started, in case
+// their account credentials were compromised.
+function notifyNewLogin(userId: string, userAgent?: string | null) {
+  pushService
+    .sendToUsers([userId], {
+      title: "Yangi kirish",
+      body: `Hisobingizga ${formatDeviceName(userAgent)} orqali yangi kirish amalga oshirildi`,
+      data: { type: "security" },
+    })
+    .catch(() => {});
 }
 
 function toPublicUser(user: {
@@ -143,6 +157,7 @@ export const authService = {
     await prisma.user.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });
 
     const tokens = await issueTokens(user, userAgent);
+    notifyNewLogin(user.id, userAgent);
     return { user: toPublicUser(user), ...tokens };
   },
 
@@ -163,6 +178,7 @@ export const authService = {
     await prisma.user.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });
 
     const tokens = await issueTokens(user, userAgent);
+    notifyNewLogin(user.id, userAgent);
     return { user: toPublicUser(user), ...tokens };
   },
 

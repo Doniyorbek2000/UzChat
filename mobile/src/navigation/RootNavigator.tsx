@@ -45,6 +45,15 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
+function navigateFromNotification(data?: MessageNotificationData) {
+  if (!navigationRef.isReady()) return;
+  if (data?.type === "security") {
+    navigationRef.navigate("ActiveSessions");
+    return;
+  }
+  navigateToConversation(data?.conversationId);
+}
+
 async function navigateToConversation(conversationId?: string) {
   if (!conversationId || !navigationRef.isReady()) return;
   const userId = useAuthStore.getState().user?.id;
@@ -107,11 +116,11 @@ export function RootNavigator() {
 
     const lastResponse = Notifications.getLastNotificationResponse();
     const lastData = lastResponse?.notification.request.content.data as MessageNotificationData | undefined;
-    navigateToConversation(lastData?.conversationId);
+    navigateFromNotification(lastData);
 
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data as MessageNotificationData;
-      navigateToConversation(data?.conversationId);
+      navigateFromNotification(data);
     });
     return () => subscription.remove();
   }, [isAuthenticated]);
