@@ -52,7 +52,7 @@ import { Avatar } from "../../components/Avatar";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
-import { formatTime } from "../../utils/conversation";
+import { formatTime, formatDateSeparator } from "../../utils/conversation";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { setActiveConversationId } from "../../utils/pushNotifications";
@@ -1254,12 +1254,24 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     navigation.setParams({ highlightMessageId: next.id });
   };
 
-  const renderItem = ({ item }: { item: DecryptedMessage }) => {
+  const renderItem = ({ item, index }: { item: DecryptedMessage; index: number }) => {
+    const previousItem = invertedData[index + 1];
+    const showDateSeparator =
+      !previousItem || new Date(item.createdAt).toDateString() !== new Date(previousItem.createdAt).toDateString();
+    const dateSeparator = showDateSeparator ? (
+      <View style={styles.dateSeparatorRow}>
+        <Text style={styles.dateSeparatorText}>{formatDateSeparator(item.createdAt)}</Text>
+      </View>
+    ) : null;
+
     if (item.type === "SYSTEM") {
       return (
-        <View style={styles.systemMessageRow}>
-          <Text style={styles.systemMessageText}>{item.text}</Text>
-        </View>
+        <>
+          {dateSeparator}
+          <View style={styles.systemMessageRow}>
+            <Text style={styles.systemMessageText}>{item.text}</Text>
+          </View>
+        </>
       );
     }
 
@@ -1305,7 +1317,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const selected = selectedIds.has(item.id);
 
     return (
-      <TouchableOpacity
+      <>
+        {dateSeparator}
+        <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => onPressMessage(item)}
         onLongPress={() => onLongPress(item)}
@@ -1385,7 +1399,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             )}
           </View>
         </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </>
     );
   };
 
@@ -2232,6 +2247,17 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     textAlign: "center",
+    overflow: "hidden",
+  },
+  dateSeparatorRow: { alignItems: "center", marginVertical: 10 },
+  dateSeparatorText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
     overflow: "hidden",
   },
   selectCheckbox: {
