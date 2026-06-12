@@ -638,6 +638,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     return contactAliases[senderId] ?? conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
   };
 
+  const formatActivityLabel = (userIds: Set<string> | undefined, suffix: string): string | null => {
+    if (!userIds || userIds.size === 0) return null;
+    const names = Array.from(userIds).map(getAuthorName).filter(Boolean);
+    if (names.length === 0) return null;
+    if (names.length === 1) return `${names[0]} ${suffix}`;
+    if (names.length === 2) return `${names[0]} va ${names[1]} ${suffix}`;
+    return `${names[0]}, ${names[1]} va yana ${names.length - 2} kishi ${suffix}`;
+  };
+
   const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
   const canMentionEveryone = !conversation || conversation.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
   const canForwardOrCopy =
@@ -1296,9 +1305,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         }
       />
       {recordingCount > 0 ? (
-        <Text style={styles.typing}>🎤 ovozli xabar yozmoqda...</Text>
+        <Text style={styles.typing}>🎤 {formatActivityLabel(recordingUsers, "ovozli xabar yozmoqda...")}</Text>
       ) : (
-        typingCount > 0 && <Text style={styles.typing}>yozmoqda...</Text>
+        typingCount > 0 && <Text style={styles.typing}>{formatActivityLabel(typingUsers, "yozmoqda...")}</Text>
       )}
       {editingMessage && (
         <View style={styles.replyPreviewBar}>
