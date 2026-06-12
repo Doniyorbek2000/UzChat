@@ -282,6 +282,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const scheduledCount = useChatStore((s) => s.scheduledMessagesByConversation[conversationId]?.length ?? 0);
 
   const [text, setText] = useState("");
+  const [selection, setSelection] = useState<{ start: number; end: number }>({ start: 0, end: 0 });
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -836,6 +837,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
   };
 
+  // Wraps the currently selected text with formatting markers (e.g. *bold*, _italic_).
+  const onFormatSelection = (open: string, close: string = open) => {
+    const { start, end } = selection;
+    if (start === end) return;
+    const before = text.slice(0, start);
+    const selected = text.slice(start, end);
+    const after = text.slice(end);
+    setText(`${before}${open}${selected}${close}${after}`);
+    setSelection({ start: 0, end: 0 });
+  };
+
   const onSelectMentionSuggestion = (username: string, userIds: string[]) => {
     setText((prev) => prev.replace(/@(\w*)$/, `@${username} `));
     setPendingMentions((prev) => Array.from(new Set([...prev, ...userIds])));
@@ -1387,6 +1399,25 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               ))}
             </View>
           )}
+          {selection.start !== selection.end && (
+            <View style={styles.formatToolbar}>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("*")}>
+                <Text style={[styles.formatButtonText, styles.boldText]}>B</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("_")}>
+                <Text style={[styles.formatButtonText, styles.italicText]}>I</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("~")}>
+                <Text style={[styles.formatButtonText, styles.strikeText]}>S</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("`")}>
+                <Text style={[styles.formatButtonText, styles.codeText]}>{"</>"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("||")}>
+                <Text style={styles.formatButtonText}>🙈</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           <View style={styles.inputRow}>
             <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage}>
               {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
@@ -1400,6 +1431,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               style={styles.input}
               value={text}
               onChangeText={onChangeText}
+              onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
               placeholder="Xabar yozing..."
               multiline
             />
@@ -2130,6 +2162,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     gap: 8,
   },
+  formatToolbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  formatButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  formatButtonText: { fontSize: 16, color: colors.text },
   recordingRow: {
     flexDirection: "row",
     alignItems: "center",
