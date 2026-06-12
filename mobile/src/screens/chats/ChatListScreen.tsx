@@ -36,6 +36,8 @@ export function ChatListScreen({ navigation }: Props) {
   const toggleArchive = useChatStore((s) => s.toggleArchive);
   const toggleUnread = useChatStore((s) => s.toggleUnread);
   const markAllRead = useChatStore((s) => s.markAllRead);
+  const clearHistory = useChatStore((s) => s.clearHistory);
+  const leaveGroup = useChatStore((s) => s.leaveGroup);
   const drafts = useChatStore((s) => s.drafts);
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const folders = useChatStore((s) => s.folders);
@@ -121,6 +123,24 @@ export function ChatListScreen({ navigation }: Props) {
     ]);
   };
 
+  const onClearHistoryPress = (item: Conversation) => {
+    Alert.alert("Suhbatni tozalash", "Barcha xabarlar faqat sizning ko'rinishingizdan o'chiriladi. Davom etilsinmi?", [
+      { text: "Bekor qilish", style: "cancel" },
+      { text: "Tozalash", style: "destructive", onPress: () => clearHistory(item.id).catch(() => {}) },
+    ]);
+  };
+
+  const onLeaveGroupPress = (item: Conversation) => {
+    Alert.alert("Guruhdan chiqish", "Haqiqatan ham guruhdan chiqmoqchimisiz?", [
+      { text: "Bekor qilish", style: "cancel" },
+      {
+        text: "Chiqish",
+        style: "destructive",
+        onPress: () => leaveGroup(item.id).catch(() => Alert.alert("Xatolik", "Guruhdan chiqib bo'lmadi")),
+      },
+    ]);
+  };
+
   const onLongPressConversation = (item: Conversation) => {
     Alert.alert(item.title ?? "Suhbat", undefined, [
       {
@@ -139,6 +159,8 @@ export function ChatListScreen({ navigation }: Props) {
         text: item.isArchived ? "📤 Arxivdan chiqarish" : "🗄 Arxivlash",
         onPress: () => toggleArchive(item.id).catch(() => {}),
       },
+      { text: "🗑 Suhbatni tozalash", onPress: () => onClearHistoryPress(item) },
+      ...(item.type === "GROUP" ? [{ text: "🚪 Guruhdan chiqish", onPress: () => onLeaveGroupPress(item) }] : []),
       { text: "Bekor qilish", style: "cancel" },
     ]);
   };
