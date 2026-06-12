@@ -2,6 +2,7 @@ import { ContactStatus } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { filterLastSeen, filterLastSeenSingle, getContactIds } from "../../utils/lastSeen";
+import { pushService } from "../push/push.service";
 import { UpdateContactInput } from "./contacts.schema";
 
 const userSummarySelect = {
@@ -34,6 +35,14 @@ export const contactsService = {
       data: { ownerId, targetId: target.id, status: ContactStatus.PENDING },
       include: { target: { select: userSummarySelect } },
     });
+
+    const sender = await prisma.user.findUnique({ where: { id: ownerId }, select: { displayName: true } });
+    await pushService.sendToUsers([target.id], {
+      title: "Yangi kontakt so'rovi",
+      body: `${sender?.displayName} sizni kontaktlar ro'yxatiga qo'shmoqchi`,
+      data: { type: "contact_request" },
+    });
+
     return { ...contact, target: await filterLastSeenSingle(ownerId, contact.target) };
   },
 
@@ -61,6 +70,13 @@ export const contactsService = {
         create: { ownerId: userId, targetId: request.ownerId, status: ContactStatus.ACCEPTED },
       }),
     ]);
+
+    const accepter = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+    await pushService.sendToUsers([request.ownerId], {
+      title: "Kontakt so'rovi qabul qilindi",
+      body: `${accepter?.displayName} so'rovingizni qabul qildi`,
+      data: { type: "contact_accepted" },
+    });
   },
 
   async declineRequest(userId: string, requestId: string) {
