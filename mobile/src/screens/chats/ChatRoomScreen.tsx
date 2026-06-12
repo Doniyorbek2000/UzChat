@@ -502,21 +502,43 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       return;
     }
 
+    const onPressHeaderTitle = () => {
+      if (conversation?.type === "GROUP") {
+        navigation.navigate("GroupInfo", { conversationId });
+      } else if (conversation?.type === "DIRECT" && !conversation.isSelf && otherUser) {
+        navigation.navigate("UserProfile", { userId: otherUser.id });
+      }
+    };
+    const headerTitleTappable = conversation?.type === "GROUP" || (conversation?.type === "DIRECT" && !conversation.isSelf);
+
     navigation.setOptions({
       title,
       headerLeft: undefined,
-      headerTitle: presenceLabel
-        ? () => (
-            <View style={styles.headerTitleContainer}>
-              <Text style={styles.headerTitleText} numberOfLines={1}>
-                {title}
-              </Text>
+      headerTitle: () => (
+        <TouchableOpacity
+          style={styles.headerTitleContainer}
+          onPress={onPressHeaderTitle}
+          disabled={!headerTitleTappable}
+          activeOpacity={0.6}
+        >
+          <Avatar
+            uri={conversation?.type === "GROUP" ? conversation.avatarUrl : otherUser?.avatarUrl}
+            name={title}
+            size={32}
+            icon={conversation?.isSelf ? "📝" : undefined}
+          />
+          <View style={styles.headerTitleTextContainer}>
+            <Text style={styles.headerTitleText} numberOfLines={1}>
+              {title}
+            </Text>
+            {!!presenceLabel && (
               <Text style={styles.headerSubtitle} numberOfLines={1}>
                 {presenceLabel}
               </Text>
-            </View>
-          )
-        : undefined,
+            )}
+          </View>
+        </TouchableOpacity>
+      ),
       headerRight: () => (
         <View style={styles.headerActions}>
           {scheduledCount > 0 && (
@@ -553,7 +575,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     conversationId,
     conversation?.type,
     conversation?.isBlocked,
+    conversation?.isSelf,
     conversation?.noForwards,
+    conversation?.avatarUrl,
     presenceLabel,
     otherUser,
     selectionMode,
@@ -2485,7 +2509,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   headerBadgeText: { color: "#fff", fontSize: 9, fontWeight: "700" },
-  headerTitleContainer: { alignItems: "center" },
+  headerTitleContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
+  headerTitleTextContainer: { alignItems: "flex-start" },
   headerTitleText: { fontSize: 17, fontWeight: "600", color: colors.text },
   headerSubtitle: { fontSize: 12, color: colors.textSecondary },
   typing: { paddingHorizontal: 16, paddingBottom: 4, color: colors.textSecondary, fontSize: 12 },
