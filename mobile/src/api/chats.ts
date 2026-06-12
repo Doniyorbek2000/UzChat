@@ -16,6 +16,7 @@ export interface SendMessageInput {
   replyToId?: string;
   mentions?: string[];
   forwardedFromName?: string;
+  forwardedFromUserId?: string;
   // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
   scheduledFor?: string;
   // "View once" (IMAGE only): media is deleted server-side after the recipient views it.

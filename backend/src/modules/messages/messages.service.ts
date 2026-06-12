@@ -293,6 +293,7 @@ export const messagesService = {
           replyToId: input.replyToId,
           mentions,
           forwardedFromName: input.forwardedFromName,
+          forwardedFromUserId: input.forwardedFromUserId,
           expiresAt,
           scheduledFor: isScheduled ? new Date(input.scheduledFor!) : null,
           viewOnce: input.viewOnce ?? false,

@@ -94,6 +94,7 @@ export interface Message {
   pollVotes: PollVote[];
   mentions: string[];
   forwardedFromName: string | null;
+  forwardedFromUserId: string | null;
   isStarred: boolean;
   createdAt: string;
   editedAt: string | null;

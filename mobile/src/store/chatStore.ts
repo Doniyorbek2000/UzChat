@@ -736,6 +736,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           ? currentUser.displayName
           : aliases[message.senderId] ??
             sourceConversation.participants.find((p) => p.userId === message.senderId)?.user.displayName);
+    const forwardedFromUserId = hideSender ? undefined : message.forwardedFromUserId ?? message.senderId;
 
     let sentMessage: Message;
     if (MEDIA_TYPES.includes(message.type) && message.mediaUrl && message.meta) {
@@ -754,16 +755,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         nonce,
         mediaUrl: url,
         forwardedFromName,
+        forwardedFromUserId,
       });
     } else if (message.type === "CONTACT" && message.contactMeta) {
       const { ciphertext, nonce } = encryptMessage(JSON.stringify(message.contactMeta), targetKey);
-      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "CONTACT", ciphertext, nonce, forwardedFromName });
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "CONTACT", ciphertext, nonce, forwardedFromName, forwardedFromUserId });
     } else if (message.type === "POLL" && message.pollMeta) {
       const { ciphertext, nonce } = encryptMessage(JSON.stringify(message.pollMeta), targetKey);
-      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "POLL", ciphertext, nonce, forwardedFromName });
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "POLL", ciphertext, nonce, forwardedFromName, forwardedFromUserId });
     } else {
       const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
-      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce, forwardedFromName });
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce, forwardedFromName, forwardedFromUserId });
     }
 
     const decrypted = decryptToMessage(targetKey, sentMessage);

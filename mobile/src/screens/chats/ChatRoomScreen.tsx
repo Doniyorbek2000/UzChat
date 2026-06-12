@@ -1423,7 +1423,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           )}
           {item.forwardedFromName && !item.deletedAt && (
-            <Text style={styles.forwardedLabel}>↪ Yo'naltirilgan: {item.forwardedFromName}</Text>
+            <Text
+              style={styles.forwardedLabel}
+              onPress={
+                item.forwardedFromUserId && item.forwardedFromUserId !== user?.id
+                  ? () => navigation.navigate("UserProfile", { userId: item.forwardedFromUserId! })
+                  : undefined
+              }
+            >
+              ↪ Yo'naltirilgan: {item.forwardedFromName}
+            </Text>
           )}
           {item.replyPreview && (
             <View style={styles.replyBox}>

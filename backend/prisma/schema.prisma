@@ -375,6 +375,8 @@ model Message {
   // When set, this message was forwarded from another conversation; holds the
   // original sender's display name (sent in cleartext for the "Forwarded" label).
   forwardedFromName String?
+  // Original sender's user id, so the "Forwarded from" label can link to their profile.
+  forwardedFromUserId String?
 
   replyToId String?
   replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
