@@ -1111,6 +1111,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const canSend = !isGroup || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
 
   const renderItem = ({ item }: { item: DecryptedMessage }) => {
+    if (item.type === "SYSTEM") {
+      return (
+        <View style={styles.systemMessageRow}>
+          <Text style={styles.systemMessageText}>{item.text}</Text>
+        </View>
+      );
+    }
+
     const isOwn = item.senderId === user?.id;
     const sender = conversation?.participants.find((p) => p.userId === item.senderId)?.user;
     const isSticker =
@@ -1915,6 +1923,17 @@ const styles = StyleSheet.create({
   bubbleRow: { flexDirection: "row", marginVertical: 4, alignItems: "center" },
   bubbleRowSelf: { justifyContent: "flex-end" },
   bubbleRowOther: { justifyContent: "flex-start" },
+  systemMessageRow: { alignItems: "center", marginVertical: 6 },
+  systemMessageText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    textAlign: "center",
+    overflow: "hidden",
+  },
   selectCheckbox: {
     width: 22,
     height: 22,

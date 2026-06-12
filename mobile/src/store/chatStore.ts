@@ -196,6 +196,11 @@ export function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSna
 }
 
 export function decryptToMessage(conversationKey: string, message: Message): DecryptedMessage {
+  // SYSTEM messages carry a pre-rendered, unencrypted notice (e.g. "X added Y to the group").
+  if (message.type === "SYSTEM") {
+    return { ...message, text: message.ciphertext, meta: null, contactMeta: null, decryptFailed: false, replyPreview: null };
+  }
+
   const replyPreview = message.replyTo ? decryptReplyPreview(conversationKey, message.replyTo) : null;
 
   if (message.deletedAt) {

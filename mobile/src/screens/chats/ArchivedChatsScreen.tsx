@@ -61,6 +61,7 @@ export function ArchivedChatsScreen({ navigation }: Props) {
   const renderPreview = (conversation: Conversation): string => {
     const lastMessage = conversation.lastMessage;
     if (!lastMessage) return "Xabarlar yo'q";
+    if (lastMessage.type === "SYSTEM") return lastMessage.ciphertext;
     if (lastMessage.deletedAt) return "Xabar o'chirildi";
     if (lastMessage.type in MEDIA_LABELS) return MEDIA_LABELS[lastMessage.type];
     try {

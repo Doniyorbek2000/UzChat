@@ -4,6 +4,7 @@ import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { getContactIds, filterLastSeen } from "../../utils/lastSeen";
 import { contactsService } from "../contacts/contacts.service";
+import { createSystemMessage } from "../messages/systemMessages";
 import {
   AddParticipantInput,
   CreateConversationInput,
@@ -443,6 +444,7 @@ export const chatsService = {
     if (!conversation) throw Errors.notFound("Taklif havolasi");
 
     const alreadyMember = conversation.participants.some((p) => p.userId === userId);
+    let systemMessage = null;
     if (!alreadyMember) {
       if (!isInviteLinkUsable(conversation)) throw Errors.notFound("Taklif havolasi");
 
@@ -462,9 +464,12 @@ export const chatsService = {
           data: { inviteCodeUseCount: { increment: 1 } },
         }),
       ]);
+
+      const joiner = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+      systemMessage = await createSystemMessage(conversation.id, userId, `${joiner?.displayName} guruhga qo'shildi`);
     }
 
-    return { conversation: await chatsService.getConversation(userId, conversation.id), alreadyMember };
+    return { conversation: await chatsService.getConversation(userId, conversation.id), alreadyMember, systemMessage };
   },
 
   async addParticipant(userId: string, conversationId: string, input: AddParticipantInput) {
@@ -502,7 +507,14 @@ export const chatsService = {
       },
     });
 
-    return chatsService.getConversation(userId, conversationId);
+    const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+    const systemMessage = await createSystemMessage(
+      conversationId,
+      userId,
+      `${actor?.displayName} ${target.displayName} foydalanuvchisini guruhga qo'shdi`
+    );
+
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
   },
 
   async assertParticipant(userId: string, conversationId: string) {
@@ -567,7 +579,13 @@ export const chatsService = {
       },
     });
 
-    return chatsService.getConversation(userId, conversationId);
+    let systemMessage = null;
+    if (input.title !== undefined && input.title !== conversation.title) {
+      const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+      systemMessage = await createSystemMessage(conversationId, userId, `${actor?.displayName} guruh nomini «${input.title}» ga o'zgartirdi`);
+    }
+
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
   },
 
   async removeParticipant(userId: string, conversationId: string, targetUserId: string) {
@@ -596,7 +614,17 @@ export const chatsService = {
 
     await prisma.conversationParticipant.delete({ where: { id: target.id } });
 
-    return chatsService.getConversation(userId, conversationId);
+    const [actor, targetUser] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } }),
+      prisma.user.findUnique({ where: { id: targetUserId }, select: { displayName: true } }),
+    ]);
+    const systemMessage = await createSystemMessage(
+      conversationId,
+      userId,
+      `${actor?.displayName} ${targetUser?.displayName} foydalanuvchisini guruhdan chiqardi`
+    );
+
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
   },
 
   async leaveConversation(userId: string, conversationId: string) {
@@ -631,7 +659,10 @@ export const chatsService = {
 
     await prisma.conversationParticipant.delete({ where: { id: self.id } });
 
-    return { deleted: false as const, newOwnerId };
+    const leaver = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+    const systemMessage = await createSystemMessage(conversationId, userId, `${leaver?.displayName} guruhdan chiqdi`);
+
+    return { deleted: false as const, newOwnerId, systemMessage };
   },
 
   async updateParticipantRole(userId: string, conversationId: string, targetUserId: string, role: ParticipantRole) {
