@@ -63,6 +63,15 @@ import { FORMAT_PATTERN } from "../../utils/textFormat";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
+interface PendingMediaItem {
+  uri: string;
+  name: string;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  type: "IMAGE" | "FILE";
+}
+
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
 
 const REPORT_REASONS: { value: ReportReason; label: string }[] = [
@@ -311,14 +320,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
   const [pollAnonymous, setPollAnonymous] = useState(false);
-  const [pendingMedia, setPendingMedia] = useState<{
-    uri: string;
-    name: string;
-    mimeType: string;
-    width?: number;
-    height?: number;
-    type: "IMAGE" | "FILE";
-  } | null>(null);
+  const [pendingMedia, setPendingMedia] = useState<PendingMediaItem | null>(null);
+  const [pendingMediaQueue, setPendingMediaQueue] = useState<PendingMediaItem[]>([]);
+  const [pendingMediaTotal, setPendingMediaTotal] = useState(0);
   const [mediaCaption, setMediaCaption] = useState("");
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -931,19 +935,27 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       Alert.alert("Ruxsat kerak", "Rasm yuborish uchun galereyaga ruxsat bering");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.6 });
-    if (result.canceled || !result.assets[0]) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.6,
+      allowsMultipleSelection: true,
+      selectionLimit: 10,
+    });
+    if (result.canceled || result.assets.length === 0) return;
 
-    const asset = result.assets[0];
-    setMediaCaption("");
-    setPendingMedia({
+    const items: PendingMediaItem[] = result.assets.map((asset, i) => ({
       uri: asset.uri,
-      name: asset.fileName ?? `photo-${Date.now()}.jpg`,
+      name: asset.fileName ?? `photo-${Date.now()}-${i}.jpg`,
       mimeType: asset.mimeType ?? "image/jpeg",
       width: asset.width,
       height: asset.height,
       type: "IMAGE",
-    });
+    }));
+
+    setMediaCaption("");
+    setPendingMedia(items[0]);
+    setPendingMediaQueue(items.slice(1));
+    setPendingMediaTotal(items.length);
   };
 
   const pickFile = async () => {
@@ -960,19 +972,33 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     });
   };
 
+  const cancelPendingMedia = () => {
+    setPendingMedia(null);
+    setPendingMediaQueue([]);
+    setPendingMediaTotal(0);
+  };
+
   const sendPendingMedia = async (viewOnce: boolean) => {
     if (!pendingMedia) return;
     const { type, ...asset } = pendingMedia;
     const caption = mediaCaption.trim();
     const replyToId = replyingTo?.id;
+    const queue = pendingMediaQueue;
     setReplyingTo(null);
-    setPendingMedia(null);
     setMediaCaption("");
     setSending(true);
     try {
       await sendMediaMessage(conversationId, asset, type, replyToId, viewOnce, caption || undefined);
       scrollToLatest();
+      if (queue.length > 0) {
+        setPendingMedia(queue[0]);
+        setPendingMediaQueue(queue.slice(1));
+      } else {
+        setPendingMedia(null);
+        setPendingMediaTotal(0);
+      }
     } catch (err: any) {
+      cancelPendingMedia();
       Alert.alert(
         "Xatolik",
         err?.response?.data?.error?.message ?? (type === "IMAGE" ? "Rasmni yuborib bo'lmadi" : "Faylni yuborib bo'lmadi")
@@ -2176,12 +2202,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </View>
       </View>
     </Modal>
-    <Modal visible={!!pendingMedia} transparent animationType="fade" onRequestClose={() => setPendingMedia(null)}>
+    <Modal visible={!!pendingMedia} transparent animationType="fade" onRequestClose={cancelPendingMedia}>
       <KeyboardAvoidingView
         style={styles.mediaPreviewBackdrop}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.mediaPreviewSheet}>
+          {pendingMediaTotal > 1 && (
+            <Text style={styles.mediaPreviewCounter}>
+              {pendingMediaTotal - pendingMediaQueue.length} / {pendingMediaTotal}
+            </Text>
+          )}
           {pendingMedia?.type === "IMAGE" ? (
             <Image source={{ uri: pendingMedia.uri }} style={styles.mediaPreviewImage} resizeMode="contain" />
           ) : (
@@ -2201,7 +2232,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             multiline
           />
           <View style={styles.mediaPreviewActions}>
-            <TouchableOpacity style={styles.mediaPreviewCancel} onPress={() => setPendingMedia(null)} disabled={sending}>
+            <TouchableOpacity style={styles.mediaPreviewCancel} onPress={cancelPendingMedia} disabled={sending}>
               <Text style={styles.mediaPreviewCancelText}>Bekor qilish</Text>
             </TouchableOpacity>
             {pendingMedia?.type === "IMAGE" && (
@@ -2637,6 +2668,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     padding: 16,
     gap: 12,
+  },
+  mediaPreviewCounter: {
+    alignSelf: "center",
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textSecondary,
   },
   mediaPreviewImage: {
     width: "100%",
