@@ -258,9 +258,34 @@ model Conversation {
   // photos, videos, voice notes, files, contacts, or polls).
   membersCanSendMedia Boolean @default(true)
 
-  participants ConversationParticipant[]
-  messages     Message[]
-  joinRequests GroupJoinRequest[]
+  participants    ConversationParticipant[]
+  messages        Message[]
+  joinRequests    GroupJoinRequest[]
+  auditLogEntries GroupAuditLogEntry[]
+}
+
+enum GroupAuditAction {
+  MEMBER_REMOVED
+  ROLE_CHANGED
+  MEMBER_RESTRICTED
+  MEMBER_UNRESTRICTED
+  MESSAGE_DELETED
+}
+
+// GROUP only: a log of moderation actions (removals, role changes,
+// restrictions, and admins deleting other members' messages), visible to the
+// group's owner and admins via the "Recent actions" screen.
+model GroupAuditLogEntry {
+  id             String           @id @default(uuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  actorId        String
+  targetUserId   String?
+  action         GroupAuditAction
+  details        String?
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
 }
 
 // A pending request to join a GROUP via invite link when the group requires

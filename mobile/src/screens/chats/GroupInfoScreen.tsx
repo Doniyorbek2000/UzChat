@@ -600,6 +600,13 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteText}>A'zolar media yuborishi mumkin</Text>
             <Switch value={conversation.membersCanSendMedia} onValueChange={onToggleMembersCanSendMedia} />
           </View>
+          <TouchableOpacity
+            style={styles.inviteRow}
+            onPress={() => navigation.navigate("GroupAuditLog", { conversationId })}
+          >
+            <Text style={styles.inviteIcon}>📋</Text>
+            <Text style={styles.inviteText}>So'nggi harakatlar</Text>
+          </TouchableOpacity>
         </View>
       )}
 

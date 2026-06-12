@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { ConversationType, GroupAddPrivacy, MessagePrivacy, ParticipantRole } from "@prisma/client";
+import { ConversationType, GroupAddPrivacy, GroupAuditAction, MessagePrivacy, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { getContactIds, filterLastSeen, filterAvatar } from "../../utils/lastSeen";
@@ -476,6 +476,50 @@ export const chatsService = {
     return conversation;
   },
 
+  /** Records a moderation action in a GROUP's "Recent actions" log. */
+  async logGroupAction(
+    conversationId: string,
+    actorId: string,
+    action: GroupAuditAction,
+    targetUserId?: string | null,
+    details?: string | null
+  ) {
+    await prisma.groupAuditLogEntry.create({
+      data: { conversationId, actorId, action, targetUserId: targetUserId ?? null, details: details ?? null },
+    });
+  },
+
+  /** GROUP only, OWNER/ADMIN only: paginated log of moderation actions. */
+  async getAuditLog(userId: string, conversationId: string, before?: string) {
+    await chatsService.assertGroupManager(userId, conversationId);
+
+    const entries = await prisma.groupAuditLogEntry.findMany({
+      where: { conversationId, ...(before ? { createdAt: { lt: new Date(before) } } : {}) },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    const userIds = new Set<string>();
+    for (const entry of entries) {
+      userIds.add(entry.actorId);
+      if (entry.targetUserId) userIds.add(entry.targetUserId);
+    }
+    const users = await prisma.user.findMany({
+      where: { id: { in: [...userIds] } },
+      select: { id: true, displayName: true, avatarUrl: true },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    return entries.map((entry) => ({
+      id: entry.id,
+      action: entry.action,
+      details: entry.details,
+      createdAt: entry.createdAt,
+      actor: userMap.get(entry.actorId) ?? null,
+      target: entry.targetUserId ? userMap.get(entry.targetUserId) ?? null : null,
+    }));
+  },
+
   async createInviteLink(userId: string, conversationId: string, input?: CreateInviteLinkInput) {
     await chatsService.assertGroupManager(userId, conversationId);
 
@@ -947,6 +991,7 @@ export const chatsService = {
     }
 
     await prisma.conversationParticipant.delete({ where: { id: target.id } });
+    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_REMOVED, targetUserId);
 
     const [actor, targetUser] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } }),
@@ -1024,6 +1069,7 @@ export const chatsService = {
     } else {
       await prisma.conversationParticipant.update({ where: { id: target.id }, data: { role } });
     }
+    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.ROLE_CHANGED, targetUserId, role);
 
     const [actor, targetUser] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } }),
@@ -1065,6 +1111,13 @@ export const chatsService = {
       where: { id: target.id },
       data: { restrictedUntil },
     });
+    await chatsService.logGroupAction(
+      conversationId,
+      userId,
+      restrictFor === "off" ? GroupAuditAction.MEMBER_UNRESTRICTED : GroupAuditAction.MEMBER_RESTRICTED,
+      targetUserId,
+      restrictFor
+    );
 
     return chatsService.getConversation(userId, conversationId);
   },

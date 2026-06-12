@@ -33,6 +33,7 @@ export type RootStackParamList = {
   AddGroupMember: { conversationId: string };
   JoinGroup: undefined;
   JoinRequests: { conversationId: string };
+  GroupAuditLog: { conversationId: string };
   CommonGroups: { userId: string };
   UserProfile: { userId: string };
   EncryptionKey: { userId: string; displayName: string };

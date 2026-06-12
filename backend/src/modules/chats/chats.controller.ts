@@ -221,6 +221,16 @@ export const chatsController = {
     }
   },
 
+  async getAuditLog(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { before } = req.query;
+      const entries = await chatsService.getAuditLog(req.user!.sub, req.params.id, before as string | undefined);
+      res.json(entries);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async approveJoinRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, requestId } = req.params;

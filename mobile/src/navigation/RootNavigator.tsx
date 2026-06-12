@@ -13,6 +13,7 @@ import { GroupInfoScreen } from "../screens/chats/GroupInfoScreen";
 import { AddGroupMemberScreen } from "../screens/chats/AddGroupMemberScreen";
 import { JoinGroupScreen } from "../screens/chats/JoinGroupScreen";
 import { JoinRequestsScreen } from "../screens/chats/JoinRequestsScreen";
+import { GroupAuditLogScreen } from "../screens/chats/GroupAuditLogScreen";
 import { CommonGroupsScreen } from "../screens/chats/CommonGroupsScreen";
 import { UserProfileScreen } from "../screens/chats/UserProfileScreen";
 import { EncryptionKeyScreen } from "../screens/chats/EncryptionKeyScreen";
@@ -165,6 +166,7 @@ export function RootNavigator() {
             <Stack.Screen name="AddGroupMember" component={AddGroupMemberScreen} options={{ title: "A'zo qo'shish" }} />
             <Stack.Screen name="JoinGroup" component={JoinGroupScreen} options={{ title: "Havola orqali qo'shilish" }} />
             <Stack.Screen name="JoinRequests" component={JoinRequestsScreen} options={{ title: "Qo'shilish so'rovlari" }} />
+            <Stack.Screen name="GroupAuditLog" component={GroupAuditLogScreen} options={{ title: "So'nggi harakatlar" }} />
             <Stack.Screen name="CommonGroups" component={CommonGroupsScreen} options={{ title: "Umumiy guruhlar" }} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ title: "Profil" }} />
             <Stack.Screen name="EncryptionKey" component={EncryptionKeyScreen} options={{ title: "Shifrlash kaliti" }} />

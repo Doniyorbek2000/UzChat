@@ -57,6 +57,7 @@ chatsRouter.patch(
 chatsRouter.get("/:id/join-requests", chatsController.listJoinRequests);
 chatsRouter.post("/:id/join-requests/:requestId/approve", chatsController.approveJoinRequest);
 chatsRouter.post("/:id/join-requests/:requestId/decline", chatsController.declineJoinRequest);
+chatsRouter.get("/:id/audit-log", chatsController.getAuditLog);
 
 chatsRouter.get("/starred/messages", messagesController.listStarred);
 chatsRouter.get("/common-groups/:userId", chatsController.listCommonGroups);

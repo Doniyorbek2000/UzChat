@@ -168,6 +168,18 @@ export interface GroupJoinRequest {
   createdAt: string;
 }
 
+export type GroupAuditAction = "MEMBER_REMOVED" | "ROLE_CHANGED" | "MEMBER_RESTRICTED" | "MEMBER_UNRESTRICTED" | "MESSAGE_DELETED";
+
+// An entry in a GROUP's "Recent actions" moderation log.
+export interface GroupAuditLogEntry {
+  id: string;
+  action: GroupAuditAction;
+  details: string | null;
+  createdAt: string;
+  actor: { id: string; displayName: string; avatarUrl: string | null } | null;
+  target: { id: string; displayName: string; avatarUrl: string | null } | null;
+}
+
 // A GROUP conversation that both the current user and another user are members of.
 export interface CommonGroup {
   id: string;

@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { ConversationType, Message, MessageType, ParticipantRole } from "@prisma/client";
+import { ConversationType, GroupAuditAction, Message, MessageType, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { isUserOnline } from "../../sockets";
@@ -399,6 +399,16 @@ export const messagesService = {
 
     if (isOwnMessage && Date.now() - message.createdAt.getTime() > RECALL_WINDOW_MS) {
       throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 2 daqiqa ichida o'chirish mumkin");
+    }
+
+    if (!isOwnMessage && isGroupManager) {
+      await chatsService.logGroupAction(
+        conversationId,
+        userId,
+        GroupAuditAction.MESSAGE_DELETED,
+        message.senderId,
+        message.type
+      );
     }
 
     return prisma.message.update({
