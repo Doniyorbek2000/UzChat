@@ -58,9 +58,11 @@ export const chatsController = {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const { conversation, systemMessage } = await chatsService.updateConversation(req.user!.sub, req.params.id, req.body);
+      const { conversation, systemMessages } = await chatsService.updateConversation(req.user!.sub, req.params.id, req.body);
       getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
-      if (systemMessage) getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+      for (const systemMessage of systemMessages) {
+        getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+      }
       res.json(conversation);
     } catch (err) {
       next(err);

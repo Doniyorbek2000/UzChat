@@ -702,13 +702,69 @@ export const chatsService = {
       },
     });
 
-    let systemMessage = null;
+    const systemMessages: Awaited<ReturnType<typeof createSystemMessage>>[] = [];
+    const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+    const name = actor?.displayName;
+
     if (input.title !== undefined && input.title !== conversation.title) {
-      const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
-      systemMessage = await createSystemMessage(conversationId, userId, `${actor?.displayName} guruh nomini «${input.title}» ga o'zgartirdi`);
+      systemMessages.push(await createSystemMessage(conversationId, userId, `${name} guruh nomini «${input.title}» ga o'zgartirdi`));
+    }
+    if (input.avatarUrl !== undefined && input.avatarUrl !== conversation.avatarUrl) {
+      systemMessages.push(await createSystemMessage(conversationId, userId, `${name} guruh rasmini o'zgartirdi`));
+    }
+    if (input.description !== undefined && input.description !== conversation.description) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.description ? `${name} guruh tavsifini o'zgartirdi` : `${name} guruh tavsifini o'chirdi`
+        )
+      );
+    }
+    if (input.onlyAdminsCanSend !== undefined && input.onlyAdminsCanSend !== conversation.onlyAdminsCanSend) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.onlyAdminsCanSend
+            ? `${name} faqat adminlar yoza olishini yoqdi`
+            : `${name} barcha a'zolar yozishi mumkinligini yoqdi`
+        )
+      );
+    }
+    if (input.slowModeSeconds !== undefined && input.slowModeSeconds !== conversation.slowModeSeconds) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.slowModeSeconds > 0 ? `${name} sekin rejimni yoqdi` : `${name} sekin rejimni o'chirdi`
+        )
+      );
+    }
+    if (input.noForwards !== undefined && input.noForwards !== conversation.noForwards) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.noForwards
+            ? `${name} nusxalash va yo'naltirishni man qildi`
+            : `${name} nusxalash va yo'naltirishga ruxsat berdi`
+        )
+      );
+    }
+    if (input.requireAdminApproval !== undefined && input.requireAdminApproval !== conversation.requireAdminApproval) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.requireAdminApproval
+            ? `${name} qo'shilish so'rovlari uchun admin tasdiqlashini yoqdi`
+            : `${name} qo'shilish so'rovlari uchun admin tasdiqlashini o'chirdi`
+        )
+      );
     }
 
-    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessages };
   },
 
   async removeParticipant(userId: string, conversationId: string, targetUserId: string) {
