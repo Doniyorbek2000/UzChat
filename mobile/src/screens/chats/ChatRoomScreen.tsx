@@ -16,6 +16,8 @@ import {
   Linking,
   Switch,
   Image,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
@@ -283,6 +285,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const [text, setText] = useState("");
   const [selection, setSelection] = useState<{ start: number; end: number }>({ start: 0, end: 0 });
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -634,6 +638,28 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const conversationKey = conversation ? getConversationKey(conversation) : null;
 
   const scrollToLatest = () => listRef.current?.scrollToOffset({ offset: 0, animated: true });
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = e.nativeEvent.contentOffset.y;
+    const isFarFromBottom = offsetY > 300;
+    setShowScrollToBottom(isFarFromBottom);
+    if (!isFarFromBottom) setNewMessagesCount(0);
+  };
+
+  const onScrollToBottomPress = () => {
+    scrollToLatest();
+    setNewMessagesCount(0);
+  };
+
+  const prevMessagesLengthRef = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > prevMessagesLengthRef.current && showScrollToBottom) {
+      const newMessages = messages.slice(prevMessagesLengthRef.current);
+      const incomingCount = newMessages.filter((m) => m.senderId !== user?.id).length;
+      if (incomingCount > 0) setNewMessagesCount((c) => c + incomingCount);
+    }
+    prevMessagesLengthRef.current = messages.length;
+  }, [messages, showScrollToBottom, user?.id]);
 
   const getAuthorName = (senderId: string) => {
     if (senderId === user?.id) return "Siz";
@@ -1307,6 +1333,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         contentContainerStyle={styles.list}
         onEndReachedThreshold={0.3}
         onEndReached={onEndReached}
+        onScroll={onScroll}
+        scrollEventThrottle={100}
         onScrollToIndexFailed={(info) => {
           setTimeout(() => listRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.4 }), 200);
         }}
@@ -1319,6 +1347,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           ) : null
         }
       />
+      {showScrollToBottom && (
+        <TouchableOpacity style={styles.scrollToBottomButton} onPress={onScrollToBottomPress}>
+          <Text style={styles.scrollToBottomIcon}>↓</Text>
+          {newMessagesCount > 0 && (
+            <View style={styles.scrollToBottomBadge}>
+              <Text style={styles.scrollToBottomBadgeText}>{newMessagesCount > 99 ? "99+" : newMessagesCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      )}
       {recordingCount > 0 ? (
         <Text style={styles.typing}>🎤 {formatActivityLabel(recordingUsers, "ovozli xabar yozmoqda...")}</Text>
       ) : (
@@ -1969,6 +2007,36 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   list: { padding: 12, flexGrow: 1 },
+  scrollToBottomButton: {
+    position: "absolute",
+    right: 12,
+    bottom: 76,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  scrollToBottomIcon: { fontSize: 18, color: colors.primary, fontWeight: "700" },
+  scrollToBottomBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scrollToBottomBadgeText: { fontSize: 10, fontWeight: "700", color: "#fff" },
   loadingMore: { marginVertical: 12 },
   bubbleRow: { flexDirection: "row", marginVertical: 4, alignItems: "center" },
   bubbleRowSelf: { justifyContent: "flex-end" },
