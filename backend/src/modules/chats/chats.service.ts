@@ -7,6 +7,7 @@ import { contactsService } from "../contacts/contacts.service";
 import {
   AddParticipantInput,
   CreateConversationInput,
+  CreateInviteLinkInput,
   JoinByInviteInput,
   UpdateConversationInput,
   UpdateParticipantRestrictionInput,
@@ -46,6 +47,19 @@ const FAR_FUTURE = new Date("9999-12-31T23:59:59.999Z");
 /** A conversation is muted if muted indefinitely, or muted until a time still in the future. */
 export function isParticipantMuted(p: { isMuted: boolean; mutedUntil: Date | null }): boolean {
   return p.isMuted || (p.mutedUntil !== null && p.mutedUntil.getTime() > Date.now());
+}
+
+/** An invite link is usable if its code hasn't expired and hasn't hit its usage limit. */
+function isInviteLinkUsable(conversation: {
+  inviteCodeExpiresAt: Date | null;
+  inviteCodeMaxUses: number | null;
+  inviteCodeUseCount: number;
+}): boolean {
+  if (conversation.inviteCodeExpiresAt && conversation.inviteCodeExpiresAt.getTime() <= Date.now()) return false;
+  if (conversation.inviteCodeMaxUses !== null && conversation.inviteCodeUseCount >= conversation.inviteCodeMaxUses) {
+    return false;
+  }
+  return true;
 }
 
 // Strips a participant's `lastReadAt` (read receipt) unless both the viewer and that
@@ -189,6 +203,9 @@ export const chatsService = {
         markedUnread: p.markedUnread,
         isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
         inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
+        inviteCodeExpiresAt: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeExpiresAt,
+        inviteCodeMaxUses: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeMaxUses,
+        inviteCodeUseCount: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeUseCount,
         disappearingSeconds: p.conversation.disappearingSeconds,
         onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
         slowModeSeconds: p.conversation.slowModeSeconds,
@@ -253,6 +270,12 @@ export const chatsService = {
       markedUnread: participant.markedUnread,
       isBlocked,
       inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
+      inviteCodeExpiresAt:
+        participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCodeExpiresAt,
+      inviteCodeMaxUses:
+        participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCodeMaxUses,
+      inviteCodeUseCount:
+        participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCodeUseCount,
       disappearingSeconds: participant.conversation.disappearingSeconds,
       onlyAdminsCanSend: participant.conversation.onlyAdminsCanSend,
       slowModeSeconds: participant.conversation.slowModeSeconds,
@@ -363,14 +386,20 @@ export const chatsService = {
     return conversation;
   },
 
-  async createInviteLink(userId: string, conversationId: string) {
+  async createInviteLink(userId: string, conversationId: string, input?: CreateInviteLinkInput) {
     await chatsService.assertGroupManager(userId, conversationId);
+
+    const expiresAt = input?.expiresInSeconds ? new Date(Date.now() + input.expiresInSeconds * 1000) : null;
+    const maxUses = input?.maxUses ?? null;
 
     for (let attempt = 0; attempt < 5; attempt++) {
       const inviteCode = crypto.randomBytes(6).toString("base64url");
       try {
-        await prisma.conversation.update({ where: { id: conversationId }, data: { inviteCode } });
-        return { inviteCode };
+        await prisma.conversation.update({
+          where: { id: conversationId },
+          data: { inviteCode, inviteCodeExpiresAt: expiresAt, inviteCodeMaxUses: maxUses, inviteCodeUseCount: 0 },
+        });
+        return { inviteCode, inviteCodeExpiresAt: expiresAt, inviteCodeMaxUses: maxUses, inviteCodeUseCount: 0 };
       } catch (err: any) {
         if (err?.code !== "P2002") throw err;
       }
@@ -380,7 +409,10 @@ export const chatsService = {
 
   async revokeInviteLink(userId: string, conversationId: string) {
     await chatsService.assertGroupManager(userId, conversationId);
-    await prisma.conversation.update({ where: { id: conversationId }, data: { inviteCode: null } });
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { inviteCode: null, inviteCodeExpiresAt: null, inviteCodeMaxUses: null, inviteCodeUseCount: 0 },
+    });
   },
 
   async getInvitePreview(code: string) {
@@ -389,6 +421,7 @@ export const chatsService = {
       include: { participants: true },
     });
     if (!conversation) throw Errors.notFound("Taklif havolasi");
+    if (!isInviteLinkUsable(conversation)) throw Errors.notFound("Taklif havolasi");
 
     return {
       id: conversation.id,
@@ -409,16 +442,24 @@ export const chatsService = {
 
     const alreadyMember = conversation.participants.some((p) => p.userId === userId);
     if (!alreadyMember) {
-      await prisma.conversationParticipant.create({
-        data: {
-          conversationId: conversation.id,
-          userId,
-          role: ParticipantRole.MEMBER,
-          wrappedKey: input.wrappedKey,
-          wrappedKeyNonce: input.wrappedKeyNonce,
-          keySenderPublicKey: input.keySenderPublicKey,
-        },
-      });
+      if (!isInviteLinkUsable(conversation)) throw Errors.notFound("Taklif havolasi");
+
+      await prisma.$transaction([
+        prisma.conversationParticipant.create({
+          data: {
+            conversationId: conversation.id,
+            userId,
+            role: ParticipantRole.MEMBER,
+            wrappedKey: input.wrappedKey,
+            wrappedKeyNonce: input.wrappedKeyNonce,
+            keySenderPublicKey: input.keySenderPublicKey,
+          },
+        }),
+        prisma.conversation.update({
+          where: { id: conversation.id },
+          data: { inviteCodeUseCount: { increment: 1 } },
+        }),
+      ]);
     }
 
     return { conversation: await chatsService.getConversation(userId, conversation.id), alreadyMember };

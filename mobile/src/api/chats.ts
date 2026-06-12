@@ -106,8 +106,13 @@ export const chatsApi = {
     return apiClient.post(`/conversations/${conversationId}/leave`);
   },
 
-  createInviteLink(conversationId: string) {
-    return apiClient.post<{ inviteCode: string }>(`/conversations/${conversationId}/invite-link`).then((r) => r.data);
+  createInviteLink(conversationId: string, options?: { expiresInSeconds?: number | null; maxUses?: number | null }) {
+    return apiClient
+      .post<{ inviteCode: string; inviteCodeExpiresAt: string | null; inviteCodeMaxUses: number | null; inviteCodeUseCount: number }>(
+        `/conversations/${conversationId}/invite-link`,
+        options ?? {}
+      )
+      .then((r) => r.data);
   },
 
   revokeInviteLink(conversationId: string) {

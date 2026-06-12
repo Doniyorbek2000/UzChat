@@ -119,7 +119,7 @@ export const chatsController = {
 
   async createInviteLink(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await chatsService.createInviteLink(req.user!.sub, req.params.id);
+      const result = await chatsService.createInviteLink(req.user!.sub, req.params.id, req.body);
       res.json(result);
     } catch (err) {
       next(err);

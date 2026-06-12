@@ -204,6 +204,13 @@ model Conversation {
   // Shareable code allowing anyone to join a GROUP conversation; null means invites are disabled.
   inviteCode String? @unique
 
+  // When set, the invite code stops working after this time.
+  inviteCodeExpiresAt DateTime?
+  // When set, the invite code stops working after this many successful joins.
+  inviteCodeMaxUses   Int?
+  // Number of times the current invite code has been used to join.
+  inviteCodeUseCount  Int @default(0)
+
   // New messages auto-delete this many seconds after being sent; null disables it.
   disappearingSeconds Int?
 

@@ -156,7 +156,7 @@ interface ChatState {
   updateParticipantRole: (conversationId: string, userId: string, role: ParticipantRole) => Promise<void>;
   restrictParticipant: (conversationId: string, userId: string, restrictFor: RestrictDuration) => Promise<void>;
   leaveGroup: (conversationId: string) => Promise<void>;
-  createInviteLink: (conversationId: string) => Promise<string>;
+  createInviteLink: (conversationId: string, options?: { expiresInSeconds?: number | null; maxUses?: number | null }) => Promise<string>;
   revokeInviteLink: (conversationId: string) => Promise<void>;
   joinConversationByInvite: (invite: string) => Promise<Conversation>;
 }
@@ -1030,13 +1030,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  createInviteLink: async (conversationId) => {
+  createInviteLink: async (conversationId, options) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
-    const { inviteCode } = await chatsApi.createInviteLink(conversationId);
+    const { inviteCode, inviteCodeExpiresAt, inviteCodeMaxUses, inviteCodeUseCount } = await chatsApi.createInviteLink(
+      conversationId,
+      options
+    );
     set((state) => ({
-      conversations: upsertConversation(state.conversations, { ...conversation, inviteCode }),
+      conversations: upsertConversation(state.conversations, {
+        ...conversation,
+        inviteCode,
+        inviteCodeExpiresAt,
+        inviteCodeMaxUses,
+        inviteCodeUseCount,
+      }),
     }));
 
     const conversationKey = get().getConversationKey(conversation);
@@ -1049,7 +1058,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     await chatsApi.revokeInviteLink(conversationId);
     set((state) => ({
-      conversations: upsertConversation(state.conversations, { ...conversation, inviteCode: null }),
+      conversations: upsertConversation(state.conversations, {
+        ...conversation,
+        inviteCode: null,
+        inviteCodeExpiresAt: null,
+        inviteCodeMaxUses: null,
+        inviteCodeUseCount: 0,
+      }),
     }));
   },
 
@@ -1190,6 +1205,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
               isArchived: existing.isArchived,
               markedUnread: existing.markedUnread,
               inviteCode: existing.inviteCode,
+              inviteCodeExpiresAt: existing.inviteCodeExpiresAt,
+              inviteCodeMaxUses: existing.inviteCodeMaxUses,
+              inviteCodeUseCount: existing.inviteCodeUseCount,
             }
           : conversation;
         return { conversations: upsertConversation(state.conversations, merged) };

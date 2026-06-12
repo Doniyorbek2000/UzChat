@@ -122,6 +122,12 @@ export interface Conversation {
   isBlocked: boolean;
   // The current group's invite code (only visible to OWNER/ADMIN), or null.
   inviteCode: string | null;
+  // When set, the invite code stops working after this time (OWNER/ADMIN only).
+  inviteCodeExpiresAt: string | null;
+  // When set, the invite code stops working after this many joins (OWNER/ADMIN only).
+  inviteCodeMaxUses: number | null;
+  // Number of times the current invite code has been used to join (OWNER/ADMIN only).
+  inviteCodeUseCount: number | null;
   // New messages auto-delete this many seconds after being sent; null disables it.
   disappearingSeconds: number | null;
   // GROUP only: when true, only the owner and admins may send messages.

@@ -94,6 +94,16 @@ export const joinByInviteSchema = z.object({
   keySenderPublicKey: z.string().min(1),
 });
 
+// 30 days, the longest supported invite-link expiry.
+const MAX_INVITE_EXPIRES_SECONDS = 30 * 24 * 60 * 60;
+
+export const createInviteLinkSchema = z.object({
+  // Seconds until the new invite code expires; null/undefined means it never expires.
+  expiresInSeconds: z.number().int().positive().max(MAX_INVITE_EXPIRES_SECONDS).nullable().optional(),
+  // Max number of times the new invite code can be used to join; null/undefined means unlimited.
+  maxUses: z.number().int().positive().max(100000).nullable().optional(),
+});
+
 // 90 days, the longest supported disappearing-messages duration.
 const MAX_DISAPPEARING_SECONDS = 90 * 24 * 60 * 60;
 
@@ -108,4 +118,5 @@ export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSch
 export type UpdateParticipantRestrictionInput = z.infer<typeof updateParticipantRestrictionSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
+export type CreateInviteLinkInput = z.infer<typeof createInviteLinkSchema>;
 export type UpdateDisappearingMessagesInput = z.infer<typeof updateDisappearingMessagesSchema>;

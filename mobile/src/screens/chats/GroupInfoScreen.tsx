@@ -23,6 +23,7 @@ import { exportConversation } from "../../utils/chatExport";
 import { encodeInviteLink } from "../../crypto/e2ee";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SLOW_MODE_OPTIONS, formatSlowModeDuration } from "../../utils/slowMode";
+import { INVITE_EXPIRY_OPTIONS, INVITE_MAX_USES_OPTIONS, formatInviteStatus } from "../../utils/inviteLink";
 import { isParticipantRestricted } from "../../utils/restriction";
 import { ConversationParticipant, ParticipantRole } from "../../types";
 
@@ -109,6 +110,37 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     Alert.alert("Taklif havolasini bekor qilish", "Eski havola endi ishlamaydi. Davom etilsinmi?", [
       { text: "Yo'q", style: "cancel" },
       { text: "Ha, bekor qilish", style: "destructive", onPress: () => revokeInviteLink(conversationId).catch(() => {}) },
+    ]);
+  };
+
+  const onCreateInviteLinkWithOptions = async (expiresInSeconds: number | null, maxUses: number | null) => {
+    if (inviteLoading) return;
+    setInviteLoading(true);
+    try {
+      const invite = await createInviteLink(conversationId, { expiresInSeconds, maxUses });
+      await Share.share({ message: invite });
+    } catch {
+      Alert.alert("Xatolik", "Taklif havolasini yaratib bo'lmadi");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const onConfigureInviteLink = () => {
+    if (inviteLoading) return;
+    Alert.alert("Havolaning amal qilish muddati", "Yangi taklif havolasi qachongacha amal qiladi?", [
+      ...INVITE_EXPIRY_OPTIONS.map((expiryOption) => ({
+        text: expiryOption.label,
+        onPress: () =>
+          Alert.alert("Foydalanish chegarasi", "Yangi havoladan necha kishi qo'shilishi mumkin?", [
+            ...INVITE_MAX_USES_OPTIONS.map((usesOption) => ({
+              text: usesOption.label,
+              onPress: () => onCreateInviteLinkWithOptions(expiryOption.value, usesOption.value),
+            })),
+            { text: "Bekor qilish", style: "cancel" as const },
+          ]),
+      })),
+      { text: "Bekor qilish", style: "cancel" as const },
     ]);
   };
 
@@ -398,6 +430,23 @@ export function GroupInfoScreen({ route, navigation }: Props) {
               {conversation.inviteCode ? "Taklif havolasini ulashish" : "Taklif havolasi yaratish"}
             </Text>
             {inviteLoading && <ActivityIndicator size="small" color={colors.primary} />}
+          </TouchableOpacity>
+          {conversation.inviteCode && (
+            <View style={styles.inviteRow}>
+              <Text style={styles.inviteIcon}>ℹ️</Text>
+              <Text style={styles.inviteText}>Havola holati</Text>
+              <Text style={styles.inviteValue}>
+                {formatInviteStatus(
+                  conversation.inviteCodeExpiresAt,
+                  conversation.inviteCodeMaxUses,
+                  conversation.inviteCodeUseCount
+                )}
+              </Text>
+            </View>
+          )}
+          <TouchableOpacity style={styles.inviteRow} onPress={onConfigureInviteLink} disabled={inviteLoading}>
+            <Text style={styles.inviteIcon}>⚙️</Text>
+            <Text style={styles.inviteText}>Yangi havola yaratish (muddat/limit bilan)</Text>
           </TouchableOpacity>
           {conversation.inviteCode && (
             <TouchableOpacity style={styles.inviteRow} onPress={onRevokeInviteLink}>

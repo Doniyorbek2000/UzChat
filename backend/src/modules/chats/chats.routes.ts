@@ -5,6 +5,7 @@ import { validateBody } from "../../utils/validate";
 import {
   addParticipantSchema,
   createConversationSchema,
+  createInviteLinkSchema,
   joinByInviteSchema,
   updateConversationSchema,
   updateDisappearingMessagesSchema,
@@ -31,7 +32,7 @@ chatsRouter.put(
   validateBody(updateDisappearingMessagesSchema),
   chatsController.setDisappearingMessages
 );
-chatsRouter.post("/:id/invite-link", chatsController.createInviteLink);
+chatsRouter.post("/:id/invite-link", validateBody(createInviteLinkSchema), chatsController.createInviteLink);
 chatsRouter.delete("/:id/invite-link", chatsController.revokeInviteLink);
 chatsRouter.get("/invite/:code", chatsController.getInvitePreview);
 chatsRouter.post("/invite/:code/join", validateBody(joinByInviteSchema), chatsController.joinByInvite);
