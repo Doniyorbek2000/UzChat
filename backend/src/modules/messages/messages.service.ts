@@ -549,6 +549,7 @@ export const messagesService = {
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
     if (message.type !== MessageType.POLL) throw Errors.badRequest("Bu xabar so'rovnoma emas");
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan so'rovnomaga ovoz berib bo'lmaydi");
+    if (message.pollClosedAt) throw Errors.badRequest("So'rovnoma yopilgan, ovoz berib bo'lmaydi");
 
     if (optionIds.length === 0) {
       await prisma.pollVote.deleteMany({ where: { messageId, userId } });
@@ -568,6 +569,22 @@ export const messagesService = {
       responseVotes: anonymizePollVotes(votes, userId),
       broadcastVotes: anonymizePollVotes(votes, null),
     };
+  },
+
+  async closePoll(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.type !== MessageType.POLL) throw Errors.badRequest("Bu xabar so'rovnoma emas");
+    if (message.senderId !== userId) throw Errors.forbidden("Faqat so'rovnoma muallifi uni yopa oladi");
+    if (message.pollClosedAt) throw Errors.badRequest("So'rovnoma allaqachon yopilgan");
+
+    const updated = await prisma.message.update({
+      where: { id: messageId },
+      data: { pollClosedAt: new Date() },
+    });
+    return updated.pollClosedAt!;
   },
 
   async toggleStar(userId: string, conversationId: string, messageId: string) {

@@ -257,6 +257,12 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
+  closePoll(conversationId: string, messageId: string) {
+    return apiClient
+      .put<{ messageId: string; pollClosedAt: string }>(`/conversations/${conversationId}/messages/${messageId}/poll-close`)
+      .then((r) => r.data);
+  },
+
   listStarred() {
     return apiClient.get<Message[]>("/conversations/starred/messages").then((r) => r.data);
   },

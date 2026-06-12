@@ -138,6 +138,19 @@ export const messagesController = {
     }
   },
 
+  async closePoll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      const pollClosedAt = await messagesService.closePoll(req.user!.sub, conversationId, messageId);
+      getIo()
+        .to(`conversation:${conversationId}`)
+        .emit("message:pollClosed", { conversationId, messageId, pollClosedAt });
+      res.json({ messageId, pollClosedAt });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async toggleStar(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;

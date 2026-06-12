@@ -105,6 +105,8 @@ export interface Message {
   // the recipient views it once.
   viewOnce: boolean;
   viewedAt: string | null;
+  // POLL only: when set, the poll creator has closed voting.
+  pollClosedAt: string | null;
 }
 
 export interface Conversation {

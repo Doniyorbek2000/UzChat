@@ -270,6 +270,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const editMessage = useChatStore((s) => s.editMessage);
   const toggleReaction = useChatStore((s) => s.toggleReaction);
   const toggleStar = useChatStore((s) => s.toggleStar);
+  const closePoll = useChatStore((s) => s.closePoll);
   const blockUser = useChatStore((s) => s.blockUser);
   const unblockUser = useChatStore((s) => s.unblockUser);
   const clearHistory = useChatStore((s) => s.clearHistory);
@@ -1800,6 +1801,29 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.actionButtonText}>🕘 Tahrirlash tarixi</Text>
             </TouchableOpacity>
           )}
+          {actionMessage &&
+            actionMessage.type === "POLL" &&
+            actionMessage.senderId === user?.id &&
+            !actionMessage.pollClosedAt &&
+            !actionMessage.deletedAt && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  Alert.alert("So'rovnomani yopish", "Yopilgandan so'ng ovoz berib bo'lmaydi. Davom etilsinmi?", [
+                    { text: "Bekor qilish", style: "cancel" },
+                    {
+                      text: "Yopish",
+                      style: "destructive",
+                      onPress: () => closePoll(conversationId, message.id).catch(() => Alert.alert("Xatolik", "So'rovnomani yopib bo'lmadi")),
+                    },
+                  ]);
+                }}
+              >
+                <Text style={styles.actionButtonText}>🔒 So'rovnomani yopish</Text>
+              </TouchableOpacity>
+            )}
           {actionMessage && !actionMessage.deletedAt && (
             <TouchableOpacity
               style={styles.actionButton}

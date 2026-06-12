@@ -411,6 +411,10 @@ model Message {
   // other's pollVotes - only vote counts and the viewer's own vote are visible.
   pollAnonymous Boolean @default(false)
 
+  // POLL only: when set, the poll creator has closed voting - no further
+  // votes are accepted and clients show the final results as read-only.
+  pollClosedAt DateTime?
+
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@index([replyToId])

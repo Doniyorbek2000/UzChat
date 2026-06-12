@@ -93,3 +93,4 @@ chatsRouter.put(
   validateBody(votePollSchema),
   messagesController.votePoll
 );
+chatsRouter.put("/:id/messages/:messageId/poll-close", messagesController.closePoll);

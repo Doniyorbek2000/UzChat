@@ -119,6 +119,7 @@ interface ChatState {
     replyToId?: string
   ) => Promise<void>;
   votePoll: (conversationId: string, messageId: string, optionIds: string[]) => Promise<void>;
+  closePoll: (conversationId: string, messageId: string) => Promise<void>;
   deleteMessage: (conversationId: string, messageId: string) => Promise<void>;
   hideMessageForMe: (conversationId: string, messageId: string) => Promise<void>;
   editMessage: (conversationId: string, messageId: string, text: string, mentions?: string[]) => Promise<void>;
@@ -622,6 +623,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
         messagesByConversation: {
           ...state.messagesByConversation,
           [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, pollVotes: votes } : m)),
+        },
+      };
+    });
+  },
+
+  closePoll: async (conversationId, messageId) => {
+    const { pollClosedAt } = await chatsApi.closePoll(conversationId, messageId);
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      return {
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, pollClosedAt } : m)),
         },
       };
     });
@@ -1365,6 +1379,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
             messagesByConversation: {
               ...state.messagesByConversation,
               [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, pollVotes: votes } : m)),
+            },
+          };
+        });
+      }
+    );
+
+    socket.on(
+      "message:pollClosed",
+      ({ conversationId, messageId, pollClosedAt }: { conversationId: string; messageId: string; pollClosedAt: string }) => {
+        set((state) => {
+          const existing = state.messagesByConversation[conversationId] ?? [];
+          return {
+            messagesByConversation: {
+              ...state.messagesByConversation,
+              [conversationId]: existing.map((m) => (m.id === messageId ? { ...m, pollClosedAt } : m)),
             },
           };
         });

@@ -19,8 +19,10 @@ export function PollBubble({ message, conversationId }: Props) {
   const myVote = votes.find((v) => v.userId === userId);
   const myOptionIds = new Set(myVote?.optionIds ?? []);
   const totalVoters = votes.length;
+  const closed = !!message.pollClosedAt;
 
   const onSelect = (optionId: string) => {
+    if (closed) return;
     if (meta.multipleChoice) {
       const next = new Set(myOptionIds);
       if (next.has(optionId)) next.delete(optionId);
@@ -45,7 +47,7 @@ export function PollBubble({ message, conversationId }: Props) {
         const percent = totalVoters > 0 ? Math.round((count / totalVoters) * 100) : 0;
         const selected = myOptionIds.has(option.id);
         return (
-          <TouchableOpacity key={option.id} style={styles.option} onPress={() => onSelect(option.id)}>
+          <TouchableOpacity key={option.id} style={styles.option} onPress={() => onSelect(option.id)} disabled={closed}>
             <View style={[styles.optionFill, { width: `${percent}%` }]} />
             <View style={styles.optionRow}>
               <View style={[styles.indicator, meta.multipleChoice && styles.indicatorSquare, selected && styles.indicatorSelected]}>
@@ -61,6 +63,7 @@ export function PollBubble({ message, conversationId }: Props) {
         {totalVoters === 0 ? "Hali ovoz yo'q" : `${totalVoters} ovoz`}
         {meta.multipleChoice ? " · Bir nechta javob mumkin" : ""}
         {meta.anonymous ? " · 🔒 Anonim" : ""}
+        {closed ? " · Yopilgan" : ""}
       </Text>
     </View>
   );
