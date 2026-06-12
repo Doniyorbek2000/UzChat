@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { downloadAndDecryptFile, extensionFromName } from "../utils/mediaFile";
 import { DecryptedMessage } from "../store/chatStore";
 import { colors } from "../theme/colors";
@@ -15,6 +15,7 @@ interface Props {
 export function MediaImageBubble({ message, conversationKey }: Props) {
   const [uri, setUri] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const meta = message.meta;
 
   useEffect(() => {
@@ -58,7 +59,18 @@ export function MediaImageBubble({ message, conversationKey }: Props) {
     );
   }
 
-  return <Image source={{ uri }} style={[styles.image, { width, height }]} resizeMode="cover" />;
+  return (
+    <>
+      <Pressable onPress={() => setViewerOpen(true)}>
+        <Image source={{ uri }} style={[styles.image, { width, height }]} resizeMode="cover" />
+      </Pressable>
+      <Modal visible={viewerOpen} transparent animationType="fade" onRequestClose={() => setViewerOpen(false)}>
+        <Pressable style={styles.viewerOverlay} onPress={() => setViewerOpen(false)}>
+          <Image source={{ uri }} style={styles.viewerImage} resizeMode="contain" />
+        </Pressable>
+      </Modal>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -76,5 +88,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     paddingHorizontal: 8,
+  },
+  viewerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewerImage: {
+    width: "100%",
+    height: "100%",
   },
 });
