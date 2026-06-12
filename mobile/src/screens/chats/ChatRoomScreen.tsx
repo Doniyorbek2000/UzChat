@@ -1092,9 +1092,23 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
   };
 
+  const lastTapRef = useRef<{ id: string; time: number } | null>(null);
+
   const onPressMessage = (item: DecryptedMessage) => {
-    if (!selectionMode || item.deletedAt) return;
-    toggleSelected(item.id);
+    if (selectionMode) {
+      if (!item.deletedAt) toggleSelected(item.id);
+      return;
+    }
+    if (item.deletedAt || item.type === "SYSTEM") return;
+
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last && last.id === item.id && now - last.time < 300) {
+      lastTapRef.current = null;
+      toggleReaction(conversationId, item.id, "❤️").catch(() => {});
+      return;
+    }
+    lastTapRef.current = { id: item.id, time: now };
   };
 
   const onBulkForward = () => {
