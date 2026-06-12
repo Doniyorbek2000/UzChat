@@ -718,7 +718,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setTimeout(() => setHighlightedMessageId((id) => (id === message.id ? null : id)), 1500);
   };
 
-  const onSend = async (scheduledFor?: string) => {
+  const onSend = async (scheduledFor?: string, silent?: boolean) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     const mentions = pendingMentions.filter((id) => {
@@ -750,7 +750,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPendingMentions([]);
     setTyping(conversationId, false);
     try {
-      await sendTextMessage(conversationId, trimmed, replyToId, mentions.length > 0 ? mentions : undefined, scheduledFor);
+      await sendTextMessage(conversationId, trimmed, replyToId, mentions.length > 0 ? mentions : undefined, scheduledFor, silent);
       if (scheduledFor) {
         Alert.alert("Rejalashtirildi", "Xabar belgilangan vaqtda yuboriladi");
       } else {
@@ -763,12 +763,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
   };
 
-  const onScheduleSend = () => {
+  const onSendOptions = () => {
     if (!text.trim() || editingMessage) return;
     Alert.alert(
-      "Keyinroq yuborish",
-      "Xabarni qachon yuborish kerak?",
+      "Yuborish parametrlari",
+      "Xabarni qanday yuborish kerak?",
       [
+        { text: "Ovozsiz yuborish", onPress: () => onSend(undefined, true) },
         ...SCHEDULE_OPTIONS.map((option) => ({
           text: option.label,
           onPress: () => onSend(option.getDate().toISOString()),
@@ -1382,7 +1383,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <TouchableOpacity
                 style={styles.sendButton}
                 onPress={() => onSend()}
-                onLongPress={onScheduleSend}
+                onLongPress={onSendOptions}
                 disabled={!!editingMessage}
               >
                 <Text style={styles.sendText}>Yuborish</Text>

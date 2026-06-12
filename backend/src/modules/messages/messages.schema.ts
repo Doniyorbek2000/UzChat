@@ -18,6 +18,8 @@ export const sendMessageSchema = z
     viewOnce: z.boolean().optional(),
     // POLL only: hides who voted for what from other participants.
     pollAnonymous: z.boolean().optional(),
+    // "Send without sound": recipients are notified silently (no notification sound).
+    silent: z.boolean().optional(),
   })
   .refine((data) => !data.scheduledFor || new Date(data.scheduledFor).getTime() > Date.now(), {
     message: "Yuborish vaqti kelajakda bo'lishi kerak",

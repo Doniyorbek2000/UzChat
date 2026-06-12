@@ -22,6 +22,8 @@ export interface SendMessageInput {
   viewOnce?: boolean;
   // POLL only: hides who voted for what from other participants.
   pollAnonymous?: boolean;
+  // "Send without sound": recipients are notified silently (no notification sound).
+  silent?: boolean;
 }
 
 export const chatsApi = {

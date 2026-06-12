@@ -17,7 +17,10 @@ export const pushService = {
     await prisma.pushToken.deleteMany({ where: { userId, token } });
   },
 
-  async sendToUsers(userIds: string[], notification: { title: string; body: string; data?: Record<string, unknown> }) {
+  async sendToUsers(
+    userIds: string[],
+    notification: { title: string; body: string; data?: Record<string, unknown>; silent?: boolean }
+  ) {
     if (userIds.length === 0) return;
 
     const tokens = await prisma.pushToken.findMany({ where: { userId: { in: userIds } } });
@@ -30,7 +33,7 @@ export const pushService = {
         title: notification.title,
         body: notification.body,
         data: notification.data ?? {},
-        sound: "default",
+        sound: notification.silent ? null : "default",
       }));
 
     const chunks = expo.chunkPushNotifications(messages);

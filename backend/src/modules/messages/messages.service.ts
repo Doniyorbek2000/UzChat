@@ -99,7 +99,7 @@ async function resolveMentions(conversationId: string, userId: string, mentions:
   return resolved;
 }
 
-async function notifyParticipants(senderId: string, conversationId: string, message: Message) {
+async function notifyParticipants(senderId: string, conversationId: string, message: Message, silent: boolean) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
     include: { participants: { include: { user: { select: { id: true, displayName: true } } } } },
@@ -136,6 +136,7 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
       title,
       body: `${sender.displayName} sizni eslatib o'tdi`,
       data: { conversationId, messageId: message.id, type: "mention" },
+      silent,
     });
   }
 
@@ -144,6 +145,7 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
       title,
       body: `${sender.displayName} sizning xabaringizga javob berdi`,
       data: { conversationId, messageId: message.id, type: "reply" },
+      silent,
     });
   }
 
@@ -152,6 +154,7 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
       title,
       body: isGroup ? `${sender.displayName}: ${contentLabel}` : contentLabel,
       data: { conversationId, messageId: message.id, type: "message" },
+      silent,
     });
   }
 }
@@ -269,7 +272,7 @@ export const messagesService = {
     });
 
     if (!isScheduled) {
-      notifyParticipants(userId, conversationId, message).catch(() => {});
+      notifyParticipants(userId, conversationId, message, input.silent ?? false).catch(() => {});
     }
 
     return formatMessage(message, userId);
@@ -569,7 +572,7 @@ export const messagesService = {
       });
       await prisma.conversation.update({ where: { id: m.conversationId }, data: { updatedAt: new Date() } });
 
-      notifyParticipants(m.senderId, m.conversationId, updated).catch(() => {});
+      notifyParticipants(m.senderId, m.conversationId, updated, false).catch(() => {});
       published.push(formatMessage(updated, m.senderId));
     }
     return published;
