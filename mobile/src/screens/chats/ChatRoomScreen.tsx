@@ -38,7 +38,7 @@ import { useWallpaperStore } from "../../store/wallpaperStore";
 import { useChatSettingsStore } from "../../store/chatSettingsStore";
 import { useRecentEmojiStore } from "../../store/recentEmojiStore";
 import { getWallpaperColor } from "../../theme/wallpapers";
-import { ConversationParticipant, MessageReaction, MessageType, ReportReason } from "../../types";
+import { ConversationParticipant, MessageReaction, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ViewOnceImageBubble } from "../../components/ViewOnceImageBubble";
@@ -56,6 +56,8 @@ import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 import { exportConversation } from "../../utils/chatExport";
 import { reportsApi } from "../../api/reports";
+import { getPreviewLabel } from "../../utils/messagePreview";
+import { FORMAT_PATTERN } from "../../utils/textFormat";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
@@ -69,22 +71,6 @@ const REPORT_REASONS: { value: ReportReason; label: string }[] = [
   { value: "IMPERSONATION", label: "Soxta profil" },
   { value: "OTHER", label: "Boshqa" },
 ];
-
-const REPLY_TYPE_LABELS: Partial<Record<MessageType, string>> = {
-  IMAGE: "🖼 Rasm",
-  VIDEO: "🎬 Video",
-  AUDIO: "🎵 Ovozli xabar",
-  FILE: "📄 Fayl",
-  CONTACT: "👤 Kontakt",
-  POLL: "📊 So'rovnoma",
-};
-
-function getPreviewLabel(item: { type: MessageType; text: string | null; deletedAt: string | null }) {
-  if (item.deletedAt) return "🚫 Xabar o'chirildi";
-  if (item.type === "TEXT") return item.text ?? "🔒 Xabarni ochib bo'lmadi";
-  const label = REPLY_TYPE_LABELS[item.type] ?? "Xabar";
-  return item.text ? `${label}: ${item.text}` : label;
-}
 
 function isMessageRead(message: { createdAt: string }, participant: ConversationParticipant) {
   return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);
@@ -151,11 +137,6 @@ function groupReactions(reactions: MessageReaction[]) {
 
 const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
 const EVERYONE_MENTION = "@hammasi";
-
-// WhatsApp/Telegram-style inline formatting: *bold*, _italic_, ~strikethrough~, `code`, ||spoiler||.
-// Each marker must hug non-space content so things like "5 * 3" are left alone.
-const FORMAT_PATTERN =
-  /(\*(?:[^\s*](?:[^*\n]*[^\s*])?)\*|_(?:[^\s_](?:[^_\n]*[^\s_])?)_|~(?:[^\s~](?:[^~\n]*[^\s~])?)~|`(?:[^\s`](?:[^`\n]*[^\s`])?)`|\|\|(?:[^\s|](?:[^|\n]*[^\s|])?)\|\|)/g;
 
 function SpoilerText({ text }: { text: string }) {
   const [revealed, setRevealed] = useState(false);

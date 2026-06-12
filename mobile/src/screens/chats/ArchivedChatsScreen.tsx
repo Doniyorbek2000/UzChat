@@ -11,6 +11,7 @@ import { colors } from "../../theme/colors";
 import { Conversation } from "../../types";
 import { getConversationDisplay, formatTime, isConversationUnread } from "../../utils/conversation";
 import { decryptMessage } from "../../crypto/e2ee";
+import { stripFormatting } from "../../utils/textFormat";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ArchivedChats">;
 
@@ -66,7 +67,7 @@ export function ArchivedChatsScreen({ navigation }: Props) {
     if (lastMessage.type in MEDIA_LABELS) return MEDIA_LABELS[lastMessage.type];
     try {
       const key = getConversationKey(conversation);
-      return decryptMessage(lastMessage.ciphertext, lastMessage.nonce, key);
+      return stripFormatting(decryptMessage(lastMessage.ciphertext, lastMessage.nonce, key));
     } catch {
       return "Xabarni ochib bo'lmadi";
     }

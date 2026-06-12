@@ -10,6 +10,7 @@ import { colors } from "../../theme/colors";
 import { Conversation } from "../../types";
 import { getConversationDisplay, formatTime, isConversationUnread } from "../../utils/conversation";
 import { decryptMessage } from "../../crypto/e2ee";
+import { stripFormatting } from "../../utils/textFormat";
 
 type Props = MainTabScreenProps<"Chats">;
 
@@ -103,7 +104,7 @@ export function ChatListScreen({ navigation }: Props) {
     if (lastMessage.type in MEDIA_LABELS) return MEDIA_LABELS[lastMessage.type];
     try {
       const key = getConversationKey(conversation);
-      return decryptMessage(lastMessage.ciphertext, lastMessage.nonce, key);
+      return stripFormatting(decryptMessage(lastMessage.ciphertext, lastMessage.nonce, key));
     } catch {
       return "Xabarni ochib bo'lmadi";
     }
@@ -201,7 +202,7 @@ export function ChatListScreen({ navigation }: Props) {
               ) : drafts[item.id] ? (
                 <>
                   <Text style={styles.draftLabel}>Qoralama: </Text>
-                  {drafts[item.id]}
+                  {stripFormatting(drafts[item.id])}
                 </>
               ) : (
                 renderPreview(item)
@@ -248,7 +249,7 @@ export function ChatListScreen({ navigation }: Props) {
           </View>
           <Text style={styles.preview} numberOfLines={1}>
             {conversation.type === "GROUP" && senderName ? `${senderName}: ` : ""}
-            {item.message.text}
+            {item.message.text ? stripFormatting(item.message.text) : ""}
           </Text>
         </View>
       </TouchableOpacity>
