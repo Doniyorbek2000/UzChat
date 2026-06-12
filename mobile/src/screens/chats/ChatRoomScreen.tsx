@@ -1901,6 +1901,29 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🚩 Xabarni shikoyat qilish</Text>
               </TouchableOpacity>
             )}
+          {actionMessage && actionMessage.type !== "SYSTEM" && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                const dateOptions: Intl.DateTimeFormatOptions = {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                };
+                let info = `Yuborilgan: ${new Date(message.createdAt).toLocaleString([], dateOptions)}`;
+                if (message.editedAt) {
+                  info += `\nTahrirlangan: ${new Date(message.editedAt).toLocaleString([], dateOptions)}`;
+                }
+                Alert.alert("Xabar haqida", info);
+              }}
+            >
+              <Text style={styles.actionButtonText}>ℹ️ Ma'lumot</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.actionButton} onPress={() => setActionMessage(null)}>
             <Text style={styles.actionButtonText}>Bekor qilish</Text>
           </TouchableOpacity>
