@@ -93,6 +93,10 @@ export function ContactsScreen({ navigation }: Props) {
   const onLongPressContact = (item: Contact) => {
     Alert.alert(item.alias ?? item.user.displayName, undefined, [
       {
+        text: "👤 Profilni ko'rish",
+        onPress: () => navigation.navigate("UserProfile", { userId: item.user.id }),
+      },
+      {
         text: item.isFavorite ? "⭐ Sevimlilardan olib tashlash" : "⭐ Sevimlilarga qo'shish",
         onPress: () => onToggleFavorite(item),
       },

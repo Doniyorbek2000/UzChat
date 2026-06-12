@@ -10,7 +10,7 @@ import { User } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddContact">;
 
-export function AddContactScreen(_props: Props) {
+export function AddContactScreen({ navigation }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
@@ -78,11 +78,16 @@ export function AddContactScreen(_props: Props) {
           const sent = sentIds.has(item.id);
           return (
             <View style={styles.resultRow}>
-              <Avatar uri={item.avatarUrl} name={item.displayName} size={44} />
-              <View style={styles.resultInfo}>
-                <Text style={styles.resultName}>{item.displayName}</Text>
-                <Text style={styles.resultUsername}>@{item.username}</Text>
-              </View>
+              <TouchableOpacity
+                style={styles.resultMain}
+                onPress={() => navigation.navigate("UserProfile", { userId: item.id })}
+              >
+                <Avatar uri={item.avatarUrl} name={item.displayName} size={44} />
+                <View style={styles.resultInfo}>
+                  <Text style={styles.resultName}>{item.displayName}</Text>
+                  <Text style={styles.resultUsername}>@{item.username}</Text>
+                </View>
+              </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.sendButton, sent && styles.sendButtonDone]}
                 onPress={() => onSendRequest(item)}
@@ -122,6 +127,7 @@ const styles = StyleSheet.create({
   },
   spinner: { marginBottom: 12 },
   resultRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, gap: 12 },
+  resultMain: { flexDirection: "row", alignItems: "center", flex: 1, gap: 12 },
   resultInfo: { flex: 1 },
   resultName: { fontSize: 15, fontWeight: "600", color: colors.text },
   resultUsername: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
