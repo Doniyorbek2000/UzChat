@@ -264,6 +264,9 @@ export function ChatListScreen({ navigation }: Props) {
   const archivedCount = conversations.length - visibleConversations.length;
   const hasUnread = visibleConversations.some((c) => isConversationUnread(c, user!.id));
 
+  const countUnread = (convs: Conversation[]) => convs.filter((c) => isConversationUnread(c, user!.id)).length;
+  const allUnreadCount = countUnread(visibleConversations);
+
   const activeFolder = activeFolderId ? folders.find((f) => f.id === activeFolderId) : undefined;
   const folderConversations = activeFolder
     ? visibleConversations.filter((c) => activeFolder.conversationIds.includes(c.id))
@@ -291,18 +294,31 @@ export function ChatListScreen({ navigation }: Props) {
           <Text style={[styles.folderChipText, activeFolderId === null && styles.folderChipTextActive]}>
             Barchasi
           </Text>
+          {allUnreadCount > 0 && (
+            <View style={[styles.folderBadge, activeFolderId === null && styles.folderBadgeActive]}>
+              <Text style={styles.folderBadgeText}>{allUnreadCount > 99 ? "99+" : allUnreadCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
-        {folders.map((folder) => (
-          <TouchableOpacity
-            key={folder.id}
-            style={[styles.folderChip, activeFolderId === folder.id && styles.folderChipActive]}
-            onPress={() => setActiveFolderId(folder.id)}
-          >
-            <Text style={[styles.folderChipText, activeFolderId === folder.id && styles.folderChipTextActive]}>
-              {folder.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {folders.map((folder) => {
+          const folderUnreadCount = countUnread(visibleConversations.filter((c) => folder.conversationIds.includes(c.id)));
+          return (
+            <TouchableOpacity
+              key={folder.id}
+              style={[styles.folderChip, activeFolderId === folder.id && styles.folderChipActive]}
+              onPress={() => setActiveFolderId(folder.id)}
+            >
+              <Text style={[styles.folderChipText, activeFolderId === folder.id && styles.folderChipTextActive]}>
+                {folder.name}
+              </Text>
+              {folderUnreadCount > 0 && (
+                <View style={[styles.folderBadge, activeFolderId === folder.id && styles.folderBadgeActive]}>
+                  <Text style={styles.folderBadgeText}>{folderUnreadCount > 99 ? "99+" : folderUnreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
         <TouchableOpacity style={styles.folderEditChip} onPress={() => navigation.navigate("ChatFolders")}>
           <Text style={styles.folderEditIcon}>✏️</Text>
         </TouchableOpacity>
@@ -377,6 +393,8 @@ const styles = StyleSheet.create({
   folderBar: { flexGrow: 0, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   folderBarContent: { paddingHorizontal: 8, paddingVertical: 8, alignItems: "center", gap: 8 },
   folderChip: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
@@ -385,6 +403,18 @@ const styles = StyleSheet.create({
   folderChipActive: { backgroundColor: colors.primary },
   folderChipText: { fontSize: 14, fontWeight: "500", color: colors.textSecondary },
   folderChipTextActive: { color: "#fff" },
+  folderBadge: {
+    marginLeft: 6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  folderBadgeActive: { backgroundColor: "rgba(255,255,255,0.3)" },
+  folderBadgeText: { color: "#fff", fontSize: 11, fontWeight: "700" },
   folderEditChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
