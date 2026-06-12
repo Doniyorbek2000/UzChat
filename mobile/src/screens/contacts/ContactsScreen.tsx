@@ -18,6 +18,7 @@ import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { Contact, ContactRequest } from "../../types";
 import { useContactsStore } from "../../store/contactsStore";
+import { useChatStore } from "../../store/chatStore";
 
 type Props = MainTabScreenProps<"Contacts">;
 
@@ -40,6 +41,17 @@ export function ContactsScreen({ navigation }: Props) {
       return alias.includes(query) || displayName.includes(query) || username.includes(query);
     });
   }, [contacts, search]);
+
+  const createDirectConversation = useChatStore((s) => s.createDirectConversation);
+
+  const onOpenChat = async (item: Contact) => {
+    try {
+      const conversation = await createDirectConversation(item.user);
+      navigation.navigate("ChatRoom", { conversationId: conversation.id, title: item.alias ?? item.user.displayName });
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Suhbat ochib bo'lmadi");
+    }
+  };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -189,7 +201,7 @@ export function ContactsScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.row} onLongPress={() => onLongPressContact(item)}>
+          <TouchableOpacity style={styles.row} onPress={() => onOpenChat(item)} onLongPress={() => onLongPressContact(item)}>
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
             <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
             {item.isFavorite && <Text style={styles.favoriteStar}>⭐</Text>}
