@@ -21,6 +21,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useChatStore } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { Linkify } from "../../components/Linkify";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { chatsApi } from "../../api/chats";
@@ -510,7 +511,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
               maxLength={500}
             />
           ) : (
-            <Text style={styles.descriptionText}>{conversation.description}</Text>
+            <Linkify text={conversation.description ?? ""} style={styles.descriptionText} />
           )}
         </View>
       )}

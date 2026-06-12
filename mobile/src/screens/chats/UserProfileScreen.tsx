@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
 import { useChatStore } from "../../store/chatStore";
 import { Avatar } from "../../components/Avatar";
+import { Linkify } from "../../components/Linkify";
 import { colors } from "../../theme/colors";
 import { User } from "../../types";
 import { formatTime } from "../../utils/conversation";
@@ -88,7 +89,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
       {!!profile.bio && (
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Bio</Text>
-          <Text style={styles.bio}>{profile.bio}</Text>
+          <Linkify text={profile.bio} style={styles.bio} />
         </View>
       )}
 
