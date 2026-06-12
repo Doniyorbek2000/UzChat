@@ -212,8 +212,9 @@ export const chatsController = {
   async updateParticipantRole(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;
-      const conversation = await chatsService.updateParticipantRole(req.user!.sub, id, userId, req.body.role);
+      const { conversation, systemMessage } = await chatsService.updateParticipantRole(req.user!.sub, id, userId, req.body.role);
       getIo().to(`conversation:${id}`).emit("conversation:updated", conversation);
+      getIo().to(`conversation:${id}`).emit("message:new", systemMessage);
       res.json(conversation);
     } catch (err) {
       next(err);

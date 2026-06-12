@@ -691,7 +691,23 @@ export const chatsService = {
       await prisma.conversationParticipant.update({ where: { id: target.id }, data: { role } });
     }
 
-    return chatsService.getConversation(userId, conversationId);
+    const [actor, targetUser] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } }),
+      prisma.user.findUnique({ where: { id: targetUserId }, select: { displayName: true } }),
+    ]);
+    const roleAction =
+      role === ParticipantRole.OWNER
+        ? "guruh egasi etib tayinladi"
+        : role === ParticipantRole.ADMIN
+          ? "admin etib tayinladi"
+          : "adminlikdan tushirdi";
+    const systemMessage = await createSystemMessage(
+      conversationId,
+      userId,
+      `${actor?.displayName} ${targetUser?.displayName} foydalanuvchisini ${roleAction}`
+    );
+
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
   },
 
   async updateParticipantRestriction(
