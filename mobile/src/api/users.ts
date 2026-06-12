@@ -12,6 +12,7 @@ export const usersApi = {
     bio?: string;
     avatarUrl?: string;
     lastSeenPrivacy?: LastSeenPrivacy;
+    avatarPrivacy?: LastSeenPrivacy;
     groupAddPrivacy?: GroupAddPrivacy;
     messagePrivacy?: MessagePrivacy;
     phoneNumberPrivacy?: LastSeenPrivacy;

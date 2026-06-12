@@ -2,7 +2,7 @@ import { ConversationType } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { hashPassword, verifyPassword } from "../../utils/password";
-import { filterLastSeenSingle, getContactIds, filterLastSeen } from "../../utils/lastSeen";
+import { filterLastSeenSingle, getContactIds, filterLastSeen, filterAvatarSingle, filterAvatar } from "../../utils/lastSeen";
 import { chatsService } from "../chats/chats.service";
 import {
   ChangePasswordInput,
@@ -22,6 +22,7 @@ const profileSelect = {
   publicKey: true,
   lastSeenAt: true,
   lastSeenPrivacy: true,
+  avatarPrivacy: true,
   groupAddPrivacy: true,
   messagePrivacy: true,
   phoneNumberPrivacy: true,
@@ -49,6 +50,7 @@ const publicSelect = {
   publicKey: true,
   lastSeenAt: true,
   lastSeenPrivacy: true,
+  avatarPrivacy: true,
 } as const;
 
 export const usersService = {
@@ -70,7 +72,7 @@ export const usersService = {
   async getPublicProfile(userId: string, targetId: string) {
     const user = await prisma.user.findUnique({ where: { id: targetId }, select: publicSelect });
     if (!user) throw Errors.notFound("Foydalanuvchi");
-    return filterLastSeenSingle(userId, user);
+    return filterAvatarSingle(userId, await filterLastSeenSingle(userId, user));
   },
 
   async searchUsers(currentUserId: string, query: string) {
@@ -95,7 +97,7 @@ export const usersService = {
         if (u.phoneNumberPrivacy === "CONTACTS") return contactIds.has(u.id);
         return true;
       })
-      .map(({ phone, phoneNumberPrivacy, ...u }) => filterLastSeen(currentUserId, u, contactIds));
+      .map(({ phone, phoneNumberPrivacy, ...u }) => filterAvatar(currentUserId, filterLastSeen(currentUserId, u, contactIds), contactIds));
   },
 
   async changePassword(userId: string, { currentPassword, newPassword }: ChangePasswordInput) {

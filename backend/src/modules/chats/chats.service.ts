@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { ConversationType, GroupAddPrivacy, MessagePrivacy, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { getContactIds, filterLastSeen } from "../../utils/lastSeen";
+import { getContactIds, filterLastSeen, filterAvatar } from "../../utils/lastSeen";
 import { contactsService } from "../contacts/contacts.service";
 import { createSystemMessage } from "../messages/systemMessages";
 import {
@@ -24,6 +24,7 @@ const userSummarySelect = {
   publicKey: true,
   lastSeenAt: true,
   lastSeenPrivacy: true,
+  avatarPrivacy: true,
   readReceiptsEnabled: true,
 } as const;
 
@@ -216,7 +217,7 @@ export const chatsService = {
         participants: p.conversation.participants.map((cp) => ({
           userId: cp.userId,
           role: cp.role,
-          user: omitPrivacyFlags(filterLastSeen(userId, cp.user, contactIds)),
+          user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
           lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
           restrictedUntil: cp.restrictedUntil,
         })),

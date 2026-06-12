@@ -7,6 +7,7 @@ export const updateProfileSchema = z.object({
   bio: z.string().max(256).optional(),
   avatarUrl: z.string().url().optional(),
   lastSeenPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
+  avatarPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   groupAddPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   messagePrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
   phoneNumberPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),

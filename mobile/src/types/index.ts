@@ -20,6 +20,7 @@ export interface User {
 export interface AuthUser extends User {
   phone: string;
   lastSeenPrivacy: LastSeenPrivacy;
+  avatarPrivacy: LastSeenPrivacy;
   groupAddPrivacy: GroupAddPrivacy;
   messagePrivacy: MessagePrivacy;
   phoneNumberPrivacy: LastSeenPrivacy;

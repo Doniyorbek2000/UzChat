@@ -76,6 +76,9 @@ model User {
   lastSeenAt   DateTime @default(now())
   // Who can see this user's lastSeenAt timestamp.
   lastSeenPrivacy LastSeenPrivacy @default(EVERYONE)
+  // Who can see this user's avatarUrl. Hidden users fall back to the
+  // initials placeholder on the viewer's side.
+  avatarPrivacy LastSeenPrivacy @default(EVERYONE)
   // Who can add this user to a group directly (without an invite link).
   groupAddPrivacy GroupAddPrivacy @default(EVERYONE)
   // Who can start a new direct conversation with this user. Doesn't affect

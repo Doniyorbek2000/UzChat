@@ -15,6 +15,12 @@ const LAST_SEEN_OPTIONS: { value: LastSeenPrivacy; label: string; description: s
   { value: "NOBODY", label: "Hech kim", description: "Hech kim oxirgi marta onlayn bo'lganingizni ko'ra olmaydi" },
 ];
 
+const AVATAR_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
+  { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar profil rasmingizni ko'ra oladi" },
+  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz profil rasmingizni ko'ra oladi" },
+  { value: "NOBODY", label: "Hech kim", description: "Hech kim profil rasmingizni ko'ra olmaydi, o'rniga harf ko'rinadi" },
+];
+
 const GROUP_ADD_OPTIONS: { value: GroupAddPrivacy; label: string; description: string }[] = [
   { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi sizni guruhga qo'sha oladi" },
   { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz sizni guruhga qo'sha oladi" },
@@ -45,6 +51,19 @@ export function PrivacySettingsScreen({}: Props) {
     setSaving(`lastSeen:${value}`);
     try {
       await usersApi.updateMe({ lastSeenPrivacy: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectAvatarPrivacy = async (value: LastSeenPrivacy) => {
+    if (value === user.avatarPrivacy || saving) return;
+    setSaving(`avatarPrivacy:${value}`);
+    try {
+      await usersApi.updateMe({ avatarPrivacy: value });
       await refreshProfile();
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
@@ -130,6 +149,31 @@ export function PrivacySettingsScreen({}: Props) {
               <Text style={styles.rowDescription}>{option.description}</Text>
             </View>
             {saving === `lastSeen:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Profil rasmimni kim ko'ra oladi</Text>
+      {AVATAR_PRIVACY_OPTIONS.map((option) => {
+        const selected = user.avatarPrivacy === option.value;
+        return (
+          <TouchableOpacity
+            key={option.value}
+            style={styles.row}
+            onPress={() => onSelectAvatarPrivacy(option.value)}
+            disabled={!!saving}
+          >
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+              <Text style={styles.rowDescription}>{option.description}</Text>
+            </View>
+            {saving === `avatarPrivacy:${option.value}` ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
               <View style={[styles.radio, selected && styles.radioSelected]}>

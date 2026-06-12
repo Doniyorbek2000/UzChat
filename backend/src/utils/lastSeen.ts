@@ -43,3 +43,37 @@ export async function filterLastSeenSingle<
   const { lastSeenPrivacy, ...rest } = user;
   return { ...rest, lastSeenAt: contact?.status === ContactStatus.ACCEPTED ? user.lastSeenAt : null };
 }
+
+/** Strips `avatarUrl` from `user` if `viewerId` is not allowed to see it per `user.avatarPrivacy`. */
+export function filterAvatar<T extends { id: string; avatarUrl: string | null; avatarPrivacy: LastSeenPrivacy }>(
+  viewerId: string,
+  user: T,
+  contactIds: Set<string>
+): Omit<T, "avatarPrivacy"> {
+  const { avatarPrivacy, ...rest } = user;
+  let visible = true;
+  if (user.id !== viewerId) {
+    if (avatarPrivacy === LastSeenPrivacy.NOBODY) visible = false;
+    else if (avatarPrivacy === LastSeenPrivacy.CONTACTS) visible = contactIds.has(user.id);
+  }
+  return { ...rest, avatarUrl: visible ? user.avatarUrl : null };
+}
+
+/** Convenience for filtering a single user's avatar without pre-fetching the contact set. */
+export async function filterAvatarSingle<
+  T extends { id: string; avatarUrl: string | null; avatarPrivacy: LastSeenPrivacy },
+>(viewerId: string, user: T): Promise<Omit<T, "avatarPrivacy">> {
+  if (user.id === viewerId || user.avatarPrivacy === LastSeenPrivacy.EVERYONE) {
+    const { avatarPrivacy, ...rest } = user;
+    return rest;
+  }
+  if (user.avatarPrivacy === LastSeenPrivacy.NOBODY) {
+    const { avatarPrivacy, ...rest } = user;
+    return { ...rest, avatarUrl: null };
+  }
+  const contact = await prisma.contact.findUnique({
+    where: { ownerId_targetId: { ownerId: viewerId, targetId: user.id } },
+  });
+  const { avatarPrivacy, ...rest } = user;
+  return { ...rest, avatarUrl: contact?.status === ContactStatus.ACCEPTED ? user.avatarUrl : null };
+}
