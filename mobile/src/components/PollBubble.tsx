@@ -20,9 +20,13 @@ export function PollBubble({ message, conversationId }: Props) {
   const myOptionIds = new Set(myVote?.optionIds ?? []);
   const totalVoters = votes.length;
   const closed = !!message.pollClosedAt;
+  const isQuiz = !!meta.quizCorrectOptionId;
+  const answered = myOptionIds.size > 0;
+  const showResults = !isQuiz || answered || closed;
+  const answeredCorrectly = isQuiz && answered && myOptionIds.has(meta.quizCorrectOptionId!);
 
   const onSelect = (optionId: string) => {
-    if (closed) return;
+    if (closed || (isQuiz && answered)) return;
     if (meta.multipleChoice) {
       const next = new Set(myOptionIds);
       if (next.has(optionId)) next.delete(optionId);
@@ -40,29 +44,61 @@ export function PollBubble({ message, conversationId }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📊 So'rovnoma</Text>
+      <Text style={styles.title}>{isQuiz ? "❓ Test" : "📊 So'rovnoma"}</Text>
       <Text style={styles.question}>{meta.question}</Text>
       {meta.options.map((option) => {
         const count = votes.filter((v) => v.optionIds.includes(option.id)).length;
         const percent = totalVoters > 0 ? Math.round((count / totalVoters) * 100) : 0;
         const selected = myOptionIds.has(option.id);
+        const isCorrectOption = isQuiz && option.id === meta.quizCorrectOptionId;
+        const revealCorrect = isQuiz && answered;
+        const wrongPick = revealCorrect && selected && !isCorrectOption;
         return (
-          <TouchableOpacity key={option.id} style={styles.option} onPress={() => onSelect(option.id)} disabled={closed}>
-            <View style={[styles.optionFill, { width: `${percent}%` }]} />
+          <TouchableOpacity
+            key={option.id}
+            style={[
+              styles.option,
+              revealCorrect && isCorrectOption && styles.optionCorrect,
+              wrongPick && styles.optionIncorrect,
+            ]}
+            onPress={() => onSelect(option.id)}
+            disabled={closed || (isQuiz && answered)}
+          >
+            {showResults && <View style={[styles.optionFill, { width: `${percent}%` }]} />}
             <View style={styles.optionRow}>
-              <View style={[styles.indicator, meta.multipleChoice && styles.indicatorSquare, selected && styles.indicatorSelected]}>
-                {selected && <Text style={styles.indicatorCheck}>✓</Text>}
+              <View
+                style={[
+                  styles.indicator,
+                  meta.multipleChoice && styles.indicatorSquare,
+                  selected && styles.indicatorSelected,
+                  revealCorrect && isCorrectOption && styles.indicatorCorrect,
+                  wrongPick && styles.indicatorIncorrect,
+                ]}
+              >
+                {(selected || (revealCorrect && isCorrectOption)) && (
+                  <Text style={styles.indicatorCheck}>{wrongPick ? "✗" : "✓"}</Text>
+                )}
               </View>
-              <Text style={styles.optionText}>{option.text}</Text>
-              {totalVoters > 0 && <Text style={styles.optionPercent}>{percent}%</Text>}
+              <Text style={[styles.optionText, revealCorrect && isCorrectOption && styles.optionTextCorrect]}>
+                {option.text}
+              </Text>
+              {showResults && totalVoters > 0 && <Text style={styles.optionPercent}>{percent}%</Text>}
             </View>
           </TouchableOpacity>
         );
       })}
       <Text style={styles.footer}>
-        {totalVoters === 0 ? "Hali ovoz yo'q" : `${totalVoters} ovoz`}
-        {meta.multipleChoice ? " · Bir nechta javob mumkin" : ""}
-        {meta.anonymous ? " · 🔒 Anonim" : ""}
+        {isQuiz
+          ? answered
+            ? answeredCorrectly
+              ? "✅ To'g'ri javob!"
+              : "❌ Noto'g'ri javob"
+            : "Javobingizni tanlang"
+          : totalVoters === 0
+            ? "Hali ovoz yo'q"
+            : `${totalVoters} ovoz`}
+        {!isQuiz && meta.multipleChoice ? " · Bir nechta javob mumkin" : ""}
+        {!isQuiz && meta.anonymous ? " · 🔒 Anonim" : ""}
         {closed ? " · Yopilgan" : ""}
       </Text>
     </View>
@@ -80,6 +116,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     overflow: "hidden",
   },
+  optionCorrect: { borderColor: colors.primary },
+  optionIncorrect: { borderColor: colors.danger },
   optionFill: {
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.primary,
@@ -97,8 +135,11 @@ const styles = StyleSheet.create({
   },
   indicatorSquare: { borderRadius: 4 },
   indicatorSelected: { borderColor: colors.primary, backgroundColor: colors.primary },
+  indicatorCorrect: { borderColor: colors.primary, backgroundColor: colors.primary },
+  indicatorIncorrect: { borderColor: colors.danger, backgroundColor: colors.danger },
   indicatorCheck: { color: "#fff", fontSize: 11, fontWeight: "700" },
   optionText: { flex: 1, fontSize: 14, color: colors.text },
+  optionTextCorrect: { color: colors.primaryDark, fontWeight: "600" },
   optionPercent: { fontSize: 12, color: colors.textSecondary },
   footer: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
 });

@@ -257,6 +257,8 @@ export interface PollMeta {
   multipleChoice: boolean;
   // When true, other participants' identities are hidden from pollVotes.
   anonymous: boolean;
+  // Quiz mode: the id of the correct option, revealed to a participant after they vote.
+  quizCorrectOptionId?: string;
 }
 
 /** A user-defined chat list tab (Telegram-style folder) grouping a subset of conversations. */

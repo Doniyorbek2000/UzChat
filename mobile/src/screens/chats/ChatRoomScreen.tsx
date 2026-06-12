@@ -321,6 +321,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollMultipleChoice, setPollMultipleChoice] = useState(false);
   const [pollAnonymous, setPollAnonymous] = useState(false);
+  const [pollQuiz, setPollQuiz] = useState(false);
+  const [pollCorrectIndex, setPollCorrectIndex] = useState<number | null>(null);
   const [pendingMedia, setPendingMedia] = useState<PendingMediaItem | null>(null);
   const [pendingMediaQueue, setPendingMediaQueue] = useState<PendingMediaItem[]>([]);
   const [pendingMediaTotal, setPendingMediaTotal] = useState(0);
@@ -1056,6 +1058,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPollOptions(["", ""]);
     setPollMultipleChoice(false);
     setPollAnonymous(false);
+    setPollQuiz(false);
+    setPollCorrectIndex(null);
     setPollModalVisible(true);
   };
 
@@ -1069,16 +1073,41 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const onRemovePollOption = (index: number) => {
     setPollOptions((prev) => (prev.length > 2 ? prev.filter((_, i) => i !== index) : prev));
+    setPollCorrectIndex((prev) => {
+      if (prev === null || prev === index) return null;
+      return prev > index ? prev - 1 : prev;
+    });
+  };
+
+  const onToggleQuiz = (value: boolean) => {
+    setPollQuiz(value);
+    if (value) setPollMultipleChoice(false);
+    else setPollCorrectIndex(null);
   };
 
   const onSubmitPoll = async () => {
     const question = pollQuestion.trim();
-    const options = pollOptions.map((o) => o.trim()).filter((o) => o.length > 0);
+    const trimmedOptions = pollOptions.map((o) => o.trim());
+    const options = trimmedOptions.filter((o) => o.length > 0);
     if (!question || options.length < 2) return;
+
+    let quizCorrectOptionIndex: number | undefined;
+    if (pollQuiz) {
+      if (pollCorrectIndex === null || !trimmedOptions[pollCorrectIndex]) return;
+      quizCorrectOptionIndex = trimmedOptions.slice(0, pollCorrectIndex).filter((o) => o.length > 0).length;
+    }
 
     setPollModalVisible(false);
     try {
-      await sendPollMessage(conversationId, question, options, pollMultipleChoice, pollAnonymous);
+      await sendPollMessage(
+        conversationId,
+        question,
+        options,
+        pollQuiz ? false : pollMultipleChoice,
+        pollAnonymous,
+        undefined,
+        quizCorrectOptionIndex
+      );
       scrollToLatest();
     } catch (err: any) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rovnomani yuborib bo'lmadi");
@@ -2223,15 +2252,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <TouchableOpacity onPress={() => setPollModalVisible(false)}>
             <Text style={styles.searchClose}>Bekor qilish</Text>
           </TouchableOpacity>
-          <Text style={styles.pollHeaderTitle}>Yangi so'rovnoma</Text>
+          <Text style={styles.pollHeaderTitle}>{pollQuiz ? "Yangi test" : "Yangi so'rovnoma"}</Text>
           <TouchableOpacity
             onPress={onSubmitPoll}
-            disabled={!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2}
+            disabled={
+              !pollQuestion.trim() ||
+              pollOptions.filter((o) => o.trim()).length < 2 ||
+              (pollQuiz && pollCorrectIndex === null)
+            }
           >
             <Text
               style={[
                 styles.searchClose,
-                (!pollQuestion.trim() || pollOptions.filter((o) => o.trim()).length < 2) && styles.pollSendDisabled,
+                (!pollQuestion.trim() ||
+                  pollOptions.filter((o) => o.trim()).length < 2 ||
+                  (pollQuiz && pollCorrectIndex === null)) &&
+                  styles.pollSendDisabled,
               ]}
             >
               Yuborish
@@ -2249,8 +2285,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             multiline
           />
           <Text style={styles.pollLabel}>Variantlar</Text>
+          {pollQuiz && <Text style={styles.pollHint}>To'g'ri javobni belgilash uchun doirachani bosing</Text>}
           {pollOptions.map((option, index) => (
             <View key={index} style={styles.pollOptionRow}>
+              {pollQuiz && (
+                <TouchableOpacity onPress={() => setPollCorrectIndex(index)} hitSlop={8}>
+                  <View style={[styles.pollCorrectRadio, pollCorrectIndex === index && styles.pollCorrectRadioSelected]}>
+                    {pollCorrectIndex === index && <Text style={styles.pollCorrectCheck}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+              )}
               <TextInput
                 style={[styles.pollInput, styles.pollOptionInput]}
                 value={option}
@@ -2270,13 +2314,19 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.pollAddOption}>+ Variant qo'shish</Text>
             </TouchableOpacity>
           )}
-          <View style={styles.pollSwitchRow}>
-            <Text style={styles.pollSwitchLabel}>Bir nechta javob</Text>
-            <Switch value={pollMultipleChoice} onValueChange={setPollMultipleChoice} trackColor={{ true: colors.primary }} />
-          </View>
+          {!pollQuiz && (
+            <View style={styles.pollSwitchRow}>
+              <Text style={styles.pollSwitchLabel}>Bir nechta javob</Text>
+              <Switch value={pollMultipleChoice} onValueChange={setPollMultipleChoice} trackColor={{ true: colors.primary }} />
+            </View>
+          )}
           <View style={styles.pollSwitchRow}>
             <Text style={styles.pollSwitchLabel}>Anonim so'rovnoma</Text>
             <Switch value={pollAnonymous} onValueChange={setPollAnonymous} trackColor={{ true: colors.primary }} />
+          </View>
+          <View style={styles.pollSwitchRow}>
+            <Text style={styles.pollSwitchLabel}>Test rejimi (to'g'ri javob bilan)</Text>
+            <Switch value={pollQuiz} onValueChange={onToggleQuiz} trackColor={{ true: colors.primary }} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -2738,6 +2788,18 @@ const styles = StyleSheet.create({
   pollAddOption: { color: colors.primary, fontWeight: "600", fontSize: 15, marginTop: 12 },
   pollSwitchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 24 },
   pollSwitchLabel: { fontSize: 15, color: colors.text },
+  pollHint: { fontSize: 12, color: colors.textSecondary, marginTop: -2, marginBottom: 4 },
+  pollCorrectRadio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: colors.textSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pollCorrectRadioSelected: { borderColor: colors.primary, backgroundColor: colors.primary },
+  pollCorrectCheck: { color: "#fff", fontSize: 12, fontWeight: "700" },
   exportOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
   exportBox: {
     backgroundColor: colors.background,
