@@ -76,6 +76,10 @@ export const chatsApi = {
     return apiClient.post(`/conversations/${conversationId}/clear`);
   },
 
+  deleteConversation(conversationId: string) {
+    return apiClient.delete(`/conversations/${conversationId}`);
+  },
+
   pinMessage(conversationId: string, messageId: string) {
     return apiClient
       .put<Conversation>(`/conversations/${conversationId}/pinned-messages/${messageId}`)

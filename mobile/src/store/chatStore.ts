@@ -134,6 +134,7 @@ interface ChatState {
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
   clearHistory: (conversationId: string) => Promise<void>;
+  deleteConversation: (conversationId: string) => Promise<void>;
   pinMessage: (conversationId: string, messageId: string) => Promise<void>;
   unpinMessage: (conversationId: string, messageId: string) => Promise<void>;
   unpinAllMessages: (conversationId: string) => Promise<void>;
@@ -903,6 +904,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messagesByConversation: { ...state.messagesByConversation, [conversationId]: [] },
       hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: false },
       conversations: upsertConversation(state.conversations, { ...conversation, lastMessage: null }),
+    }));
+  },
+
+  deleteConversation: async (conversationId) => {
+    await chatsApi.deleteConversation(conversationId);
+    set((state) => ({
+      conversations: state.conversations.filter((c) => c.id !== conversationId),
+      messagesByConversation: dropConversation(state.messagesByConversation, conversationId),
+      hasMoreByConversation: dropConversation(state.hasMoreByConversation, conversationId),
     }));
   },
 

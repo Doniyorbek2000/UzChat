@@ -87,6 +87,15 @@ export const chatsController = {
     }
   },
 
+  async deleteConversation(req: Request, res: Response, next: NextFunction) {
+    try {
+      await chatsService.deleteConversation(req.user!.sub, req.params.id);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async listCommonGroups(req: Request, res: Response, next: NextFunction) {
     try {
       const groups = await chatsService.listCommonGroups(req.user!.sub, req.params.userId);

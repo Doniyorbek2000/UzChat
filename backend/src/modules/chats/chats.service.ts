@@ -186,53 +186,59 @@ export const chatsService = {
 
     const blockedIds = new Set(blocked.map((b) => b.blockedId));
 
-    return participations.map((p) => {
-      const other = p.conversation.participants.find((cp) => cp.userId !== userId);
-      return {
-        id: p.conversation.id,
-        type: p.conversation.type,
-        title: p.conversation.title,
-        description: p.conversation.description,
-        avatarUrl: p.conversation.avatarUrl,
-        updatedAt: p.conversation.updatedAt,
-        wrappedKey: p.wrappedKey,
-        wrappedKeyNonce: p.wrappedKeyNonce,
-        keySenderPublicKey: p.keySenderPublicKey,
-        lastReadAt: p.lastReadAt,
-        isPinned: !!p.pinnedAt,
-        isMuted: isParticipantMuted(p),
-        mutedUntil: p.mutedUntil,
-        isArchived: p.isArchived,
-        markedUnread: p.markedUnread,
-        isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
-        inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
-        inviteCodeExpiresAt: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeExpiresAt,
-        inviteCodeMaxUses: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeMaxUses,
-        inviteCodeUseCount: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeUseCount,
-        disappearingSeconds: p.conversation.disappearingSeconds,
-        onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
-        slowModeSeconds: p.conversation.slowModeSeconds,
-        noForwards: p.conversation.noForwards,
-        requireAdminApproval: p.conversation.requireAdminApproval,
-        membersCanAddMembers: p.conversation.membersCanAddMembers,
-        membersCanPinMessages: p.conversation.membersCanPinMessages,
-        membersCanChangeInfo: p.conversation.membersCanChangeInfo,
-        membersCanSendMedia: p.conversation.membersCanSendMedia,
-        isSelf: p.conversation.isSelf,
-        pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
-        participants: p.conversation.participants.map((cp) => ({
-          userId: cp.userId,
-          role: cp.role,
-          user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
-          lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
-          restrictedUntil: cp.restrictedUntil,
-        })),
-        lastMessage:
-          p.clearedAt && p.conversation.messages[0] && p.conversation.messages[0].createdAt <= p.clearedAt
-            ? null
-            : p.conversation.messages[0] ?? null,
-      };
-    });
+    return participations
+      .filter((p) => {
+        if (!p.hiddenAt) return true;
+        const lastMessage = p.conversation.messages[0];
+        return !!lastMessage && lastMessage.createdAt > p.hiddenAt;
+      })
+      .map((p) => {
+        const other = p.conversation.participants.find((cp) => cp.userId !== userId);
+        return {
+          id: p.conversation.id,
+          type: p.conversation.type,
+          title: p.conversation.title,
+          description: p.conversation.description,
+          avatarUrl: p.conversation.avatarUrl,
+          updatedAt: p.conversation.updatedAt,
+          wrappedKey: p.wrappedKey,
+          wrappedKeyNonce: p.wrappedKeyNonce,
+          keySenderPublicKey: p.keySenderPublicKey,
+          lastReadAt: p.lastReadAt,
+          isPinned: !!p.pinnedAt,
+          isMuted: isParticipantMuted(p),
+          mutedUntil: p.mutedUntil,
+          isArchived: p.isArchived,
+          markedUnread: p.markedUnread,
+          isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
+          inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
+          inviteCodeExpiresAt: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeExpiresAt,
+          inviteCodeMaxUses: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeMaxUses,
+          inviteCodeUseCount: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeUseCount,
+          disappearingSeconds: p.conversation.disappearingSeconds,
+          onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
+          slowModeSeconds: p.conversation.slowModeSeconds,
+          noForwards: p.conversation.noForwards,
+          requireAdminApproval: p.conversation.requireAdminApproval,
+          membersCanAddMembers: p.conversation.membersCanAddMembers,
+          membersCanPinMessages: p.conversation.membersCanPinMessages,
+          membersCanChangeInfo: p.conversation.membersCanChangeInfo,
+          membersCanSendMedia: p.conversation.membersCanSendMedia,
+          isSelf: p.conversation.isSelf,
+          pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
+          participants: p.conversation.participants.map((cp) => ({
+            userId: cp.userId,
+            role: cp.role,
+            user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
+            lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
+            restrictedUntil: cp.restrictedUntil,
+          })),
+          lastMessage:
+            p.clearedAt && p.conversation.messages[0] && p.conversation.messages[0].createdAt <= p.clearedAt
+              ? null
+              : p.conversation.messages[0] ?? null,
+        };
+      });
   },
 
   async getConversation(userId: string, conversationId: string) {
@@ -334,6 +340,21 @@ export const chatsService = {
     await prisma.conversationParticipant.update({
       where: { id: participant.id },
       data: { clearedAt: new Date() },
+    });
+  },
+
+  /**
+   * Removes a conversation from this user's chat list and clears its history
+   * for them. The other participant(s) are unaffected, and the conversation
+   * reappears in this user's list once a newer message arrives.
+   */
+  async deleteConversation(userId: string, conversationId: string) {
+    const participant = await chatsService.assertParticipant(userId, conversationId);
+
+    const now = new Date();
+    await prisma.conversationParticipant.update({
+      where: { id: participant.id },
+      data: { hiddenAt: now, clearedAt: now, pinnedAt: null, isArchived: false, markedUnread: false },
     });
   },
 

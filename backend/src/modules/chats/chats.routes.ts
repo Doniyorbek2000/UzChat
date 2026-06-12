@@ -40,6 +40,7 @@ chatsRouter.delete("/:id/invite-link", chatsController.revokeInviteLink);
 chatsRouter.get("/invite/:code", chatsController.getInvitePreview);
 chatsRouter.post("/invite/:code/join", validateBody(joinByInviteSchema), chatsController.joinByInvite);
 chatsRouter.post("/:id/clear", chatsController.clearHistory);
+chatsRouter.delete("/:id", chatsController.deleteConversation);
 chatsRouter.post("/:id/leave", chatsController.leave);
 chatsRouter.post("/:id/participants", validateBody(addParticipantSchema), chatsController.addParticipant);
 chatsRouter.delete("/:id/participants/:userId", chatsController.removeParticipant);

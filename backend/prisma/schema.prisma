@@ -337,6 +337,10 @@ model ConversationParticipant {
   markedUnread Boolean   @default(false)
   // Messages created at or before this time are hidden from this user only.
   clearedAt    DateTime?
+  // Set when this user "deletes" the conversation from their chat list (its
+  // history is cleared too). The conversation reappears once a message newer
+  // than this arrives.
+  hiddenAt     DateTime?
   // GROUP only: when set and in the future, this MEMBER cannot send messages
   // until this time (admin-imposed restriction).
   restrictedUntil DateTime?
