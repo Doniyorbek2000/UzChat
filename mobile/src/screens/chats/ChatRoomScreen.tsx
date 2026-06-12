@@ -1559,8 +1559,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           )}
           {actionMessage &&
-            actionMessage.senderId === user?.id &&
-            Date.now() - new Date(actionMessage.createdAt).getTime() <= RECALL_WINDOW_MS && (
+            ((actionMessage.senderId === user?.id &&
+              Date.now() - new Date(actionMessage.createdAt).getTime() <= RECALL_WINDOW_MS) ||
+              (conversation?.type === "GROUP" &&
+                actionMessage.senderId !== user?.id &&
+                actionMessage.type !== "SYSTEM" &&
+                (myRole === "OWNER" || myRole === "ADMIN"))) && (
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => {

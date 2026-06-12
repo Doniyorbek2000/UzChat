@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { ConversationType, Message, MessageType } from "@prisma/client";
+import { ConversationType, Message, MessageType, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { isUserOnline } from "../../sockets";
@@ -365,13 +365,17 @@ export const messagesService = {
   },
 
   async deleteMessage(userId: string, conversationId: string, messageId: string) {
-    await chatsService.assertParticipant(userId, conversationId);
+    const participant = await chatsService.assertParticipant(userId, conversationId);
 
     const message = await prisma.message.findUnique({ where: { id: messageId } });
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
-    if (message.senderId !== userId) throw Errors.forbidden();
     if (message.deletedAt) return message;
-    if (Date.now() - message.createdAt.getTime() > RECALL_WINDOW_MS) {
+
+    const isOwnMessage = message.senderId === userId;
+    const isGroupManager = participant.role === ParticipantRole.OWNER || participant.role === ParticipantRole.ADMIN;
+    if (!isOwnMessage && !isGroupManager) throw Errors.forbidden();
+
+    if (isOwnMessage && Date.now() - message.createdAt.getTime() > RECALL_WINDOW_MS) {
       throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 2 daqiqa ichida o'chirish mumkin");
     }
 
