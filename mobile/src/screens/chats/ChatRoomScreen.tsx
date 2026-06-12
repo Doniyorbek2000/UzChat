@@ -287,6 +287,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [selection, setSelection] = useState<{ start: number; end: number }>({ start: 0, end: 0 });
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
+  const [viewedMentionIds, setViewedMentionIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -660,6 +661,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
     prevMessagesLengthRef.current = messages.length;
   }, [messages, showScrollToBottom, user?.id]);
+
+  // Snapshot of "last read" at the moment this screen opened, used to find @mentions that were
+  // still unread when the user arrived (markRead fires immediately after, so we can't rely on
+  // the live value to know what was unread "before").
+  const initialLastReadAtRef = useRef<string | null>(null);
+  const initialLastReadAtCapturedRef = useRef(false);
+  useEffect(() => {
+    if (!initialLastReadAtCapturedRef.current && conversation) {
+      initialLastReadAtRef.current = conversation.participants.find((p) => p.userId === user?.id)?.lastReadAt ?? null;
+      initialLastReadAtCapturedRef.current = true;
+    }
+  }, [conversation, user?.id]);
 
   const getAuthorName = (senderId: string) => {
     if (senderId === user?.id) return "Siz";
@@ -1158,6 +1171,24 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const isGroup = conversation?.type === "GROUP";
   const canSend = !isGroup || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
 
+  const unreadMentions =
+    isGroup && initialLastReadAtCapturedRef.current
+      ? messages.filter(
+          (m) =>
+            m.mentions.includes(user?.id ?? "") &&
+            m.senderId !== user?.id &&
+            !viewedMentionIds.has(m.id) &&
+            (!initialLastReadAtRef.current || new Date(m.createdAt) > new Date(initialLastReadAtRef.current))
+        )
+      : [];
+
+  const onJumpToMention = () => {
+    const next = unreadMentions[0];
+    if (!next) return;
+    setViewedMentionIds((prev) => new Set(prev).add(next.id));
+    navigation.setParams({ highlightMessageId: next.id });
+  };
+
   const renderItem = ({ item }: { item: DecryptedMessage }) => {
     if (item.type === "SYSTEM") {
       return (
@@ -1347,6 +1378,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           ) : null
         }
       />
+      {unreadMentions.length > 0 && (
+        <TouchableOpacity style={[styles.scrollToBottomButton, styles.mentionButton]} onPress={onJumpToMention}>
+          <Text style={styles.scrollToBottomIcon}>@</Text>
+          <View style={styles.scrollToBottomBadge}>
+            <Text style={styles.scrollToBottomBadgeText}>{unreadMentions.length > 99 ? "99+" : unreadMentions.length}</Text>
+          </View>
+        </TouchableOpacity>
+      )}
       {showScrollToBottom && (
         <TouchableOpacity style={styles.scrollToBottomButton} onPress={onScrollToBottomPress}>
           <Text style={styles.scrollToBottomIcon}>↓</Text>
@@ -2024,6 +2063,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   scrollToBottomIcon: { fontSize: 18, color: colors.primary, fontWeight: "700" },
+  mentionButton: { bottom: 124 },
   scrollToBottomBadge: {
     position: "absolute",
     top: -4,
