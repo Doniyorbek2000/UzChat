@@ -244,6 +244,12 @@ model Conversation {
   // must approve it.
   requireAdminApproval Boolean @default(false)
 
+  // GROUP only: when true, regular MEMBERs (not just owner/admins) can add new participants.
+  membersCanAddMembers Boolean @default(false)
+
+  // GROUP only: when true, regular MEMBERs (not just owner/admins) can pin/unpin messages.
+  membersCanPinMessages Boolean @default(false)
+
   participants ConversationParticipant[]
   messages     Message[]
   joinRequests GroupJoinRequest[]

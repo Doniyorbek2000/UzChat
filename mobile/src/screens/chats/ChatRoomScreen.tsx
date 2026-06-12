@@ -686,6 +686,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const canMentionEveryone = !conversation || conversation.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
   const canForwardOrCopy =
     !conversation || conversation.type !== "GROUP" || !conversation.noForwards || myRole === "OWNER" || myRole === "ADMIN";
+  const canManagePins =
+    !conversation ||
+    conversation.type !== "GROUP" ||
+    myRole === "OWNER" ||
+    myRole === "ADMIN" ||
+    conversation.membersCanPinMessages;
 
   const mentionSuggestions =
     mentionQuery !== null
@@ -1360,7 +1366,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.pinnedListIcon}>☰</Text>
             </TouchableOpacity>
           )}
-          {(!isGroup || myRole === "OWNER" || myRole === "ADMIN") && (
+          {canManagePins && (
             <TouchableOpacity onPress={onUnpinLatest} hitSlop={8}>
               <Text style={styles.pinnedClose}>✕</Text>
             </TouchableOpacity>
@@ -1644,7 +1650,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           {actionMessage &&
             !actionMessage.deletedAt &&
-            (!isGroup || myRole === "OWNER" || myRole === "ADMIN") && (
+            canManagePins && (
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => {

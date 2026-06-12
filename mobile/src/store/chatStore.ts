@@ -154,6 +154,8 @@ interface ChatState {
       slowModeSeconds?: number;
       noForwards?: boolean;
       requireAdminApproval?: boolean;
+      membersCanAddMembers?: boolean;
+      membersCanPinMessages?: boolean;
     }
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;

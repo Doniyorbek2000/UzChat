@@ -214,6 +214,8 @@ export const chatsService = {
         slowModeSeconds: p.conversation.slowModeSeconds,
         noForwards: p.conversation.noForwards,
         requireAdminApproval: p.conversation.requireAdminApproval,
+        membersCanAddMembers: p.conversation.membersCanAddMembers,
+        membersCanPinMessages: p.conversation.membersCanPinMessages,
         isSelf: p.conversation.isSelf,
         pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
         participants: p.conversation.participants.map((cp) => ({
@@ -286,6 +288,8 @@ export const chatsService = {
       slowModeSeconds: participant.conversation.slowModeSeconds,
       noForwards: participant.conversation.noForwards,
       requireAdminApproval: participant.conversation.requireAdminApproval,
+      membersCanAddMembers: participant.conversation.membersCanAddMembers,
+      membersCanPinMessages: participant.conversation.membersCanPinMessages,
       isSelf: participant.conversation.isSelf,
       pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
       participants: participant.conversation.participants.map((cp) => ({
@@ -629,7 +633,9 @@ export const chatsService = {
     }
 
     const requester = conversation.participants.find((p) => p.userId === userId);
-    if (!requester || (requester.role !== ParticipantRole.OWNER && requester.role !== ParticipantRole.ADMIN)) {
+    if (!requester) throw Errors.forbidden();
+    const isManager = requester.role === ParticipantRole.OWNER || requester.role === ParticipantRole.ADMIN;
+    if (!isManager && !conversation.membersCanAddMembers) {
       throw Errors.forbidden();
     }
 
@@ -671,7 +677,10 @@ export const chatsService = {
     return participant;
   },
 
-  /** In a GROUP, only OWNER/ADMIN can pin/unpin messages; in a DIRECT chat, either participant can. */
+  /**
+   * In a GROUP, only OWNER/ADMIN can pin/unpin messages, unless `membersCanPinMessages`
+   * is enabled, in which case any MEMBER can too. In a DIRECT chat, either participant can.
+   */
   async assertCanManagePins(userId: string, conversationId: string) {
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
@@ -684,7 +693,8 @@ export const chatsService = {
     if (
       conversation.type === ConversationType.GROUP &&
       requester.role !== ParticipantRole.OWNER &&
-      requester.role !== ParticipantRole.ADMIN
+      requester.role !== ParticipantRole.ADMIN &&
+      !conversation.membersCanPinMessages
     ) {
       throw Errors.forbidden();
     }
@@ -744,6 +754,8 @@ export const chatsService = {
         ...(input.slowModeSeconds !== undefined ? { slowModeSeconds: input.slowModeSeconds } : {}),
         ...(input.noForwards !== undefined ? { noForwards: input.noForwards } : {}),
         ...(input.requireAdminApproval !== undefined ? { requireAdminApproval: input.requireAdminApproval } : {}),
+        ...(input.membersCanAddMembers !== undefined ? { membersCanAddMembers: input.membersCanAddMembers } : {}),
+        ...(input.membersCanPinMessages !== undefined ? { membersCanPinMessages: input.membersCanPinMessages } : {}),
       },
     });
 
@@ -805,6 +817,31 @@ export const chatsService = {
           input.requireAdminApproval
             ? `${name} qo'shilish so'rovlari uchun admin tasdiqlashini yoqdi`
             : `${name} qo'shilish so'rovlari uchun admin tasdiqlashini o'chirdi`
+        )
+      );
+    }
+    if (input.membersCanAddMembers !== undefined && input.membersCanAddMembers !== conversation.membersCanAddMembers) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.membersCanAddMembers
+            ? `${name} a'zolarga yangi a'zo qo'shishga ruxsat berdi`
+            : `${name} a'zolarga yangi a'zo qo'shishni man qildi`
+        )
+      );
+    }
+    if (
+      input.membersCanPinMessages !== undefined &&
+      input.membersCanPinMessages !== conversation.membersCanPinMessages
+    ) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.membersCanPinMessages
+            ? `${name} a'zolarga xabarlarni qadashga ruxsat berdi`
+            : `${name} a'zolarga xabarlarni qadashni man qildi`
         )
       );
     }

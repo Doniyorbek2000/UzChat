@@ -56,6 +56,8 @@ export const chatsApi = {
       slowModeSeconds?: number;
       noForwards?: boolean;
       requireAdminApproval?: boolean;
+      membersCanAddMembers?: boolean;
+      membersCanPinMessages?: boolean;
     }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);

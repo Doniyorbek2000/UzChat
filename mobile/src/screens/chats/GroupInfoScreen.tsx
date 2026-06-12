@@ -197,6 +197,22 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleMembersCanAddMembers = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { membersCanAddMembers: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
+  const onToggleMembersCanPinMessages = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { membersCanPinMessages: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onSetSlowMode = () => {
     Alert.alert(
       "Sekin rejim",
@@ -547,6 +563,16 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteText}>A'zolarga nusxalash va yo'naltirishni man qilish</Text>
             <Switch value={conversation.noForwards} onValueChange={onToggleNoForwards} />
           </View>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>➕</Text>
+            <Text style={styles.inviteText}>A'zolar yangi a'zo qo'shishi mumkin</Text>
+            <Switch value={conversation.membersCanAddMembers} onValueChange={onToggleMembersCanAddMembers} />
+          </View>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>📌</Text>
+            <Text style={styles.inviteText}>A'zolar xabarlarni qadashi mumkin</Text>
+            <Switch value={conversation.membersCanPinMessages} onValueChange={onToggleMembersCanPinMessages} />
+          </View>
         </View>
       )}
 
@@ -555,7 +581,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         keyExtractor={(item) => item.userId}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
-          canManage ? (
+          canManage || conversation.membersCanAddMembers ? (
             <TouchableOpacity
               style={styles.addButton}
               onPress={() => navigation.navigate("AddGroupMember", { conversationId })}

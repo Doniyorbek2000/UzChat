@@ -144,6 +144,10 @@ export interface Conversation {
   // GROUP only: when true, joining via invite link creates a pending request
   // that an owner/admin must approve.
   requireAdminApproval: boolean;
+  // GROUP only: when true, regular members (not just owner/admins) can add new participants.
+  membersCanAddMembers: boolean;
+  // GROUP only: when true, regular members (not just owner/admins) can pin/unpin messages.
+  membersCanPinMessages: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.
