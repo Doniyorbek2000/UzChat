@@ -108,3 +108,18 @@ export function decodeInviteLink(invite: string): { code: string; key: string } 
   if (dot <= 0 || dot === trimmed.length - 1) return null;
   return { code: trimmed.slice(0, dot), key: trimmed.slice(dot + 1) };
 }
+
+/**
+ * Derives a numeric "security code" from two users' public keys. Both
+ * participants in a DIRECT chat can compute this independently and compare
+ * it (e.g. by reading it aloud) to verify no one is tampering with their
+ * end-to-end encrypted conversation key exchange.
+ */
+export function getSecurityCode(publicKeyA: string, publicKeyB: string): string {
+  const combined = [publicKeyA, publicKeyB].sort().join("");
+  const hash = nacl.hash(decodeUTF8(combined));
+  const digits = Array.from(hash.slice(0, 30))
+    .map((byte) => byte % 10)
+    .join("");
+  return digits.match(/.{1,5}/g)!.join("  ");
+}

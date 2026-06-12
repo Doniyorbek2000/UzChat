@@ -35,6 +35,7 @@ export type RootStackParamList = {
   JoinRequests: { conversationId: string };
   CommonGroups: { userId: string };
   UserProfile: { userId: string };
+  EncryptionKey: { userId: string; displayName: string };
   ForwardMessage: { conversationId: string; messageIds: string[] };
   ShareContact: { conversationId: string };
   SharedMedia: { conversationId: string };

@@ -103,6 +103,18 @@ export function UserProfileScreen({ route, navigation }: Props) {
           <Text style={styles.actionIcon}>📤</Text>
           <Text style={styles.actionText}>Profilni ulashish</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionRow}
+          onPress={() =>
+            navigation.navigate("EncryptionKey", {
+              userId: profile.id,
+              displayName: contactAliases[profile.id] ?? profile.displayName,
+            })
+          }
+        >
+          <Text style={styles.actionIcon}>🔐</Text>
+          <Text style={styles.actionText}>Shifrlash kaliti</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

@@ -15,6 +15,7 @@ import { JoinGroupScreen } from "../screens/chats/JoinGroupScreen";
 import { JoinRequestsScreen } from "../screens/chats/JoinRequestsScreen";
 import { CommonGroupsScreen } from "../screens/chats/CommonGroupsScreen";
 import { UserProfileScreen } from "../screens/chats/UserProfileScreen";
+import { EncryptionKeyScreen } from "../screens/chats/EncryptionKeyScreen";
 import { ForwardMessageScreen } from "../screens/chats/ForwardMessageScreen";
 import { ShareContactScreen } from "../screens/chats/ShareContactScreen";
 import { SharedMediaScreen } from "../screens/chats/SharedMediaScreen";
@@ -166,6 +167,7 @@ export function RootNavigator() {
             <Stack.Screen name="JoinRequests" component={JoinRequestsScreen} options={{ title: "Qo'shilish so'rovlari" }} />
             <Stack.Screen name="CommonGroups" component={CommonGroupsScreen} options={{ title: "Umumiy guruhlar" }} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ title: "Profil" }} />
+            <Stack.Screen name="EncryptionKey" component={EncryptionKeyScreen} options={{ title: "Shifrlash kaliti" }} />
             <Stack.Screen name="ForwardMessage" component={ForwardMessageScreen} options={{ title: "Yo'naltirish" }} />
             <Stack.Screen name="ShareContact" component={ShareContactScreen} options={{ title: "Kontakt yuborish" }} />
             <Stack.Screen name="SharedMedia" component={SharedMediaScreen} options={{ title: "Umumiy media" }} />
