@@ -1194,6 +1194,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const isGroup = conversation?.type === "GROUP";
   const canSend = !isGroup || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
 
+  const slowModeSeconds = isGroup && myRole === "MEMBER" ? conversation?.slowModeSeconds ?? 0 : 0;
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!slowModeSeconds) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [slowModeSeconds]);
+  const lastOwnMessage = slowModeSeconds
+    ? [...messages].reverse().find((m) => m.senderId === user?.id && !m.deletedAt && !m.scheduledFor)
+    : undefined;
+  const slowModeRemaining = lastOwnMessage
+    ? Math.max(0, slowModeSeconds - Math.floor((now - new Date(lastOwnMessage.createdAt).getTime()) / 1000))
+    : 0;
+
   const unreadMentions =
     isGroup && initialLastReadAtCapturedRef.current
       ? messages.filter(
@@ -1504,6 +1518,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               ))}
             </View>
           )}
+          {slowModeRemaining > 0 && (
+            <View style={styles.slowModeBar}>
+              <Text style={styles.slowModeText}>
+                🐢 Sekin rejim: yana {slowModeRemaining} soniyadan keyin xabar yuborishingiz mumkin
+              </Text>
+            </View>
+          )}
           {selection.start !== selection.end && (
             <View style={styles.formatToolbar}>
               <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("*")}>
@@ -1545,7 +1566,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 style={styles.sendButton}
                 onPress={() => onSend()}
                 onLongPress={onSendOptions}
-                disabled={!!editingMessage}
+                disabled={!!editingMessage || slowModeRemaining > 0}
               >
                 <Text style={styles.sendText}>Yuborish</Text>
               </TouchableOpacity>
@@ -2338,6 +2359,14 @@ const styles = StyleSheet.create({
   },
   blockedText: { flex: 1, fontSize: 13, color: colors.textSecondary },
   blockedAction: { fontSize: 13, fontWeight: "600", color: colors.primary },
+  slowModeBar: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: colors.background,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  slowModeText: { fontSize: 12, color: colors.textSecondary, textAlign: "center" },
   recordingDot: {
     width: 10,
     height: 10,
