@@ -87,6 +87,15 @@ export const chatsController = {
     }
   },
 
+  async listCommonGroups(req: Request, res: Response, next: NextFunction) {
+    try {
+      const groups = await chatsService.listCommonGroups(req.user!.sub, req.params.userId);
+      res.json(groups);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async pinMessage(req: Request, res: Response, next: NextFunction) {
     try {
       const { conversation, systemMessage } = await chatsService.pinMessage(req.user!.sub, req.params.id, req.params.messageId);

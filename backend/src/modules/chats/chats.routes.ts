@@ -57,6 +57,7 @@ chatsRouter.post("/:id/join-requests/:requestId/approve", chatsController.approv
 chatsRouter.post("/:id/join-requests/:requestId/decline", chatsController.declineJoinRequest);
 
 chatsRouter.get("/starred/messages", messagesController.listStarred);
+chatsRouter.get("/common-groups/:userId", chatsController.listCommonGroups);
 
 chatsRouter.get("/:id/scheduled-messages", messagesController.listScheduled);
 chatsRouter.delete("/:id/scheduled-messages/:messageId", messagesController.cancelScheduled);

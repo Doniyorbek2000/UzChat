@@ -158,6 +158,14 @@ export interface GroupJoinRequest {
   createdAt: string;
 }
 
+// A GROUP conversation that both the current user and another user are members of.
+export interface CommonGroup {
+  id: string;
+  title: string | null;
+  avatarUrl: string | null;
+  memberCount: number;
+}
+
 export interface Contact {
   id: string;
   alias: string | null;

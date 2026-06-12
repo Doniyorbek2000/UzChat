@@ -329,6 +329,30 @@ export const chatsService = {
     });
   },
 
+  /** GROUP conversations where both userId and otherUserId are participants. */
+  async listCommonGroups(userId: string, otherUserId: string) {
+    const groups = await prisma.conversation.findMany({
+      where: {
+        type: ConversationType.GROUP,
+        AND: [{ participants: { some: { userId } } }, { participants: { some: { userId: otherUserId } } }],
+      },
+      select: {
+        id: true,
+        title: true,
+        avatarUrl: true,
+        _count: { select: { participants: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    return groups.map((g) => ({
+      id: g.id,
+      title: g.title,
+      avatarUrl: g.avatarUrl,
+      memberCount: g._count.participants,
+    }));
+  },
+
   async pinMessage(userId: string, conversationId: string, messageId: string) {
     await chatsService.assertCanManagePins(userId, conversationId);
 

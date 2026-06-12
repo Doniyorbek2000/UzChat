@@ -425,6 +425,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (!otherUser) return;
     Alert.alert(otherUserDisplayName, undefined, [
       { text: "🖼 Umumiy media", onPress: () => navigation.navigate("SharedMedia", { conversationId }) },
+      { text: "👥 Umumiy guruhlar", onPress: () => navigation.navigate("CommonGroups", { userId: otherUser.id }) },
       { text: "📤 Suhbatni eksport qilish", onPress: onExportChat },
       { text: "🗑 Suhbatni tozalash", onPress: onClearHistory },
       {

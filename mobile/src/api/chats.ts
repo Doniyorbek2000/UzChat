@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { Conversation, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
+import { CommonGroup, Conversation, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -227,5 +227,9 @@ export const chatsApi = {
 
   listStarred() {
     return apiClient.get<Message[]>("/conversations/starred/messages").then((r) => r.data);
+  },
+
+  listCommonGroups(userId: string) {
+    return apiClient.get<CommonGroup[]>(`/conversations/common-groups/${userId}`).then((r) => r.data);
   },
 };
