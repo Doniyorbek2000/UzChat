@@ -87,8 +87,9 @@ export const chatsController = {
 
   async pinMessage(req: Request, res: Response, next: NextFunction) {
     try {
-      const conversation = await chatsService.pinMessage(req.user!.sub, req.params.id, req.params.messageId);
+      const { conversation, systemMessage } = await chatsService.pinMessage(req.user!.sub, req.params.id, req.params.messageId);
       getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
+      if (systemMessage) getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
       res.json(conversation);
     } catch (err) {
       next(err);

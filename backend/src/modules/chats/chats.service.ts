@@ -333,13 +333,23 @@ export const chatsService = {
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni qadab bo'lmaydi");
 
+    const alreadyPinned = await prisma.pinnedMessage.findUnique({
+      where: { conversationId_messageId: { conversationId, messageId } },
+    });
+
     await prisma.pinnedMessage.upsert({
       where: { conversationId_messageId: { conversationId, messageId } },
       create: { conversationId, messageId, pinnedBy: userId },
       update: {},
     });
 
-    return chatsService.getConversation(userId, conversationId);
+    let systemMessage = null;
+    if (!alreadyPinned) {
+      const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+      systemMessage = await createSystemMessage(conversationId, userId, `${actor?.displayName} xabarni qadab qo'ydi`);
+    }
+
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
   },
 
   async unpinMessage(userId: string, conversationId: string, messageId: string) {
