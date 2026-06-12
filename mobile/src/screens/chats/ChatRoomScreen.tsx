@@ -961,6 +961,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const onAttach = () => {
+    if (!canSendMedia) {
+      Alert.alert("Cheklangan", "Bu guruhda a'zolar faqat matnli xabar yuborishi mumkin");
+      return;
+    }
     Alert.alert("Yuborish", "Nimani yubormoqchisiz?", [
       { text: "🖼 Rasm", onPress: pickImage },
       { text: "📄 Fayl", onPress: pickFile },
@@ -1193,6 +1197,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const isGroup = conversation?.type === "GROUP";
   const canSend = !isGroup || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
+  const canSendMedia =
+    !isGroup || conversation?.membersCanSendMedia !== false || myRole === "OWNER" || myRole === "ADMIN";
 
   const slowModeSeconds = isGroup && myRole === "MEMBER" ? conversation?.slowModeSeconds ?? 0 : 0;
   const [now, setNow] = useState(Date.now());
@@ -1571,7 +1577,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.sendText}>Yuborish</Text>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.attachButton} onPress={startRecording} disabled={sending || !!editingMessage}>
+              <TouchableOpacity
+                style={styles.attachButton}
+                onPress={startRecording}
+                disabled={sending || !!editingMessage || !canSendMedia}
+              >
                 <Text style={styles.attachIcon}>🎤</Text>
               </TouchableOpacity>
             )}

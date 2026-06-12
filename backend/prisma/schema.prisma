@@ -254,6 +254,10 @@ model Conversation {
   // group's title, photo, and description.
   membersCanChangeInfo Boolean @default(false)
 
+  // GROUP only: when false, regular MEMBERs can only send TEXT messages (no
+  // photos, videos, voice notes, files, contacts, or polls).
+  membersCanSendMedia Boolean @default(true)
+
   participants ConversationParticipant[]
   messages     Message[]
   joinRequests GroupJoinRequest[]

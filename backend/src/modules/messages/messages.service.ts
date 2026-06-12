@@ -228,6 +228,15 @@ export const messagesService = {
 
     if (
       conversation?.type === ConversationType.GROUP &&
+      !conversation.membersCanSendMedia &&
+      participant.role === "MEMBER" &&
+      input.type !== MessageType.TEXT
+    ) {
+      throw Errors.forbidden("Bu guruhda a'zolar faqat matnli xabar yuborishi mumkin");
+    }
+
+    if (
+      conversation?.type === ConversationType.GROUP &&
       participant.role === "MEMBER" &&
       participant.restrictedUntil !== null &&
       participant.restrictedUntil.getTime() > Date.now()

@@ -151,6 +151,8 @@ export interface Conversation {
   // GROUP only: when true, regular members (not just owner/admins) can edit the
   // group's title, photo, and description.
   membersCanChangeInfo: boolean;
+  // GROUP only: when false, regular members can only send TEXT messages.
+  membersCanSendMedia: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.

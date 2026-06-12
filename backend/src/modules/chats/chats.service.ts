@@ -217,6 +217,7 @@ export const chatsService = {
         membersCanAddMembers: p.conversation.membersCanAddMembers,
         membersCanPinMessages: p.conversation.membersCanPinMessages,
         membersCanChangeInfo: p.conversation.membersCanChangeInfo,
+        membersCanSendMedia: p.conversation.membersCanSendMedia,
         isSelf: p.conversation.isSelf,
         pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
         participants: p.conversation.participants.map((cp) => ({
@@ -292,6 +293,7 @@ export const chatsService = {
       membersCanAddMembers: participant.conversation.membersCanAddMembers,
       membersCanPinMessages: participant.conversation.membersCanPinMessages,
       membersCanChangeInfo: participant.conversation.membersCanChangeInfo,
+      membersCanSendMedia: participant.conversation.membersCanSendMedia,
       isSelf: participant.conversation.isSelf,
       pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
       participants: participant.conversation.participants.map((cp) => ({
@@ -798,6 +800,7 @@ export const chatsService = {
         ...(input.membersCanAddMembers !== undefined ? { membersCanAddMembers: input.membersCanAddMembers } : {}),
         ...(input.membersCanPinMessages !== undefined ? { membersCanPinMessages: input.membersCanPinMessages } : {}),
         ...(input.membersCanChangeInfo !== undefined ? { membersCanChangeInfo: input.membersCanChangeInfo } : {}),
+        ...(input.membersCanSendMedia !== undefined ? { membersCanSendMedia: input.membersCanSendMedia } : {}),
       },
     });
 
@@ -898,6 +901,20 @@ export const chatsService = {
           input.membersCanChangeInfo
             ? `${name} a'zolarga guruh ma'lumotlarini tahrirlashga ruxsat berdi`
             : `${name} a'zolarga guruh ma'lumotlarini tahrirlashni man qildi`
+        )
+      );
+    }
+    if (
+      input.membersCanSendMedia !== undefined &&
+      input.membersCanSendMedia !== conversation.membersCanSendMedia
+    ) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.membersCanSendMedia
+            ? `${name} a'zolarga media yuborishga ruxsat berdi`
+            : `${name} a'zolarga faqat matnli xabar yuborishni ruxsat berdi`
         )
       );
     }

@@ -222,6 +222,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleMembersCanSendMedia = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { membersCanSendMedia: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onSetSlowMode = () => {
     Alert.alert(
       "Sekin rejim",
@@ -586,6 +594,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteIcon}>✏️</Text>
             <Text style={styles.inviteText}>A'zolar guruh ma'lumotlarini tahrirlashi mumkin</Text>
             <Switch value={conversation.membersCanChangeInfo} onValueChange={onToggleMembersCanChangeInfo} />
+          </View>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>🖼️</Text>
+            <Text style={styles.inviteText}>A'zolar media yuborishi mumkin</Text>
+            <Switch value={conversation.membersCanSendMedia} onValueChange={onToggleMembersCanSendMedia} />
           </View>
         </View>
       )}

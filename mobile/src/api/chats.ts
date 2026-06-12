@@ -59,6 +59,7 @@ export const chatsApi = {
       membersCanAddMembers?: boolean;
       membersCanPinMessages?: boolean;
       membersCanChangeInfo?: boolean;
+      membersCanSendMedia?: boolean;
     }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);
