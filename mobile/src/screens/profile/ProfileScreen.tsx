@@ -139,10 +139,11 @@ export function ProfileScreen({ navigation }: Props) {
       </View>
 
       <Text style={styles.label}>Ism</Text>
-      <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} />
+      <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} maxLength={64} />
 
       <Text style={styles.label}>Bio</Text>
-      <TextInput style={[styles.input, styles.bioInput]} value={bio} onChangeText={setBio} multiline />
+      <TextInput style={[styles.input, styles.bioInput]} value={bio} onChangeText={setBio} multiline maxLength={256} />
+      <Text style={styles.charCounter}>{bio.length}/256</Text>
 
       <TouchableOpacity style={styles.button} onPress={onSave} disabled={saving}>
         {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Saqlash</Text>}
@@ -251,6 +252,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   bioInput: { minHeight: 80, textAlignVertical: "top" },
+  charCounter: { fontSize: 12, color: colors.textSecondary, textAlign: "right", marginTop: 4 },
   usernameInputRow: {
     flexDirection: "row",
     alignItems: "center",

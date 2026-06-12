@@ -488,7 +488,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           {canEditInfo ? (
-            <TextInput style={styles.titleInput} value={title} onChangeText={setTitle} onBlur={onSaveTitle} />
+            <TextInput style={styles.titleInput} value={title} onChangeText={setTitle} onBlur={onSaveTitle} maxLength={64} />
           ) : (
             <Text style={styles.title}>{conversation.title}</Text>
           )}
