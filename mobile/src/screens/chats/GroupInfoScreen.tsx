@@ -242,9 +242,19 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   };
 
   const onMemberPress = (participant: ConversationParticipant) => {
-    if (participant.userId === user?.id || !canManage) return;
+    if (participant.userId === user?.id) return;
+
+    if (!canManage) {
+      navigation.navigate("UserProfile", { userId: participant.userId });
+      return;
+    }
 
     const options: { text: string; style?: "default" | "destructive" | "cancel"; onPress?: () => void }[] = [];
+
+    options.push({
+      text: "👤 Profilni ko'rish",
+      onPress: () => navigation.navigate("UserProfile", { userId: participant.userId }),
+    });
 
     if (isOwner) {
       if (participant.role === "MEMBER") {
@@ -557,7 +567,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.row}
-            activeOpacity={canManage && item.userId !== user?.id ? 0.6 : 1}
+            activeOpacity={item.userId !== user?.id ? 0.6 : 1}
             onPress={() => onMemberPress(item)}
           >
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />

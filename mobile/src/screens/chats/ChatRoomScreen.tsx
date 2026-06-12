@@ -1275,7 +1275,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           ]}
         >
           {isGroup && !isOwn && sender && (
-            <Text style={styles.senderName}>{contactAliases[sender.id] ?? sender.displayName}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("UserProfile", { userId: sender.id })}>
+              <Text style={styles.senderName}>{contactAliases[sender.id] ?? sender.displayName}</Text>
+            </TouchableOpacity>
           )}
           {item.forwardedFromName && !item.deletedAt && (
             <Text style={styles.forwardedLabel}>↪ Yo'naltirilgan: {item.forwardedFromName}</Text>
