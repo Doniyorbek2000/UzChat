@@ -151,6 +151,7 @@ interface ChatState {
       description?: string | null;
       onlyAdminsCanSend?: boolean;
       slowModeSeconds?: number;
+      noForwards?: boolean;
     }
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;

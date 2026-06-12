@@ -169,6 +169,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleNoForwards = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { noForwards: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onSetSlowMode = () => {
     Alert.alert(
       "Sekin rejim",
@@ -415,11 +423,13 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           <Text style={styles.inviteIcon}>🖼</Text>
           <Text style={styles.inviteText}>Umumiy media</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.inviteRow} onPress={onExportChat} disabled={exporting}>
-          <Text style={styles.inviteIcon}>📤</Text>
-          <Text style={styles.inviteText}>Suhbatni eksport qilish</Text>
-          {exporting && <ActivityIndicator color={colors.primary} size="small" />}
-        </TouchableOpacity>
+        {(conversation.type !== "GROUP" || !conversation.noForwards || canManage) && (
+          <TouchableOpacity style={styles.inviteRow} onPress={onExportChat} disabled={exporting}>
+            <Text style={styles.inviteIcon}>📤</Text>
+            <Text style={styles.inviteText}>Suhbatni eksport qilish</Text>
+            {exporting && <ActivityIndicator color={colors.primary} size="small" />}
+          </TouchableOpacity>
+        )}
       </View>
 
       {canManage && (
@@ -469,6 +479,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteText}>Sekin rejim</Text>
             <Text style={styles.inviteValue}>{formatSlowModeDuration(conversation.slowModeSeconds)}</Text>
           </TouchableOpacity>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>🔒</Text>
+            <Text style={styles.inviteText}>A'zolarga nusxalash va yo'naltirishni man qilish</Text>
+            <Switch value={conversation.noForwards} onValueChange={onToggleNoForwards} />
+          </View>
         </View>
       )}
 

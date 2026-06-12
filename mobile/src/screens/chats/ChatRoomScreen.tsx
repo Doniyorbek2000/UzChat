@@ -463,9 +463,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         ),
         headerRight: () => (
           <View style={styles.headerActions}>
-            <TouchableOpacity onPress={onBulkForward} hitSlop={8}>
-              <Text style={styles.headerInfoIcon}>➡️</Text>
-            </TouchableOpacity>
+            {canForwardOrCopy && (
+              <TouchableOpacity onPress={onBulkForward} hitSlop={8}>
+                <Text style={styles.headerInfoIcon}>➡️</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity onPress={() => onBulkStar()} hitSlop={8}>
               <Text style={styles.headerInfoIcon}>⭐</Text>
             </TouchableOpacity>
@@ -534,6 +536,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     conversationId,
     conversation?.type,
     conversation?.isBlocked,
+    conversation?.noForwards,
     presenceLabel,
     otherUser,
     selectionMode,
@@ -637,6 +640,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
   const canMentionEveryone = !conversation || conversation.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
+  const canForwardOrCopy =
+    !conversation || conversation.type !== "GROUP" || !conversation.noForwards || myRole === "OWNER" || myRole === "ADMIN";
 
   const mentionSuggestions =
     mentionQuery !== null
@@ -1448,6 +1453,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           )}
           {actionMessage &&
+            canForwardOrCopy &&
             (actionMessage.type === "TEXT" ||
               actionMessage.type === "IMAGE" ||
               actionMessage.type === "VIDEO" ||
@@ -1524,7 +1530,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.actionButtonText}>👁 Kim ko'rdi</Text>
             </TouchableOpacity>
           )}
-          {actionMessage && !actionMessage.decryptFailed && !actionMessage.viewOnce && (
+          {actionMessage && canForwardOrCopy && !actionMessage.decryptFailed && !actionMessage.viewOnce && (
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => {

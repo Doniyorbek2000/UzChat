@@ -209,6 +209,7 @@ export const chatsService = {
         disappearingSeconds: p.conversation.disappearingSeconds,
         onlyAdminsCanSend: p.conversation.onlyAdminsCanSend,
         slowModeSeconds: p.conversation.slowModeSeconds,
+        noForwards: p.conversation.noForwards,
         isSelf: p.conversation.isSelf,
         pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
         participants: p.conversation.participants.map((cp) => ({
@@ -279,6 +280,7 @@ export const chatsService = {
       disappearingSeconds: participant.conversation.disappearingSeconds,
       onlyAdminsCanSend: participant.conversation.onlyAdminsCanSend,
       slowModeSeconds: participant.conversation.slowModeSeconds,
+      noForwards: participant.conversation.noForwards,
       isSelf: participant.conversation.isSelf,
       pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
       participants: participant.conversation.participants.map((cp) => ({
@@ -561,6 +563,7 @@ export const chatsService = {
         ...(input.description !== undefined ? { description: input.description } : {}),
         ...(input.onlyAdminsCanSend !== undefined ? { onlyAdminsCanSend: input.onlyAdminsCanSend } : {}),
         ...(input.slowModeSeconds !== undefined ? { slowModeSeconds: input.slowModeSeconds } : {}),
+        ...(input.noForwards !== undefined ? { noForwards: input.noForwards } : {}),
       },
     });
 

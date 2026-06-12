@@ -134,6 +134,8 @@ export interface Conversation {
   onlyAdminsCanSend: boolean;
   // GROUP only: minimum seconds a member must wait between their messages; 0 disables it.
   slowModeSeconds: number;
+  // GROUP only: when true, MEMBERs can't forward, copy, or export messages from this group.
+  noForwards: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.

@@ -54,6 +54,7 @@ export const chatsApi = {
       description?: string | null;
       onlyAdminsCanSend?: boolean;
       slowModeSeconds?: number;
+      noForwards?: boolean;
     }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);
