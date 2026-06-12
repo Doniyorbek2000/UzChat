@@ -142,6 +142,12 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
+  getStats(conversationId: string) {
+    return apiClient
+      .get<{ total: number; media: number; voice: number; files: number }>(`/conversations/${conversationId}/stats`)
+      .then((r) => r.data);
+  },
+
   sendMessage(conversationId: string, input: SendMessageInput) {
     return apiClient.post<Message>(`/conversations/${conversationId}/messages`, input).then((r) => r.data);
   },

@@ -325,6 +325,32 @@ export const messagesService = {
     return messages.map((m) => formatMessage(m, userId));
   },
 
+  async getStats(userId: string, conversationId: string) {
+    const participant = await chatsService.assertParticipant(userId, conversationId);
+
+    const counts = await prisma.message.groupBy({
+      by: ["type"],
+      where: {
+        conversationId,
+        scheduledFor: null,
+        deletedAt: null,
+        NOT: { hiddenFor: { has: userId } },
+        ...(participant.clearedAt ? { createdAt: { gt: participant.clearedAt } } : {}),
+      },
+      _count: { _all: true },
+    });
+
+    const byType = new Map(counts.map((c) => [c.type, c._count._all]));
+    const total = counts.filter((c) => c.type !== MessageType.SYSTEM).reduce((sum, c) => sum + c._count._all, 0);
+
+    return {
+      total,
+      media: (byType.get(MessageType.IMAGE) ?? 0) + (byType.get(MessageType.VIDEO) ?? 0),
+      voice: byType.get(MessageType.AUDIO) ?? 0,
+      files: byType.get(MessageType.FILE) ?? 0,
+    };
+  },
+
   async deleteMessage(userId: string, conversationId: string, messageId: string) {
     await chatsService.assertParticipant(userId, conversationId);
 

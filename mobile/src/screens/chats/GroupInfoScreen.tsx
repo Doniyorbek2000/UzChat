@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Switch,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore } from "../../store/chatStore";
@@ -19,6 +20,7 @@ import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
+import { chatsApi } from "../../api/chats";
 import { exportConversation } from "../../utils/chatExport";
 import { encodeInviteLink } from "../../crypto/e2ee";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
@@ -56,6 +58,16 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [stats, setStats] = useState<{ total: number; media: number; voice: number; files: number } | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      chatsApi
+        .getStats(conversationId)
+        .then(setStats)
+        .catch(() => {});
+    }, [conversationId])
+  );
 
   if (!conversation) return null;
 
@@ -415,6 +427,27 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       )}
 
+      {stats && (
+        <View style={styles.statsSection}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats.total}</Text>
+            <Text style={styles.statLabel}>💬 Xabar</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats.media}</Text>
+            <Text style={styles.statLabel}>🖼 Media</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats.voice}</Text>
+            <Text style={styles.statLabel}>🎵 Ovozli</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{stats.files}</Text>
+            <Text style={styles.statLabel}>📄 Fayl</Text>
+          </View>
+        </View>
+      )}
+
       <View style={styles.inviteSection}>
         <TouchableOpacity
           style={styles.inviteRow}
@@ -560,6 +593,15 @@ const styles = StyleSheet.create({
   descriptionLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4, fontWeight: "600" },
   descriptionText: { fontSize: 15, color: colors.text, lineHeight: 20 },
   descriptionInput: { fontSize: 15, color: colors.text, lineHeight: 20, padding: 0 },
+  statsSection: {
+    flexDirection: "row",
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  statBox: { flex: 1, alignItems: "center" },
+  statValue: { fontSize: 17, fontWeight: "700", color: colors.text },
+  statLabel: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   inviteSection: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,

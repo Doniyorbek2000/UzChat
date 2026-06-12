@@ -36,6 +36,15 @@ export const messagesController = {
     }
   },
 
+  async getStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const stats = await messagesService.getStats(req.user!.sub, req.params.id);
+      res.json(stats);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async markRead(req: Request, res: Response, next: NextFunction) {
     try {
       await messagesService.markRead(req.user!.sub, req.params.id);

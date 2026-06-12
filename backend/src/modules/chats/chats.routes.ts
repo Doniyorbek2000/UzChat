@@ -58,6 +58,7 @@ chatsRouter.delete("/:id/scheduled-messages/:messageId", messagesController.canc
 
 chatsRouter.get("/:id/messages", messagesController.list);
 chatsRouter.get("/:id/media", messagesController.listMedia);
+chatsRouter.get("/:id/stats", messagesController.getStats);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);
 chatsRouter.post("/:id/read", messagesController.markRead);
 chatsRouter.delete("/:id/messages/:messageId", messagesController.remove);
