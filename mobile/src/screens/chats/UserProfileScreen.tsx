@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Share } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Share, Modal, Pressable, Image } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
@@ -16,6 +16,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
+  const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
@@ -74,7 +75,9 @@ export function UserProfileScreen({ route, navigation }: Props) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Avatar uri={profile.avatarUrl} name={profile.displayName} size={88} online={isOnline} />
+        <TouchableOpacity disabled={!profile.avatarUrl} onPress={() => setAvatarViewerOpen(true)}>
+          <Avatar uri={profile.avatarUrl} name={profile.displayName} size={88} online={isOnline} />
+        </TouchableOpacity>
         <Text style={styles.name}>{contactAliases[profile.id] ?? profile.displayName}</Text>
         <Text style={styles.username}>@{profile.username}</Text>
         {(isOnline || profile.lastSeenAt) && (
@@ -116,6 +119,11 @@ export function UserProfileScreen({ route, navigation }: Props) {
           <Text style={styles.actionText}>Shifrlash kaliti</Text>
         </TouchableOpacity>
       </View>
+      <Modal visible={avatarViewerOpen} transparent animationType="fade" onRequestClose={() => setAvatarViewerOpen(false)}>
+        <Pressable style={styles.viewerOverlay} onPress={() => setAvatarViewerOpen(false)}>
+          {profile.avatarUrl && <Image source={{ uri: profile.avatarUrl }} style={styles.viewerImage} resizeMode="contain" />}
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -150,4 +158,14 @@ const styles = StyleSheet.create({
   },
   actionIcon: { fontSize: 18 },
   actionText: { fontSize: 15, color: colors.text, flex: 1 },
+  viewerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewerImage: {
+    width: "100%",
+    height: "100%",
+  },
 });

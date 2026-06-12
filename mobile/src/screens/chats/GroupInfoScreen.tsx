@@ -10,6 +10,9 @@ import {
   ActivityIndicator,
   Share,
   Switch,
+  Modal,
+  Pressable,
+  Image,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "@react-navigation/native";
@@ -57,6 +60,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const [title, setTitle] = useState(conversation?.title ?? "");
   const [description, setDescription] = useState(conversation?.description ?? "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [stats, setStats] = useState<{ total: number; media: number; voice: number; files: number } | null>(null);
@@ -246,6 +250,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         { text: "Bekor qilish", style: "cancel" as const },
       ]
     );
+  };
+
+  const onPressAvatar = () => {
+    if (canEditInfo) {
+      onChangeAvatar();
+    } else if (conversation.avatarUrl) {
+      setAvatarViewerOpen(true);
+    }
   };
 
   const onChangeAvatar = async () => {
@@ -456,7 +468,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onChangeAvatar} disabled={!canEditInfo || uploadingAvatar}>
+        <TouchableOpacity onPress={onPressAvatar} disabled={uploadingAvatar || (!canEditInfo && !conversation.avatarUrl)}>
           <Avatar uri={conversation.avatarUrl} name={conversation.title ?? "Guruh"} size={72} />
           {uploadingAvatar && (
             <View style={styles.avatarOverlay}>
@@ -664,6 +676,12 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       <TouchableOpacity style={styles.leaveButton} onPress={onLeave}>
         <Text style={styles.leaveButtonText}>Guruhdan chiqish</Text>
       </TouchableOpacity>
+
+      <Modal visible={avatarViewerOpen} transparent animationType="fade" onRequestClose={() => setAvatarViewerOpen(false)}>
+        <Pressable style={styles.viewerOverlay} onPress={() => setAvatarViewerOpen(false)}>
+          {conversation.avatarUrl && <Image source={{ uri: conversation.avatarUrl }} style={styles.viewerImage} resizeMode="contain" />}
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -727,4 +745,14 @@ const styles = StyleSheet.create({
   clearButtonText: { color: colors.text, fontSize: 16, fontWeight: "600" },
   leaveButton: { paddingVertical: 16, alignItems: "center" },
   leaveButtonText: { color: colors.danger, fontSize: 16, fontWeight: "600" },
+  viewerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewerImage: {
+    width: "100%",
+    height: "100%",
+  },
 });
