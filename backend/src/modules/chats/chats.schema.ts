@@ -136,6 +136,10 @@ export const setNoForwardsSchema = z.object({
   noForwards: z.boolean(),
 });
 
+export const patSchema = z.object({
+  targetUserId: z.string().uuid(),
+});
+
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;

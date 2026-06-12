@@ -107,6 +107,11 @@ export const chatsApi = {
     return apiClient.put<Conversation>(`/conversations/${conversationId}/no-forwards`, { noForwards }).then((r) => r.data);
   },
 
+  // WeChat-style "pat on the shoulder": posts a playful system message naming the actor and target.
+  pat(conversationId: string, targetUserId: string) {
+    return apiClient.post(`/conversations/${conversationId}/pat`, { targetUserId }).then((r) => r.data);
+  },
+
   removeParticipant(conversationId: string, userId: string) {
     return apiClient.delete<Conversation>(`/conversations/${conversationId}/participants/${userId}`).then((r) => r.data);
   },

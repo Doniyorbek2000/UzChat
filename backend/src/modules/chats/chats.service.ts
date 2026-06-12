@@ -1190,4 +1190,31 @@ export const chatsService = {
 
     return chatsService.getConversation(userId, conversationId);
   },
+
+  // WeChat-style "pat on the shoulder": posts a playful system message naming the actor and target.
+  async pat(userId: string, conversationId: string, targetUserId: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+
+    const requester = conversation.participants.find((p) => p.userId === userId);
+    if (!requester) throw Errors.forbidden();
+
+    const target = conversation.participants.find((p) => p.userId === targetUserId);
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+
+    const [actor, recipient] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } }),
+      prisma.user.findUnique({ where: { id: targetUserId }, select: { displayName: true } }),
+    ]);
+
+    const text =
+      userId === targetUserId
+        ? `${actor?.displayName} o'zini elkasidan qoqib qo'ydi 👋`
+        : `${actor?.displayName} ${recipient?.displayName}ni elkasidan qoqib qo'ydi 👋`;
+
+    return createSystemMessage(conversationId, userId, text);
+  },
 };

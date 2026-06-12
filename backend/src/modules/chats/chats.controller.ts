@@ -352,4 +352,14 @@ export const chatsController = {
       next(err);
     }
   },
+
+  async pat(req: Request, res: Response, next: NextFunction) {
+    try {
+      const systemMessage = await chatsService.pat(req.user!.sub, req.params.id, req.body.targetUserId);
+      getIo().to(`conversation:${req.params.id}`).emit("message:new", systemMessage);
+      res.status(201).json(systemMessage);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

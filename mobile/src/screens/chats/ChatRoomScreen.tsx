@@ -271,6 +271,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const toggleReaction = useChatStore((s) => s.toggleReaction);
   const toggleStar = useChatStore((s) => s.toggleStar);
   const closePoll = useChatStore((s) => s.closePoll);
+  const patUser = useChatStore((s) => s.patUser);
   const blockUser = useChatStore((s) => s.blockUser);
   const unblockUser = useChatStore((s) => s.unblockUser);
   const clearHistory = useChatStore((s) => s.clearHistory);
@@ -1950,6 +1951,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               }}
             >
               <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🙈 Mendan o'chirish</Text>
+            </TouchableOpacity>
+          )}
+          {actionMessage && actionMessage.senderId !== user?.id && actionMessage.type !== "SYSTEM" && !actionMessage.deletedAt && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                patUser(conversationId, message.senderId).catch(() => {});
+              }}
+            >
+              <Text style={styles.actionButtonText}>👋 Chimchilash</Text>
             </TouchableOpacity>
           )}
           {actionMessage &&

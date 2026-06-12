@@ -148,6 +148,7 @@ interface ChatState {
   unpinAllMessages: (conversationId: string) => Promise<void>;
   setDisappearingMessages: (conversationId: string, disappearingSeconds: number | null) => Promise<void>;
   setNoForwards: (conversationId: string, noForwards: boolean) => Promise<void>;
+  patUser: (conversationId: string, targetUserId: string) => Promise<void>;
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
   setTyping: (conversationId: string, isTyping: boolean) => void;
@@ -986,6 +987,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));
+  },
+
+  // The resulting system message arrives via the "message:new" socket event for all participants, including us.
+  patUser: async (conversationId, targetUserId) => {
+    await chatsApi.pat(conversationId, targetUserId);
   },
 
   blockUser: async (userId) => {
