@@ -45,6 +45,7 @@ export function ChatListScreen({ navigation }: Props) {
   const folders = useChatStore((s) => s.folders);
   const loadFolders = useChatStore((s) => s.loadFolders);
   const searchAllMessages = useChatStore((s) => s.searchAllMessages);
+  const isConnected = useChatStore((s) => s.isConnected);
   const user = useAuthStore((s) => s.user);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -303,6 +304,11 @@ export function ChatListScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {!isConnected && (
+        <View style={styles.connectionBanner}>
+          <Text style={styles.connectionBannerText}>📡 Aloqa yo'q. Qayta ulanmoqda...</Text>
+        </View>
+      )}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.folderBar} contentContainerStyle={styles.folderBarContent}>
         <TouchableOpacity
           style={[styles.folderChip, activeFolderId === null && styles.folderChipActive]}
@@ -407,6 +413,8 @@ export function ChatListScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
+  connectionBanner: { backgroundColor: colors.danger, paddingVertical: 6, alignItems: "center" },
+  connectionBannerText: { color: "#fff", fontSize: 13, fontWeight: "600" },
   folderBar: { flexGrow: 0, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   folderBarContent: { paddingHorizontal: 8, paddingVertical: 8, alignItems: "center", gap: 8 },
   folderChip: {

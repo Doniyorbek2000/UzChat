@@ -70,6 +70,7 @@ interface ChatState {
   typingUsers: Record<string, Set<string>>;
   recordingUsers: Record<string, Set<string>>;
   onlineUsers: Set<string>;
+  isConnected: boolean;
   listenersRegistered: boolean;
   drafts: Record<string, string>;
   contactAliases: Record<string, string>;
@@ -275,6 +276,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   typingUsers: {},
   recordingUsers: {},
   onlineUsers: new Set(),
+  isConnected: true,
   listenersRegistered: false,
   drafts: {},
   contactAliases: {},
@@ -1166,6 +1168,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (get().listenersRegistered) return;
     const socket = getSocket();
     if (!socket) return;
+
+    set({ isConnected: socket.connected });
+    socket.on("connect", () => set({ isConnected: true }));
+    socket.on("disconnect", () => set({ isConnected: false }));
 
     socket.on("message:new", (message: Message) => {
       const conversation = get().conversations.find((c) => c.id === message.conversationId);
