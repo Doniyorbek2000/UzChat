@@ -677,7 +677,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!conversation) throw new Error("Suhbat topilmadi");
 
     const key = get().getConversationKey(conversation);
-    const { ciphertext, nonce } = encryptMessage(text, key);
+
+    const existing = (get().messagesByConversation[conversationId] ?? []).find((m) => m.id === messageId);
+
+    let payload = text;
+    if (existing && MEDIA_TYPES.includes(existing.type) && existing.meta) {
+      const meta: MediaMeta = { ...existing.meta, caption: text || undefined };
+      payload = JSON.stringify(meta);
+    }
+
+    const { ciphertext, nonce } = encryptMessage(payload, key);
 
     const updated = await chatsApi.editMessage(conversationId, messageId, { ciphertext, nonce, mentions });
     const decrypted = decryptToMessage(key, updated);

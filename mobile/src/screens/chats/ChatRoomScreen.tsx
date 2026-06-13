@@ -825,7 +825,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const onSend = async (scheduledFor?: string, silent?: boolean) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    const isMediaCaptionEdit = !!editingMessage && editingMessage.type !== "TEXT";
+    if (!trimmed && !isMediaCaptionEdit) return;
     const mentions = pendingMentions.filter((id) => {
       if (trimmed.includes(EVERYONE_MENTION)) return true;
       const username = conversation?.participants.find((p) => p.userId === id)?.user.username;
@@ -1742,12 +1743,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               placeholder="Xabar yozing..."
               multiline
             />
-            {text.trim() ? (
+            {text.trim() || editingMessage ? (
               <TouchableOpacity
                 style={styles.sendButton}
                 onPress={() => onSend()}
                 onLongPress={onSendOptions}
-                disabled={!!editingMessage || slowModeRemaining > 0}
+                disabled={!editingMessage && slowModeRemaining > 0}
               >
                 <Text style={styles.sendText}>Yuborish</Text>
               </TouchableOpacity>
@@ -1835,7 +1836,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             )}
           {actionMessage &&
             actionMessage.senderId === user?.id &&
-            actionMessage.type === "TEXT" &&
+            (actionMessage.type === "TEXT" ||
+              actionMessage.type === "IMAGE" ||
+              actionMessage.type === "VIDEO" ||
+              actionMessage.type === "FILE") &&
             !actionMessage.decryptFailed &&
             Date.now() - new Date(actionMessage.createdAt).getTime() <= RECALL_WINDOW_MS && (
               <TouchableOpacity
