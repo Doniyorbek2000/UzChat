@@ -331,6 +331,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pendingMediaQueue, setPendingMediaQueue] = useState<PendingMediaItem[]>([]);
   const [pendingMediaTotal, setPendingMediaTotal] = useState(0);
   const [mediaCaption, setMediaCaption] = useState("");
+  const [mediaSpoiler, setMediaSpoiler] = useState(false);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
@@ -1012,6 +1013,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPendingMedia(null);
     setPendingMediaQueue([]);
     setPendingMediaTotal(0);
+    setMediaSpoiler(false);
   };
 
   const sendPendingMedia = async (viewOnce: boolean) => {
@@ -1020,11 +1022,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const caption = mediaCaption.trim();
     const replyToId = replyingTo?.id;
     const queue = pendingMediaQueue;
+    const isSpoiler = mediaSpoiler;
     setReplyingTo(null);
     setMediaCaption("");
+    setMediaSpoiler(false);
     setSending(true);
     try {
-      await sendMediaMessage(conversationId, asset, type, replyToId, viewOnce, caption || undefined);
+      await sendMediaMessage(conversationId, asset, type, replyToId, viewOnce, caption || undefined, isSpoiler);
       scrollToLatest();
       if (queue.length > 0) {
         setPendingMedia(queue[0]);
@@ -2432,6 +2436,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </TouchableOpacity>
             {pendingMedia?.type === "IMAGE" && (
               <TouchableOpacity
+                style={[styles.mediaPreviewSpoiler, mediaSpoiler && styles.mediaPreviewSpoilerActive]}
+                onPress={() => setMediaSpoiler((v) => !v)}
+                disabled={sending}
+              >
+                <Text style={styles.mediaPreviewSpoilerText}>🙈</Text>
+              </TouchableOpacity>
+            )}
+            {pendingMedia?.type === "IMAGE" && (
+              <TouchableOpacity
                 style={styles.mediaPreviewViewOnce}
                 onPress={() => sendPendingMedia(true)}
                 disabled={sending}
@@ -2920,6 +2933,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   mediaPreviewViewOnceText: { fontSize: 20 },
+  mediaPreviewSpoiler: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
+  },
+  mediaPreviewSpoilerActive: {
+    backgroundColor: colors.primary,
+  },
+  mediaPreviewSpoilerText: { fontSize: 20 },
   mediaPreviewSend: {
     flex: 1,
     backgroundColor: colors.primary,

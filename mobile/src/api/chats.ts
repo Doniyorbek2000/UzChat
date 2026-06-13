@@ -21,6 +21,8 @@ export interface SendMessageInput {
   scheduledFor?: string;
   // "View once" (IMAGE only): media is deleted server-side after the recipient views it.
   viewOnce?: boolean;
+  // Media (IMAGE/VIDEO) sent with a blur overlay; tap to reveal.
+  isSpoiler?: boolean;
   // POLL only: hides who voted for what from other participants.
   pollAnonymous?: boolean;
   // "Send without sound": recipients are notified silently (no notification sound).

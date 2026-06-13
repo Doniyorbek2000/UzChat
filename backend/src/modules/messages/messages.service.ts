@@ -342,6 +342,7 @@ export const messagesService = {
           expiresAt,
           scheduledFor: isScheduled ? new Date(input.scheduledFor!) : null,
           viewOnce: input.viewOnce ?? false,
+          isSpoiler: input.isSpoiler ?? false,
           pollAnonymous: input.pollAnonymous ?? false,
         },
         include: messageInclude(userId),

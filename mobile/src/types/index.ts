@@ -115,6 +115,8 @@ export interface Message {
   // the recipient views it once.
   viewOnce: boolean;
   viewedAt: string | null;
+  // Media (IMAGE/VIDEO) sent with a blur overlay; tap to reveal.
+  isSpoiler: boolean;
   // POLL only: when set, the poll creator has closed voting.
   pollClosedAt: string | null;
 }

@@ -17,6 +17,8 @@ export const sendMessageSchema = z
     scheduledFor: z.string().datetime().optional(),
     // "View once": media is deleted after the recipient views it (IMAGE only).
     viewOnce: z.boolean().optional(),
+    // Media sent with a blur overlay; recipient taps to reveal (IMAGE/VIDEO only).
+    isSpoiler: z.boolean().optional(),
     // POLL only: hides who voted for what from other participants.
     pollAnonymous: z.boolean().optional(),
     // "Send without sound": recipients are notified silently (no notification sound).
@@ -29,6 +31,10 @@ export const sendMessageSchema = z
   .refine((data) => !data.viewOnce || data.type === "IMAGE", {
     message: "Bir martalik ko'rish faqat rasmlar uchun mavjud",
     path: ["viewOnce"],
+  })
+  .refine((data) => !data.isSpoiler || data.type === "IMAGE" || data.type === "VIDEO", {
+    message: "Spoyler faqat rasm va video uchun mavjud",
+    path: ["isSpoiler"],
   })
   .refine((data) => !data.pollAnonymous || data.type === "POLL", {
     message: "Anonim rejim faqat so'rovnomalar uchun mavjud",

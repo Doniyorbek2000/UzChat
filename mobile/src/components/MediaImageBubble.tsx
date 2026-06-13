@@ -16,6 +16,7 @@ export function MediaImageBubble({ message, conversationKey }: Props) {
   const [uri, setUri] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [revealed, setRevealed] = useState(!message.isSpoiler);
   const meta = message.meta;
 
   useEffect(() => {
@@ -61,8 +62,19 @@ export function MediaImageBubble({ message, conversationKey }: Props) {
 
   return (
     <>
-      <Pressable onPress={() => setViewerOpen(true)}>
-        <Image source={{ uri }} style={[styles.image, { width, height }]} resizeMode="cover" />
+      <Pressable onPress={() => (revealed ? setViewerOpen(true) : setRevealed(true))}>
+        <Image
+          source={{ uri }}
+          style={[styles.image, { width, height }, !revealed && styles.spoilerImage]}
+          resizeMode="cover"
+          blurRadius={revealed ? 0 : 40}
+        />
+        {!revealed && (
+          <View style={styles.spoilerOverlay}>
+            <Text style={styles.spoilerIcon}>👁</Text>
+            <Text style={styles.spoilerText}>Ko'rsatish uchun bosing</Text>
+          </View>
+        )}
       </Pressable>
       <Modal visible={viewerOpen} transparent animationType="fade" onRequestClose={() => setViewerOpen(false)}>
         <Pressable style={styles.viewerOverlay} onPress={() => setViewerOpen(false)}>
@@ -82,6 +94,25 @@ const styles = StyleSheet.create({
   },
   image: {
     borderRadius: 8,
+  },
+  spoilerImage: {
+    opacity: 0.6,
+  },
+  spoilerOverlay: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  spoilerIcon: {
+    fontSize: 28,
+    marginBottom: 4,
+  },
+  spoilerText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
   },
   errorText: {
     color: colors.textSecondary,

@@ -432,6 +432,10 @@ model Message {
   viewOnce Boolean   @default(false)
   viewedAt DateTime?
 
+  // Media (IMAGE or VIDEO) sent with a blur overlay; recipients must tap to
+  // reveal. Unlike viewOnce, the media is not deleted and can be re-hidden.
+  isSpoiler Boolean @default(false)
+
   // POLL only: when true, other participants' identities are hidden from each
   // other's pollVotes - only vote counts and the viewer's own vote are visible.
   pollAnonymous Boolean @default(false)
