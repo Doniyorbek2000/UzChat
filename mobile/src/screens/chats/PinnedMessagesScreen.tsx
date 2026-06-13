@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, decryptReplyPreview } from "../../store/chatStore";
@@ -19,6 +19,8 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
   const unpinMessage = useChatStore((s) => s.unpinMessage);
   const unpinAllMessages = useChatStore((s) => s.unpinAllMessages);
   const user = useAuthStore((s) => s.user);
+
+  const [search, setSearch] = useState("");
 
   const pinnedMessages = conversation?.pinnedMessages ?? [];
   const conversationKey = conversation ? getConversationKey(conversation) : null;
@@ -50,6 +52,17 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
     return contactAliases[senderId] ?? conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
   };
 
+  const filteredPinnedMessages = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return pinnedMessages;
+    return pinnedMessages.filter((item) => {
+      const preview = conversationKey ? decryptReplyPreview(conversationKey, item) : null;
+      const label = preview ? getPreviewLabel(preview) : "";
+      const author = getAuthorName(item.senderId);
+      return label.toLowerCase().includes(query) || author.toLowerCase().includes(query);
+    });
+  }, [pinnedMessages, search, conversationKey]);
+
   const onUnpin = (item: PinnedMessageInfo) => {
     Alert.alert("Qadalgan xabar", "Xabarni qadashdan olib tashlansinmi?", [
       { text: "Bekor qilish", style: "cancel" },
@@ -63,8 +76,26 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {pinnedMessages.length > 0 && (
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Qidirish"
+            placeholderTextColor={colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch("")} hitSlop={8}>
+              <Text style={styles.searchClear}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
       <FlatList
-        data={pinnedMessages}
+        data={filteredPinnedMessages}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => {
@@ -92,7 +123,7 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
         }}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>📌 Qadalgan xabarlar yo'q</Text>
+            <Text style={styles.emptyText}>{search ? "Hech narsa topilmadi" : "📌 Qadalgan xabarlar yo'q"}</Text>
           </View>
         }
       />
@@ -113,4 +144,18 @@ const styles = StyleSheet.create({
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 12 },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    paddingHorizontal: 12,
+    height: 40,
+    gap: 8,
+  },
+  searchIcon: { fontSize: 14 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
+  searchClear: { fontSize: 14, color: colors.textSecondary, paddingHorizontal: 4 },
 });

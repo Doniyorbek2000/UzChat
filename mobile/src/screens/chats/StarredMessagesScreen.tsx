@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -32,6 +32,7 @@ export function StarredMessagesScreen({ navigation }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState("");
 
   const load = useCallback(async () => {
     const data = await chatsApi.listStarred();
@@ -67,6 +68,28 @@ export function StarredMessagesScreen({ navigation }: Props) {
       return "🔒 Xabarni ochib bo'lmadi";
     }
   };
+
+  const filteredMessages = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return messages;
+    return messages.filter((item) => {
+      const conversation = conversations.find((c) => c.id === item.conversationId);
+      if (!conversation) return false;
+      const display = getConversationDisplay(conversation, user!.id, contactAliases);
+      const senderName =
+        item.senderId === user?.id
+          ? "Siz"
+          : contactAliases[item.senderId] ??
+            conversation.participants.find((p) => p.userId === item.senderId)?.user.displayName ??
+            "";
+      const preview = getPreview(item, conversation);
+      return (
+        display.title.toLowerCase().includes(query) ||
+        senderName.toLowerCase().includes(query) ||
+        preview.toLowerCase().includes(query)
+      );
+    });
+  }, [messages, search, conversations, user, contactAliases]);
 
   const renderItem = ({ item }: { item: Message }) => {
     const conversation = conversations.find((c) => c.id === item.conversationId);
@@ -116,15 +139,33 @@ export function StarredMessagesScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {messages.length > 0 && (
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Qidirish"
+            placeholderTextColor={colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch("")} hitSlop={8}>
+              <Text style={styles.searchClear}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
       <FlatList
-        data={messages}
+        data={filteredMessages}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>⭐ Saqlangan xabarlar yo'q</Text>
+            <Text style={styles.emptyText}>{search ? "Hech narsa topilmadi" : "⭐ Saqlangan xabarlar yo'q"}</Text>
           </View>
         }
       />
@@ -145,4 +186,18 @@ const styles = StyleSheet.create({
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    paddingHorizontal: 12,
+    height: 40,
+    gap: 8,
+  },
+  searchIcon: { fontSize: 14 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
+  searchClear: { fontSize: 14, color: colors.textSecondary, paddingHorizontal: 4 },
 });
