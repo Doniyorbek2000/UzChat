@@ -62,6 +62,15 @@ enum NotificationPreview {
   HIDE
 }
 
+// Per-conversation override of the user's global readReceiptsEnabled
+// setting: DEFAULT follows the global setting, ON always sends read
+// receipts in this chat, OFF never sends them in this chat.
+enum ReadReceiptsOverride {
+  DEFAULT
+  ON
+  OFF
+}
+
 enum ReportReason {
   SPAM
   HARASSMENT
@@ -406,6 +415,8 @@ model ConversationParticipant {
   customTitle     String?
   // Per-conversation override of this user's global hideNotificationContent setting.
   notificationPreview NotificationPreview @default(DEFAULT)
+  // Per-conversation override of this user's global readReceiptsEnabled setting.
+  readReceiptsOverride ReadReceiptsOverride @default(DEFAULT)
 
   @@unique([conversationId, userId])
   @@index([userId])

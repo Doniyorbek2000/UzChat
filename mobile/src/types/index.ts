@@ -146,6 +146,10 @@ export interface Conversation {
   // DEFAULT follows the global setting, SHOW always includes the preview, HIDE
   // always shows a generic "new message" notification for this chat.
   notificationPreview: "DEFAULT" | "SHOW" | "HIDE";
+  // Per-conversation override of the global "read receipts" setting: DEFAULT
+  // follows the global setting, ON always sends read receipts in this chat,
+  // OFF never sends them in this chat.
+  readReceiptsOverride: "DEFAULT" | "ON" | "OFF";
   isBlocked: boolean;
   // The current group's invite code (only visible to OWNER/ADMIN), or null.
   inviteCode: string | null;

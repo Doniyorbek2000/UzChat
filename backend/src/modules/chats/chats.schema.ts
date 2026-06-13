@@ -103,6 +103,8 @@ export const updatePreferencesSchema = z
     markedUnread: z.boolean().optional(),
     // Per-conversation override of the global "hide notification content" setting.
     notificationPreview: z.enum(["DEFAULT", "SHOW", "HIDE"]).optional(),
+    // Per-conversation override of the global "read receipts" setting.
+    readReceiptsOverride: z.enum(["DEFAULT", "ON", "OFF"]).optional(),
   })
   .refine(
     (data) =>
@@ -110,7 +112,8 @@ export const updatePreferencesSchema = z
       data.muteFor !== undefined ||
       data.isArchived !== undefined ||
       data.markedUnread !== undefined ||
-      data.notificationPreview !== undefined,
+      data.notificationPreview !== undefined ||
+      data.readReceiptsOverride !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

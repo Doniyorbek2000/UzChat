@@ -75,13 +75,27 @@ function isInviteLinkUsable(conversation: {
 
 // Strips a participant's `lastReadAt` (read receipt) unless both the viewer and that
 // participant have read receipts enabled. Viewers always see their own `lastReadAt`.
+// Combines a user's global readReceiptsEnabled setting with their
+// per-conversation override (if any) for this conversation.
+function effectiveReadReceipts(override: "DEFAULT" | "ON" | "OFF", globalEnabled: boolean): boolean {
+  if (override === "ON") return true;
+  if (override === "OFF") return false;
+  return globalEnabled;
+}
+
 function visibleLastReadAt(
   viewerId: string,
-  viewerReadReceiptsEnabled: boolean,
-  participant: { userId: string; lastReadAt: Date | null; user: { readReceiptsEnabled: boolean } }
+  viewerEffectiveReadReceipts: boolean,
+  participant: {
+    userId: string;
+    lastReadAt: Date | null;
+    readReceiptsOverride: "DEFAULT" | "ON" | "OFF";
+    user: { readReceiptsEnabled: boolean };
+  }
 ): Date | null {
   if (participant.userId === viewerId) return participant.lastReadAt;
-  return viewerReadReceiptsEnabled && participant.user.readReceiptsEnabled ? participant.lastReadAt : null;
+  const participantEffective = effectiveReadReceipts(participant.readReceiptsOverride, participant.user.readReceiptsEnabled);
+  return viewerEffectiveReadReceipts && participantEffective ? participant.lastReadAt : null;
 }
 
 // Removes the cleartext `readReceiptsEnabled` and `lastSeenPrivacy` flags from a
@@ -209,6 +223,7 @@ export const chatsService = {
       })
       .map((p) => {
         const other = p.conversation.participants.find((cp) => cp.userId !== userId);
+        const viewerEffectiveReadReceipts = effectiveReadReceipts(p.readReceiptsOverride, viewerReadReceiptsEnabled);
         return {
           id: p.conversation.id,
           type: p.conversation.type,
@@ -226,6 +241,7 @@ export const chatsService = {
           isArchived: p.isArchived,
           markedUnread: p.markedUnread,
           notificationPreview: p.notificationPreview,
+          readReceiptsOverride: p.readReceiptsOverride,
           isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
           inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
           inviteCodeExpiresAt: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeExpiresAt,
@@ -247,7 +263,7 @@ export const chatsService = {
             userId: cp.userId,
             role: cp.role,
             user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
-            lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
+            lastReadAt: visibleLastReadAt(userId, viewerEffectiveReadReceipts, cp),
             lastDeliveredAt: cp.lastDeliveredAt,
             restrictedUntil: cp.restrictedUntil,
             customTitle: cp.customTitle,
@@ -285,6 +301,7 @@ export const chatsService = {
       prisma.user.findUnique({ where: { id: userId }, select: { readReceiptsEnabled: true } }),
     ]);
     const viewerReadReceiptsEnabled = viewer?.readReceiptsEnabled ?? true;
+    const viewerEffectiveReadReceipts = effectiveReadReceipts(participant.readReceiptsOverride, viewerReadReceiptsEnabled);
 
     return {
       id: participant.conversation.id,
@@ -303,6 +320,7 @@ export const chatsService = {
       isArchived: participant.isArchived,
       markedUnread: participant.markedUnread,
       notificationPreview: participant.notificationPreview,
+      readReceiptsOverride: participant.readReceiptsOverride,
       isBlocked,
       inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
       inviteCodeExpiresAt:
@@ -327,7 +345,7 @@ export const chatsService = {
         userId: cp.userId,
         role: cp.role,
         user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
-        lastReadAt: visibleLastReadAt(userId, viewerReadReceiptsEnabled, cp),
+        lastReadAt: visibleLastReadAt(userId, viewerEffectiveReadReceipts, cp),
         lastDeliveredAt: cp.lastDeliveredAt,
         restrictedUntil: cp.restrictedUntil,
         customTitle: cp.customTitle,
@@ -367,6 +385,7 @@ export const chatsService = {
         ...(input.isArchived !== undefined ? { isArchived: input.isArchived } : {}),
         ...(input.markedUnread !== undefined ? { markedUnread: input.markedUnread } : {}),
         ...(input.notificationPreview !== undefined ? { notificationPreview: input.notificationPreview } : {}),
+        ...(input.readReceiptsOverride !== undefined ? { readReceiptsOverride: input.readReceiptsOverride } : {}),
       },
     });
 

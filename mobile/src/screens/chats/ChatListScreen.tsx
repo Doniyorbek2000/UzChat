@@ -45,6 +45,7 @@ export function ChatListScreen({ navigation }: Props) {
   const reorderPinned = useChatStore((s) => s.reorderPinned);
   const muteConversation = useChatStore((s) => s.muteConversation);
   const setNotificationPreview = useChatStore((s) => s.setNotificationPreview);
+  const setReadReceiptsOverride = useChatStore((s) => s.setReadReceiptsOverride);
   const toggleArchive = useChatStore((s) => s.toggleArchive);
   const toggleUnread = useChatStore((s) => s.toggleUnread);
   const markAllRead = useChatStore((s) => s.markAllRead);
@@ -147,6 +148,15 @@ export function ChatListScreen({ navigation }: Props) {
     ]);
   };
 
+  const onReadReceiptsPress = (item: Conversation) => {
+    Alert.alert("O'qildi belgisi", "Bu suhbatda o'qilgan xabar belgisini yuborishni boshqaring", [
+      { text: "Standart", onPress: () => setReadReceiptsOverride(item.id, "DEFAULT").catch(() => {}) },
+      { text: "Yoqish", onPress: () => setReadReceiptsOverride(item.id, "ON").catch(() => {}) },
+      { text: "O'chirish", onPress: () => setReadReceiptsOverride(item.id, "OFF").catch(() => {}) },
+      { text: "Bekor qilish", style: "cancel" },
+    ]);
+  };
+
   const onClearHistoryPress = (item: Conversation) => {
     Alert.alert("Suhbatni tozalash", "Tozalangan xabarlar faqat sizning ko'rinishingizdan o'chiriladi", [
       { text: "Bekor qilish", style: "cancel" },
@@ -240,6 +250,10 @@ export function ChatListScreen({ navigation }: Props) {
       {
         text: "✉️ Bildirishnoma matni",
         onPress: () => onNotificationPreviewPress(item),
+      },
+      {
+        text: "👁 O'qildi belgisi",
+        onPress: () => onReadReceiptsPress(item),
       },
       {
         text: item.isArchived ? "📤 Arxivdan chiqarish" : "🗄 Arxivlash",
