@@ -19,6 +19,11 @@ export function setActiveConversationId(conversationId: string | null) {
   activeConversationId = conversationId;
 }
 
+/** Returns the conversation currently open on screen, if any. */
+export function getActiveConversationId(): string | null {
+  return activeConversationId;
+}
+
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
     const data = notification.request.content.data as MessageNotificationData;

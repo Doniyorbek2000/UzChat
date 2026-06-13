@@ -15,7 +15,9 @@ import {
 } from "../crypto/e2ee";
 import { downloadAndDecryptFile, encryptAndUploadFile, extensionFromName } from "../utils/mediaFile";
 import { draftStorage } from "../storage/draftStorage";
-import { isConversationUnread } from "../utils/conversation";
+import { getConversationDisplay, isConversationUnread, messagePreviewText } from "../utils/conversation";
+import { getActiveConversationId } from "../utils/pushNotifications";
+import { useToastStore } from "./toastStore";
 import {
   ChatFolder,
   Conversation,
@@ -1222,12 +1224,33 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const conversation = get().conversations.find((c) => c.id === message.conversationId);
       if (!conversation) return;
 
-      if (message.senderId !== useAuthStore.getState().user?.id) {
+      const currentUser = useAuthStore.getState().user;
+      if (message.senderId !== currentUser?.id) {
         getSocket()?.emit("message:delivered", { conversationId: message.conversationId });
       }
 
       const key = get().getConversationKey(conversation);
       const decrypted = decryptToMessage(key, message);
+
+      if (
+        message.senderId !== currentUser?.id &&
+        message.type !== "SYSTEM" &&
+        !conversation.isMuted &&
+        message.conversationId !== getActiveConversationId()
+      ) {
+        const display = getConversationDisplay(conversation, currentUser!.id, get().contactAliases);
+        const senderName =
+          conversation.type === "GROUP"
+            ? conversation.participants.find((p) => p.userId === message.senderId)?.user.displayName
+            : undefined;
+        const preview = messagePreviewText(decrypted);
+        useToastStore.getState().showToast({
+          conversationId: message.conversationId,
+          title: display.title,
+          body: senderName ? `${senderName}: ${preview}` : preview,
+          avatarUrl: display.avatarUrl,
+        });
+      }
 
       set((state) => {
         const existing = state.messagesByConversation[message.conversationId] ?? [];

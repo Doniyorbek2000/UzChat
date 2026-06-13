@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { ActivityIndicator, AppState, View } from "react-native";
-import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
+import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Notifications from "expo-notifications";
 import { RootStackParamList } from "./types";
@@ -45,6 +45,8 @@ import { NotificationSettingsScreen } from "../screens/profile/NotificationSetti
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { AboutScreen } from "../screens/profile/AboutScreen";
 import { LockScreen } from "../screens/LockScreen";
+import { ChatToastBanner } from "../components/ChatToastBanner";
+import { navigationRef } from "./navigationRef";
 import { useAuthStore } from "../store/authStore";
 import { useAppLockStore } from "../store/appLockStore";
 import { useChatStore } from "../store/chatStore";
@@ -59,8 +61,6 @@ import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from
 import { colors } from "../theme/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 function navigateFromNotification(data?: MessageNotificationData) {
   if (!navigationRef.isReady()) return;
@@ -220,6 +220,7 @@ export function RootNavigator() {
         )}
       </NavigationContainer>
       {isAuthenticated && isLocked && <LockScreen />}
+      {isAuthenticated && !isLocked && <ChatToastBanner />}
     </>
   );
 }

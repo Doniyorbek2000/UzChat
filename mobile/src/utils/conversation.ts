@@ -1,4 +1,5 @@
 import { Conversation, User } from "../types";
+import { stripFormatting } from "./textFormat";
 
 export function getConversationDisplay(
   conversation: Conversation,
@@ -19,6 +20,29 @@ export function getConversationDisplay(
     avatarUrl: other?.avatarUrl ?? null,
     otherUser: other,
   };
+}
+
+const MEDIA_PREVIEW_LABELS: Record<string, string> = {
+  IMAGE: "🖼 Rasm",
+  VIDEO: "🎬 Video",
+  AUDIO: "🎵 Ovozli xabar",
+  FILE: "📄 Fayl",
+  CONTACT: "👤 Kontakt",
+  POLL: "📊 So'rovnoma",
+};
+
+/** Short preview text for a decrypted message, suitable for chat list previews and notification toasts. */
+export function messagePreviewText(message: {
+  type: string;
+  text: string | null;
+  decryptFailed: boolean;
+  deletedAt?: string | null;
+}): string {
+  if (message.deletedAt) return "Xabar o'chirildi";
+  if (message.decryptFailed) return "Xabarni ochib bo'lmadi";
+  const mediaLabel = MEDIA_PREVIEW_LABELS[message.type];
+  if (mediaLabel) return message.text ? `${mediaLabel}: ${stripFormatting(message.text)}` : mediaLabel;
+  return message.text ? stripFormatting(message.text) : "";
 }
 
 export function isConversationUnread(conversation: Conversation, currentUserId: string): boolean {
