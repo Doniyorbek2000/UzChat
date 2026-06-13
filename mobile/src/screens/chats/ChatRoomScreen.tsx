@@ -308,6 +308,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
   const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
   const [moreReactionsMessage, setMoreReactionsMessage] = useState<DecryptedMessage | null>(null);
+  const [customReactionEmoji, setCustomReactionEmoji] = useState("");
   const [editHistoryMessage, setEditHistoryMessage] = useState<DecryptedMessage | null>(null);
   const [editHistoryEntries, setEditHistoryEntries] = useState<{ text: string; editedAt: string }[]>([]);
   const [loadingEditHistory, setLoadingEditHistory] = useState(false);
@@ -2038,9 +2039,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       visible={!!moreReactionsMessage}
       transparent
       animationType="fade"
-      onRequestClose={() => setMoreReactionsMessage(null)}
+      onRequestClose={() => {
+        setMoreReactionsMessage(null);
+        setCustomReactionEmoji("");
+      }}
     >
-      <Pressable style={styles.actionBackdrop} onPress={() => setMoreReactionsMessage(null)}>
+      <Pressable
+        style={styles.actionBackdrop}
+        onPress={() => {
+          setMoreReactionsMessage(null);
+          setCustomReactionEmoji("");
+        }}
+      >
         <Pressable style={styles.actionSheet}>
           <Text style={styles.mentionPickerTitle}>Reaksiya tanlang</Text>
           <View style={styles.moreReactionsGrid}>
@@ -2052,11 +2062,45 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   if (moreReactionsMessage) toggleReaction(conversationId, moreReactionsMessage.id, emoji).catch(() => {});
                   recordEmoji(emoji).catch(() => {});
                   setMoreReactionsMessage(null);
+                  setCustomReactionEmoji("");
                 }}
               >
                 <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+          <View style={styles.customReactionRow}>
+            <TextInput
+              style={styles.customReactionInput}
+              placeholder="Boshqa emoji..."
+              placeholderTextColor={colors.textSecondary}
+              value={customReactionEmoji}
+              onChangeText={setCustomReactionEmoji}
+              maxLength={8}
+              returnKeyType="done"
+              onSubmitEditing={() => {
+                const emoji = customReactionEmoji.trim();
+                if (!emoji || !moreReactionsMessage) return;
+                toggleReaction(conversationId, moreReactionsMessage.id, emoji).catch(() => {});
+                recordEmoji(emoji).catch(() => {});
+                setMoreReactionsMessage(null);
+                setCustomReactionEmoji("");
+              }}
+            />
+            <TouchableOpacity
+              style={[styles.customReactionButton, !customReactionEmoji.trim() && styles.customReactionButtonDisabled]}
+              disabled={!customReactionEmoji.trim()}
+              onPress={() => {
+                const emoji = customReactionEmoji.trim();
+                if (!emoji || !moreReactionsMessage) return;
+                toggleReaction(conversationId, moreReactionsMessage.id, emoji).catch(() => {});
+                recordEmoji(emoji).catch(() => {});
+                setMoreReactionsMessage(null);
+                setCustomReactionEmoji("");
+              }}
+            >
+              <Text style={styles.customReactionButtonText}>✓</Text>
+            </TouchableOpacity>
           </View>
         </Pressable>
       </Pressable>
@@ -2675,6 +2719,26 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     paddingBottom: 16,
   },
+  customReactionRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingBottom: 8 },
+  customReactionInput: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 18,
+    color: colors.text,
+  },
+  customReactionButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  customReactionButtonDisabled: { opacity: 0.4 },
+  customReactionButtonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
   actionButton: { paddingVertical: 14, alignItems: "center" },
   actionButtonText: { fontSize: 16, color: colors.text },
   actionButtonDanger: { color: colors.danger },
