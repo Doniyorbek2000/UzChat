@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { downloadAndDecryptFile, extensionFromName } from "../utils/mediaFile";
+import { downloadAndDecryptFile, extensionFromName, getCachedFileUri } from "../utils/mediaFile";
 import { DecryptedMessage } from "../store/chatStore";
+import { useChatSettingsStore } from "../store/chatSettingsStore";
 import { colors } from "../theme/colors";
 
 const MAX_WIDTH = 220;
@@ -15,15 +16,37 @@ interface Props {
 export function MediaImageBubble({ message, conversationKey }: Props) {
   const [uri, setUri] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [needsDownload, setNeedsDownload] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [revealed, setRevealed] = useState(!message.isSpoiler);
+  const autoDownloadMedia = useChatSettingsStore((s) => s.autoDownloadMedia);
   const meta = message.meta;
+  const cacheKey = meta ? `${message.id}${extensionFromName(meta.name) || ".jpg"}` : "";
+
+  const download = useCallback(() => {
+    if (!message.mediaUrl || !meta) return;
+    setNeedsDownload(false);
+    downloadAndDecryptFile(message.mediaUrl, meta.fileNonce, conversationKey, cacheKey)
+      .then(setUri)
+      .catch(() => setError(true));
+  }, [message.mediaUrl, meta, conversationKey, cacheKey]);
 
   useEffect(() => {
     let cancelled = false;
     if (!message.mediaUrl || !meta) return;
 
-    downloadAndDecryptFile(message.mediaUrl, meta.fileNonce, conversationKey, `${message.id}${extensionFromName(meta.name) || ".jpg"}`)
+    if (!autoDownloadMedia) {
+      getCachedFileUri(cacheKey).then((cached) => {
+        if (cancelled) return;
+        if (cached) setUri(cached);
+        else setNeedsDownload(true);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    downloadAndDecryptFile(message.mediaUrl, meta.fileNonce, conversationKey, cacheKey)
       .then((localUri) => {
         if (!cancelled) setUri(localUri);
       })
@@ -34,7 +57,7 @@ export function MediaImageBubble({ message, conversationKey }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [message.id, message.mediaUrl, meta, conversationKey]);
+  }, [message.id, message.mediaUrl, meta, conversationKey, autoDownloadMedia, cacheKey]);
 
   const ratio = meta?.width && meta?.height ? meta.width / meta.height : 1;
   let width = MAX_WIDTH;
@@ -49,6 +72,15 @@ export function MediaImageBubble({ message, conversationKey }: Props) {
       <View style={[styles.box, { width, height }]}>
         <Text style={styles.errorText}>⚠️ Yuklab bo'lmadi</Text>
       </View>
+    );
+  }
+
+  if (needsDownload) {
+    return (
+      <Pressable style={[styles.box, { width, height }]} onPress={download}>
+        <Text style={styles.downloadIcon}>⬇️</Text>
+        <Text style={styles.downloadText}>Yuklab olish</Text>
+      </Pressable>
     );
   }
 
@@ -119,6 +151,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     paddingHorizontal: 8,
+  },
+  downloadIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  downloadText: {
+    color: colors.textSecondary,
+    fontSize: 12,
   },
   viewerOverlay: {
     flex: 1,

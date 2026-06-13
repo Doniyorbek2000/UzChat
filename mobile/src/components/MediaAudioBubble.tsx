@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import { downloadAndDecryptFile, formatDuration } from "../utils/mediaFile";
+import { downloadAndDecryptFile, formatDuration, getCachedFileUri } from "../utils/mediaFile";
 import { DecryptedMessage } from "../store/chatStore";
 import { usePlaybackSpeedStore } from "../store/playbackSpeedStore";
+import { useChatSettingsStore } from "../store/chatSettingsStore";
 import { colors } from "../theme/colors";
 
 interface Props {
@@ -15,20 +16,43 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
   const meta = message.meta;
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [needsDownload, setNeedsDownload] = useState(false);
   const player = useAudioPlayer(localUri);
   const status = useAudioPlayerStatus(player);
   const speed = usePlaybackSpeedStore((s) => s.speed);
   const cycleSpeed = usePlaybackSpeedStore((s) => s.cycleSpeed);
+  const autoDownloadMedia = useChatSettingsStore((s) => s.autoDownloadMedia);
+  const cacheKey = `${message.id}.m4a`;
 
   useEffect(() => {
     if (!localUri) return;
     player.setPlaybackRate(speed, "high");
   }, [localUri, speed, player]);
 
+  const download = useCallback(() => {
+    if (!meta || !message.mediaUrl) return;
+    setNeedsDownload(false);
+    downloadAndDecryptFile(message.mediaUrl, meta.fileNonce, conversationKey, cacheKey)
+      .then(setLocalUri)
+      .catch(() => setError(true));
+  }, [meta, message.mediaUrl, conversationKey, cacheKey]);
+
   useEffect(() => {
     if (!meta || !message.mediaUrl) return;
     let cancelled = false;
-    downloadAndDecryptFile(message.mediaUrl, meta.fileNonce, conversationKey, `${message.id}.m4a`)
+
+    if (!autoDownloadMedia) {
+      getCachedFileUri(cacheKey).then((cached) => {
+        if (cancelled) return;
+        if (cached) setLocalUri(cached);
+        else setNeedsDownload(true);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    downloadAndDecryptFile(message.mediaUrl, meta.fileNonce, conversationKey, cacheKey)
       .then((uri) => {
         if (!cancelled) setLocalUri(uri);
       })
@@ -38,11 +62,15 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [message.id, message.mediaUrl, meta?.fileNonce, conversationKey]);
+  }, [message.id, message.mediaUrl, meta?.fileNonce, conversationKey, autoDownloadMedia, cacheKey]);
 
   if (!meta) return null;
 
   const onPress = () => {
+    if (needsDownload) {
+      download();
+      return;
+    }
     if (!localUri) return;
     if (status.playing) {
       player.pause();
@@ -57,9 +85,11 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
   const progress = duration > 0 ? Math.min(status.currentTime / duration, 1) : 0;
 
   return (
-    <Pressable style={styles.container} onPress={onPress} disabled={!localUri && !error}>
+    <Pressable style={styles.container} onPress={onPress} disabled={!localUri && !error && !needsDownload}>
       <View style={styles.icon}>
-        {!localUri && !error ? (
+        {needsDownload ? (
+          <Text style={styles.iconText}>⬇️</Text>
+        ) : !localUri && !error ? (
           <ActivityIndicator color="#fff" size="small" />
         ) : (
           <Text style={styles.iconText}>{status.playing ? "⏸" : "▶"}</Text>

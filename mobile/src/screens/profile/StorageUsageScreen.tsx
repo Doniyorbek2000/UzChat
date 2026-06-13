@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Switch } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import * as FileSystem from "expo-file-system/legacy";
 import { colors } from "../../theme/colors";
 import { formatFileSize } from "../../utils/mediaFile";
+import { useChatSettingsStore } from "../../store/chatSettingsStore";
 
 interface CacheBreakdown {
   media: number;
@@ -47,6 +48,8 @@ async function clearCache(): Promise<void> {
 export function StorageUsageScreen() {
   const [breakdown, setBreakdown] = useState<CacheBreakdown | null>(null);
   const [clearing, setClearing] = useState(false);
+  const autoDownloadMedia = useChatSettingsStore((s) => s.autoDownloadMedia);
+  const setAutoDownloadMedia = useChatSettingsStore((s) => s.setAutoDownloadMedia);
 
   const refresh = useCallback(() => {
     scanCache()
@@ -87,6 +90,16 @@ export function StorageUsageScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={[styles.row, styles.toggleRow]}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>📥 Mediani avtomatik yuklab olish</Text>
+          <Text style={styles.rowDescription}>
+            O'chirilganda, rasm va ovozli xabarlar faqat ustiga bosilganda yuklab olinadi
+          </Text>
+        </View>
+        <Switch value={autoDownloadMedia} onValueChange={setAutoDownloadMedia} trackColor={{ true: colors.primary }} />
+      </View>
+
       <View style={styles.totalBox}>
         <Text style={styles.totalLabel}>Jami kesh hajmi</Text>
         <Text style={styles.totalValue}>{formatFileSize(total)}</Text>
@@ -140,6 +153,9 @@ const styles = StyleSheet.create({
   rowLast: { marginBottom: 0, borderBottomLeftRadius: 8, borderBottomRightRadius: 8 },
   rowLabel: { fontSize: 15, color: colors.text },
   rowValue: { fontSize: 15, color: colors.textSecondary },
+  toggleRow: { marginBottom: 16 },
+  rowText: { flex: 1, marginRight: 12 },
+  rowDescription: { fontSize: 12, color: colors.textSecondary, marginTop: 4, lineHeight: 16 },
   hint: { fontSize: 13, color: colors.textSecondary, lineHeight: 18, marginTop: 16 },
   clearButton: { backgroundColor: colors.danger, borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 24 },
   clearButtonDisabled: { opacity: 0.5 },

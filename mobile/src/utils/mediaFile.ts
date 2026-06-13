@@ -48,6 +48,13 @@ export async function encryptAndUploadFile(
   }
 }
 
+/** Returns the local cache URI for a media file if it has already been downloaded, or null otherwise. */
+export async function getCachedFileUri(cacheKey: string): Promise<string | null> {
+  const destUri = `${FileSystem.cacheDirectory}uzchat-${cacheKey}`;
+  const info = await FileSystem.getInfoAsync(destUri);
+  return info.exists ? destUri : null;
+}
+
 /** Downloads an encrypted media file (if not already cached) and decrypts it to a local file URI. */
 export async function downloadAndDecryptFile(
   url: string,
