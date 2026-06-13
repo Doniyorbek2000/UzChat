@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
 import { contactsApi } from "../../api/contacts";
 import { useChatStore } from "../../store/chatStore";
+import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { Linkify } from "../../components/Linkify";
 import { colors } from "../../theme/colors";
@@ -26,6 +27,9 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [noteInput, setNoteInput] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [sendingRequest, setSendingRequest] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+  const currentUser = useAuthStore((s) => s.user);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
@@ -111,6 +115,19 @@ export function UserProfileScreen({ route, navigation }: Props) {
     }
   };
 
+  const onAddContact = async () => {
+    if (!profile || sendingRequest || requestSent) return;
+    setSendingRequest(true);
+    try {
+      await contactsApi.sendRequest(profile.username);
+      setRequestSent(true);
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
+    } finally {
+      setSendingRequest(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -181,6 +198,13 @@ export function UserProfileScreen({ route, navigation }: Props) {
           <Text style={styles.actionIcon}>👥</Text>
           <Text style={styles.actionText}>Umumiy guruhlar</Text>
         </TouchableOpacity>
+        {!contact && profile.id !== currentUser?.id && (
+          <TouchableOpacity style={styles.actionRow} onPress={onAddContact} disabled={sendingRequest || requestSent}>
+            <Text style={styles.actionIcon}>👤➕</Text>
+            <Text style={styles.actionText}>{requestSent ? "So'rov yuborildi" : "Kontaktlarga qo'shish"}</Text>
+            {sendingRequest && <ActivityIndicator color={colors.primary} size="small" />}
+          </TouchableOpacity>
+        )}
         {!isOnline && (
           <TouchableOpacity style={styles.actionRow} onPress={onToggleNotifyOnline} disabled={notifyLoading}>
             <Text style={styles.actionIcon}>{notifyOnlineRequested ? "🔕" : "🔔"}</Text>
