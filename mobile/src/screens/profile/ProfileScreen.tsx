@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Share, Modal, FlatList, Pressable } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
+import { authApi } from "../../api/auth";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
@@ -10,6 +11,7 @@ import { formatBirthday, MAX_DAYS_IN_MONTH, UZ_MONTHS } from "../../utils/birthd
 import { MainTabScreenProps } from "../../navigation/types";
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
+const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,24}$/;
 
 type Props = MainTabScreenProps<"Profile">;
 
@@ -27,6 +29,27 @@ export function ProfileScreen({ navigation }: Props) {
   const [savingBirthday, setSavingBirthday] = useState(false);
   const [pickedDay, setPickedDay] = useState(1);
   const [pickedMonth, setPickedMonth] = useState(1);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (checkTimer.current) clearTimeout(checkTimer.current);
+    const trimmed = username.trim();
+    if (!USERNAME_PATTERN.test(trimmed) || trimmed === user?.username) {
+      setUsernameStatus("idle");
+      return;
+    }
+    setUsernameStatus("checking");
+    checkTimer.current = setTimeout(() => {
+      authApi
+        .checkUsername(trimmed)
+        .then((available) => setUsernameStatus(available ? "available" : "taken"))
+        .catch(() => setUsernameStatus("idle"));
+    }, 500);
+    return () => {
+      if (checkTimer.current) clearTimeout(checkTimer.current);
+    };
+  }, [username, user?.username]);
 
   if (!user) return null;
 
@@ -34,6 +57,10 @@ export function ProfileScreen({ navigation }: Props) {
     const trimmedUsername = username.trim();
     if (trimmedUsername.length < 3 || trimmedUsername.length > 24 || !/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
       Alert.alert("Xatolik", "Username 3-24 ta belgidan iborat bo'lib, faqat harf, raqam va '_' belgisini o'z ichiga olishi mumkin");
+      return;
+    }
+    if (usernameStatus === "taken") {
+      Alert.alert("Xatolik", "Bu username band");
       return;
     }
     setSaving(true);
@@ -175,7 +202,12 @@ export function ProfileScreen({ navigation }: Props) {
           autoCorrect={false}
           maxLength={24}
         />
+        {usernameStatus === "checking" && <ActivityIndicator size="small" color={colors.textSecondary} />}
+        {usernameStatus === "available" && <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>}
+        {usernameStatus === "taken" && <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>}
       </View>
+      {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
+      {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
 
       <Text style={styles.label}>Ism</Text>
       <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} maxLength={64} />
@@ -381,6 +413,10 @@ const styles = StyleSheet.create({
   },
   usernamePrefix: { fontSize: 16, color: colors.textSecondary },
   usernameInput: { flex: 1, fontSize: 16, paddingVertical: 12, color: colors.text },
+  usernameStatusIcon: { fontSize: 18, fontWeight: "700" },
+  usernameAvailable: { color: colors.online },
+  usernameTaken: { color: colors.danger },
+  usernameHint: { fontSize: 12, color: colors.danger, marginTop: 4, marginLeft: 4 },
   button: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 20 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   securityBox: { backgroundColor: colors.background, borderRadius: 8, padding: 16, marginTop: 24 },
