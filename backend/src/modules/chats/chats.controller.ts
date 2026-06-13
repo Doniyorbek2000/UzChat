@@ -105,6 +105,17 @@ export const chatsController = {
     }
   },
 
+  async deleteConversationForEveryone(req: Request, res: Response, next: NextFunction) {
+    try {
+      const conversationId = req.params.id;
+      await chatsService.deleteConversationForEveryone(req.user!.sub, conversationId);
+      getIo().to(`conversation:${conversationId}`).emit("conversation:deleted", { conversationId });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async listCommonGroups(req: Request, res: Response, next: NextFunction) {
     try {
       const groups = await chatsService.listCommonGroups(req.user!.sub, req.params.userId);

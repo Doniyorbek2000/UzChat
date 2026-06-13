@@ -420,6 +420,26 @@ export const chatsService = {
     });
   },
 
+  /**
+   * Permanently deletes a DIRECT conversation and all its messages for both
+   * participants. Not available for GROUPs (use leave/removeParticipant) or
+   * the "Saved Messages" self-chat.
+   */
+  async deleteConversationForEveryone(userId: string, conversationId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { type: true, isSelf: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.DIRECT || conversation.isSelf) {
+      throw Errors.badRequest("Bu suhbatni hammaga o'chirib bo'lmaydi");
+    }
+
+    await prisma.conversation.delete({ where: { id: conversationId } });
+  },
+
   /** GROUP conversations where both userId and otherUserId are participants. */
   async listCommonGroups(userId: string, otherUserId: string) {
     const groups = await prisma.conversation.findMany({

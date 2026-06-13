@@ -50,6 +50,7 @@ export function ChatListScreen({ navigation }: Props) {
   const markAllRead = useChatStore((s) => s.markAllRead);
   const clearHistory = useChatStore((s) => s.clearHistory);
   const deleteConversation = useChatStore((s) => s.deleteConversation);
+  const deleteConversationForEveryone = useChatStore((s) => s.deleteConversationForEveryone);
   const leaveGroup = useChatStore((s) => s.leaveGroup);
   const drafts = useChatStore((s) => s.drafts);
   const loadDrafts = useChatStore((s) => s.loadDrafts);
@@ -153,7 +154,40 @@ export function ChatListScreen({ navigation }: Props) {
     ]);
   };
 
+  const onDeleteForEveryonePress = (item: Conversation) => {
+    Alert.alert(
+      "Hammaga o'chirish",
+      "Suhbat va barcha xabarlar ikki tomon uchun ham butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.",
+      [
+        { text: "Bekor qilish", style: "cancel" },
+        {
+          text: "Hammaga o'chirish",
+          style: "destructive",
+          onPress: () =>
+            deleteConversationForEveryone(item.id).catch(() => Alert.alert("Xatolik", "Suhbatni o'chirib bo'lmadi")),
+        },
+      ]
+    );
+  };
+
   const onDeleteConversationPress = (item: Conversation) => {
+    if (item.type === "DIRECT" && !item.isSelf) {
+      Alert.alert("Suhbatni o'chirish", undefined, [
+        { text: "Bekor qilish", style: "cancel" },
+        {
+          text: "Faqat men uchun",
+          onPress: () =>
+            deleteConversation(item.id).catch(() => Alert.alert("Xatolik", "Suhbatni o'chirib bo'lmadi")),
+        },
+        {
+          text: "Hammaga o'chirish",
+          style: "destructive",
+          onPress: () => onDeleteForEveryonePress(item),
+        },
+      ]);
+      return;
+    }
+
     Alert.alert(
       "Suhbatni o'chirish",
       "Suhbat ro'yxatdan va tarix sizning ko'rinishingizdan o'chiriladi. Yangi xabar kelsa, suhbat qaytadan paydo bo'ladi.",
