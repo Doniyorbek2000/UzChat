@@ -19,7 +19,13 @@ import {
   updatePreferencesSchema,
 } from "./chats.schema";
 import { messagesController } from "../messages/messages.controller";
-import { editMessageSchema, sendMessageSchema, setReactionSchema, votePollSchema } from "../messages/messages.schema";
+import {
+  editMessageSchema,
+  rescheduleMessageSchema,
+  sendMessageSchema,
+  setReactionSchema,
+  votePollSchema,
+} from "../messages/messages.schema";
 
 export const chatsRouter = Router();
 
@@ -81,6 +87,12 @@ chatsRouter.get("/common-groups/:userId", chatsController.listCommonGroups);
 
 chatsRouter.get("/:id/scheduled-messages", messagesController.listScheduled);
 chatsRouter.delete("/:id/scheduled-messages/:messageId", messagesController.cancelScheduled);
+chatsRouter.patch(
+  "/:id/scheduled-messages/:messageId",
+  validateBody(rescheduleMessageSchema),
+  messagesController.rescheduleScheduled
+);
+chatsRouter.post("/:id/scheduled-messages/:messageId/send-now", messagesController.sendScheduledNow);
 
 chatsRouter.get("/:id/messages", messagesController.list);
 chatsRouter.get("/:id/media", messagesController.listMedia);

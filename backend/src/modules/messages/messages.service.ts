@@ -290,6 +290,26 @@ async function notifyReaction(reactorId: string, conversationId: string, message
   });
 }
 
+// Delivers a scheduled message now: makes it visible to other participants,
+// computes a fresh disappearing-messages timer based on the conversation's
+// current setting, and notifies recipients.
+async function publishScheduledMessage(m: Message) {
+  const conversation = await prisma.conversation.findUnique({ where: { id: m.conversationId } });
+  const expiresAt = conversation?.disappearingSeconds
+    ? new Date(Date.now() + conversation.disappearingSeconds * 1000)
+    : null;
+
+  const updated = await prisma.message.update({
+    where: { id: m.id },
+    data: { scheduledFor: null, createdAt: new Date(), expiresAt },
+    include: messageInclude(m.senderId),
+  });
+  await prisma.conversation.update({ where: { id: m.conversationId }, data: { updatedAt: new Date() } });
+
+  notifyParticipants(m.senderId, m.conversationId, updated, false).catch(() => {});
+  return formatMessage(updated, m.senderId);
+}
+
 export const messagesService = {
   async sendMessage(userId: string, conversationId: string, input: SendMessageInput) {
     const participant = await chatsService.assertParticipant(userId, conversationId);
@@ -805,9 +825,36 @@ export const messagesService = {
     await prisma.message.delete({ where: { id: messageId } });
   },
 
-  // Publishes (delivers) scheduled messages whose time has come: makes them
-  // visible to other participants, computes a fresh disappearing-messages
-  // timer based on the conversation's current setting, and notifies recipients.
+  async rescheduleMessage(userId: string, conversationId: string, messageId: string, scheduledFor: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId || message.scheduledFor === null) {
+      throw Errors.notFound("Rejalashtirilgan xabar");
+    }
+    if (message.senderId !== userId) throw Errors.forbidden();
+
+    const updated = await prisma.message.update({
+      where: { id: messageId },
+      data: { scheduledFor: new Date(scheduledFor) },
+      include: messageInclude(userId),
+    });
+    return formatMessage(updated, userId);
+  },
+
+  async sendScheduledNow(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId || message.scheduledFor === null) {
+      throw Errors.notFound("Rejalashtirilgan xabar");
+    }
+    if (message.senderId !== userId) throw Errors.forbidden();
+
+    return publishScheduledMessage(message);
+  },
+
+  // Publishes (delivers) scheduled messages whose time has come.
   async publishDueScheduledMessages() {
     const due = await prisma.message.findMany({
       where: { scheduledFor: { lte: new Date() } },
@@ -816,20 +863,7 @@ export const messagesService = {
 
     const published = [];
     for (const m of due) {
-      const conversation = await prisma.conversation.findUnique({ where: { id: m.conversationId } });
-      const expiresAt = conversation?.disappearingSeconds
-        ? new Date(Date.now() + conversation.disappearingSeconds * 1000)
-        : null;
-
-      const updated = await prisma.message.update({
-        where: { id: m.id },
-        data: { scheduledFor: null, createdAt: new Date(), expiresAt },
-        include: messageInclude(m.senderId),
-      });
-      await prisma.conversation.update({ where: { id: m.conversationId }, data: { updatedAt: new Date() } });
-
-      notifyParticipants(m.senderId, m.conversationId, updated, false).catch(() => {});
-      published.push(formatMessage(updated, m.senderId));
+      published.push(await publishScheduledMessage(m));
     }
     return published;
   },

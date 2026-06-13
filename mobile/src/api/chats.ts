@@ -245,6 +245,18 @@ export const chatsApi = {
     return apiClient.delete(`/conversations/${conversationId}/scheduled-messages/${messageId}`);
   },
 
+  rescheduleMessage(conversationId: string, messageId: string, scheduledFor: string) {
+    return apiClient
+      .patch<Message>(`/conversations/${conversationId}/scheduled-messages/${messageId}`, { scheduledFor })
+      .then((r) => r.data);
+  },
+
+  sendScheduledMessageNow(conversationId: string, messageId: string) {
+    return apiClient
+      .post<Message>(`/conversations/${conversationId}/scheduled-messages/${messageId}/send-now`)
+      .then((r) => r.data);
+  },
+
   markRead(conversationId: string) {
     return apiClient.post(`/conversations/${conversationId}/read`);
   },

@@ -41,6 +41,15 @@ export const sendMessageSchema = z
     path: ["pollAnonymous"],
   });
 
+export const rescheduleMessageSchema = z
+  .object({
+    scheduledFor: z.string().datetime(),
+  })
+  .refine((data) => new Date(data.scheduledFor).getTime() > Date.now(), {
+    message: "Yuborish vaqti kelajakda bo'lishi kerak",
+    path: ["scheduledFor"],
+  });
+
 export const listMessagesQuerySchema = z.object({
   before: z.string().datetime().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(30),
@@ -63,6 +72,7 @@ export const votePollSchema = z.object({
   optionIds: z.array(z.string().min(1).max(50)).max(20),
 });
 
+export type RescheduleMessageInput = z.infer<typeof rescheduleMessageSchema>;
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type ListMessagesQuery = z.infer<typeof listMessagesQuerySchema>;
 export type SetReactionInput = z.infer<typeof setReactionSchema>;

@@ -196,4 +196,28 @@ export const messagesController = {
       next(err);
     }
   },
+
+  async rescheduleScheduled(req: Request, res: Response, next: NextFunction) {
+    try {
+      const message = await messagesService.rescheduleMessage(
+        req.user!.sub,
+        req.params.id,
+        req.params.messageId,
+        req.body.scheduledFor
+      );
+      res.json(message);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async sendScheduledNow(req: Request, res: Response, next: NextFunction) {
+    try {
+      const message = await messagesService.sendScheduledNow(req.user!.sub, req.params.id, req.params.messageId);
+      getIo().to(`conversation:${req.params.id}`).emit("message:new", message);
+      res.json(message);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

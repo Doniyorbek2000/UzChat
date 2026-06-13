@@ -6,7 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { colors } from "../../theme/colors";
 import { MessageType } from "../../types";
-import { formatScheduledTime } from "../../utils/scheduledMessages";
+import { formatScheduledTime, SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ScheduledMessages">;
 
@@ -28,6 +28,8 @@ export function ScheduledMessagesScreen({ route }: Props) {
   const messages = useChatStore((s) => s.scheduledMessagesByConversation[conversationId] ?? []);
   const loadScheduledMessages = useChatStore((s) => s.loadScheduledMessages);
   const cancelScheduledMessage = useChatStore((s) => s.cancelScheduledMessage);
+  const rescheduleMessage = useChatStore((s) => s.rescheduleMessage);
+  const sendScheduledMessageNow = useChatStore((s) => s.sendScheduledMessageNow);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -49,16 +51,51 @@ export function ScheduledMessagesScreen({ route }: Props) {
     ]);
   };
 
+  const onSendNow = (item: DecryptedMessage) => {
+    Alert.alert("Hozir yuborish", "Xabar hoziroq yuborilsinmi?", [
+      { text: "Yo'q", style: "cancel" },
+      {
+        text: "Ha, yuborish",
+        onPress: () =>
+          sendScheduledMessageNow(conversationId, item.id).catch(() =>
+            Alert.alert("Xatolik", "Xabarni yuborib bo'lmadi")
+          ),
+      },
+    ]);
+  };
+
+  const onReschedule = (item: DecryptedMessage) => {
+    Alert.alert("Vaqtni o'zgartirish", undefined, [
+      ...SCHEDULE_OPTIONS.map((opt) => ({
+        text: opt.label,
+        onPress: () =>
+          rescheduleMessage(conversationId, item.id, opt.getDate().toISOString()).catch(() =>
+            Alert.alert("Xatolik", "Vaqtni o'zgartirib bo'lmadi")
+          ),
+      })),
+      { text: "Bekor qilish", style: "cancel" as const },
+    ]);
+  };
+
+  const onItemActions = (item: DecryptedMessage) => {
+    Alert.alert("Rejalashtirilgan xabar", undefined, [
+      { text: "🚀 Hozir yuborish", onPress: () => onSendNow(item) },
+      { text: "🕒 Vaqtni o'zgartirish", onPress: () => onReschedule(item) },
+      { text: "🗑 Bekor qilish", style: "destructive", onPress: () => onCancel(item) },
+      { text: "Yopish", style: "cancel" },
+    ]);
+  };
+
   const renderItem = ({ item }: { item: DecryptedMessage }) => (
-    <TouchableOpacity style={styles.row} onLongPress={() => onCancel(item)}>
+    <TouchableOpacity style={styles.row} onLongPress={() => onItemActions(item)}>
       <View style={styles.content}>
         <Text style={styles.preview} numberOfLines={3}>
           {getPreview(item)}
         </Text>
         <Text style={styles.time}>🕒 {formatScheduledTime(item.scheduledFor!)}</Text>
       </View>
-      <TouchableOpacity style={styles.cancelButton} onPress={() => onCancel(item)} hitSlop={8}>
-        <Text style={styles.cancelText}>Bekor qilish</Text>
+      <TouchableOpacity style={styles.menuButton} onPress={() => onItemActions(item)} hitSlop={8}>
+        <Text style={styles.menuButtonText}>•••</Text>
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -95,8 +132,8 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   preview: { fontSize: 15, color: colors.text },
   time: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
-  cancelButton: { paddingHorizontal: 12, paddingVertical: 6 },
-  cancelText: { color: colors.danger, fontWeight: "600", fontSize: 13 },
+  menuButton: { paddingHorizontal: 12, paddingVertical: 6 },
+  menuButtonText: { color: colors.textSecondary, fontWeight: "700", fontSize: 16 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 12 },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },

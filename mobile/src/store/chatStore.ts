@@ -103,6 +103,8 @@ interface ChatState {
   ) => Promise<void>;
   loadScheduledMessages: (conversationId: string) => Promise<void>;
   cancelScheduledMessage: (conversationId: string, messageId: string) => Promise<void>;
+  rescheduleMessage: (conversationId: string, messageId: string, scheduledFor: string) => Promise<void>;
+  sendScheduledMessageNow: (conversationId: string, messageId: string) => Promise<void>;
   sendMediaMessage: (
     conversationId: string,
     asset: MediaAsset,
@@ -502,6 +504,29 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   cancelScheduledMessage: async (conversationId, messageId) => {
     await chatsApi.cancelScheduledMessage(conversationId, messageId);
+    set((state) => ({
+      scheduledMessagesByConversation: {
+        ...state.scheduledMessagesByConversation,
+        [conversationId]: (state.scheduledMessagesByConversation[conversationId] ?? []).filter((m) => m.id !== messageId),
+      },
+    }));
+  },
+
+  rescheduleMessage: async (conversationId, messageId, scheduledFor) => {
+    const updated = await chatsApi.rescheduleMessage(conversationId, messageId, scheduledFor);
+    set((state) => ({
+      scheduledMessagesByConversation: {
+        ...state.scheduledMessagesByConversation,
+        [conversationId]: (state.scheduledMessagesByConversation[conversationId] ?? []).map((m) =>
+          m.id === messageId ? { ...m, scheduledFor: updated.scheduledFor } : m
+        ),
+      },
+    }));
+  },
+
+  // The published message arrives via the "message:new" socket event, which appends it to the chat.
+  sendScheduledMessageNow: async (conversationId, messageId) => {
+    await chatsApi.sendScheduledMessageNow(conversationId, messageId);
     set((state) => ({
       scheduledMessagesByConversation: {
         ...state.scheduledMessagesByConversation,
