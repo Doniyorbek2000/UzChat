@@ -20,6 +20,7 @@ import { colors } from "../../theme/colors";
 import { Contact, ContactRequest, ContactSuggestion } from "../../types";
 import { useContactsStore } from "../../store/contactsStore";
 import { useChatStore } from "../../store/chatStore";
+import { formatTime } from "../../utils/conversation";
 
 type Props = MainTabScreenProps<"Contacts">;
 
@@ -37,6 +38,8 @@ export function ContactsScreen({ navigation }: Props) {
   const [noteInput, setNoteInput] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [search, setSearch] = useState("");
+  const [sortOnlineFirst, setSortOnlineFirst] = useState(false);
+  const onlineUsers = useChatStore((s) => s.onlineUsers);
 
   const filteredContacts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -48,6 +51,18 @@ export function ContactsScreen({ navigation }: Props) {
       return alias.includes(query) || displayName.includes(query) || username.includes(query);
     });
   }, [contacts, search]);
+
+  const sortedContacts = useMemo(() => {
+    if (!sortOnlineFirst) return filteredContacts;
+    return [...filteredContacts].sort((a, b) => {
+      const aOnline = onlineUsers.has(a.user.id);
+      const bOnline = onlineUsers.has(b.user.id);
+      if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      const aTime = a.user.lastSeenAt ? new Date(a.user.lastSeenAt).getTime() : 0;
+      const bTime = b.user.lastSeenAt ? new Date(b.user.lastSeenAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  }, [filteredContacts, onlineUsers, sortOnlineFirst]);
 
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
 
@@ -294,18 +309,36 @@ export function ContactsScreen({ navigation }: Props) {
           )}
         </View>
       )}
+      {contacts.length > 0 && (
+        <TouchableOpacity style={styles.sortToggleRow} onPress={() => setSortOnlineFirst((v) => !v)}>
+          <View style={[styles.sortToggleCheckbox, sortOnlineFirst && styles.sortToggleCheckboxActive]}>
+            {sortOnlineFirst && <Text style={styles.sortToggleCheckmark}>✓</Text>}
+          </View>
+          <Text style={styles.sortToggleText}>Onlaynlarni birinchi ko'rsatish</Text>
+        </TouchableOpacity>
+      )}
       <FlatList
-        data={filteredContacts}
+        data={sortedContacts}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.row} onPress={() => onOpenChat(item)} onLongPress={() => onLongPressContact(item)}>
-            <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
-            <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
-            {item.note && <Text style={styles.noteIcon}>📝</Text>}
-            {item.isFavorite && <Text style={styles.favoriteStar}>⭐</Text>}
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const isOnline = onlineUsers.has(item.user.id);
+          return (
+            <TouchableOpacity style={styles.row} onPress={() => onOpenChat(item)} onLongPress={() => onLongPressContact(item)}>
+              <Avatar uri={item.user.avatarUrl} name={item.user.displayName} online={isOnline} />
+              <View style={styles.nameColumn}>
+                <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
+                {(isOnline || item.user.lastSeenAt) && (
+                  <Text style={styles.presenceLabel}>
+                    {isOnline ? "Onlayn" : `Oxirgi marta: ${formatTime(item.user.lastSeenAt!)}`}
+                  </Text>
+                )}
+              </View>
+              {item.note && <Text style={styles.noteIcon}>📝</Text>}
+              {item.isFavorite && <Text style={styles.favoriteStar}>⭐</Text>}
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.center}>
             <Text style={styles.emptyText}>
@@ -396,6 +429,21 @@ const styles = StyleSheet.create({
   addText: { fontSize: 16, fontWeight: "500", color: colors.text },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   name: { fontSize: 16, color: colors.text, flex: 1 },
+  nameColumn: { flex: 1 },
+  presenceLabel: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  sortToggleRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 8, gap: 8 },
+  sortToggleCheckbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sortToggleCheckboxActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  sortToggleCheckmark: { color: "#fff", fontSize: 12, fontWeight: "700" },
+  sortToggleText: { fontSize: 13, color: colors.textSecondary },
   requestInfo: { flex: 1 },
   requestMutual: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   favoriteStar: { fontSize: 14 },
