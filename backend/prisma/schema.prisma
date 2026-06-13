@@ -295,6 +295,10 @@ model Conversation {
   // photos, videos, voice notes, files, contacts, or polls).
   membersCanSendMedia Boolean @default(true)
 
+  // GROUP only: when true, members who join after this is enabled only see
+  // messages sent after they joined (existing members keep their current view).
+  hideHistoryForNewMembers Boolean @default(false)
+
   participants    ConversationParticipant[]
   messages        Message[]
   joinRequests    GroupJoinRequest[]

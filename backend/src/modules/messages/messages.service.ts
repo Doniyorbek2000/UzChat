@@ -389,7 +389,20 @@ export const messagesService = {
 
     const createdAtFilter: { lt?: Date; gt?: Date } = {};
     if (query.before) createdAtFilter.lt = new Date(query.before);
-    if (participant.clearedAt) createdAtFilter.gt = participant.clearedAt;
+
+    const gtCandidates: Date[] = [];
+    if (participant.clearedAt) gtCandidates.push(participant.clearedAt);
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { type: true, hideHistoryForNewMembers: true },
+    });
+    if (conversation?.type === ConversationType.GROUP && conversation.hideHistoryForNewMembers) {
+      gtCandidates.push(participant.joinedAt);
+    }
+    if (gtCandidates.length > 0) {
+      createdAtFilter.gt = gtCandidates.reduce((a, b) => (a > b ? a : b));
+    }
 
     const messages = await prisma.message.findMany({
       where: {

@@ -171,6 +171,9 @@ export interface Conversation {
   membersCanChangeInfo: boolean;
   // GROUP only: when false, regular members can only send TEXT messages.
   membersCanSendMedia: boolean;
+  // GROUP only: when true, members who join after this is enabled only see
+  // messages sent after they joined.
+  hideHistoryForNewMembers: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.

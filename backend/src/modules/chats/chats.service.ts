@@ -239,6 +239,7 @@ export const chatsService = {
           membersCanPinMessages: p.conversation.membersCanPinMessages,
           membersCanChangeInfo: p.conversation.membersCanChangeInfo,
           membersCanSendMedia: p.conversation.membersCanSendMedia,
+          hideHistoryForNewMembers: p.conversation.hideHistoryForNewMembers,
           isSelf: p.conversation.isSelf,
           pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
           participants: p.conversation.participants.map((cp) => ({
@@ -317,6 +318,7 @@ export const chatsService = {
       membersCanPinMessages: participant.conversation.membersCanPinMessages,
       membersCanChangeInfo: participant.conversation.membersCanChangeInfo,
       membersCanSendMedia: participant.conversation.membersCanSendMedia,
+      hideHistoryForNewMembers: participant.conversation.hideHistoryForNewMembers,
       isSelf: participant.conversation.isSelf,
       pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
       participants: participant.conversation.participants.map((cp) => ({
@@ -934,6 +936,9 @@ export const chatsService = {
         ...(input.membersCanPinMessages !== undefined ? { membersCanPinMessages: input.membersCanPinMessages } : {}),
         ...(input.membersCanChangeInfo !== undefined ? { membersCanChangeInfo: input.membersCanChangeInfo } : {}),
         ...(input.membersCanSendMedia !== undefined ? { membersCanSendMedia: input.membersCanSendMedia } : {}),
+        ...(input.hideHistoryForNewMembers !== undefined
+          ? { hideHistoryForNewMembers: input.hideHistoryForNewMembers }
+          : {}),
       },
     });
 
@@ -1048,6 +1053,20 @@ export const chatsService = {
           input.membersCanSendMedia
             ? `${name} a'zolarga media yuborishga ruxsat berdi`
             : `${name} a'zolarga faqat matnli xabar yuborishni ruxsat berdi`
+        )
+      );
+    }
+    if (
+      input.hideHistoryForNewMembers !== undefined &&
+      input.hideHistoryForNewMembers !== conversation.hideHistoryForNewMembers
+    ) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.hideHistoryForNewMembers
+            ? `${name} yangi a'zolar uchun eski xabarlarni yashirdi`
+            : `${name} yangi a'zolar uchun eski xabarlarni ko'rsatishni yoqdi`
         )
       );
     }

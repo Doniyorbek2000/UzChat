@@ -174,6 +174,7 @@ interface ChatState {
       membersCanPinMessages?: boolean;
       membersCanChangeInfo?: boolean;
       membersCanSendMedia?: boolean;
+      hideHistoryForNewMembers?: boolean;
     }
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;

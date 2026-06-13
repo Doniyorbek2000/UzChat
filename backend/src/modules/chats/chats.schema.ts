@@ -57,6 +57,7 @@ export const updateConversationSchema = z
     membersCanPinMessages: z.boolean().optional(),
     membersCanChangeInfo: z.boolean().optional(),
     membersCanSendMedia: z.boolean().optional(),
+    hideHistoryForNewMembers: z.boolean().optional(),
   })
   .refine(
     (data) =>
@@ -70,7 +71,8 @@ export const updateConversationSchema = z
       data.membersCanAddMembers !== undefined ||
       data.membersCanPinMessages !== undefined ||
       data.membersCanChangeInfo !== undefined ||
-      data.membersCanSendMedia !== undefined,
+      data.membersCanSendMedia !== undefined ||
+      data.hideHistoryForNewMembers !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

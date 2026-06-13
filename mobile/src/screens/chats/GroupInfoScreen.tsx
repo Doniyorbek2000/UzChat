@@ -237,6 +237,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleHideHistoryForNewMembers = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { hideHistoryForNewMembers: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onToggleMembersCanSendMedia = async (value: boolean) => {
     try {
       await updateGroupInfo(conversationId, { membersCanSendMedia: value });
@@ -637,6 +645,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteIcon}>🖼️</Text>
             <Text style={styles.inviteText}>A'zolar media yuborishi mumkin</Text>
             <Switch value={conversation.membersCanSendMedia} onValueChange={onToggleMembersCanSendMedia} />
+          </View>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>🙈</Text>
+            <Text style={styles.inviteText}>Yangi a'zolar uchun eski xabarlarni yashirish</Text>
+            <Switch value={conversation.hideHistoryForNewMembers} onValueChange={onToggleHideHistoryForNewMembers} />
           </View>
           <TouchableOpacity
             style={styles.inviteRow}
