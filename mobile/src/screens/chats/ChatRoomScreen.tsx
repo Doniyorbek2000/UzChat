@@ -39,6 +39,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useWallpaperStore } from "../../store/wallpaperStore";
 import { useChatSettingsStore } from "../../store/chatSettingsStore";
 import { useRecentEmojiStore } from "../../store/recentEmojiStore";
+import { useQuickRepliesStore } from "../../store/quickRepliesStore";
 import { getCustomWallpaperUri, getWallpaperColor } from "../../theme/wallpapers";
 import { ConversationParticipant, MessageReaction, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
@@ -288,6 +289,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const setDraft = useChatStore((s) => s.setDraft);
+  const quickReplies = useQuickRepliesStore((s) => s.quickReplies);
   const loadScheduledMessages = useChatStore((s) => s.loadScheduledMessages);
   const scheduledCount = useChatStore((s) => s.scheduledMessagesByConversation[conversationId]?.length ?? 0);
 
@@ -314,6 +316,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [mentionPickerVisible, setMentionPickerVisible] = useState(false);
   const [pendingMentions, setPendingMentions] = useState<string[]>([]);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [quickReplyPickerVisible, setQuickReplyPickerVisible] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
@@ -1050,8 +1053,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       { text: "📄 Fayl", onPress: pickFile },
       { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
       { text: "📊 So'rovnoma", onPress: openPollModal },
+      { text: "💬 Tezkor javob", onPress: onOpenQuickReplies },
       { text: "Bekor qilish", style: "cancel" },
     ]);
+  };
+
+  const onOpenQuickReplies = () => {
+    if (quickReplies.length === 0) {
+      navigation.navigate("QuickReplies");
+      return;
+    }
+    setQuickReplyPickerVisible(true);
+  };
+
+  const onSelectQuickReply = (replyText: string) => {
+    setQuickReplyPickerVisible(false);
+    onChangeText(text ? `${text}\n${replyText}` : replyText);
   };
 
   const openPollModal = () => {
@@ -2187,6 +2204,30 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </TouchableOpacity>
             ))}
           <TouchableOpacity style={styles.actionButton} onPress={() => setMentionPickerVisible(false)}>
+            <Text style={styles.actionButtonText}>Bekor qilish</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    <Modal
+      visible={quickReplyPickerVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setQuickReplyPickerVisible(false)}
+    >
+      <Pressable style={styles.actionBackdrop} onPress={() => setQuickReplyPickerVisible(false)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Tezkor javob</Text>
+          <ScrollView style={styles.seenByList}>
+            {quickReplies.map((item) => (
+              <TouchableOpacity key={item.id} style={styles.actionButton} onPress={() => onSelectQuickReply(item.text)}>
+                <Text style={styles.actionButtonText} numberOfLines={2}>
+                  {item.text}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setQuickReplyPickerVisible(false)}>
             <Text style={styles.actionButtonText}>Bekor qilish</Text>
           </TouchableOpacity>
         </Pressable>

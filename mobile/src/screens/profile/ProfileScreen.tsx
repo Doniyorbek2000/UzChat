@@ -197,6 +197,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("QuickReplies")}>
+        <Text style={styles.menuRowText}>💬 Tezkor javoblar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("StorageUsage")}>
         <Text style={styles.menuRowText}>📦 Xotira va kesh</Text>
         <Text style={styles.menuRowArrow}>›</Text>

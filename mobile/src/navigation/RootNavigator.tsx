@@ -35,6 +35,7 @@ import { AppLockSettingsScreen } from "../screens/profile/AppLockSettingsScreen"
 import { TwoFactorSettingsScreen } from "../screens/profile/TwoFactorSettingsScreen";
 import { ChatTextSizeScreen } from "../screens/profile/ChatTextSizeScreen";
 import { StorageUsageScreen } from "../screens/profile/StorageUsageScreen";
+import { QuickRepliesScreen } from "../screens/profile/QuickRepliesScreen";
 import { NotificationSettingsScreen } from "../screens/profile/NotificationSettingsScreen";
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { AboutScreen } from "../screens/profile/AboutScreen";
@@ -47,6 +48,7 @@ import { useChatSettingsStore } from "../store/chatSettingsStore";
 import { useContactsStore } from "../store/contactsStore";
 import { useRecentEmojiStore } from "../store/recentEmojiStore";
 import { useVerifiedContactsStore } from "../store/verifiedContactsStore";
+import { useQuickRepliesStore } from "../store/quickRepliesStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
 import { colors } from "../theme/colors";
@@ -102,6 +104,7 @@ export function RootNavigator() {
   const chatSettingsBootstrap = useChatSettingsStore((s) => s.bootstrap);
   const recentEmojiBootstrap = useRecentEmojiStore((s) => s.bootstrap);
   const verifiedContactsBootstrap = useVerifiedContactsStore((s) => s.bootstrap);
+  const quickRepliesBootstrap = useQuickRepliesStore((s) => s.bootstrap);
 
   useEffect(() => {
     bootstrap();
@@ -109,7 +112,8 @@ export function RootNavigator() {
     chatSettingsBootstrap();
     recentEmojiBootstrap();
     verifiedContactsBootstrap();
-  }, [bootstrap, wallpaperBootstrap, chatSettingsBootstrap, recentEmojiBootstrap, verifiedContactsBootstrap]);
+    quickRepliesBootstrap();
+  }, [bootstrap, wallpaperBootstrap, chatSettingsBootstrap, recentEmojiBootstrap, verifiedContactsBootstrap, quickRepliesBootstrap]);
 
   useEffect(() => {
     if (isAuthenticated) appLockBootstrap();
@@ -192,6 +196,7 @@ export function RootNavigator() {
             <Stack.Screen name="TwoFactorSettings" component={TwoFactorSettingsScreen} options={{ title: "Ikki bosqichli tekshiruv" }} />
             <Stack.Screen name="ChatTextSize" component={ChatTextSizeScreen} options={{ title: "Matn hajmi" }} />
             <Stack.Screen name="StorageUsage" component={StorageUsageScreen} options={{ title: "Xotira va kesh" }} />
+            <Stack.Screen name="QuickReplies" component={QuickRepliesScreen} options={{ title: "Tezkor javoblar" }} />
             <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ title: "Bildirishnomalar" }} />
             <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />
             <Stack.Screen name="About" component={AboutScreen} options={{ title: "UzChat haqida" }} />
