@@ -17,6 +17,7 @@ usersRouter.use(requireAuth);
 
 usersRouter.get("/me", usersController.me);
 usersRouter.patch("/me", validateBody(updateProfileSchema), usersController.updateMe);
+usersRouter.get("/me/username-history", usersController.getUsernameHistory);
 usersRouter.patch("/me/password", validateBody(changePasswordSchema), usersController.changePassword);
 usersRouter.put("/me/two-factor", validateBody(setTwoFactorSchema), usersController.setTwoFactor);
 usersRouter.delete("/me/two-factor", validateBody(disableTwoFactorSchema), usersController.disableTwoFactor);

@@ -92,6 +92,8 @@ model User {
   id           String   @id @default(uuid())
   phone        String   @unique
   username     String   @unique
+  // Set when the username is changed; used to enforce the change cooldown.
+  usernameChangedAt DateTime?
   displayName  String
   passwordHash String
   avatarUrl    String?
@@ -177,6 +179,7 @@ model User {
   reportsReceived  Report[]                   @relation("ReportReported")
   groupJoinRequests GroupJoinRequest[]
   broadcastLists   BroadcastList[]
+  usernameHistory  UsernameHistory[]
 
   @@index([username])
   @@index([phone])
@@ -215,6 +218,20 @@ model RefreshToken {
   revokedAt DateTime?
 
   @@index([userId])
+}
+
+// A previous username a user has changed away from. Keeps the old handle
+// reserved for a grace period so it can't be immediately squatted, and lets
+// the user view their own change history.
+model UsernameHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oldUsername String
+  changedAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([oldUsername])
 }
 
 model OtpCode {

@@ -25,10 +25,17 @@ import {
   UpdateProfileInput,
 } from "./users.schema";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+// How often a user may change their username.
+const USERNAME_CHANGE_COOLDOWN_DAYS = 7;
+// How long a freed-up username stays reserved (can't be claimed by someone else).
+const USERNAME_RESERVATION_DAYS = 30;
+
 const profileSelect = {
   id: true,
   phone: true,
   username: true,
+  usernameChangedAt: true,
   displayName: true,
   avatarUrl: true,
   bio: true,
@@ -91,12 +98,56 @@ export const usersService = {
   },
 
   async updateProfile(userId: string, data: UpdateProfileInput) {
+    let usernameChangedAt: Date | undefined;
     if (data.username) {
-      const existing = await prisma.user.findUnique({ where: { username: data.username }, select: { id: true } });
-      if (existing && existing.id !== userId) throw Errors.conflict("Bu username band");
+      const current = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { username: true, usernameChangedAt: true },
+      });
+      if (!current) throw Errors.notFound("Foydalanuvchi");
+
+      if (data.username !== current.username) {
+        if (current.usernameChangedAt) {
+          const remainingMs = current.usernameChangedAt.getTime() + USERNAME_CHANGE_COOLDOWN_DAYS * DAY_MS - Date.now();
+          if (remainingMs > 0) {
+            const remainingDays = Math.ceil(remainingMs / DAY_MS);
+            throw Errors.badRequest(
+              `Username ${USERNAME_CHANGE_COOLDOWN_DAYS} kunda bir marta o'zgartirilishi mumkin. Yana ${remainingDays} kundan keyin urinib ko'ring`
+            );
+          }
+        }
+
+        const existing = await prisma.user.findUnique({ where: { username: data.username }, select: { id: true } });
+        if (existing && existing.id !== userId) throw Errors.conflict("Bu username band");
+
+        const reserved = await prisma.usernameHistory.findFirst({
+          where: {
+            oldUsername: data.username,
+            userId: { not: userId },
+            changedAt: { gt: new Date(Date.now() - USERNAME_RESERVATION_DAYS * DAY_MS) },
+          },
+        });
+        if (reserved) throw Errors.conflict("Bu username vaqtincha band");
+
+        await prisma.usernameHistory.create({ data: { userId, oldUsername: current.username } });
+        usernameChangedAt = new Date();
+      }
     }
-    const user = await prisma.user.update({ where: { id: userId }, data, select: profileSelect });
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { ...data, ...(usernameChangedAt ? { usernameChangedAt } : {}) },
+      select: profileSelect,
+    });
     return formatProfile(user);
+  },
+
+  /** Lists this user's previous usernames, most recent first. */
+  async getUsernameHistory(userId: string) {
+    return prisma.usernameHistory.findMany({
+      where: { userId },
+      orderBy: { changedAt: "desc" },
+      select: { oldUsername: true, changedAt: true },
+    });
   },
 
   async getPublicProfile(userId: string, targetId: string) {

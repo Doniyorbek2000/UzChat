@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { AuthUser, GroupAddPrivacy, LastSeenException, LastSeenPrivacy, MessagePrivacy, User } from "../types";
+import { AuthUser, GroupAddPrivacy, LastSeenException, LastSeenPrivacy, MessagePrivacy, User, UsernameHistoryEntry } from "../types";
 
 export const usersApi = {
   me() {
@@ -35,6 +35,10 @@ export const usersApi = {
     defaultDisappearingSeconds?: number | null;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);
+  },
+
+  getUsernameHistory() {
+    return apiClient.get<UsernameHistoryEntry[]>("/users/me/username-history").then((r) => r.data);
   },
 
   search(query: string) {

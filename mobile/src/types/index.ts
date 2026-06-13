@@ -23,6 +23,8 @@ export interface User {
 
 export interface AuthUser extends User {
   phone: string;
+  // Set when the username was last changed; used to show the change cooldown.
+  usernameChangedAt?: string | null;
   lastSeenPrivacy: LastSeenPrivacy;
   avatarPrivacy: LastSeenPrivacy;
   bioPrivacy: LastSeenPrivacy;
@@ -335,6 +337,12 @@ export interface BroadcastList {
   memberIds: string[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** A previous username the current user has changed away from. */
+export interface UsernameHistoryEntry {
+  oldUsername: string;
+  changedAt: string;
 }
 
 /** A logged-in device/client, backed by a refresh token on the server. */

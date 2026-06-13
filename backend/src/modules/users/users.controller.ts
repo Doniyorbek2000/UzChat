@@ -22,6 +22,15 @@ export const usersController = {
     }
   },
 
+  async getUsernameHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const history = await usersService.getUsernameHistory(req.user!.sub);
+      res.json(history);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async changePassword(req: Request, res: Response, next: NextFunction) {
     try {
       await usersService.changePassword(req.user!.sub, req.body);

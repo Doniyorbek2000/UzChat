@@ -9,9 +9,12 @@ import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { formatBirthday, MAX_DAYS_IN_MONTH, UZ_MONTHS } from "../../utils/birthday";
 import { MainTabScreenProps } from "../../navigation/types";
+import { UsernameHistoryEntry } from "../../types";
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,24}$/;
+// How often a user may change their username (mirrors the backend limit).
+const USERNAME_CHANGE_COOLDOWN_DAYS = 7;
 
 type Props = MainTabScreenProps<"Profile">;
 
@@ -31,6 +34,9 @@ export function ProfileScreen({ navigation }: Props) {
   const [pickedDay, setPickedDay] = useState(1);
   const [pickedMonth, setPickedMonth] = useState(1);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [usernameHistoryVisible, setUsernameHistoryVisible] = useState(false);
+  const [usernameHistory, setUsernameHistory] = useState<UsernameHistoryEntry[]>([]);
+  const [loadingUsernameHistory, setLoadingUsernameHistory] = useState(false);
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -53,6 +59,25 @@ export function ProfileScreen({ navigation }: Props) {
   }, [username, user?.username]);
 
   if (!user) return null;
+
+  const usernameCooldownRemainingDays = (() => {
+    if (!user.usernameChangedAt) return 0;
+    const cooldownEnds = new Date(user.usernameChangedAt).getTime() + USERNAME_CHANGE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+    return Math.max(0, Math.ceil((cooldownEnds - Date.now()) / (24 * 60 * 60 * 1000)));
+  })();
+
+  const onOpenUsernameHistory = async () => {
+    setUsernameHistoryVisible(true);
+    setLoadingUsernameHistory(true);
+    try {
+      const history = await usersApi.getUsernameHistory();
+      setUsernameHistory(history);
+    } catch {
+      setUsernameHistory([]);
+    } finally {
+      setLoadingUsernameHistory(false);
+    }
+  };
 
   const onSave = async () => {
     const trimmedUsername = username.trim();
@@ -214,6 +239,12 @@ export function ProfileScreen({ navigation }: Props) {
       </View>
       {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
       {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
+      {usernameCooldownRemainingDays > 0 && (
+        <Text style={styles.usernameCooldownHint}>
+          Username {USERNAME_CHANGE_COOLDOWN_DAYS} kunda bir marta o'zgartiriladi. Yana {usernameCooldownRemainingDays} kundan
+          keyin o'zgartirishingiz mumkin
+        </Text>
+      )}
 
       <Text style={styles.label}>Ism</Text>
       <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} maxLength={64} />
@@ -250,6 +281,11 @@ export function ProfileScreen({ navigation }: Props) {
           <Text style={styles.menuRowValue}>{formatBirthday(user.birthdayDay, user.birthdayMonth) ?? "Belgilanmagan"}</Text>
           <Text style={styles.menuRowArrow}>›</Text>
         </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={onOpenUsernameHistory}>
+        <Text style={styles.menuRowText}>🕓 Oldingi usernamelar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.menuRow} onPress={onShare}>
@@ -404,6 +440,41 @@ export function ProfileScreen({ navigation }: Props) {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Modal
+        visible={usernameHistoryVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setUsernameHistoryVisible(false)}
+      >
+        <Pressable style={styles.birthdayBackdrop} onPress={() => setUsernameHistoryVisible(false)}>
+          <Pressable style={styles.birthdaySheet}>
+            <Text style={styles.birthdayTitle}>Oldingi usernamelar</Text>
+            {loadingUsernameHistory ? (
+              <ActivityIndicator color={colors.primary} style={styles.usernameHistoryLoading} />
+            ) : usernameHistory.length === 0 ? (
+              <Text style={styles.usernameHistoryEmpty}>Username hali o'zgartirilmagan</Text>
+            ) : (
+              <FlatList
+                data={usernameHistory}
+                keyExtractor={(item, index) => `${item.oldUsername}-${index}`}
+                style={styles.usernameHistoryList}
+                renderItem={({ item }) => (
+                  <View style={styles.usernameHistoryRow}>
+                    <Text style={styles.usernameHistoryName}>@{item.oldUsername}</Text>
+                    <Text style={styles.usernameHistoryDate}>
+                      {new Date(item.changedAt).toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" })}
+                    </Text>
+                  </View>
+                )}
+              />
+            )}
+            <TouchableOpacity style={styles.birthdayButton} onPress={() => setUsernameHistoryVisible(false)}>
+              <Text style={[styles.birthdayButtonText, styles.birthdayButtonPrimary]}>Yopish</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -448,6 +519,20 @@ const styles = StyleSheet.create({
   usernameAvailable: { color: colors.online },
   usernameTaken: { color: colors.danger },
   usernameHint: { fontSize: 12, color: colors.danger, marginTop: 4, marginLeft: 4 },
+  usernameCooldownHint: { fontSize: 12, color: colors.textSecondary, marginTop: 4, marginLeft: 4 },
+  usernameHistoryLoading: { marginVertical: 20 },
+  usernameHistoryEmpty: { fontSize: 14, color: colors.textSecondary, textAlign: "center", paddingVertical: 20 },
+  usernameHistoryList: { maxHeight: 280 },
+  usernameHistoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  usernameHistoryName: { fontSize: 15, color: colors.text, fontWeight: "600" },
+  usernameHistoryDate: { fontSize: 13, color: colors.textSecondary },
   button: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 20 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   securityBox: { backgroundColor: colors.background, borderRadius: 8, padding: 16, marginTop: 24 },
