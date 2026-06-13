@@ -141,6 +141,7 @@ model User {
   reportsMade      Report[]                   @relation("ReportReporter")
   reportsReceived  Report[]                   @relation("ReportReported")
   groupJoinRequests GroupJoinRequest[]
+  broadcastLists   BroadcastList[]
 
   @@index([username])
   @@index([phone])
@@ -544,6 +545,23 @@ model ChatFolder {
   // stale IDs (e.g. for left groups) are simply filtered out client-side.
   conversationIds String[] @default([])
   createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+// A named list of recipients (WhatsApp-style "broadcast list"): sending a
+// message to the list delivers it as an individual direct message to each
+// member's 1:1 conversation with the owner - members are unaware of each other.
+model BroadcastList {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name   String
+  // IDs of recipient users. Not enforced as a foreign key; stale IDs (e.g. for
+  // deleted accounts) are simply filtered out client-side.
+  memberIds String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }

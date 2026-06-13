@@ -280,6 +280,16 @@ export interface ChatFolder {
   conversationIds: string[];
 }
 
+/** A saved list of recipients; sending a message to it delivers individual
+ * direct messages to each member's 1:1 conversation with the owner. */
+export interface BroadcastList {
+  id: string;
+  name: string;
+  memberIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** A logged-in device/client, backed by a refresh token on the server. */
 export interface Session {
   id: string;

@@ -88,6 +88,12 @@ export function NewChatScreen({ navigation }: Props) {
         </View>
         <Text style={styles.actionText}>Shaxsiy yozuvlar</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("BroadcastLists")}>
+        <View style={styles.groupIcon}>
+          <Text style={styles.groupIconText}>📢</Text>
+        </View>
+        <Text style={styles.actionText}>Tarqatish ro'yxatlari</Text>
+      </TouchableOpacity>
 
       {contacts.length > 0 && (
         <View style={styles.searchBar}>

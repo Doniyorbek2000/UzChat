@@ -27,6 +27,8 @@ import { MentionsScreen } from "../screens/chats/MentionsScreen";
 import { ArchivedChatsScreen } from "../screens/chats/ArchivedChatsScreen";
 import { ChatFoldersScreen } from "../screens/chats/ChatFoldersScreen";
 import { EditChatFolderScreen } from "../screens/chats/EditChatFolderScreen";
+import { BroadcastListsScreen } from "../screens/chats/BroadcastListsScreen";
+import { EditBroadcastListScreen } from "../screens/chats/EditBroadcastListScreen";
 import { ChatWallpaperScreen } from "../screens/chats/ChatWallpaperScreen";
 import { BlockedUsersScreen } from "../screens/contacts/BlockedUsersScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
@@ -194,6 +196,8 @@ export function RootNavigator() {
             <Stack.Screen name="ArchivedChats" component={ArchivedChatsScreen} options={{ title: "Arxivlangan suhbatlar" }} />
             <Stack.Screen name="ChatFolders" component={ChatFoldersScreen} options={{ title: "Papkalar" }} />
             <Stack.Screen name="EditChatFolder" component={EditChatFolderScreen} options={{ title: "Suhbatlarni tanlash" }} />
+            <Stack.Screen name="BroadcastLists" component={BroadcastListsScreen} options={{ title: "Tarqatish ro'yxatlari" }} />
+            <Stack.Screen name="EditBroadcastList" component={EditBroadcastListScreen} options={{ title: "Ro'yxatni tahrirlash" }} />
             <Stack.Screen name="ChatWallpaper" component={ChatWallpaperScreen} options={{ title: "Suhbat foni" }} />
             <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
             <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />

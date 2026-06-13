@@ -1,6 +1,7 @@
 import { CompositeScreenProps, NavigatorScreenParams } from "@react-navigation/native";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { BroadcastList } from "../types";
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -47,6 +48,8 @@ export type RootStackParamList = {
   ArchivedChats: undefined;
   ChatFolders: undefined;
   EditChatFolder: { folderId: string };
+  BroadcastLists: undefined;
+  EditBroadcastList: { list?: BroadcastList };
   ChatWallpaper: { conversationId: string };
   BlockedUsers: undefined;
   ChangePassword: undefined;
