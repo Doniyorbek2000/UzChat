@@ -193,6 +193,17 @@ export function ChatListScreen({ navigation }: Props) {
     ]);
   };
 
+  const formatActivityLabel = (conversation: Conversation, userIds: Set<string> | undefined, suffix: string): string => {
+    if (conversation.type !== "GROUP" || !userIds || userIds.size === 0) return suffix;
+    const names = Array.from(userIds)
+      .map((id) => contactAliases[id] ?? conversation.participants.find((p) => p.userId === id)?.user.displayName)
+      .filter((name): name is string => !!name);
+    if (names.length === 0) return suffix;
+    if (names.length === 1) return `${names[0]} ${suffix}`;
+    if (names.length === 2) return `${names[0]} va ${names[1]} ${suffix}`;
+    return `${names[0]}, ${names[1]} va yana ${names.length - 2} kishi ${suffix}`;
+  };
+
   const renderItem = ({ item }: { item: Conversation }) => {
     const display = getConversationDisplay(item, user!.id, contactAliases);
     const unread = isConversationUnread(item, user!.id);
@@ -223,9 +234,9 @@ export function ChatListScreen({ navigation }: Props) {
           <View style={styles.bottomRow}>
             <Text style={[styles.preview, (isTyping || isRecording) && styles.previewTyping]} numberOfLines={1}>
               {isRecording ? (
-                "🎤 ovozli xabar yozmoqda..."
+                formatActivityLabel(item, recordingUsers[item.id], "🎤 ovozli xabar yozmoqda...")
               ) : isTyping ? (
-                "yozmoqda..."
+                formatActivityLabel(item, typingUsers[item.id], "yozmoqda...")
               ) : drafts[item.id] ? (
                 <>
                   <Text style={styles.draftLabel}>Qoralama: </Text>
