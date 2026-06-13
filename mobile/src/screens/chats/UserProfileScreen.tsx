@@ -19,6 +19,8 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
+  const [notifyOnlineRequested, setNotifyOnlineRequested] = useState(false);
+  const [notifyLoading, setNotifyLoading] = useState(false);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
@@ -26,7 +28,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
   useEffect(() => {
     usersApi
       .getById(userId)
-      .then(setProfile)
+      .then((p) => {
+        setProfile(p);
+        setNotifyOnlineRequested(!!p.notifyOnlineRequested);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [userId]);
@@ -54,6 +59,24 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const onShare = () => {
     if (!profile) return;
     Share.share({ message: `UzChat'da menga qo'shilish uchun: @${profile.username}` }).catch(() => {});
+  };
+
+  const onToggleNotifyOnline = async () => {
+    if (!profile || notifyLoading) return;
+    setNotifyLoading(true);
+    try {
+      if (notifyOnlineRequested) {
+        await usersApi.cancelNotifyOnline(profile.id);
+        setNotifyOnlineRequested(false);
+      } else {
+        await usersApi.notifyOnline(profile.id);
+        setNotifyOnlineRequested(true);
+      }
+    } catch {
+      Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+    } finally {
+      setNotifyLoading(false);
+    }
   };
 
   if (loading) {
@@ -115,6 +138,15 @@ export function UserProfileScreen({ route, navigation }: Props) {
           <Text style={styles.actionIcon}>👥</Text>
           <Text style={styles.actionText}>Umumiy guruhlar</Text>
         </TouchableOpacity>
+        {!isOnline && (
+          <TouchableOpacity style={styles.actionRow} onPress={onToggleNotifyOnline} disabled={notifyLoading}>
+            <Text style={styles.actionIcon}>{notifyOnlineRequested ? "🔕" : "🔔"}</Text>
+            <Text style={styles.actionText}>
+              {notifyOnlineRequested ? "Onlayn ogohlantirishni bekor qilish" : "Onlayn bo'lganda xabar bering"}
+            </Text>
+            {notifyLoading && <ActivityIndicator color={colors.primary} size="small" />}
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.actionRow} onPress={onShare}>
           <Text style={styles.actionIcon}>📤</Text>
           <Text style={styles.actionText}>Profilni ulashish</Text>

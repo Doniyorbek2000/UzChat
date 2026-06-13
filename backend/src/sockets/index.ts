@@ -4,6 +4,7 @@ import { verifyAccessToken } from "../utils/jwt";
 import { env } from "../config/env";
 import { registerChatHandlers } from "./chat.gateway";
 import { prisma } from "../config/prisma";
+import { pushService } from "../modules/push/push.service";
 
 let io: Server | undefined;
 
@@ -91,6 +92,20 @@ export function initSocketServer(httpServer: HttpServer): Server {
     socket.emit("presence:initial", { userIds: onlineUserIds });
 
     io!.emit("presence:update", { userId: authed.userId, online: true });
+
+    const notifyRequests = await prisma.onlineNotifyRequest.findMany({
+      where: { targetId: authed.userId },
+      select: { ownerId: true },
+    });
+    if (notifyRequests.length > 0) {
+      const target = await prisma.user.findUnique({ where: { id: authed.userId }, select: { displayName: true } });
+      await pushService.sendToUsers(notifyRequests.map((r) => r.ownerId), {
+        title: "Onlayn bo'ldi",
+        body: `${target?.displayName} hozir onlayn`,
+        data: { type: "user_online", userId: authed.userId },
+      });
+      await prisma.onlineNotifyRequest.deleteMany({ where: { targetId: authed.userId } });
+    }
 
     registerChatHandlers(io!, authed);
 

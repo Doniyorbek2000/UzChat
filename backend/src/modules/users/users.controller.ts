@@ -97,4 +97,22 @@ export const usersController = {
       next(err);
     }
   },
+
+  async notifyOnline(req: Request, res: Response, next: NextFunction) {
+    try {
+      await usersService.subscribeOnlineNotify(req.user!.sub, req.params.id);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async cancelNotifyOnline(req: Request, res: Response, next: NextFunction) {
+    try {
+      await usersService.unsubscribeOnlineNotify(req.user!.sub, req.params.id);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
 };

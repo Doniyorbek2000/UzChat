@@ -21,4 +21,6 @@ usersRouter.put("/me/two-factor", validateBody(setTwoFactorSchema), usersControl
 usersRouter.delete("/me/two-factor", validateBody(disableTwoFactorSchema), usersController.disableTwoFactor);
 usersRouter.delete("/me", validateBody(deleteAccountSchema), usersController.deleteAccount);
 usersRouter.get("/search", usersController.search);
+usersRouter.post("/:id/notify-online", usersController.notifyOnline);
+usersRouter.delete("/:id/notify-online", usersController.cancelNotifyOnline);
 usersRouter.get("/:id", usersController.getById);

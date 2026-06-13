@@ -18,6 +18,7 @@ export interface User {
   lastSeenAt?: string | null;
   birthdayDay?: number | null;
   birthdayMonth?: number | null;
+  notifyOnlineRequested?: boolean;
 }
 
 export interface AuthUser extends User {

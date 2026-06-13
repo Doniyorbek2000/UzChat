@@ -44,6 +44,14 @@ export const usersApi = {
     return apiClient.get<User>(`/users/${id}`).then((r) => r.data);
   },
 
+  notifyOnline(id: string) {
+    return apiClient.post(`/users/${id}/notify-online`);
+  },
+
+  cancelNotifyOnline(id: string) {
+    return apiClient.delete(`/users/${id}/notify-online`);
+  },
+
   changePassword(currentPassword: string, newPassword: string) {
     return apiClient.patch("/users/me/password", { currentPassword, newPassword });
   },

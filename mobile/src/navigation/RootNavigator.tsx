@@ -80,6 +80,10 @@ function navigateFromNotification(data?: MessageNotificationData) {
     navigationRef.navigate("UserProfile", { userId: data.userId });
     return;
   }
+  if (data?.type === "user_online" && data.userId) {
+    navigationRef.navigate("UserProfile", { userId: data.userId });
+    return;
+  }
   navigateToConversation(data?.conversationId);
 }
 

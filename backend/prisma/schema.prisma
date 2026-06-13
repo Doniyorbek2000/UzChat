@@ -139,6 +139,8 @@ model User {
   receivedContacts Contact[]                  @relation("ContactTarget")
   blockedUsers     BlockedUser[]              @relation("BlockOwner")
   blockedByUsers   BlockedUser[]              @relation("BlockTarget")
+  onlineNotifyRequestsOwned    OnlineNotifyRequest[] @relation("OnlineNotifyOwner")
+  onlineNotifyRequestsTargeted OnlineNotifyRequest[] @relation("OnlineNotifyTarget")
   pushTokens       PushToken[]
   chatFolders      ChatFolder[]
   reportsMade      Report[]                   @relation("ReportReporter")
@@ -223,6 +225,18 @@ model BlockedUser {
 
   @@unique([ownerId, blockedId])
   @@index([blockedId])
+}
+
+model OnlineNotifyRequest {
+  id        String   @id @default(uuid())
+  ownerId   String
+  owner     User     @relation("OnlineNotifyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  targetId  String
+  target    User     @relation("OnlineNotifyTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([ownerId, targetId])
+  @@index([targetId])
 }
 
 model Conversation {

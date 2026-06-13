@@ -1,6 +1,7 @@
 import { ConversationType } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
+import { isUserOnline } from "../../sockets";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import {
   filterLastSeenSingle,
@@ -95,7 +96,28 @@ export const usersService = {
   async getPublicProfile(userId: string, targetId: string) {
     const user = await prisma.user.findUnique({ where: { id: targetId }, select: publicSelect });
     if (!user) throw Errors.notFound("Foydalanuvchi");
-    return filterBirthdaySingle(userId, await filterAvatarSingle(userId, await filterLastSeenSingle(userId, user)));
+    const filtered = await filterBirthdaySingle(userId, await filterAvatarSingle(userId, await filterLastSeenSingle(userId, user)));
+    const notifyOnlineRequested = !!(await prisma.onlineNotifyRequest.findUnique({
+      where: { ownerId_targetId: { ownerId: userId, targetId } },
+    }));
+    return { ...filtered, notifyOnlineRequested };
+  },
+
+  async subscribeOnlineNotify(ownerId: string, targetId: string) {
+    if (ownerId === targetId) throw Errors.badRequest("O'zingizga obuna bo'lib bo'lmaydi");
+    const target = await prisma.user.findUnique({ where: { id: targetId }, select: { id: true } });
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+    if (isUserOnline(targetId)) throw Errors.conflict("Foydalanuvchi allaqachon onlayn");
+
+    await prisma.onlineNotifyRequest.upsert({
+      where: { ownerId_targetId: { ownerId, targetId } },
+      update: {},
+      create: { ownerId, targetId },
+    });
+  },
+
+  async unsubscribeOnlineNotify(ownerId: string, targetId: string) {
+    await prisma.onlineNotifyRequest.deleteMany({ where: { ownerId, targetId } });
   },
 
   async searchUsers(currentUserId: string, query: string) {
