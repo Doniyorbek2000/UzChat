@@ -42,6 +42,10 @@ const ROLE_LABELS: Record<ParticipantRole, string> = {
   MEMBER: "A'zo",
 };
 
+// JS Date#getDay(): 0=Yakshanba..6=Shanba. Reordered to start the week on Monday.
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const WEEKDAY_LABELS = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
+
 export function GroupInfoScreen({ route, navigation }: Props) {
   const { conversationId } = route.params;
   const user = useAuthStore((s) => s.user);
@@ -68,7 +72,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [stats, setStats] = useState<{ total: number; media: number; voice: number; files: number } | null>(null);
+  const [stats, setStats] = useState<{
+    total: number;
+    media: number;
+    voice: number;
+    files: number;
+    topSenders?: { userId: string; count: number }[];
+    byWeekday?: number[];
+  } | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
 
   useFocusEffect(
@@ -595,6 +606,53 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       )}
 
+      {stats?.topSenders && stats.topSenders.length > 0 && (
+        <View style={styles.activitySection}>
+          <Text style={styles.activityTitle}>Faol a'zolar</Text>
+          {stats.topSenders.map((sender) => {
+            const participant = conversation.participants.find((p) => p.userId === sender.userId);
+            if (!participant) return null;
+            const maxCount = stats.topSenders![0].count;
+            const percent = maxCount > 0 ? (sender.count / maxCount) * 100 : 0;
+            return (
+              <View key={sender.userId} style={styles.activityRow}>
+                <Avatar uri={participant.user.avatarUrl} name={participant.user.displayName} size={28} />
+                <View style={styles.activityBarContainer}>
+                  <Text style={styles.activityName} numberOfLines={1}>
+                    {contactAliases[sender.userId] ?? participant.user.displayName}
+                  </Text>
+                  <View style={styles.activityBarTrack}>
+                    <View style={[styles.activityBarFill, { width: `${percent}%` }]} />
+                  </View>
+                </View>
+                <Text style={styles.activityCount}>{sender.count}</Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {stats?.byWeekday && (
+        <View style={styles.activitySection}>
+          <Text style={styles.activityTitle}>Haftalik faollik</Text>
+          <View style={styles.weekdayRow}>
+            {WEEKDAY_ORDER.map((dayIndex, i) => {
+              const count = stats.byWeekday![dayIndex];
+              const max = Math.max(...stats.byWeekday!, 1);
+              const heightPercent = (count / max) * 100;
+              return (
+                <View key={i} style={styles.weekdayColumn}>
+                  <View style={styles.weekdayBarTrack}>
+                    <View style={[styles.weekdayBarFill, { height: `${heightPercent}%` }]} />
+                  </View>
+                  <Text style={styles.weekdayLabel}>{WEEKDAY_LABELS[i]}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
+
       <View style={styles.inviteSection}>
         <TouchableOpacity
           style={styles.inviteRow}
@@ -847,6 +905,31 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, alignItems: "center" },
   statValue: { fontSize: 17, fontWeight: "700", color: colors.text },
   statLabel: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  activitySection: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  activityTitle: { fontSize: 13, color: colors.textSecondary, marginBottom: 10, fontWeight: "600" },
+  activityRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  activityBarContainer: { flex: 1 },
+  activityName: { fontSize: 13, color: colors.text, marginBottom: 4 },
+  activityBarTrack: { height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
+  activityBarFill: { height: "100%", borderRadius: 3, backgroundColor: colors.primary },
+  activityCount: { fontSize: 13, color: colors.textSecondary, minWidth: 28, textAlign: "right" },
+  weekdayRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", height: 90 },
+  weekdayColumn: { flex: 1, alignItems: "center", gap: 6 },
+  weekdayBarTrack: {
+    width: 16,
+    height: 60,
+    borderRadius: 4,
+    backgroundColor: colors.border,
+    justifyContent: "flex-end",
+    overflow: "hidden",
+  },
+  weekdayBarFill: { width: "100%", borderRadius: 4, backgroundColor: colors.primary, minHeight: 2 },
+  weekdayLabel: { fontSize: 11, color: colors.textSecondary },
   inviteSection: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,

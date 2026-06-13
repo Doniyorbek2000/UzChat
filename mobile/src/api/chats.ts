@@ -229,7 +229,14 @@ export const chatsApi = {
 
   getStats(conversationId: string) {
     return apiClient
-      .get<{ total: number; media: number; voice: number; files: number }>(`/conversations/${conversationId}/stats`)
+      .get<{
+        total: number;
+        media: number;
+        voice: number;
+        files: number;
+        topSenders?: { userId: string; count: number }[];
+        byWeekday?: number[];
+      }>(`/conversations/${conversationId}/stats`)
       .then((r) => r.data);
   },
 

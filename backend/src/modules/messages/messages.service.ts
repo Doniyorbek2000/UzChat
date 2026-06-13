@@ -486,27 +486,66 @@ export const messagesService = {
   async getStats(userId: string, conversationId: string) {
     const participant = await chatsService.assertParticipant(userId, conversationId);
 
+    const baseWhere = {
+      conversationId,
+      scheduledFor: null,
+      deletedAt: null,
+      NOT: { hiddenFor: { has: userId } },
+      ...(participant.clearedAt ? { createdAt: { gt: participant.clearedAt } } : {}),
+    };
+
     const counts = await prisma.message.groupBy({
       by: ["type"],
-      where: {
-        conversationId,
-        scheduledFor: null,
-        deletedAt: null,
-        NOT: { hiddenFor: { has: userId } },
-        ...(participant.clearedAt ? { createdAt: { gt: participant.clearedAt } } : {}),
-      },
+      where: baseWhere,
       _count: { _all: true },
     });
 
     const byType = new Map(counts.map((c) => [c.type, c._count._all]));
     const total = counts.filter((c) => c.type !== MessageType.SYSTEM).reduce((sum, c) => sum + c._count._all, 0);
 
-    return {
+    const stats: {
+      total: number;
+      media: number;
+      voice: number;
+      files: number;
+      topSenders?: { userId: string; count: number }[];
+      byWeekday?: number[];
+    } = {
       total,
       media: (byType.get(MessageType.IMAGE) ?? 0) + (byType.get(MessageType.VIDEO) ?? 0),
       voice: byType.get(MessageType.AUDIO) ?? 0,
       files: byType.get(MessageType.FILE) ?? 0,
     };
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { type: true },
+    });
+
+    // Group-only breakdown: most active members and weekday activity histogram,
+    // based on the most recent 1000 non-system messages.
+    if (conversation?.type === ConversationType.GROUP) {
+      const senderCounts = await prisma.message.groupBy({
+        by: ["senderId"],
+        where: { ...baseWhere, type: { not: MessageType.SYSTEM } },
+        _count: { _all: true },
+        orderBy: { _count: { senderId: "desc" } },
+        take: 5,
+      });
+      stats.topSenders = senderCounts.map((s) => ({ userId: s.senderId, count: s._count._all }));
+
+      const recentMessages = await prisma.message.findMany({
+        where: { ...baseWhere, type: { not: MessageType.SYSTEM } },
+        select: { createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 1000,
+      });
+      const byWeekday = new Array(7).fill(0);
+      for (const m of recentMessages) byWeekday[m.createdAt.getDay()]++;
+      stats.byWeekday = byWeekday;
+    }
+
+    return stats;
   },
 
   async deleteMessage(userId: string, conversationId: string, messageId: string) {
