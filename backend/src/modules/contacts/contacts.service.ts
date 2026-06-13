@@ -98,6 +98,7 @@ export const contactsService = {
       id: c.id,
       alias: c.alias,
       isFavorite: c.isFavorite,
+      note: c.note,
       user: filterLastSeen(userId, c.target, contactIds, exceptions),
     }));
   },
@@ -113,7 +114,7 @@ export const contactsService = {
     if (!contact || contact.ownerId !== userId) throw Errors.notFound("Kontakt");
 
     const updated = await prisma.contact.update({ where: { id: contactId }, data });
-    return { id: updated.id, alias: updated.alias, isFavorite: updated.isFavorite };
+    return { id: updated.id, alias: updated.alias, isFavorite: updated.isFavorite, note: updated.note };
   },
 
   async blockUser(ownerId: string, targetUserId: string) {

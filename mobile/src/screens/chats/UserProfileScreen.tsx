@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Share, Modal, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Share, Modal, Pressable, Image, TextInput } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
+import { contactsApi } from "../../api/contacts";
 import { useChatStore } from "../../store/chatStore";
 import { Avatar } from "../../components/Avatar";
 import { Linkify } from "../../components/Linkify";
 import { colors } from "../../theme/colors";
-import { User } from "../../types";
+import { Contact, User } from "../../types";
 import { formatTime } from "../../utils/conversation";
 import { formatBirthday, isBirthdayToday } from "../../utils/birthday";
 
@@ -21,6 +22,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
   const [notifyOnlineRequested, setNotifyOnlineRequested] = useState(false);
   const [notifyLoading, setNotifyLoading] = useState(false);
+  const [contact, setContact] = useState<Contact | null>(null);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [noteInput, setNoteInput] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
@@ -34,6 +39,13 @@ export function UserProfileScreen({ route, navigation }: Props) {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, [userId]);
+
+  useEffect(() => {
+    contactsApi
+      .list()
+      .then((contacts) => setContact(contacts.find((c) => c.user.id === userId) ?? null))
+      .catch(() => {});
   }, [userId]);
 
   useEffect(() => {
@@ -59,6 +71,26 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const onShare = () => {
     if (!profile) return;
     Share.share({ message: `UzChat'da menga qo'shilish uchun: @${profile.username}` }).catch(() => {});
+  };
+
+  const onOpenNoteModal = () => {
+    setNoteInput(contact?.note ?? "");
+    setNoteModalOpen(true);
+  };
+
+  const onSaveNote = async () => {
+    if (!contact) return;
+    setSavingNote(true);
+    try {
+      const trimmed = noteInput.trim();
+      const updated = await contactsApi.updateNote(contact.id, trimmed.length > 0 ? trimmed : null);
+      setContact((prev) => (prev ? { ...prev, note: updated.note } : prev));
+      setNoteModalOpen(false);
+    } catch {
+      Alert.alert("Xatolik", "Eslatmani saqlab bo'lmadi");
+    } finally {
+      setSavingNote(false);
+    }
   };
 
   const onToggleNotifyOnline = async () => {
@@ -128,6 +160,17 @@ export function UserProfileScreen({ route, navigation }: Props) {
         </View>
       )}
 
+      {!!contact && (
+        <TouchableOpacity style={styles.section} onPress={onOpenNoteModal}>
+          <Text style={styles.sectionLabel}>Shaxsiy eslatma</Text>
+          {contact.note ? (
+            <Text style={styles.bio}>{contact.note}</Text>
+          ) : (
+            <Text style={styles.notePlaceholder}>Eslatma qo'shish...</Text>
+          )}
+        </TouchableOpacity>
+      )}
+
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionRow} onPress={onMessage} disabled={opening}>
           <Text style={styles.actionIcon}>💬</Text>
@@ -169,6 +212,33 @@ export function UserProfileScreen({ route, navigation }: Props) {
           {profile.avatarUrl && <Image source={{ uri: profile.avatarUrl }} style={styles.viewerImage} resizeMode="contain" />}
         </Pressable>
       </Modal>
+
+      <Modal visible={noteModalOpen} transparent animationType="fade" onRequestClose={() => setNoteModalOpen(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setNoteModalOpen(false)}>
+          <Pressable style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
+            <Text style={styles.modalSubtitle}>{contactAliases[profile.id] ?? profile.displayName}</Text>
+            <TextInput
+              style={[styles.modalInput, styles.modalNoteInput]}
+              value={noteInput}
+              onChangeText={setNoteInput}
+              placeholder="Faqat sizga ko'rinadigan eslatma..."
+              placeholderTextColor={colors.textSecondary}
+              autoFocus
+              multiline
+              maxLength={500}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteModalOpen(false)}>
+                <Text style={styles.modalCancelText}>Bekor qilish</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
+                {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </ScrollView>
   );
 }
@@ -192,6 +262,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4, fontWeight: "600" },
   bio: { fontSize: 15, color: colors.text, lineHeight: 20 },
+  notePlaceholder: { fontSize: 15, color: colors.textSecondary, lineHeight: 20 },
   actions: { marginTop: 12 },
   actionRow: {
     flexDirection: "row",
@@ -214,4 +285,30 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
+  modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center", padding: 24 },
+  modalCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, width: "100%" },
+  modalTitle: { fontSize: 16, fontWeight: "700", color: colors.text },
+  modalSubtitle: { fontSize: 13, color: colors.textSecondary, marginTop: 2, marginBottom: 12 },
+  modalInput: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalNoteInput: { minHeight: 96, textAlignVertical: "top" },
+  modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 16 },
+  modalCancelButton: { paddingVertical: 10, paddingHorizontal: 16 },
+  modalCancelText: { color: colors.textSecondary, fontSize: 15, fontWeight: "600" },
+  modalSaveButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    minWidth: 88,
+    alignItems: "center",
+  },
+  modalSaveText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });

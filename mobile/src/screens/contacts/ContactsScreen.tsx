@@ -29,6 +29,9 @@ export function ContactsScreen({ navigation }: Props) {
   const [aliasContact, setAliasContact] = useState<Contact | null>(null);
   const [aliasInput, setAliasInput] = useState("");
   const [savingAlias, setSavingAlias] = useState(false);
+  const [noteContact, setNoteContact] = useState<Contact | null>(null);
+  const [noteInput, setNoteInput] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const [search, setSearch] = useState("");
 
   const filteredContacts = useMemo(() => {
@@ -108,6 +111,13 @@ export function ContactsScreen({ navigation }: Props) {
         },
       },
       {
+        text: item.note ? "📝 Eslatmani tahrirlash" : "📝 Eslatma qo'shish",
+        onPress: () => {
+          setNoteInput(item.note ?? "");
+          setNoteContact(item);
+        },
+      },
+      {
         text: "🚫 Bloklash",
         style: "destructive",
         onPress: () => {
@@ -143,6 +153,21 @@ export function ContactsScreen({ navigation }: Props) {
       Alert.alert("Xatolik", "Taxallusni saqlab bo'lmadi");
     } finally {
       setSavingAlias(false);
+    }
+  };
+
+  const onSaveNote = async () => {
+    if (!noteContact) return;
+    setSavingNote(true);
+    try {
+      const trimmed = noteInput.trim();
+      const updated = await contactsApi.updateNote(noteContact.id, trimmed.length > 0 ? trimmed : null);
+      setContacts((prev) => prev.map((c) => (c.id === updated.id ? { ...c, note: updated.note } : c)));
+      setNoteContact(null);
+    } catch {
+      Alert.alert("Xatolik", "Eslatmani saqlab bo'lmadi");
+    } finally {
+      setSavingNote(false);
     }
   };
 
@@ -208,6 +233,7 @@ export function ContactsScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.row} onPress={() => onOpenChat(item)} onLongPress={() => onLongPressContact(item)}>
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
             <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
+            {item.note && <Text style={styles.noteIcon}>📝</Text>}
             {item.isFavorite && <Text style={styles.favoriteStar}>⭐</Text>}
           </TouchableOpacity>
         )}
@@ -245,6 +271,33 @@ export function ContactsScreen({ navigation }: Props) {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <Modal visible={!!noteContact} transparent animationType="fade" onRequestClose={() => setNoteContact(null)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setNoteContact(null)}>
+          <Pressable style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
+            <Text style={styles.modalSubtitle}>{noteContact?.alias ?? noteContact?.user.displayName}</Text>
+            <TextInput
+              style={[styles.modalInput, styles.modalNoteInput]}
+              value={noteInput}
+              onChangeText={setNoteInput}
+              placeholder="Faqat sizga ko'rinadigan eslatma..."
+              placeholderTextColor={colors.textSecondary}
+              autoFocus
+              multiline
+              maxLength={500}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteContact(null)}>
+                <Text style={styles.modalCancelText}>Bekor qilish</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
+                {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -274,6 +327,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   name: { fontSize: 16, color: colors.text, flex: 1 },
   favoriteStar: { fontSize: 14 },
+  noteIcon: { fontSize: 14, marginRight: 4 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   searchBar: {
     flexDirection: "row",
@@ -313,6 +367,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  modalNoteInput: { minHeight: 96, textAlignVertical: "top" },
   modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 16 },
   modalCancelButton: { paddingVertical: 10, paddingHorizontal: 16 },
   modalCancelText: { color: colors.textSecondary, fontSize: 15, fontWeight: "600" },

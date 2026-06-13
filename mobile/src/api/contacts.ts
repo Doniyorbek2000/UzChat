@@ -36,6 +36,10 @@ export const contactsApi = {
       .then((r) => r.data);
   },
 
+  updateNote(contactId: string, note: string | null) {
+    return apiClient.patch<{ id: string; note: string | null }>(`/contacts/${contactId}`, { note }).then((r) => r.data);
+  },
+
   block(userId: string) {
     return apiClient.post(`/contacts/blocked/${userId}`);
   },

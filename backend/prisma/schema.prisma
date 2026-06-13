@@ -235,6 +235,9 @@ model Contact {
   status    ContactStatus @default(PENDING)
   alias     String?
   isFavorite Boolean      @default(false)
+  // Private free-text note the owner keeps about this contact; never shared
+  // with the contact or anyone else.
+  note      String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 

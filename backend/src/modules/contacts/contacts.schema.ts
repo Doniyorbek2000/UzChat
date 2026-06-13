@@ -13,6 +13,13 @@ export const updateContactSchema = z.object({
     .transform((v) => (v ? v : null))
     .optional(),
   isFavorite: z.boolean().optional(),
+  note: z
+    .string()
+    .trim()
+    .max(500, "Eslatma juda uzun")
+    .nullable()
+    .transform((v) => (v ? v : null))
+    .optional(),
 });
 
 export type AddContactInput = z.infer<typeof addContactSchema>;

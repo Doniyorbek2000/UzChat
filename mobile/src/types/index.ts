@@ -239,6 +239,9 @@ export interface Contact {
   id: string;
   alias: string | null;
   isFavorite: boolean;
+  // Private free-text note the current user keeps about this contact; never
+  // shared with the contact or anyone else.
+  note: string | null;
   user: User;
 }
 
