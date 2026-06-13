@@ -180,6 +180,7 @@ model User {
   groupJoinRequests GroupJoinRequest[]
   broadcastLists   BroadcastList[]
   usernameHistory  UsernameHistory[]
+  dismissedSuggestions DismissedSuggestion[] @relation("DismissedSuggestionOwner")
 
   @@index([username])
   @@index([phone])
@@ -275,6 +276,18 @@ model BlockedUser {
 
   @@unique([ownerId, blockedId])
   @@index([blockedId])
+}
+
+// A user the owner has dismissed from "People you may know" suggestions.
+model DismissedSuggestion {
+  id              String   @id @default(uuid())
+  ownerId         String
+  owner           User     @relation("DismissedSuggestionOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  dismissedUserId String
+  createdAt       DateTime @default(now())
+
+  @@unique([ownerId, dismissedUserId])
+  @@index([ownerId])
 }
 
 model OnlineNotifyRequest {

@@ -93,4 +93,22 @@ export const contactsController = {
       next(err);
     }
   },
+
+  async listSuggestions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const suggestions = await contactsService.listSuggestions(req.user!.sub);
+      res.json(suggestions);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async dismissSuggestion(req: Request, res: Response, next: NextFunction) {
+    try {
+      await contactsService.dismissSuggestion(req.user!.sub, req.params.userId);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
 };

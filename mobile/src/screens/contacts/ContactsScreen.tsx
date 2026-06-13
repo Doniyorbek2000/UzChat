@@ -3,6 +3,7 @@ import {
   View,
   Text,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   TextInput,
   StyleSheet,
@@ -16,7 +17,7 @@ import { MainTabScreenProps } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
-import { Contact, ContactRequest } from "../../types";
+import { Contact, ContactRequest, ContactSuggestion } from "../../types";
 import { useContactsStore } from "../../store/contactsStore";
 import { useChatStore } from "../../store/chatStore";
 
@@ -25,6 +26,9 @@ type Props = MainTabScreenProps<"Contacts">;
 export function ContactsScreen({ navigation }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [requests, setRequests] = useState<ContactRequest[]>([]);
+  const [suggestions, setSuggestions] = useState<ContactSuggestion[]>([]);
+  const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
+  const [sentSuggestionIds, setSentSuggestionIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [aliasContact, setAliasContact] = useState<Contact | null>(null);
   const [aliasInput, setAliasInput] = useState("");
@@ -58,10 +62,11 @@ export function ContactsScreen({ navigation }: Props) {
 
   const load = useCallback(() => {
     setLoading(true);
-    Promise.all([contactsApi.list(), contactsApi.listIncomingRequests()])
-      .then(([c, r]) => {
+    Promise.all([contactsApi.list(), contactsApi.listIncomingRequests(), contactsApi.listSuggestions()])
+      .then(([c, r, s]) => {
         setContacts(c);
         setRequests(r);
+        setSuggestions(s);
         useContactsStore.getState().setPendingRequestCount(r.length);
       })
       .catch(() => {})
@@ -91,6 +96,23 @@ export function ContactsScreen({ navigation }: Props) {
     } catch {
       Alert.alert("Xatolik", "O'zgartirib bo'lmadi");
     }
+  };
+
+  const onAddSuggestion = async (suggestion: ContactSuggestion) => {
+    setAddingSuggestionId(suggestion.user.id);
+    try {
+      await contactsApi.sendRequest(suggestion.user.username);
+      setSentSuggestionIds((prev) => new Set(prev).add(suggestion.user.id));
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
+    } finally {
+      setAddingSuggestionId(null);
+    }
+  };
+
+  const onDismissSuggestion = (userId: string) => {
+    setSuggestions((prev) => prev.filter((s) => s.user.id !== userId));
+    contactsApi.dismissSuggestion(userId).catch(() => {});
   };
 
   const onLongPressContact = (item: Contact) => {
@@ -203,6 +225,41 @@ export function ContactsScreen({ navigation }: Props) {
               </TouchableOpacity>
             </View>
           ))}
+        </View>
+      )}
+
+      {suggestions.length > 0 && (
+        <View>
+          <Text style={styles.sectionTitle}>Sizga tanish bo'lishi mumkin</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestionsRow}>
+            {suggestions.map((s) => (
+              <View key={s.user.id} style={styles.suggestionCard}>
+                <TouchableOpacity style={styles.suggestionDismiss} onPress={() => onDismissSuggestion(s.user.id)} hitSlop={8}>
+                  <Text style={styles.suggestionDismissText}>✕</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate("UserProfile", { userId: s.user.id })}>
+                  <Avatar uri={s.user.avatarUrl} name={s.user.displayName} size={56} />
+                </TouchableOpacity>
+                <Text style={styles.suggestionName} numberOfLines={1}>
+                  {s.user.displayName}
+                </Text>
+                <Text style={styles.suggestionMutual} numberOfLines={1}>
+                  {s.mutualCount} umumiy kontakt
+                </Text>
+                <TouchableOpacity
+                  style={styles.suggestionAddButton}
+                  onPress={() => onAddSuggestion(s)}
+                  disabled={addingSuggestionId === s.user.id || sentSuggestionIds.has(s.user.id)}
+                >
+                  {addingSuggestionId === s.user.id ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={styles.suggestionAddText}>{sentSuggestionIds.has(s.user.id) ? "Yuborildi" : "Qo'shish"}</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
         </View>
       )}
 
@@ -343,6 +400,41 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 14 },
   searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
   searchClear: { fontSize: 14, color: colors.textSecondary, paddingHorizontal: 4 },
+  suggestionsRow: { paddingHorizontal: 12, paddingBottom: 8, gap: 8 },
+  suggestionCard: {
+    width: 112,
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+  },
+  suggestionDismiss: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.border,
+    zIndex: 1,
+  },
+  suggestionDismissText: { fontSize: 11, color: colors.textSecondary },
+  suggestionName: { fontSize: 13, fontWeight: "600", color: colors.text, marginTop: 6, maxWidth: "100%" },
+  suggestionMutual: { fontSize: 11, color: colors.textSecondary, marginTop: 2, maxWidth: "100%" },
+  suggestionAddButton: {
+    marginTop: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    minWidth: 76,
+    minHeight: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  suggestionAddText: { color: "#fff", fontSize: 12, fontWeight: "600" },
   acceptButton: { backgroundColor: colors.primary, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6 },
   acceptText: { color: "#fff", fontSize: 12, fontWeight: "600" },
   declineButton: {

@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { BlockedUser, Contact, ContactRequest } from "../types";
+import { BlockedUser, Contact, ContactRequest, ContactSuggestion } from "../types";
 
 export const contactsApi = {
   list() {
@@ -50,5 +50,13 @@ export const contactsApi = {
 
   listBlocked() {
     return apiClient.get<BlockedUser[]>("/contacts/blocked").then((r) => r.data);
+  },
+
+  listSuggestions() {
+    return apiClient.get<ContactSuggestion[]>("/contacts/suggestions").then((r) => r.data);
+  },
+
+  dismissSuggestion(userId: string) {
+    return apiClient.post(`/contacts/suggestions/${userId}/dismiss`);
   },
 };

@@ -13,6 +13,8 @@ contactsRouter.post("/", validateBody(addContactSchema), contactsController.send
 contactsRouter.get("/requests", contactsController.listIncoming);
 contactsRouter.post("/requests/:requestId/accept", contactsController.accept);
 contactsRouter.post("/requests/:requestId/decline", contactsController.decline);
+contactsRouter.get("/suggestions", contactsController.listSuggestions);
+contactsRouter.post("/suggestions/:userId/dismiss", contactsController.dismissSuggestion);
 contactsRouter.get("/blocked", contactsController.listBlocked);
 contactsRouter.post("/blocked/:userId", contactsController.block);
 contactsRouter.delete("/blocked/:userId", contactsController.unblock);

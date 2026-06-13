@@ -263,6 +263,13 @@ export interface BlockedUser {
   user: User;
 }
 
+// A suggested contact ("people you may know"), with the number of mutual
+// (accepted) contacts shared with the current user.
+export interface ContactSuggestion {
+  user: User;
+  mutualCount: number;
+}
+
 // A per-user override of the current user's lastSeenPrivacy setting: ALLOW
 // always shows lastSeenAt to this user, DENY always hides it from them,
 // regardless of the global setting.

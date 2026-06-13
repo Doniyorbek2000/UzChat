@@ -182,6 +182,74 @@ export const contactsService = {
     }
   },
 
+  // Suggests other users who share accepted contacts with `userId` ("people you
+  // may know"), excluding existing contacts/requests, blocked users, and users
+  // the owner has previously dismissed. Sorted by mutual contact count, desc.
+  async listSuggestions(userId: string) {
+    const contactIds = await getContactIds(userId);
+    if (contactIds.size === 0) return [];
+
+    const [mutuals, existingContacts, blocked, dismissed] = await Promise.all([
+      prisma.contact.groupBy({
+        by: ["targetId"],
+        where: {
+          ownerId: { in: [...contactIds] },
+          status: ContactStatus.ACCEPTED,
+          targetId: { notIn: [...contactIds, userId] },
+        },
+        _count: { ownerId: true },
+        orderBy: { _count: { ownerId: "desc" } },
+        take: 20,
+      }),
+      prisma.contact.findMany({
+        where: { OR: [{ ownerId: userId }, { targetId: userId }] },
+        select: { ownerId: true, targetId: true },
+      }),
+      prisma.blockedUser.findMany({
+        where: { OR: [{ ownerId: userId }, { blockedId: userId }] },
+        select: { ownerId: true, blockedId: true },
+      }),
+      prisma.dismissedSuggestion.findMany({
+        where: { ownerId: userId },
+        select: { dismissedUserId: true },
+      }),
+    ]);
+
+    const excludeIds = new Set<string>();
+    for (const c of existingContacts) excludeIds.add(c.ownerId === userId ? c.targetId : c.ownerId);
+    for (const b of blocked) excludeIds.add(b.ownerId === userId ? b.blockedId : b.ownerId);
+    for (const d of dismissed) excludeIds.add(d.dismissedUserId);
+
+    const candidates = mutuals.filter((m) => !excludeIds.has(m.targetId));
+    if (candidates.length === 0) return [];
+
+    const users = await prisma.user.findMany({
+      where: { id: { in: candidates.map((c) => c.targetId) } },
+      select: userSummarySelect,
+    });
+    const usersById = new Map(users.map((u) => [u.id, u]));
+    const exceptions = await getLastSeenExceptions(userId);
+
+    return candidates
+      .map((c) => {
+        const user = usersById.get(c.targetId);
+        if (!user) return null;
+        return {
+          user: filterBio(userId, filterLastSeen(userId, user, contactIds, exceptions), contactIds),
+          mutualCount: c._count.ownerId,
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+  },
+
+  async dismissSuggestion(userId: string, targetUserId: string) {
+    await prisma.dismissedSuggestion.upsert({
+      where: { ownerId_dismissedUserId: { ownerId: userId, dismissedUserId: targetUserId } },
+      update: {},
+      create: { ownerId: userId, dismissedUserId: targetUserId },
+    });
+  },
+
   async isBlockedEitherWay(userId: string, otherUserId: string) {
     const block = await prisma.blockedUser.findFirst({
       where: {
