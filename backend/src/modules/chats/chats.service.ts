@@ -242,6 +242,7 @@ export const chatsService = {
           markedUnread: p.markedUnread,
           notificationPreview: p.notificationPreview,
           readReceiptsOverride: p.readReceiptsOverride,
+          mutedSenderIds: p.mutedSenderIds,
           isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
           inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
           inviteCodeExpiresAt: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeExpiresAt,
@@ -321,6 +322,7 @@ export const chatsService = {
       markedUnread: participant.markedUnread,
       notificationPreview: participant.notificationPreview,
       readReceiptsOverride: participant.readReceiptsOverride,
+      mutedSenderIds: participant.mutedSenderIds,
       isBlocked,
       inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
       inviteCodeExpiresAt:
@@ -386,6 +388,7 @@ export const chatsService = {
         ...(input.markedUnread !== undefined ? { markedUnread: input.markedUnread } : {}),
         ...(input.notificationPreview !== undefined ? { notificationPreview: input.notificationPreview } : {}),
         ...(input.readReceiptsOverride !== undefined ? { readReceiptsOverride: input.readReceiptsOverride } : {}),
+        ...(input.mutedSenderIds !== undefined ? { mutedSenderIds: input.mutedSenderIds } : {}),
       },
     });
 

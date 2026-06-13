@@ -164,7 +164,11 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   if (!sender) return;
 
   const recipients = conversation.participants.filter(
-    (p) => p.userId !== senderId && !isUserOnline(p.userId) && !isInQuietHours(p.user)
+    (p) =>
+      p.userId !== senderId &&
+      !p.mutedSenderIds.includes(senderId) &&
+      !isUserOnline(p.userId) &&
+      !isInQuietHours(p.user)
   );
   if (recipients.length === 0) return;
 
@@ -251,7 +255,7 @@ async function notifyReaction(reactorId: string, conversationId: string, message
   const participant = await prisma.conversationParticipant.findUnique({
     where: { conversationId_userId: { conversationId, userId: message.senderId } },
   });
-  if (!participant || isParticipantMuted(participant)) return;
+  if (!participant || isParticipantMuted(participant) || participant.mutedSenderIds.includes(reactorId)) return;
 
   const [reactor, recipient] = await Promise.all([
     prisma.user.findUnique({ where: { id: reactorId }, select: { displayName: true } }),

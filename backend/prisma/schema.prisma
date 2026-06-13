@@ -417,6 +417,10 @@ model ConversationParticipant {
   notificationPreview NotificationPreview @default(DEFAULT)
   // Per-conversation override of this user's global readReceiptsEnabled setting.
   readReceiptsOverride ReadReceiptsOverride @default(DEFAULT)
+  // GROUP only: userIds of other participants whose messages shouldn't trigger
+  // notifications for this user (not enforced as a foreign key; stale IDs from
+  // removed members are simply ignored).
+  mutedSenderIds String[] @default([])
 
   @@unique([conversationId, userId])
   @@index([userId])

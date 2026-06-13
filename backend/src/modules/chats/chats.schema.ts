@@ -105,6 +105,9 @@ export const updatePreferencesSchema = z
     notificationPreview: z.enum(["DEFAULT", "SHOW", "HIDE"]).optional(),
     // Per-conversation override of the global "read receipts" setting.
     readReceiptsOverride: z.enum(["DEFAULT", "ON", "OFF"]).optional(),
+    // GROUP only: full replacement list of participant userIds whose messages
+    // shouldn't trigger notifications for this user.
+    mutedSenderIds: z.array(z.string().uuid()).optional(),
   })
   .refine(
     (data) =>
@@ -113,7 +116,8 @@ export const updatePreferencesSchema = z
       data.isArchived !== undefined ||
       data.markedUnread !== undefined ||
       data.notificationPreview !== undefined ||
-      data.readReceiptsOverride !== undefined,
+      data.readReceiptsOverride !== undefined ||
+      data.mutedSenderIds !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

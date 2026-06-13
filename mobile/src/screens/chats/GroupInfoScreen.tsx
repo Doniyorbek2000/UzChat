@@ -56,6 +56,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const createInviteLink = useChatStore((s) => s.createInviteLink);
   const revokeInviteLink = useChatStore((s) => s.revokeInviteLink);
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
+  const toggleMutedSender = useChatStore((s) => s.toggleMutedSender);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
 
   const [title, setTitle] = useState(conversation?.title ?? "");
@@ -308,8 +309,24 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const onMemberPress = (participant: ConversationParticipant) => {
     if (participant.userId === user?.id) return;
 
+    const isSenderMuted = conversation.mutedSenderIds.includes(participant.userId);
+    const muteOption = {
+      text: isSenderMuted ? "🔔 Xabarlarini ovozsizlikdan chiqarish" : "🔕 Xabarlarini ovozsiz qilish",
+      onPress: () =>
+        toggleMutedSender(conversationId, participant.userId).catch(() => {
+          Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+        }),
+    };
+
     if (!canManage) {
-      navigation.navigate("UserProfile", { userId: participant.userId });
+      Alert.alert(contactAliases[participant.userId] ?? participant.user.displayName, undefined, [
+        {
+          text: "👤 Profilni ko'rish",
+          onPress: () => navigation.navigate("UserProfile", { userId: participant.userId }),
+        },
+        muteOption,
+        { text: "Bekor qilish", style: "cancel" },
+      ]);
       return;
     }
 
@@ -319,6 +336,8 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       text: "👤 Profilni ko'rish",
       onPress: () => navigation.navigate("UserProfile", { userId: participant.userId }),
     });
+
+    options.push(muteOption);
 
     if (isOwner) {
       if (participant.role === "MEMBER") {

@@ -146,6 +146,7 @@ interface ChatState {
   muteConversation: (conversationId: string, muteFor: MuteDuration) => Promise<void>;
   setNotificationPreview: (conversationId: string, notificationPreview: "DEFAULT" | "SHOW" | "HIDE") => Promise<void>;
   setReadReceiptsOverride: (conversationId: string, readReceiptsOverride: "DEFAULT" | "ON" | "OFF") => Promise<void>;
+  toggleMutedSender: (conversationId: string, userId: string) => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
   clearHistory: (conversationId: string, olderThanDays?: number) => Promise<void>;
@@ -933,6 +934,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
     const updated = await chatsApi.updatePreferences(conversationId, { readReceiptsOverride });
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
+  toggleMutedSender: async (conversationId, userId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const isMuted = conversation.mutedSenderIds.includes(userId);
+    const mutedSenderIds = isMuted
+      ? conversation.mutedSenderIds.filter((id) => id !== userId)
+      : [...conversation.mutedSenderIds, userId];
+    const updated = await chatsApi.updatePreferences(conversationId, { mutedSenderIds });
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));

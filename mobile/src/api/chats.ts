@@ -78,6 +78,7 @@ export const chatsApi = {
       markedUnread?: boolean;
       notificationPreview?: "DEFAULT" | "SHOW" | "HIDE";
       readReceiptsOverride?: "DEFAULT" | "ON" | "OFF";
+      mutedSenderIds?: string[];
     }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}/preferences`, input).then((r) => r.data);

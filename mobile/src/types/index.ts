@@ -150,6 +150,9 @@ export interface Conversation {
   // follows the global setting, ON always sends read receipts in this chat,
   // OFF never sends them in this chat.
   readReceiptsOverride: "DEFAULT" | "ON" | "OFF";
+  // GROUP only: userIds of other participants whose messages don't trigger
+  // notifications for the current user in this conversation.
+  mutedSenderIds: string[];
   isBlocked: boolean;
   // The current group's invite code (only visible to OWNER/ADMIN), or null.
   inviteCode: string | null;
