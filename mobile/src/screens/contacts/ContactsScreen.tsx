@@ -216,7 +216,12 @@ export function ContactsScreen({ navigation }: Props) {
           {requests.map((req) => (
             <View key={req.id} style={styles.row}>
               <Avatar uri={req.owner.avatarUrl} name={req.owner.displayName} />
-              <Text style={styles.name}>{req.owner.displayName}</Text>
+              <View style={styles.requestInfo}>
+                <Text style={styles.name}>{req.owner.displayName}</Text>
+                {req.mutualCount > 0 && (
+                  <Text style={styles.requestMutual}>{req.mutualCount} umumiy kontakt</Text>
+                )}
+              </View>
               <TouchableOpacity style={styles.acceptButton} onPress={() => onAccept(req.id)}>
                 <Text style={styles.acceptText}>Qabul qilish</Text>
               </TouchableOpacity>
@@ -383,6 +388,8 @@ const styles = StyleSheet.create({
   addText: { fontSize: 16, fontWeight: "500", color: colors.text },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   name: { fontSize: 16, color: colors.text, flex: 1 },
+  requestInfo: { flex: 1 },
+  requestMutual: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   favoriteStar: { fontSize: 14 },
   noteIcon: { fontSize: 14, marginRight: 4 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },

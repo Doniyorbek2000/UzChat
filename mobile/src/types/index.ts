@@ -258,6 +258,8 @@ export interface ContactRequest {
   status: "PENDING" | "ACCEPTED" | "BLOCKED";
   owner: User;
   createdAt: string;
+  // Number of contacts the current user and the requester both have accepted.
+  mutualCount: number;
 }
 
 export interface BlockedUser {

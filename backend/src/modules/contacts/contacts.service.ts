@@ -61,7 +61,26 @@ export const contactsService = {
       orderBy: { createdAt: "desc" },
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
-    return requests.map((r) => ({ ...r, owner: filterBio(userId, filterLastSeen(userId, r.owner, contactIds, exceptions), contactIds) }));
+
+    const mutuals =
+      requests.length === 0
+        ? []
+        : await prisma.contact.groupBy({
+            by: ["targetId"],
+            where: {
+              ownerId: { in: [...contactIds] },
+              status: ContactStatus.ACCEPTED,
+              targetId: { in: requests.map((r) => r.ownerId) },
+            },
+            _count: { ownerId: true },
+          });
+    const mutualCountByUserId = new Map(mutuals.map((m) => [m.targetId, m._count.ownerId]));
+
+    return requests.map((r) => ({
+      ...r,
+      mutualCount: mutualCountByUserId.get(r.ownerId) ?? 0,
+      owner: filterBio(userId, filterLastSeen(userId, r.owner, contactIds, exceptions), contactIds),
+    }));
   },
 
   async acceptRequest(userId: string, requestId: string) {
