@@ -74,6 +74,7 @@ interface ChatState {
   listenersRegistered: boolean;
   drafts: Record<string, string>;
   contactAliases: Record<string, string>;
+  favoriteContactIds: Set<string>;
   folders: ChatFolder[];
 
   loadConversations: () => Promise<void>;
@@ -285,6 +286,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   listenersRegistered: false,
   drafts: {},
   contactAliases: {},
+  favoriteContactIds: new Set(),
   folders: [],
 
   loadConversations: async () => {
@@ -295,10 +297,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   loadContactAliases: async () => {
     const contacts = await contactsApi.list();
     const contactAliases: Record<string, string> = {};
+    const favoriteContactIds = new Set<string>();
     for (const contact of contacts) {
       if (contact.alias) contactAliases[contact.user.id] = contact.alias;
+      if (contact.isFavorite) favoriteContactIds.add(contact.user.id);
     }
-    set({ contactAliases });
+    set({ contactAliases, favoriteContactIds });
   },
 
   loadFolders: async () => {

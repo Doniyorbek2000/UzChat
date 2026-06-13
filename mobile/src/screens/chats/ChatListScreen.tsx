@@ -34,6 +34,7 @@ export function ChatListScreen({ navigation }: Props) {
   const conversations = useChatStore((s) => s.conversations);
   const loadConversations = useChatStore((s) => s.loadConversations);
   const contactAliases = useChatStore((s) => s.contactAliases);
+  const favoriteContactIds = useChatStore((s) => s.favoriteContactIds);
   const loadContactAliases = useChatStore((s) => s.loadContactAliases);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const setupSocketListeners = useChatStore((s) => s.setupSocketListeners);
@@ -219,6 +220,7 @@ export function ChatListScreen({ navigation }: Props) {
     const isTyping = (typingUsers[item.id]?.size ?? 0) > 0;
     const otherParticipant =
       item.type === "DIRECT" ? item.participants.find((p) => p.userId !== user!.id) : undefined;
+    const isFavorite = !!otherParticipant && favoriteContactIds.has(otherParticipant.userId);
     const lastMessage = item.lastMessage;
     const showReceipt =
       !!lastMessage &&
@@ -245,6 +247,7 @@ export function ChatListScreen({ navigation }: Props) {
               <Text style={[styles.title, unread && styles.titleUnread]} numberOfLines={1}>
                 {display.title}
               </Text>
+              {isFavorite && <Text style={styles.favoriteIcon}>⭐</Text>}
             </View>
             {item.lastMessage && (
               <View style={styles.timeRow}>
@@ -525,6 +528,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 16, fontWeight: "600", color: colors.text, flex: 1 },
   titleUnread: { fontWeight: "700" },
   pinIcon: { fontSize: 12 },
+  favoriteIcon: { fontSize: 12 },
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
   timeRow: { flexDirection: "row", alignItems: "center" },
   receipt: { fontSize: 11, color: colors.textSecondary, marginLeft: 8 },
