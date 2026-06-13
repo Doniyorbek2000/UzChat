@@ -71,7 +71,13 @@ export const chatsApi = {
 
   updatePreferences(
     conversationId: string,
-    input: { isPinned?: boolean; muteFor?: MuteDuration; isArchived?: boolean; markedUnread?: boolean }
+    input: {
+      isPinned?: boolean;
+      muteFor?: MuteDuration;
+      isArchived?: boolean;
+      markedUnread?: boolean;
+      notificationPreview?: "DEFAULT" | "SHOW" | "HIDE";
+    }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}/preferences`, input).then((r) => r.data);
   },

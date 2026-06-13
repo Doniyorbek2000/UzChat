@@ -101,13 +101,16 @@ export const updatePreferencesSchema = z
     muteFor: z.enum(["1h", "8h", "1d", "1w", "forever", "off"]).optional(),
     isArchived: z.boolean().optional(),
     markedUnread: z.boolean().optional(),
+    // Per-conversation override of the global "hide notification content" setting.
+    notificationPreview: z.enum(["DEFAULT", "SHOW", "HIDE"]).optional(),
   })
   .refine(
     (data) =>
       data.isPinned !== undefined ||
       data.muteFor !== undefined ||
       data.isArchived !== undefined ||
-      data.markedUnread !== undefined,
+      data.markedUnread !== undefined ||
+      data.notificationPreview !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

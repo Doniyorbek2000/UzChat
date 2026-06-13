@@ -104,6 +104,17 @@ async function resolveMentions(conversationId: string, userId: string, mentions:
 const HIDDEN_TITLE = "UzChat";
 const HIDDEN_BODY = "Yangi xabar";
 
+// A per-conversation notificationPreview override ("SHOW"/"HIDE") takes
+// precedence over the user's global hideNotificationContent setting.
+function shouldHidePreview(
+  notificationPreview: "DEFAULT" | "SHOW" | "HIDE",
+  globalHideNotificationContent: boolean
+): boolean {
+  if (notificationPreview === "HIDE") return true;
+  if (notificationPreview === "SHOW") return false;
+  return globalHideNotificationContent;
+}
+
 // Whether `user` currently has "do not disturb" active, based on their
 // configured local-time window and captured UTC offset.
 function isInQuietHours(user: {
@@ -183,8 +194,12 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   );
 
   const send = async (participants: typeof recipients, body: string, type: string) => {
-    const visible = participants.filter((p) => !p.user.hideNotificationContent).map((p) => p.userId);
-    const hidden = participants.filter((p) => p.user.hideNotificationContent).map((p) => p.userId);
+    const visible = participants
+      .filter((p) => !shouldHidePreview(p.notificationPreview, p.user.hideNotificationContent))
+      .map((p) => p.userId);
+    const hidden = participants
+      .filter((p) => shouldHidePreview(p.notificationPreview, p.user.hideNotificationContent))
+      .map((p) => p.userId);
     const data = { conversationId, messageId: message.id, type };
     if (visible.length > 0) {
       await pushService.sendToUsers(visible, { title, body, data, silent });
@@ -255,7 +270,7 @@ async function notifyReaction(reactorId: string, conversationId: string, message
   if (!reactor || !recipient?.notifyReactions) return;
   if (isInQuietHours(recipient)) return;
 
-  if (recipient.hideNotificationContent) {
+  if (shouldHidePreview(participant.notificationPreview, recipient.hideNotificationContent)) {
     await pushService.sendToUsers([message.senderId], {
       title: HIDDEN_TITLE,
       body: HIDDEN_BODY,

@@ -225,6 +225,7 @@ export const chatsService = {
           mutedUntil: p.mutedUntil,
           isArchived: p.isArchived,
           markedUnread: p.markedUnread,
+          notificationPreview: p.notificationPreview,
           isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
           inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
           inviteCodeExpiresAt: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeExpiresAt,
@@ -301,6 +302,7 @@ export const chatsService = {
       mutedUntil: participant.mutedUntil,
       isArchived: participant.isArchived,
       markedUnread: participant.markedUnread,
+      notificationPreview: participant.notificationPreview,
       isBlocked,
       inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
       inviteCodeExpiresAt:
@@ -364,6 +366,7 @@ export const chatsService = {
         ...muteData,
         ...(input.isArchived !== undefined ? { isArchived: input.isArchived } : {}),
         ...(input.markedUnread !== undefined ? { markedUnread: input.markedUnread } : {}),
+        ...(input.notificationPreview !== undefined ? { notificationPreview: input.notificationPreview } : {}),
       },
     });
 

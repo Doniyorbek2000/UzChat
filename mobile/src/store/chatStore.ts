@@ -144,6 +144,7 @@ interface ChatState {
   togglePin: (conversationId: string) => Promise<void>;
   reorderPinned: (conversationId: string, direction: "up" | "down") => Promise<void>;
   muteConversation: (conversationId: string, muteFor: MuteDuration) => Promise<void>;
+  setNotificationPreview: (conversationId: string, notificationPreview: "DEFAULT" | "SHOW" | "HIDE") => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
   clearHistory: (conversationId: string) => Promise<void>;
@@ -912,6 +913,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
     const updated = await chatsApi.updatePreferences(conversationId, { muteFor });
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
+  setNotificationPreview: async (conversationId, notificationPreview) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.updatePreferences(conversationId, { notificationPreview });
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));

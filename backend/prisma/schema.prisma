@@ -53,6 +53,15 @@ enum MessagePrivacy {
   NOBODY
 }
 
+// Per-conversation override of the user's global hideNotificationContent
+// setting: DEFAULT follows the global setting, SHOW always includes the
+// preview, HIDE always shows a generic "new message" notification.
+enum NotificationPreview {
+  DEFAULT
+  SHOW
+  HIDE
+}
+
 enum ReportReason {
   SPAM
   HARASSMENT
@@ -395,6 +404,8 @@ model ConversationParticipant {
   // GROUP only: optional custom label shown instead of "Admin"/"Owner" for this
   // participant (e.g. "Moderator"). Settable by the group owner.
   customTitle     String?
+  // Per-conversation override of this user's global hideNotificationContent setting.
+  notificationPreview NotificationPreview @default(DEFAULT)
 
   @@unique([conversationId, userId])
   @@index([userId])

@@ -142,6 +142,10 @@ export interface Conversation {
   mutedUntil: string | null;
   isArchived: boolean;
   markedUnread: boolean;
+  // Per-conversation override of the global "hide notification content" setting:
+  // DEFAULT follows the global setting, SHOW always includes the preview, HIDE
+  // always shows a generic "new message" notification for this chat.
+  notificationPreview: "DEFAULT" | "SHOW" | "HIDE";
   isBlocked: boolean;
   // The current group's invite code (only visible to OWNER/ADMIN), or null.
   inviteCode: string | null;
