@@ -18,7 +18,7 @@ export function NotificationSettingsScreen({}: Props) {
   if (!user) return null;
 
   const onToggle = async (
-    key: "notifyPrivateChats" | "notifyGroupChats" | "notifyReactions" | "hideNotificationContent",
+    key: "notifyPrivateChats" | "notifyGroupChats" | "notifyReactions" | "notifyMentions" | "hideNotificationContent",
     value: boolean
   ) => {
     if (saving) return;
@@ -50,7 +50,8 @@ export function NotificationSettingsScreen({}: Props) {
     <View style={styles.container}>
       <Text style={styles.hint}>
         Bu sozlamalar barcha bildirishnomalarga taalluqli. Ovozsiz qilingan suhbatlar bu yerdagi sozlamalardan
-        qat'i nazar bildirishnoma yubormaydi, lekin sizga yo'naltirilgan eslatma va javoblar har doim keladi.
+        qat'i nazar bildirishnoma yubormaydi, lekin sizga yo'naltirilgan eslatma va javoblar (eslatishlar
+        o'chirilmagan bo'lsa) har doim keladi.
       </Text>
 
       <View style={styles.row}>
@@ -96,6 +97,24 @@ export function NotificationSettingsScreen({}: Props) {
           <Switch
             value={user.notifyReactions}
             onValueChange={(v) => onToggle("notifyReactions", v)}
+            trackColor={{ true: colors.primary }}
+          />
+        )}
+      </View>
+
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>Eslatishlar (@)</Text>
+          <Text style={styles.rowDescription}>
+            Sizni @-eslatib o'tgan xabarlar uchun bildirishnoma, ovozsiz qilingan suhbatlarda ham
+          </Text>
+        </View>
+        {saving === "notifyMentions" ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Switch
+            value={user.notifyMentions}
+            onValueChange={(v) => onToggle("notifyMentions", v)}
             trackColor={{ true: colors.primary }}
           />
         )}

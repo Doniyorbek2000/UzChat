@@ -111,7 +111,14 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
       participants: {
         include: {
           user: {
-            select: { id: true, displayName: true, notifyPrivateChats: true, notifyGroupChats: true, hideNotificationContent: true },
+            select: {
+              id: true,
+              displayName: true,
+              notifyPrivateChats: true,
+              notifyGroupChats: true,
+              notifyMentions: true,
+              hideNotificationContent: true,
+            },
           },
         },
       },
@@ -135,14 +142,16 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
     repliedToSenderId = repliedTo?.senderId ?? null;
   }
 
-  // Muted conversations are silenced, except for messages that @-mention the recipient.
-  const mentioned = recipients.filter((p) => message.mentions.includes(p.userId));
+  // Muted conversations are silenced, except for messages that @-mention the recipient
+  // (unless that recipient turned off notifyMentions, in which case they're treated
+  // like a regular message).
+  const mentioned = recipients.filter((p) => message.mentions.includes(p.userId) && p.user.notifyMentions);
   const replied = recipients.filter(
-    (p) => p.userId === repliedToSenderId && !message.mentions.includes(p.userId) && !isParticipantMuted(p)
+    (p) => p.userId === repliedToSenderId && !mentioned.includes(p) && !isParticipantMuted(p)
   );
   const regular = recipients.filter(
     (p) =>
-      !message.mentions.includes(p.userId) &&
+      !mentioned.includes(p) &&
       p.userId !== repliedToSenderId &&
       !isParticipantMuted(p) &&
       (isGroup ? p.user.notifyGroupChats : p.user.notifyPrivateChats)

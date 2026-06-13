@@ -42,6 +42,7 @@ const profileSelect = {
   notifyPrivateChats: true,
   notifyGroupChats: true,
   notifyReactions: true,
+  notifyMentions: true,
   hideNotificationContent: true,
   twoFactorHash: true,
   twoFactorHint: true,

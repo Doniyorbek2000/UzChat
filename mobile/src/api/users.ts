@@ -24,6 +24,7 @@ export const usersApi = {
     notifyPrivateChats?: boolean;
     notifyGroupChats?: boolean;
     notifyReactions?: boolean;
+    notifyMentions?: boolean;
     hideNotificationContent?: boolean;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);

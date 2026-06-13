@@ -32,6 +32,7 @@ export interface AuthUser extends User {
   notifyPrivateChats: boolean;
   notifyGroupChats: boolean;
   notifyReactions: boolean;
+  notifyMentions: boolean;
   hideNotificationContent: boolean;
   twoFactorEnabled: boolean;
   twoFactorHint: string | null;

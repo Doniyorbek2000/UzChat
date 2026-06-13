@@ -19,6 +19,7 @@ export const updateProfileSchema = z
     notifyPrivateChats: z.boolean().optional(),
     notifyGroupChats: z.boolean().optional(),
     notifyReactions: z.boolean().optional(),
+    notifyMentions: z.boolean().optional(),
     hideNotificationContent: z.boolean().optional(),
     // Birthday is stored as day-of-month + month only (no year), to avoid
     // revealing the user's age. Both fields must be set or cleared together.
