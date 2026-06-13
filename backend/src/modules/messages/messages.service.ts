@@ -104,6 +104,25 @@ async function resolveMentions(conversationId: string, userId: string, mentions:
 const HIDDEN_TITLE = "UzChat";
 const HIDDEN_BODY = "Yangi xabar";
 
+// Whether `user` currently has "do not disturb" active, based on their
+// configured local-time window and captured UTC offset.
+function isInQuietHours(user: {
+  quietHoursEnabled: boolean;
+  quietHoursStart: number | null;
+  quietHoursEnd: number | null;
+  quietHoursTimezoneOffset: number | null;
+}): boolean {
+  if (!user.quietHoursEnabled || user.quietHoursStart == null || user.quietHoursEnd == null) return false;
+  const offset = user.quietHoursTimezoneOffset ?? 0;
+  const now = new Date();
+  const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const localMinutes = (((utcMinutes + offset) % 1440) + 1440) % 1440;
+  const { quietHoursStart: start, quietHoursEnd: end } = user;
+  if (start === end) return true;
+  if (start < end) return localMinutes >= start && localMinutes < end;
+  return localMinutes >= start || localMinutes < end;
+}
+
 async function notifyParticipants(senderId: string, conversationId: string, message: Message, silent: boolean) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
@@ -118,6 +137,10 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
               notifyGroupChats: true,
               notifyMentions: true,
               hideNotificationContent: true,
+              quietHoursEnabled: true,
+              quietHoursStart: true,
+              quietHoursEnd: true,
+              quietHoursTimezoneOffset: true,
             },
           },
         },
@@ -129,7 +152,9 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   const sender = conversation.participants.find((p) => p.userId === senderId)?.user;
   if (!sender) return;
 
-  const recipients = conversation.participants.filter((p) => p.userId !== senderId && !isUserOnline(p.userId));
+  const recipients = conversation.participants.filter(
+    (p) => p.userId !== senderId && !isUserOnline(p.userId) && !isInQuietHours(p.user)
+  );
   if (recipients.length === 0) return;
 
   const contentLabel = MEDIA_LABELS[message.type] ?? "Yangi xabar";
@@ -192,9 +217,20 @@ async function notifyReaction(reactorId: string, conversationId: string, message
 
   const [reactor, recipient] = await Promise.all([
     prisma.user.findUnique({ where: { id: reactorId }, select: { displayName: true } }),
-    prisma.user.findUnique({ where: { id: message.senderId }, select: { notifyReactions: true, hideNotificationContent: true } }),
+    prisma.user.findUnique({
+      where: { id: message.senderId },
+      select: {
+        notifyReactions: true,
+        hideNotificationContent: true,
+        quietHoursEnabled: true,
+        quietHoursStart: true,
+        quietHoursEnd: true,
+        quietHoursTimezoneOffset: true,
+      },
+    }),
   ]);
   if (!reactor || !recipient?.notifyReactions) return;
+  if (isInQuietHours(recipient)) return;
 
   if (recipient.hideNotificationContent) {
     await pushService.sendToUsers([message.senderId], {

@@ -27,6 +27,10 @@ export const usersApi = {
     notifyReactions?: boolean;
     notifyMentions?: boolean;
     hideNotificationContent?: boolean;
+    quietHoursEnabled?: boolean;
+    quietHoursStart?: number | null;
+    quietHoursEnd?: number | null;
+    quietHoursTimezoneOffset?: number | null;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);
   },

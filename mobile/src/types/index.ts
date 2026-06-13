@@ -35,6 +35,10 @@ export interface AuthUser extends User {
   notifyReactions: boolean;
   notifyMentions: boolean;
   hideNotificationContent: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: number | null;
+  quietHoursEnd: number | null;
+  quietHoursTimezoneOffset: number | null;
   twoFactorEnabled: boolean;
   twoFactorHint: string | null;
 }

@@ -27,6 +27,11 @@ export const updateProfileSchema = z
     birthdayDay: z.number().int().min(1).max(31).nullable().optional(),
     birthdayMonth: z.number().int().min(1).max(12).nullable().optional(),
     birthdayPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
+    // "Do not disturb" window, in the user's local time (minutes since midnight).
+    quietHoursEnabled: z.boolean().optional(),
+    quietHoursStart: z.number().int().min(0).max(1439).nullable().optional(),
+    quietHoursEnd: z.number().int().min(0).max(1439).nullable().optional(),
+    quietHoursTimezoneOffset: z.number().int().min(-720).max(840).nullable().optional(),
   })
   .refine(
     (data) => {
@@ -36,6 +41,13 @@ export const updateProfileSchema = z
       return data.birthdayDay <= MAX_DAYS_IN_MONTH[data.birthdayMonth - 1];
     },
     { message: "Tug'ilgan kun sanasi noto'g'ri" }
+  )
+  .refine(
+    (data) => {
+      if (data.quietHoursStart === undefined && data.quietHoursEnd === undefined) return true;
+      return (data.quietHoursStart === null) === (data.quietHoursEnd === null);
+    },
+    { message: "Sokin soatlar boshlanish va tugash vaqti birga belgilanishi shart" }
   );
 
 export const searchUsersSchema = z.object({

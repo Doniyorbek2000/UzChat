@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, Alert, ActivityIndicator, Switch, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Alert, ActivityIndicator, Switch, TouchableOpacity, ScrollView, Modal, Pressable, FlatList } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -8,24 +8,59 @@ import { sendTestNotification } from "../../utils/pushNotifications";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NotificationSettings">;
+type UpdateMeInput = Parameters<typeof usersApi.updateMe>[0];
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+function formatHour(minutes: number | null): string {
+  if (minutes == null) return "--:--";
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:00`;
+}
 
 export function NotificationSettingsScreen({}: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const [saving, setSaving] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
+  const [timePicker, setTimePicker] = useState<"start" | "end" | null>(null);
 
   if (!user) return null;
 
   const onToggle = async (
-    key: "notifyPrivateChats" | "notifyGroupChats" | "notifyReactions" | "notifyMentions" | "hideNotificationContent",
+    key: "notifyPrivateChats" | "notifyGroupChats" | "notifyReactions" | "notifyMentions" | "hideNotificationContent" | "quietHoursEnabled",
     value: boolean
   ) => {
     if (saving) return;
     setSaving(key);
     try {
-      await usersApi.updateMe({ [key]: value });
+      const data: UpdateMeInput = { [key]: value };
+      if (key === "quietHoursEnabled" && value && (user.quietHoursStart == null || user.quietHoursEnd == null)) {
+        data.quietHoursStart = 23 * 60;
+        data.quietHoursEnd = 7 * 60;
+        data.quietHoursTimezoneOffset = -new Date().getTimezoneOffset();
+      }
+      await usersApi.updateMe(data);
       await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectHour = async (hour: number) => {
+    if (!timePicker || saving) return;
+    setSaving("quietHours");
+    try {
+      const minutes = hour * 60;
+      const data: UpdateMeInput =
+        timePicker === "start"
+          ? { quietHoursStart: minutes, quietHoursEnd: user.quietHoursEnd ?? 7 * 60 }
+          : { quietHoursStart: user.quietHoursStart ?? 23 * 60, quietHoursEnd: minutes };
+      data.quietHoursTimezoneOffset = -new Date().getTimezoneOffset();
+      await usersApi.updateMe(data);
+      await refreshProfile();
+      setTimePicker(null);
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
     } finally {
@@ -47,7 +82,7 @@ export function NotificationSettingsScreen({}: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.hint}>
         Bu sozlamalar barcha bildirishnomalarga taalluqli. Ovozsiz qilingan suhbatlar bu yerdagi sozlamalardan
         qat'i nazar bildirishnoma yubormaydi, lekin sizga yo'naltirilgan eslatma va javoblar (eslatishlar
@@ -138,6 +173,42 @@ export function NotificationSettingsScreen({}: Props) {
         )}
       </View>
 
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>🌙 Sokin soatlar</Text>
+          <Text style={styles.rowDescription}>
+            Belgilangan vaqt oralig'ida hech qanday bildirishnoma kelmaydi
+          </Text>
+        </View>
+        {saving === "quietHoursEnabled" ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Switch
+            value={user.quietHoursEnabled}
+            onValueChange={(v) => onToggle("quietHoursEnabled", v)}
+            trackColor={{ true: colors.primary }}
+          />
+        )}
+      </View>
+
+      {user.quietHoursEnabled && (
+        <>
+          <TouchableOpacity style={styles.row} onPress={() => setTimePicker("start")}>
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>Boshlanish vaqti</Text>
+            </View>
+            <Text style={styles.timeValue}>{formatHour(user.quietHoursStart)}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.row} onPress={() => setTimePicker("end")}>
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>Tugash vaqti</Text>
+            </View>
+            <Text style={styles.timeValue}>{formatHour(user.quietHoursEnd)}</Text>
+          </TouchableOpacity>
+        </>
+      )}
+
       <TouchableOpacity style={styles.testButton} onPress={onTestNotification} disabled={testing}>
         {testing ? (
           <ActivityIndicator color={colors.primary} />
@@ -145,12 +216,42 @@ export function NotificationSettingsScreen({}: Props) {
           <Text style={styles.testButtonText}>🔔 Sinov bildirishnomasini yuborish</Text>
         )}
       </TouchableOpacity>
-    </View>
+
+      <Modal visible={timePicker !== null} transparent animationType="fade" onRequestClose={() => setTimePicker(null)}>
+        <Pressable style={styles.pickerBackdrop} onPress={() => setTimePicker(null)}>
+          <Pressable style={styles.pickerSheet}>
+            <Text style={styles.pickerTitle}>{timePicker === "start" ? "Boshlanish vaqti" : "Tugash vaqti"}</Text>
+            <FlatList
+              data={HOURS}
+              keyExtractor={(h) => String(h)}
+              style={styles.pickerList}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => {
+                const current = timePicker === "start" ? user.quietHoursStart : user.quietHoursEnd;
+                const selected = current === item * 60;
+                return (
+                  <TouchableOpacity
+                    style={[styles.pickerItem, selected && styles.pickerItemSelected]}
+                    onPress={() => onSelectHour(item)}
+                    disabled={saving === "quietHours"}
+                  >
+                    <Text style={[styles.pickerItemText, selected && styles.pickerItemTextSelected]}>
+                      {`${String(item).padStart(2, "0")}:00`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
+  container: { flex: 1, backgroundColor: colors.surface },
+  content: { padding: 16 },
   hint: { fontSize: 13, color: colors.textSecondary, lineHeight: 18, marginBottom: 16 },
   row: {
     flexDirection: "row",
@@ -164,6 +265,7 @@ const styles = StyleSheet.create({
   rowText: { flex: 1 },
   rowLabel: { fontSize: 16, color: colors.text, fontWeight: "600" },
   rowDescription: { fontSize: 13, color: colors.textSecondary, marginTop: 4, lineHeight: 18 },
+  timeValue: { fontSize: 16, color: colors.primary, fontWeight: "600" },
   testButton: {
     backgroundColor: colors.background,
     borderRadius: 8,
@@ -172,4 +274,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   testButtonText: { fontSize: 15, fontWeight: "600", color: colors.primary },
+  pickerBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
+  pickerSheet: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    width: "70%",
+    maxWidth: 240,
+  },
+  pickerTitle: { fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 12, textAlign: "center" },
+  pickerList: { height: 220 },
+  pickerItem: { paddingVertical: 10, alignItems: "center", borderRadius: 8 },
+  pickerItemSelected: { backgroundColor: colors.primary },
+  pickerItemText: { fontSize: 15, color: colors.text },
+  pickerItemTextSelected: { color: "#fff", fontWeight: "700" },
 });
