@@ -32,6 +32,7 @@ import { BroadcastListsScreen } from "../screens/chats/BroadcastListsScreen";
 import { EditBroadcastListScreen } from "../screens/chats/EditBroadcastListScreen";
 import { ChatWallpaperScreen } from "../screens/chats/ChatWallpaperScreen";
 import { BlockedUsersScreen } from "../screens/contacts/BlockedUsersScreen";
+import { BirthdaysScreen } from "../screens/contacts/BirthdaysScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { ChangePhoneScreen } from "../screens/profile/ChangePhoneScreen";
@@ -208,6 +209,7 @@ export function RootNavigator() {
             <Stack.Screen name="EditBroadcastList" component={EditBroadcastListScreen} options={{ title: "Ro'yxatni tahrirlash" }} />
             <Stack.Screen name="ChatWallpaper" component={ChatWallpaperScreen} options={{ title: "Suhbat foni" }} />
             <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
+            <Stack.Screen name="Birthdays" component={BirthdaysScreen} options={{ title: "Tug'ilgan kunlar" }} />
             <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />
             <Stack.Screen name="ChangePhone" component={ChangePhoneScreen} options={{ title: "Telefon raqamni o'zgartirish" }} />

@@ -274,6 +274,13 @@ export interface ContactSuggestion {
   mutualCount: number;
 }
 
+// An accepted contact whose birthday falls within the next 30 days, sorted
+// soonest-first. daysUntil is 0 for "today", 1 for "tomorrow", etc.
+export interface UpcomingBirthday {
+  user: Pick<User, "id" | "username" | "displayName" | "avatarUrl" | "birthdayDay" | "birthdayMonth">;
+  daysUntil: number;
+}
+
 // A per-user override of the current user's lastSeenPrivacy setting: ALLOW
 // always shows lastSeenAt to this user, DENY always hides it from them,
 // regardless of the global setting.

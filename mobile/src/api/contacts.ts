@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { BlockedUser, Contact, ContactRequest, ContactSuggestion } from "../types";
+import { BlockedUser, Contact, ContactRequest, ContactSuggestion, UpcomingBirthday } from "../types";
 
 export const contactsApi = {
   list() {
@@ -58,5 +58,9 @@ export const contactsApi = {
 
   dismissSuggestion(userId: string) {
     return apiClient.post(`/contacts/suggestions/${userId}/dismiss`);
+  },
+
+  listUpcomingBirthdays() {
+    return apiClient.get<UpcomingBirthday[]>("/contacts/birthdays").then((r) => r.data);
   },
 };

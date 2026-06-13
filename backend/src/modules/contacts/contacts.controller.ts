@@ -111,4 +111,13 @@ export const contactsController = {
       next(err);
     }
   },
+
+  async listUpcomingBirthdays(req: Request, res: Response, next: NextFunction) {
+    try {
+      const birthdays = await contactsService.listUpcomingBirthdays(req.user!.sub);
+      res.json(birthdays);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

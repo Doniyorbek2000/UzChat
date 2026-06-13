@@ -210,6 +210,13 @@ export function ContactsScreen({ navigation }: Props) {
         <Text style={styles.addText}>Kontakt qo'shish</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.addRow} onPress={() => navigation.navigate("Birthdays")}>
+        <View style={[styles.addIcon, styles.birthdayIcon]}>
+          <Text style={styles.addIconText}>🎂</Text>
+        </View>
+        <Text style={styles.addText}>Tug'ilgan kunlar</Text>
+      </TouchableOpacity>
+
       {requests.length > 0 && (
         <View>
           <Text style={styles.sectionTitle}>So'rovlar</Text>
@@ -384,6 +391,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  birthdayIcon: { backgroundColor: colors.border },
   addIconText: { fontSize: 18 },
   addText: { fontSize: 16, fontWeight: "500", color: colors.text },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },

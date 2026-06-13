@@ -4,6 +4,7 @@ import { Errors } from "../../utils/errors";
 import {
   filterBio,
   filterBioSingle,
+  filterBirthday,
   filterLastSeen,
   filterLastSeenSingle,
   getContactIds,
@@ -11,6 +12,15 @@ import {
 } from "../../utils/lastSeen";
 import { pushService } from "../push/push.service";
 import { UpdateContactInput } from "./contacts.schema";
+
+// Returns the number of days from `from` until the next occurrence of the given
+// month/day (0 if it falls on `from` itself, wrapping to next year if already passed).
+function daysUntilBirthday(month: number, day: number, from: Date): number {
+  const today = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate());
+  let next = Date.UTC(from.getUTCFullYear(), month - 1, day);
+  if (next < today) next = Date.UTC(from.getUTCFullYear() + 1, month - 1, day);
+  return Math.round((next - today) / (1000 * 60 * 60 * 24));
+}
 
 const userSummarySelect = {
   id: true,
@@ -267,6 +277,46 @@ export const contactsService = {
       update: {},
       create: { ownerId: userId, dismissedUserId: targetUserId },
     });
+  },
+
+  // Accepted contacts whose birthday falls within the next 30 days, soonest first.
+  async listUpcomingBirthdays(userId: string) {
+    const contacts = await prisma.contact.findMany({
+      where: {
+        ownerId: userId,
+        status: ContactStatus.ACCEPTED,
+        target: {
+          birthdayDay: { not: null },
+          birthdayMonth: { not: null },
+          birthdayPrivacy: { not: LastSeenPrivacy.NOBODY },
+        },
+      },
+      select: {
+        target: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            birthdayDay: true,
+            birthdayMonth: true,
+            birthdayPrivacy: true,
+          },
+        },
+      },
+    });
+
+    const contactIds = await getContactIds(userId);
+    const now = new Date();
+
+    return contacts
+      .map((c) => {
+        const user = filterBirthday(userId, c.target, contactIds);
+        if (user.birthdayDay == null || user.birthdayMonth == null) return null;
+        return { user, daysUntil: daysUntilBirthday(user.birthdayMonth, user.birthdayDay, now) };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null && x.daysUntil <= 30)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
   },
 
   async isBlockedEitherWay(userId: string, otherUserId: string) {

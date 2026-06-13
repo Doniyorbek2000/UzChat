@@ -53,6 +53,7 @@ export type RootStackParamList = {
   EditBroadcastList: { list?: BroadcastList };
   ChatWallpaper: { conversationId: string };
   BlockedUsers: undefined;
+  Birthdays: undefined;
   ChangePassword: undefined;
   ChangePhone: undefined;
   PrivacySettings: undefined;
