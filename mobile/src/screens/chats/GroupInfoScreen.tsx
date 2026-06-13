@@ -248,6 +248,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleHideMembersList = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { hideMembersList: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onToggleMembersCanSendMedia = async (value: boolean) => {
     try {
       await updateGroupInfo(conversationId, { membersCanSendMedia: value });
@@ -692,6 +700,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteText}>Yangi a'zolar uchun eski xabarlarni yashirish</Text>
             <Switch value={conversation.hideHistoryForNewMembers} onValueChange={onToggleHideHistoryForNewMembers} />
           </View>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>👁️</Text>
+            <Text style={styles.inviteText}>A'zolardan a'zolar ro'yxatini yashirish</Text>
+            <Switch value={conversation.hideMembersList} onValueChange={onToggleHideMembersList} />
+          </View>
           <TouchableOpacity
             style={styles.inviteRow}
             onPress={() => navigation.navigate("GroupAuditLog", { conversationId })}
@@ -709,60 +722,67 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       )}
 
-      <FlatList
-        data={filteredParticipants}
-        keyExtractor={(item) => item.userId}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListHeaderComponent={
-          <>
-            {canManage || conversation.membersCanAddMembers ? (
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => navigation.navigate("AddGroupMember", { conversationId })}
-              >
-                <Text style={styles.addButtonText}>+ A'zo qo'shish</Text>
-              </TouchableOpacity>
-            ) : null}
-            {conversation.participants.length > 6 && (
-              <View style={styles.memberSearchBar}>
-                <Text style={styles.memberSearchIcon}>🔍</Text>
-                <TextInput
-                  style={styles.memberSearchInput}
-                  placeholder="A'zoni qidirish"
-                  placeholderTextColor={colors.textSecondary}
-                  value={memberSearch}
-                  onChangeText={setMemberSearch}
-                />
+      {conversation.hideMembersList && !canManage ? (
+        <View style={styles.hiddenMembers}>
+          <Text style={styles.hiddenMembersText}>A'zolar ro'yxati guruh egasi yoki adminlar tomonidan yashirilgan</Text>
+          <Text style={styles.hiddenMembersCount}>{conversation.participants.length} a'zo</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredParticipants}
+          keyExtractor={(item) => item.userId}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListHeaderComponent={
+            <>
+              {canManage || conversation.membersCanAddMembers ? (
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => navigation.navigate("AddGroupMember", { conversationId })}
+                >
+                  <Text style={styles.addButtonText}>+ A'zo qo'shish</Text>
+                </TouchableOpacity>
+              ) : null}
+              {conversation.participants.length > 6 && (
+                <View style={styles.memberSearchBar}>
+                  <Text style={styles.memberSearchIcon}>🔍</Text>
+                  <TextInput
+                    style={styles.memberSearchInput}
+                    placeholder="A'zoni qidirish"
+                    placeholderTextColor={colors.textSecondary}
+                    value={memberSearch}
+                    onChangeText={setMemberSearch}
+                  />
+                </View>
+              )}
+            </>
+          }
+          ListEmptyComponent={
+            memberQuery ? (
+              <View style={styles.memberEmpty}>
+                <Text style={styles.memberEmptyText}>Hech kim topilmadi</Text>
               </View>
-            )}
-          </>
-        }
-        ListEmptyComponent={
-          memberQuery ? (
-            <View style={styles.memberEmpty}>
-              <Text style={styles.memberEmptyText}>Hech kim topilmadi</Text>
-            </View>
-          ) : null
-        }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.row}
-            activeOpacity={item.userId !== user?.id ? 0.6 : 1}
-            onPress={() => onMemberPress(item)}
-          >
-            <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
-            <View style={styles.nameContainer}>
-              <Text style={styles.name}>
-                {contactAliases[item.userId] ?? item.user.displayName}
-                {item.userId === user?.id ? " (Siz)" : ""}
-              </Text>
-              <Text style={styles.joinedDate}>Qo'shilgan: {formatJoinDate(item.joinedAt)}</Text>
-            </View>
-            {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{item.customTitle || ROLE_LABELS[item.role]}</Text>}
-            {isParticipantRestricted(item) && <Text style={styles.restrictedBadge}>🔇</Text>}
-          </TouchableOpacity>
-        )}
-      />
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.row}
+              activeOpacity={item.userId !== user?.id ? 0.6 : 1}
+              onPress={() => onMemberPress(item)}
+            >
+              <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
+              <View style={styles.nameContainer}>
+                <Text style={styles.name}>
+                  {contactAliases[item.userId] ?? item.user.displayName}
+                  {item.userId === user?.id ? " (Siz)" : ""}
+                </Text>
+                <Text style={styles.joinedDate}>Qo'shilgan: {formatJoinDate(item.joinedAt)}</Text>
+              </View>
+              {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{item.customTitle || ROLE_LABELS[item.role]}</Text>}
+              {isParticipantRestricted(item) && <Text style={styles.restrictedBadge}>🔇</Text>}
+            </TouchableOpacity>
+          )}
+        />
+      )}
 
       <TouchableOpacity style={styles.clearButton} onPress={onClearHistory}>
         <Text style={styles.clearButtonText}>🗑 Suhbatni tozalash</Text>
@@ -846,6 +866,9 @@ const styles = StyleSheet.create({
   memberSearchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
   memberEmpty: { padding: 24, alignItems: "center" },
   memberEmptyText: { color: colors.textSecondary, fontSize: 14 },
+  hiddenMembers: { padding: 24, alignItems: "center", gap: 4 },
+  hiddenMembersText: { color: colors.textSecondary, fontSize: 14, textAlign: "center" },
+  hiddenMembersCount: { color: colors.text, fontSize: 15, fontWeight: "600", marginTop: 4 },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   nameContainer: { flex: 1 },
   name: { fontSize: 16, color: colors.text },

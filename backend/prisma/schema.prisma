@@ -347,6 +347,10 @@ model Conversation {
   // messages sent after they joined (existing members keep their current view).
   hideHistoryForNewMembers Boolean @default(false)
 
+  // GROUP only: when true, regular MEMBERs can't view the full member list
+  // (only OWNER/ADMIN can). MEMBERs still see the total member count.
+  hideMembersList Boolean @default(false)
+
   participants    ConversationParticipant[]
   messages        Message[]
   joinRequests    GroupJoinRequest[]

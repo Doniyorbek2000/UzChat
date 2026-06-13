@@ -259,6 +259,7 @@ export const chatsService = {
           membersCanChangeInfo: p.conversation.membersCanChangeInfo,
           membersCanSendMedia: p.conversation.membersCanSendMedia,
           hideHistoryForNewMembers: p.conversation.hideHistoryForNewMembers,
+          hideMembersList: p.conversation.hideMembersList,
           isSelf: p.conversation.isSelf,
           pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
           participants: p.conversation.participants.map((cp) => ({
@@ -346,6 +347,7 @@ export const chatsService = {
       membersCanChangeInfo: participant.conversation.membersCanChangeInfo,
       membersCanSendMedia: participant.conversation.membersCanSendMedia,
       hideHistoryForNewMembers: participant.conversation.hideHistoryForNewMembers,
+      hideMembersList: participant.conversation.hideMembersList,
       isSelf: participant.conversation.isSelf,
       pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
       participants: participant.conversation.participants.map((cp) => ({
@@ -1011,6 +1013,7 @@ export const chatsService = {
         ...(input.hideHistoryForNewMembers !== undefined
           ? { hideHistoryForNewMembers: input.hideHistoryForNewMembers }
           : {}),
+        ...(input.hideMembersList !== undefined ? { hideMembersList: input.hideMembersList } : {}),
       },
     });
 
@@ -1139,6 +1142,17 @@ export const chatsService = {
           input.hideHistoryForNewMembers
             ? `${name} yangi a'zolar uchun eski xabarlarni yashirdi`
             : `${name} yangi a'zolar uchun eski xabarlarni ko'rsatishni yoqdi`
+        )
+      );
+    }
+    if (input.hideMembersList !== undefined && input.hideMembersList !== conversation.hideMembersList) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.hideMembersList
+            ? `${name} a'zolar ro'yxatini yashirdi`
+            : `${name} a'zolar ro'yxatini ko'rsatishni yoqdi`
         )
       );
     }

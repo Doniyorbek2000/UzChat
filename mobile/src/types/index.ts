@@ -187,6 +187,9 @@ export interface Conversation {
   // GROUP only: when true, members who join after this is enabled only see
   // messages sent after they joined.
   hideHistoryForNewMembers: boolean;
+  // GROUP only: when true, regular members can't view the full member list
+  // (only owner/admin can). Members still see the total member count.
+  hideMembersList: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.
