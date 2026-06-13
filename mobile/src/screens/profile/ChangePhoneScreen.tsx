@@ -1,0 +1,119 @@
+import { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../navigation/types";
+import { authApi } from "../../api/auth";
+import { useAuthStore } from "../../store/authStore";
+import { colors } from "../../theme/colors";
+
+type Props = NativeStackScreenProps<RootStackParamList, "ChangePhone">;
+
+export function ChangePhoneScreen({ navigation }: Props) {
+  const user = useAuthStore((s) => s.user);
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [newPhone, setNewPhone] = useState("+998");
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const onRequestOtp = async () => {
+    if (!/^\+[1-9]\d{7,14}$/.test(newPhone.trim())) {
+      Alert.alert("Xatolik", "Telefon raqam +998901234567 formatida bo'lishi kerak");
+      return;
+    }
+    setLoading(true);
+    try {
+      await authApi.requestPhoneChange(newPhone.trim());
+      setStep("otp");
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod yuborib bo'lmadi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onVerifyOtp = async () => {
+    if (code.length !== 6) {
+      Alert.alert("Xatolik", "6 xonali kodni kiriting");
+      return;
+    }
+    setLoading(true);
+    try {
+      await authApi.verifyPhoneChange(newPhone.trim(), code);
+      await refreshProfile();
+      Alert.alert("Saqlandi", "Telefon raqam muvaffaqiyatli o'zgartirildi", [
+        { text: "OK", onPress: () => navigation.goBack() },
+      ]);
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod noto'g'ri");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === "otp") {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.label}>Tasdiqlash kodi</Text>
+        <Text style={styles.hint}>{newPhone.trim()} raqamiga yuborilgan 6 xonali kodni kiriting</Text>
+        <TextInput
+          style={[styles.input, styles.codeInput]}
+          placeholder="000000"
+          keyboardType="number-pad"
+          maxLength={6}
+          value={code}
+          onChangeText={setCode}
+          autoFocus
+        />
+        <TouchableOpacity style={styles.button} onPress={onVerifyOtp} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.secondaryButton} onPress={() => setStep("phone")} disabled={loading}>
+          <Text style={styles.secondaryButtonText}>Raqamni o'zgartirish</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>Joriy raqam</Text>
+      <Text style={styles.hint}>{user?.phone}</Text>
+
+      <Text style={styles.label}>Yangi raqam</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="+998901234567"
+        keyboardType="phone-pad"
+        value={newPhone}
+        onChangeText={setNewPhone}
+        autoFocus
+      />
+
+      <TouchableOpacity style={styles.button} onPress={onRequestOtp} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kod yuborish</Text>}
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 16, backgroundColor: colors.surface },
+  label: { fontSize: 14, color: colors.textSecondary, marginBottom: 8, marginTop: 4 },
+  hint: { fontSize: 15, color: colors.text, marginBottom: 16 },
+  input: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 16,
+  },
+  codeInput: { fontSize: 24, textAlign: "center", letterSpacing: 8 },
+  button: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 8 },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  secondaryButton: { alignItems: "center", paddingVertical: 14 },
+  secondaryButtonText: { color: colors.primary, fontSize: 14 },
+});

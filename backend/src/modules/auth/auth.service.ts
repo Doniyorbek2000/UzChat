@@ -17,7 +17,15 @@ import {
   sendOtpSms,
   verifyOtpCode,
 } from "../../utils/otp";
-import { LoginInput, RequestOtpInput, VerifyOtpInput, VerifyTwoFactorInput, usernameSchema } from "./auth.schema";
+import {
+  LoginInput,
+  RequestOtpInput,
+  RequestPhoneChangeInput,
+  VerifyOtpInput,
+  VerifyPhoneChangeInput,
+  VerifyTwoFactorInput,
+  usernameSchema,
+} from "./auth.schema";
 import { env } from "../../config/env";
 import { pushService } from "../push/push.service";
 import { formatDeviceName } from "../../utils/device";
@@ -256,5 +264,51 @@ export const authService = {
       where: { userId, id: { not: currentSessionId }, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+  },
+
+  async requestPhoneChange(userId: string, { newPhone }: RequestPhoneChangeInput) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { phone: true } });
+    if (!user) throw Errors.notFound("Foydalanuvchi");
+    if (user.phone === newPhone) throw Errors.badRequest("Bu sizning joriy raqamingiz");
+
+    const existing = await prisma.user.findUnique({ where: { phone: newPhone } });
+    if (existing) throw Errors.conflict("Bu telefon raqam allaqachon ro'yxatdan o'tgan");
+
+    const code = generateOtpCode();
+    const codeHash = await hashOtpCode(code);
+
+    await prisma.otpCode.create({
+      data: { phone: newPhone, codeHash, expiresAt: new Date(Date.now() + OTP_TTL_MS) },
+    });
+
+    await sendOtpSms(newPhone, code);
+  },
+
+  async verifyPhoneChange(userId: string, { newPhone, code }: VerifyPhoneChangeInput) {
+    const otp = await prisma.otpCode.findFirst({
+      where: { phone: newPhone },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!otp || otp.expiresAt < new Date()) {
+      throw Errors.badRequest("Tasdiqlash kodi muddati o'tgan, qaytadan so'rang");
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      throw Errors.badRequest("Urinishlar soni tugadi, qaytadan so'rang");
+    }
+
+    const valid = await verifyOtpCode(code, otp.codeHash);
+    if (!valid) {
+      await prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
+      throw Errors.badRequest("Tasdiqlash kodi noto'g'ri");
+    }
+
+    const existing = await prisma.user.findUnique({ where: { phone: newPhone } });
+    if (existing) throw Errors.conflict("Bu telefon raqam allaqachon ro'yxatdan o'tgan");
+
+    const user = await prisma.user.update({ where: { id: userId }, data: { phone: newPhone } });
+    await prisma.otpCode.delete({ where: { id: otp.id } });
+
+    return { phone: user.phone };
   },
 };

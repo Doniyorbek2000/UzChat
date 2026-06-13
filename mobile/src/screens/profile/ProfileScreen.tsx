@@ -277,6 +277,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("ChangePhone")}>
+        <Text style={styles.menuRowText}>📱 Telefon raqamni o'zgartirish</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("PrivacySettings")}>
         <Text style={styles.menuRowText}>🕒 Oxirgi marta onlayn</Text>
         <Text style={styles.menuRowArrow}>›</Text>

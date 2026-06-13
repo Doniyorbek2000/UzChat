@@ -31,6 +31,7 @@ import { ChatWallpaperScreen } from "../screens/chats/ChatWallpaperScreen";
 import { BlockedUsersScreen } from "../screens/contacts/BlockedUsersScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
+import { ChangePhoneScreen } from "../screens/profile/ChangePhoneScreen";
 import { PrivacySettingsScreen } from "../screens/profile/PrivacySettingsScreen";
 import { AppLockSettingsScreen } from "../screens/profile/AppLockSettingsScreen";
 import { TwoFactorSettingsScreen } from "../screens/profile/TwoFactorSettingsScreen";
@@ -197,6 +198,7 @@ export function RootNavigator() {
             <Stack.Screen name="BlockedUsers" component={BlockedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
             <Stack.Screen name="AddContact" component={AddContactScreen} options={{ title: "Kontakt qo'shish" }} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />
+            <Stack.Screen name="ChangePhone" component={ChangePhoneScreen} options={{ title: "Telefon raqamni o'zgartirish" }} />
             <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: "Maxfiylik" }} />
             <Stack.Screen name="AppLockSettings" component={AppLockSettingsScreen} options={{ title: "Ilovani qulflash" }} />
             <Stack.Screen name="TwoFactorSettings" component={TwoFactorSettingsScreen} options={{ title: "Ikki bosqichli tekshiruv" }} />

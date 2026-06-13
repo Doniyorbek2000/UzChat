@@ -92,4 +92,22 @@ export const authController = {
       next(err);
     }
   },
+
+  async requestPhoneChange(req: Request, res: Response, next: NextFunction) {
+    try {
+      await authService.requestPhoneChange(req.user!.sub, req.body);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async verifyPhoneChange(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await authService.verifyPhoneChange(req.user!.sub, req.body);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

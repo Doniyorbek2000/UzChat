@@ -50,4 +50,12 @@ export const authApi = {
   revokeOtherSessions() {
     return apiClient.post("/auth/sessions/revoke-others");
   },
+
+  requestPhoneChange(newPhone: string) {
+    return apiClient.post("/auth/change-phone/request-otp", { newPhone });
+  },
+
+  verifyPhoneChange(newPhone: string, code: string) {
+    return apiClient.post<{ phone: string }>("/auth/change-phone/verify-otp", { newPhone, code }).then((r) => r.data);
+  },
 };

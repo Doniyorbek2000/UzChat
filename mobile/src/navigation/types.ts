@@ -50,6 +50,7 @@ export type RootStackParamList = {
   ChatWallpaper: { conversationId: string };
   BlockedUsers: undefined;
   ChangePassword: undefined;
+  ChangePhone: undefined;
   PrivacySettings: undefined;
   AppLockSettings: undefined;
   TwoFactorSettings: undefined;

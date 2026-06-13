@@ -1,7 +1,15 @@
 import { Router } from "express";
 import { authController } from "./auth.controller";
 import { validateBody } from "../../utils/validate";
-import { loginSchema, refreshSchema, requestOtpSchema, verifyOtpSchema, verifyTwoFactorSchema } from "./auth.schema";
+import {
+  loginSchema,
+  refreshSchema,
+  requestOtpSchema,
+  requestPhoneChangeSchema,
+  verifyOtpSchema,
+  verifyPhoneChangeSchema,
+  verifyTwoFactorSchema,
+} from "./auth.schema";
 import { authRateLimiter, apiRateLimiter } from "../../middleware/rateLimit.middleware";
 import { requireAuth } from "../../middleware/auth.middleware";
 
@@ -34,3 +42,18 @@ authRouter.post("/logout", validateBody(refreshSchema), authController.logout);
 authRouter.get("/sessions", requireAuth, authController.listSessions);
 authRouter.delete("/sessions/:id", requireAuth, authController.revokeSession);
 authRouter.post("/sessions/revoke-others", requireAuth, authController.revokeOtherSessions);
+
+authRouter.post(
+  "/change-phone/request-otp",
+  requireAuth,
+  authRateLimiter,
+  validateBody(requestPhoneChangeSchema),
+  authController.requestPhoneChange
+);
+authRouter.post(
+  "/change-phone/verify-otp",
+  requireAuth,
+  authRateLimiter,
+  validateBody(verifyPhoneChangeSchema),
+  authController.verifyPhoneChange
+);

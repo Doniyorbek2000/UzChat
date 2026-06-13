@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const phoneSchema = z
+export const phoneSchema = z
   .string()
   .regex(/^\+[1-9]\d{7,14}$/, "Telefon raqam +998901234567 formatida bo'lishi kerak");
 
@@ -43,8 +43,19 @@ export const verifyTwoFactorSchema = z.object({
   password: z.string().min(1, "Parol kiritilishi shart"),
 });
 
+export const requestPhoneChangeSchema = z.object({
+  newPhone: phoneSchema,
+});
+
+export const verifyPhoneChangeSchema = z.object({
+  newPhone: phoneSchema,
+  code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
+});
+
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;
 export type VerifyTwoFactorInput = z.infer<typeof verifyTwoFactorSchema>;
+export type RequestPhoneChangeInput = z.infer<typeof requestPhoneChangeSchema>;
+export type VerifyPhoneChangeInput = z.infer<typeof verifyPhoneChangeSchema>;
