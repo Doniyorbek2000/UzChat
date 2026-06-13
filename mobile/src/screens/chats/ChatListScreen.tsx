@@ -7,12 +7,16 @@ import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
-import { Conversation } from "../../types";
+import { Conversation, ConversationParticipant } from "../../types";
 import { getConversationDisplay, formatTime, isConversationUnread } from "../../utils/conversation";
 import { decryptMessage } from "../../crypto/e2ee";
 import { stripFormatting } from "../../utils/textFormat";
 
 type Props = MainTabScreenProps<"Chats">;
+
+function isMessageRead(message: { createdAt: string }, participant: ConversationParticipant): boolean {
+  return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);
+}
 
 const MEDIA_LABELS: Record<string, string> = {
   IMAGE: "🖼 Rasm",
@@ -209,6 +213,15 @@ export function ChatListScreen({ navigation }: Props) {
     const unread = isConversationUnread(item, user!.id);
     const isRecording = (recordingUsers[item.id]?.size ?? 0) > 0;
     const isTyping = (typingUsers[item.id]?.size ?? 0) > 0;
+    const otherParticipant =
+      item.type === "DIRECT" ? item.participants.find((p) => p.userId !== user!.id) : undefined;
+    const lastMessage = item.lastMessage;
+    const showReceipt =
+      !!lastMessage &&
+      !!otherParticipant &&
+      lastMessage.senderId === user!.id &&
+      lastMessage.type !== "SYSTEM" &&
+      !lastMessage.deletedAt;
     return (
       <TouchableOpacity
         style={styles.row}
@@ -229,7 +242,16 @@ export function ChatListScreen({ navigation }: Props) {
                 {display.title}
               </Text>
             </View>
-            {item.lastMessage && <Text style={styles.time}>{formatTime(item.lastMessage.createdAt)}</Text>}
+            {item.lastMessage && (
+              <View style={styles.timeRow}>
+                {showReceipt && (
+                  <Text style={[styles.receipt, isMessageRead(item.lastMessage, otherParticipant!) && styles.receiptRead]}>
+                    {isMessageRead(item.lastMessage, otherParticipant!) ? "✓✓" : "✓"}
+                  </Text>
+                )}
+                <Text style={styles.time}>{formatTime(item.lastMessage.createdAt)}</Text>
+              </View>
+            )}
           </View>
           <View style={styles.bottomRow}>
             <Text style={[styles.preview, (isTyping || isRecording) && styles.previewTyping]} numberOfLines={1}>
@@ -498,6 +520,9 @@ const styles = StyleSheet.create({
   titleUnread: { fontWeight: "700" },
   pinIcon: { fontSize: 12 },
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
+  timeRow: { flexDirection: "row", alignItems: "center" },
+  receipt: { fontSize: 11, color: colors.textSecondary, marginLeft: 8 },
+  receiptRead: { color: colors.primary },
   bottomRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
   preview: { fontSize: 14, color: colors.textSecondary, flex: 1 },
   previewTyping: { color: colors.primary, fontWeight: "600" },
