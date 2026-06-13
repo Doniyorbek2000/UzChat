@@ -13,6 +13,7 @@ export interface User {
   displayName: string;
   avatarUrl: string | null;
   bio?: string | null;
+  customStatus?: string | null;
   publicKey: string;
   lastSeenAt?: string | null;
   birthdayDay?: number | null;

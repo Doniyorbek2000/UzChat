@@ -8,6 +8,7 @@ export const updateProfileSchema = z
     username: usernameSchema.optional(),
     displayName: z.string().min(1).max(64).optional(),
     bio: z.string().max(256).optional(),
+    customStatus: z.string().max(70).optional(),
     avatarUrl: z.string().url().optional(),
     lastSeenPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     avatarPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),

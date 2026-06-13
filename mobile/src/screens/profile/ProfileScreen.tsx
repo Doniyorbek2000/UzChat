@@ -23,6 +23,7 @@ export function ProfileScreen({ navigation }: Props) {
   const [username, setUsername] = useState(user?.username ?? "");
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
+  const [customStatus, setCustomStatus] = useState(user?.customStatus ?? "");
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [birthdayModalVisible, setBirthdayModalVisible] = useState(false);
@@ -65,7 +66,12 @@ export function ProfileScreen({ navigation }: Props) {
     }
     setSaving(true);
     try {
-      await usersApi.updateMe({ username: trimmedUsername, displayName: displayName.trim(), bio: bio.trim() });
+      await usersApi.updateMe({
+        username: trimmedUsername,
+        displayName: displayName.trim(),
+        bio: bio.trim(),
+        customStatus: customStatus.trim(),
+      });
       await refreshProfile();
       Alert.alert("Saqlandi", "Profil yangilandi");
     } catch (err: any) {
@@ -211,6 +217,16 @@ export function ProfileScreen({ navigation }: Props) {
 
       <Text style={styles.label}>Ism</Text>
       <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} maxLength={64} />
+
+      <Text style={styles.label}>Holat</Text>
+      <TextInput
+        style={styles.input}
+        value={customStatus}
+        onChangeText={setCustomStatus}
+        placeholder="Masalan: 📚 Mashg'ulotda"
+        maxLength={70}
+      />
+      <Text style={styles.charCounter}>{customStatus.length}/70</Text>
 
       <Text style={styles.label}>Bio</Text>
       <TextInput style={[styles.input, styles.bioInput]} value={bio} onChangeText={setBio} multiline maxLength={256} />

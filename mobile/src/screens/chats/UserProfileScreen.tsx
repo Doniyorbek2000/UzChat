@@ -85,6 +85,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         {(isOnline || profile.lastSeenAt) && (
           <Text style={styles.presence}>{isOnline ? "Onlayn" : `Oxirgi marta: ${formatTime(profile.lastSeenAt!)}`}</Text>
         )}
+        {!!profile.customStatus && <Text style={styles.customStatus}>{profile.customStatus}</Text>}
       </View>
 
       {!!profile.bio && (
@@ -149,6 +150,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 20, fontWeight: "700", color: colors.text, marginTop: 8 },
   username: { fontSize: 14, color: colors.textSecondary },
   presence: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  customStatus: { fontSize: 14, color: colors.primary, marginTop: 4, textAlign: "center" },
   section: {
     paddingHorizontal: 16,
     paddingVertical: 12,

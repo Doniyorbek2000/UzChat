@@ -10,6 +10,7 @@ export const usersApi = {
     username?: string;
     displayName?: string;
     bio?: string;
+    customStatus?: string;
     avatarUrl?: string;
     lastSeenPrivacy?: LastSeenPrivacy;
     avatarPrivacy?: LastSeenPrivacy;
