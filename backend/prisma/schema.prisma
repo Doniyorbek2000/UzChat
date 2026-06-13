@@ -108,6 +108,8 @@ model User {
   // Who can see this user's avatarUrl. Hidden users fall back to the
   // initials placeholder on the viewer's side.
   avatarPrivacy LastSeenPrivacy @default(EVERYONE)
+  // Who can see this user's bio/about text.
+  bioPrivacy LastSeenPrivacy @default(EVERYONE)
   // Birthday (day-of-month and month only, no year, to avoid revealing age).
   birthdayDay   Int?
   birthdayMonth Int?

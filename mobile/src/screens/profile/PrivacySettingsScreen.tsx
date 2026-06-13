@@ -22,6 +22,12 @@ const AVATAR_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; descripti
   { value: "NOBODY", label: "Hech kim", description: "Hech kim profil rasmingizni ko'ra olmaydi, o'rniga harf ko'rinadi" },
 ];
 
+const BIO_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
+  { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar bio matningizni ko'ra oladi" },
+  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz bio matningizni ko'ra oladi" },
+  { value: "NOBODY", label: "Hech kim", description: "Hech kim bio matningizni ko'ra olmaydi" },
+];
+
 const BIRTHDAY_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
   { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar tug'ilgan kuningizni ko'ra oladi" },
   { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz tug'ilgan kuningizni ko'ra oladi" },
@@ -71,6 +77,19 @@ export function PrivacySettingsScreen({ navigation }: Props) {
     setSaving(`avatarPrivacy:${value}`);
     try {
       await usersApi.updateMe({ avatarPrivacy: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectBioPrivacy = async (value: LastSeenPrivacy) => {
+    if (value === user.bioPrivacy || saving) return;
+    setSaving(`bioPrivacy:${value}`);
+    try {
+      await usersApi.updateMe({ bioPrivacy: value });
       await refreshProfile();
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
@@ -218,6 +237,31 @@ export function PrivacySettingsScreen({ navigation }: Props) {
               <Text style={styles.rowDescription}>{option.description}</Text>
             </View>
             {saving === `avatarPrivacy:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Bio matnimni kim ko'ra oladi</Text>
+      {BIO_PRIVACY_OPTIONS.map((option) => {
+        const selected = user.bioPrivacy === option.value;
+        return (
+          <TouchableOpacity
+            key={option.value}
+            style={styles.row}
+            onPress={() => onSelectBioPrivacy(option.value)}
+            disabled={!!saving}
+          >
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+              <Text style={styles.rowDescription}>{option.description}</Text>
+            </View>
+            {saving === `bioPrivacy:${option.value}` ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
               <View style={[styles.radio, selected && styles.radioSelected]}>

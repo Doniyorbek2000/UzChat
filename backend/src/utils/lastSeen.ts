@@ -106,6 +106,41 @@ export async function filterAvatarSingle<
   return { ...rest, avatarUrl: contact?.status === ContactStatus.ACCEPTED ? user.avatarUrl : null };
 }
 
+/** Strips `bio` from `user` if `viewerId` is not allowed to see it per `user.bioPrivacy`. */
+export function filterBio<T extends { id: string; bio: string | null; bioPrivacy: LastSeenPrivacy }>(
+  viewerId: string,
+  user: T,
+  contactIds: Set<string>
+): Omit<T, "bioPrivacy"> {
+  const { bioPrivacy, ...rest } = user;
+  let visible = true;
+  if (user.id !== viewerId) {
+    if (bioPrivacy === LastSeenPrivacy.NOBODY) visible = false;
+    else if (bioPrivacy === LastSeenPrivacy.CONTACTS) visible = contactIds.has(user.id);
+  }
+  return { ...rest, bio: visible ? user.bio : null };
+}
+
+/** Convenience for filtering a single user's bio without pre-fetching the contact set. */
+export async function filterBioSingle<T extends { id: string; bio: string | null; bioPrivacy: LastSeenPrivacy }>(
+  viewerId: string,
+  user: T
+): Promise<Omit<T, "bioPrivacy">> {
+  if (user.id === viewerId || user.bioPrivacy === LastSeenPrivacy.EVERYONE) {
+    const { bioPrivacy, ...rest } = user;
+    return rest;
+  }
+  if (user.bioPrivacy === LastSeenPrivacy.NOBODY) {
+    const { bioPrivacy, ...rest } = user;
+    return { ...rest, bio: null };
+  }
+  const contact = await prisma.contact.findUnique({
+    where: { ownerId_targetId: { ownerId: viewerId, targetId: user.id } },
+  });
+  const { bioPrivacy, ...rest } = user;
+  return { ...rest, bio: contact?.status === ContactStatus.ACCEPTED ? user.bio : null };
+}
+
 /** Strips `birthdayDay`/`birthdayMonth` from `user` if `viewerId` is not allowed to see them per `user.birthdayPrivacy`. */
 export function filterBirthday<
   T extends { id: string; birthdayDay: number | null; birthdayMonth: number | null; birthdayPrivacy: LastSeenPrivacy },

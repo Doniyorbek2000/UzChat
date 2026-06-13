@@ -1,7 +1,14 @@
 import { ContactStatus, LastSeenPrivacy } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { filterLastSeen, filterLastSeenSingle, getContactIds, getLastSeenExceptions } from "../../utils/lastSeen";
+import {
+  filterBio,
+  filterBioSingle,
+  filterLastSeen,
+  filterLastSeenSingle,
+  getContactIds,
+  getLastSeenExceptions,
+} from "../../utils/lastSeen";
 import { pushService } from "../push/push.service";
 import { UpdateContactInput } from "./contacts.schema";
 
@@ -11,6 +18,7 @@ const userSummarySelect = {
   displayName: true,
   avatarUrl: true,
   bio: true,
+  bioPrivacy: true,
   publicKey: true,
   lastSeenAt: true,
   lastSeenPrivacy: true,
@@ -43,7 +51,7 @@ export const contactsService = {
       data: { type: "contact_request" },
     });
 
-    return { ...contact, target: await filterLastSeenSingle(ownerId, contact.target) };
+    return { ...contact, target: await filterBioSingle(ownerId, await filterLastSeenSingle(ownerId, contact.target)) };
   },
 
   async listIncomingRequests(userId: string) {
@@ -53,7 +61,7 @@ export const contactsService = {
       orderBy: { createdAt: "desc" },
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
-    return requests.map((r) => ({ ...r, owner: filterLastSeen(userId, r.owner, contactIds, exceptions) }));
+    return requests.map((r) => ({ ...r, owner: filterBio(userId, filterLastSeen(userId, r.owner, contactIds, exceptions), contactIds) }));
   },
 
   async acceptRequest(userId: string, requestId: string) {
@@ -99,7 +107,7 @@ export const contactsService = {
       alias: c.alias,
       isFavorite: c.isFavorite,
       note: c.note,
-      user: filterLastSeen(userId, c.target, contactIds, exceptions),
+      user: filterBio(userId, filterLastSeen(userId, c.target, contactIds, exceptions), contactIds),
     }));
   },
 
@@ -140,7 +148,7 @@ export const contactsService = {
       orderBy: { createdAt: "desc" },
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(ownerId), getLastSeenExceptions(ownerId)]);
-    return blocked.map((b) => ({ id: b.id, user: filterLastSeen(ownerId, b.blocked, contactIds, exceptions) }));
+    return blocked.map((b) => ({ id: b.id, user: filterBio(ownerId, filterLastSeen(ownerId, b.blocked, contactIds, exceptions), contactIds) }));
   },
 
   async hasBlocked(ownerId: string, targetUserId: string) {

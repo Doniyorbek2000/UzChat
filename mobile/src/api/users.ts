@@ -14,6 +14,7 @@ export const usersApi = {
     avatarUrl?: string;
     lastSeenPrivacy?: LastSeenPrivacy;
     avatarPrivacy?: LastSeenPrivacy;
+    bioPrivacy?: LastSeenPrivacy;
     birthdayDay?: number | null;
     birthdayMonth?: number | null;
     birthdayPrivacy?: LastSeenPrivacy;

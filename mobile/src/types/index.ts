@@ -25,6 +25,7 @@ export interface AuthUser extends User {
   phone: string;
   lastSeenPrivacy: LastSeenPrivacy;
   avatarPrivacy: LastSeenPrivacy;
+  bioPrivacy: LastSeenPrivacy;
   birthdayPrivacy: LastSeenPrivacy;
   groupAddPrivacy: GroupAddPrivacy;
   messagePrivacy: MessagePrivacy;

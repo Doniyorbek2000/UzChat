@@ -13,6 +13,7 @@ export const updateProfileSchema = z
     avatarUrl: z.string().url().optional(),
     lastSeenPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     avatarPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
+    bioPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     groupAddPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     messagePrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     phoneNumberPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),

@@ -12,6 +12,8 @@ import {
   filterAvatar,
   filterBirthdaySingle,
   filterBirthday,
+  filterBioSingle,
+  filterBio,
 } from "../../utils/lastSeen";
 import { chatsService } from "../chats/chats.service";
 import {
@@ -35,6 +37,7 @@ const profileSelect = {
   lastSeenAt: true,
   lastSeenPrivacy: true,
   avatarPrivacy: true,
+  bioPrivacy: true,
   birthdayDay: true,
   birthdayMonth: true,
   birthdayPrivacy: true,
@@ -74,6 +77,7 @@ const publicSelect = {
   lastSeenAt: true,
   lastSeenPrivacy: true,
   avatarPrivacy: true,
+  bioPrivacy: true,
   birthdayDay: true,
   birthdayMonth: true,
   birthdayPrivacy: true,
@@ -98,7 +102,10 @@ export const usersService = {
   async getPublicProfile(userId: string, targetId: string) {
     const user = await prisma.user.findUnique({ where: { id: targetId }, select: publicSelect });
     if (!user) throw Errors.notFound("Foydalanuvchi");
-    const filtered = await filterBirthdaySingle(userId, await filterAvatarSingle(userId, await filterLastSeenSingle(userId, user)));
+    const filtered = await filterBioSingle(
+      userId,
+      await filterBirthdaySingle(userId, await filterAvatarSingle(userId, await filterLastSeenSingle(userId, user)))
+    );
     const notifyOnlineRequested = !!(await prisma.onlineNotifyRequest.findUnique({
       where: { ownerId_targetId: { ownerId: userId, targetId } },
     }));
@@ -148,9 +155,13 @@ export const usersService = {
         return true;
       })
       .map(({ phone, phoneNumberPrivacy, ...u }) =>
-        filterBirthday(
+        filterBio(
           currentUserId,
-          filterAvatar(currentUserId, filterLastSeen(currentUserId, u, contactIds, exceptions), contactIds),
+          filterBirthday(
+            currentUserId,
+            filterAvatar(currentUserId, filterLastSeen(currentUserId, u, contactIds, exceptions), contactIds),
+            contactIds
+          ),
           contactIds
         )
       );
