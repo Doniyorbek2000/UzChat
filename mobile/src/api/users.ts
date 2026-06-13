@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { AuthUser, GroupAddPrivacy, LastSeenPrivacy, MessagePrivacy, User } from "../types";
+import { AuthUser, GroupAddPrivacy, LastSeenException, LastSeenPrivacy, MessagePrivacy, User } from "../types";
 
 export const usersApi = {
   me() {
@@ -66,5 +66,17 @@ export const usersApi = {
 
   deleteAccount(currentPassword: string) {
     return apiClient.delete("/users/me", { data: { currentPassword } });
+  },
+
+  listLastSeenExceptions() {
+    return apiClient.get<LastSeenException[]>("/users/me/last-seen-exceptions").then((r) => r.data);
+  },
+
+  setLastSeenException(userId: string, mode: "ALLOW" | "DENY") {
+    return apiClient.put(`/users/me/last-seen-exceptions/${userId}`, { mode });
+  },
+
+  removeLastSeenException(userId: string) {
+    return apiClient.delete(`/users/me/last-seen-exceptions/${userId}`);
   },
 };

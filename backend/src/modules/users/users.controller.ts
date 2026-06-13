@@ -115,4 +115,31 @@ export const usersController = {
       next(err);
     }
   },
+
+  async listLastSeenExceptions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const exceptions = await usersService.listLastSeenExceptions(req.user!.sub);
+      res.json(exceptions);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async setLastSeenException(req: Request, res: Response, next: NextFunction) {
+    try {
+      await usersService.setLastSeenException(req.user!.sub, req.params.id, req.body);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async removeLastSeenException(req: Request, res: Response, next: NextFunction) {
+    try {
+      await usersService.removeLastSeenException(req.user!.sub, req.params.id);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
 };

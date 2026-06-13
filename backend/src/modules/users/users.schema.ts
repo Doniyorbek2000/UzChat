@@ -76,8 +76,15 @@ export const deleteAccountSchema = z.object({
   currentPassword: z.string().min(1, "Joriy parol kiritilishi shart"),
 });
 
+// ALLOW always shows this user's lastSeenAt to the target user regardless of
+// lastSeenPrivacy; DENY always hides it from them.
+export const setLastSeenExceptionSchema = z.object({
+  mode: z.enum(["ALLOW", "DENY"]),
+});
+
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type SetTwoFactorInput = z.infer<typeof setTwoFactorSchema>;
 export type DisableTwoFactorInput = z.infer<typeof disableTwoFactorSchema>;
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
+export type SetLastSeenExceptionInput = z.infer<typeof setLastSeenExceptionSchema>;

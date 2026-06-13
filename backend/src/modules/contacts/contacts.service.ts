@@ -1,7 +1,7 @@
 import { ContactStatus, LastSeenPrivacy } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { filterLastSeen, filterLastSeenSingle, getContactIds } from "../../utils/lastSeen";
+import { filterLastSeen, filterLastSeenSingle, getContactIds, getLastSeenExceptions } from "../../utils/lastSeen";
 import { pushService } from "../push/push.service";
 import { UpdateContactInput } from "./contacts.schema";
 
@@ -52,8 +52,8 @@ export const contactsService = {
       include: { owner: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
     });
-    const contactIds = await getContactIds(userId);
-    return requests.map((r) => ({ ...r, owner: filterLastSeen(userId, r.owner, contactIds) }));
+    const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
+    return requests.map((r) => ({ ...r, owner: filterLastSeen(userId, r.owner, contactIds, exceptions) }));
   },
 
   async acceptRequest(userId: string, requestId: string) {
@@ -93,12 +93,12 @@ export const contactsService = {
       include: { target: { select: userSummarySelect } },
       orderBy: [{ isFavorite: "desc" }, { target: { displayName: "asc" } }],
     });
-    const contactIds = await getContactIds(userId);
+    const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
     return contacts.map((c) => ({
       id: c.id,
       alias: c.alias,
       isFavorite: c.isFavorite,
-      user: filterLastSeen(userId, c.target, contactIds),
+      user: filterLastSeen(userId, c.target, contactIds, exceptions),
     }));
   },
 
@@ -138,8 +138,8 @@ export const contactsService = {
       include: { blocked: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
     });
-    const contactIds = await getContactIds(ownerId);
-    return blocked.map((b) => ({ id: b.id, user: filterLastSeen(ownerId, b.blocked, contactIds) }));
+    const [contactIds, exceptions] = await Promise.all([getContactIds(ownerId), getLastSeenExceptions(ownerId)]);
+    return blocked.map((b) => ({ id: b.id, user: filterLastSeen(ownerId, b.blocked, contactIds, exceptions) }));
   },
 
   async hasBlocked(ownerId: string, targetUserId: string) {

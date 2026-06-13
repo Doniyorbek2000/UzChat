@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { ConversationType, GroupAddPrivacy, GroupAuditAction, MessagePrivacy, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { getContactIds, filterLastSeen, filterAvatar } from "../../utils/lastSeen";
+import { getContactIds, getLastSeenExceptions, filterLastSeen, filterAvatar } from "../../utils/lastSeen";
 import { contactsService } from "../contacts/contacts.service";
 import { createSystemMessage } from "../messages/systemMessages";
 import { pushService } from "../push/push.service";
@@ -189,7 +189,7 @@ export const chatsService = {
   },
 
   async listConversations(userId: string) {
-    const [participations, blocked, contactIds, viewer] = await Promise.all([
+    const [participations, blocked, contactIds, exceptions, viewer] = await Promise.all([
       prisma.conversationParticipant.findMany({
         where: { userId },
         include: {
@@ -209,6 +209,7 @@ export const chatsService = {
       }),
       prisma.blockedUser.findMany({ where: { ownerId: userId }, select: { blockedId: true } }),
       getContactIds(userId),
+      getLastSeenExceptions(userId),
       prisma.user.findUnique({ where: { id: userId }, select: { readReceiptsEnabled: true } }),
     ]);
     const viewerReadReceiptsEnabled = viewer?.readReceiptsEnabled ?? true;
@@ -263,7 +264,9 @@ export const chatsService = {
           participants: p.conversation.participants.map((cp) => ({
             userId: cp.userId,
             role: cp.role,
-            user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
+            user: omitPrivacyFlags(
+              filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds, exceptions), contactIds)
+            ),
             lastReadAt: visibleLastReadAt(userId, viewerEffectiveReadReceipts, cp),
             lastDeliveredAt: cp.lastDeliveredAt,
             restrictedUntil: cp.restrictedUntil,
@@ -297,8 +300,9 @@ export const chatsService = {
       if (other) isBlocked = await contactsService.hasBlocked(userId, other.userId);
     }
 
-    const [contactIds, viewer] = await Promise.all([
+    const [contactIds, exceptions, viewer] = await Promise.all([
       getContactIds(userId),
+      getLastSeenExceptions(userId),
       prisma.user.findUnique({ where: { id: userId }, select: { readReceiptsEnabled: true } }),
     ]);
     const viewerReadReceiptsEnabled = viewer?.readReceiptsEnabled ?? true;
@@ -346,7 +350,9 @@ export const chatsService = {
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,
-        user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds), contactIds)),
+        user: omitPrivacyFlags(
+          filterAvatar(userId, filterLastSeen(userId, cp.user, contactIds, exceptions), contactIds)
+        ),
         lastReadAt: visibleLastReadAt(userId, viewerEffectiveReadReceipts, cp),
         lastDeliveredAt: cp.lastDeliveredAt,
         restrictedUntil: cp.restrictedUntil,
@@ -797,10 +803,10 @@ export const chatsService = {
       include: { user: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
     });
-    const contactIds = await getContactIds(userId);
+    const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
     return requests.map((r) => ({
       id: r.id,
-      user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, r.user, contactIds), contactIds)),
+      user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, r.user, contactIds, exceptions), contactIds)),
       createdAt: r.createdAt,
     }));
   },

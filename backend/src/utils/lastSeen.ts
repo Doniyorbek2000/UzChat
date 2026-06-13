@@ -1,4 +1,4 @@
-import { ContactStatus, LastSeenPrivacy } from "@prisma/client";
+import { ContactStatus, LastSeenExceptionMode, LastSeenPrivacy } from "@prisma/client";
 import { prisma } from "../config/prisma";
 
 /** Returns the IDs of users who are mutual (accepted) contacts of `viewerId`. */
@@ -10,16 +10,33 @@ export async function getContactIds(viewerId: string): Promise<Set<string>> {
   return new Set(contacts.map((c) => c.targetId));
 }
 
+/**
+ * Returns a map of userId -> exception mode for users who have set a
+ * lastSeenAt exception (ALLOW/DENY) specifically for `viewerId`, keyed by
+ * the *owner* of the exception (i.e. the user whose last-seen is affected).
+ */
+export async function getLastSeenExceptions(viewerId: string): Promise<Map<string, LastSeenExceptionMode>> {
+  const exceptions = await prisma.lastSeenException.findMany({
+    where: { exceptionUserId: viewerId },
+    select: { ownerId: true, mode: true },
+  });
+  return new Map(exceptions.map((e) => [e.ownerId, e.mode]));
+}
+
 /** Strips `lastSeenAt` from `user` if `viewerId` is not allowed to see it per `user.lastSeenPrivacy`. */
 export function filterLastSeen<T extends { id: string; lastSeenAt: Date | null; lastSeenPrivacy: LastSeenPrivacy }>(
   viewerId: string,
   user: T,
-  contactIds: Set<string>
+  contactIds: Set<string>,
+  exceptions?: Map<string, LastSeenExceptionMode>
 ): Omit<T, "lastSeenPrivacy"> {
   const { lastSeenPrivacy, ...rest } = user;
   let visible = true;
   if (user.id !== viewerId) {
-    if (lastSeenPrivacy === LastSeenPrivacy.NOBODY) visible = false;
+    const exception = exceptions?.get(user.id);
+    if (exception) {
+      visible = exception === LastSeenExceptionMode.ALLOW;
+    } else if (lastSeenPrivacy === LastSeenPrivacy.NOBODY) visible = false;
     else if (lastSeenPrivacy === LastSeenPrivacy.CONTACTS) visible = contactIds.has(user.id);
   }
   return { ...rest, lastSeenAt: visible ? user.lastSeenAt : null };
@@ -29,7 +46,18 @@ export function filterLastSeen<T extends { id: string; lastSeenAt: Date | null; 
 export async function filterLastSeenSingle<
   T extends { id: string; lastSeenAt: Date | null; lastSeenPrivacy: LastSeenPrivacy },
 >(viewerId: string, user: T): Promise<Omit<T, "lastSeenPrivacy">> {
-  if (user.id === viewerId || user.lastSeenPrivacy === LastSeenPrivacy.EVERYONE) {
+  if (user.id === viewerId) {
+    const { lastSeenPrivacy, ...rest } = user;
+    return rest;
+  }
+  const exception = await prisma.lastSeenException.findUnique({
+    where: { ownerId_exceptionUserId: { ownerId: user.id, exceptionUserId: viewerId } },
+  });
+  if (exception) {
+    const { lastSeenPrivacy, ...rest } = user;
+    return { ...rest, lastSeenAt: exception.mode === LastSeenExceptionMode.ALLOW ? user.lastSeenAt : null };
+  }
+  if (user.lastSeenPrivacy === LastSeenPrivacy.EVERYONE) {
     const { lastSeenPrivacy, ...rest } = user;
     return rest;
   }

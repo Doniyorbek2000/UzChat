@@ -55,6 +55,7 @@ export type RootStackParamList = {
   ChangePassword: undefined;
   ChangePhone: undefined;
   PrivacySettings: undefined;
+  LastSeenExceptions: undefined;
   AppLockSettings: undefined;
   TwoFactorSettings: undefined;
   ActiveSessions: undefined;

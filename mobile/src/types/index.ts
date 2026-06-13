@@ -239,6 +239,14 @@ export interface BlockedUser {
   user: User;
 }
 
+// A per-user override of the current user's lastSeenPrivacy setting: ALLOW
+// always shows lastSeenAt to this user, DENY always hides it from them,
+// regardless of the global setting.
+export interface LastSeenException {
+  user: Pick<User, "id" | "username" | "displayName" | "avatarUrl">;
+  mode: "ALLOW" | "DENY";
+}
+
 export interface InvitePreview {
   id: string;
   type: ConversationType;

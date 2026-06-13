@@ -6,6 +6,7 @@ import {
   changePasswordSchema,
   deleteAccountSchema,
   disableTwoFactorSchema,
+  setLastSeenExceptionSchema,
   setTwoFactorSchema,
   updateProfileSchema,
 } from "./users.schema";
@@ -20,6 +21,9 @@ usersRouter.patch("/me/password", validateBody(changePasswordSchema), usersContr
 usersRouter.put("/me/two-factor", validateBody(setTwoFactorSchema), usersController.setTwoFactor);
 usersRouter.delete("/me/two-factor", validateBody(disableTwoFactorSchema), usersController.disableTwoFactor);
 usersRouter.delete("/me", validateBody(deleteAccountSchema), usersController.deleteAccount);
+usersRouter.get("/me/last-seen-exceptions", usersController.listLastSeenExceptions);
+usersRouter.put("/me/last-seen-exceptions/:id", validateBody(setLastSeenExceptionSchema), usersController.setLastSeenException);
+usersRouter.delete("/me/last-seen-exceptions/:id", usersController.removeLastSeenException);
 usersRouter.get("/search", usersController.search);
 usersRouter.post("/:id/notify-online", usersController.notifyOnline);
 usersRouter.delete("/:id/notify-online", usersController.cancelNotifyOnline);

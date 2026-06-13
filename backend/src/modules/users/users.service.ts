@@ -6,6 +6,7 @@ import { hashPassword, verifyPassword } from "../../utils/password";
 import {
   filterLastSeenSingle,
   getContactIds,
+  getLastSeenExceptions,
   filterLastSeen,
   filterAvatarSingle,
   filterAvatar,
@@ -17,6 +18,7 @@ import {
   ChangePasswordInput,
   DeleteAccountInput,
   DisableTwoFactorInput,
+  SetLastSeenExceptionInput,
   SetTwoFactorInput,
   UpdateProfileInput,
 } from "./users.schema";
@@ -132,7 +134,10 @@ export const usersService = {
       select: { ...publicSelect, phone: true, phoneNumberPrivacy: true },
       take: 20,
     });
-    const contactIds = await getContactIds(currentUserId);
+    const [contactIds, exceptions] = await Promise.all([
+      getContactIds(currentUserId),
+      getLastSeenExceptions(currentUserId),
+    ]);
     return users
       .filter((u) => {
         // Only the phone-search match is gated by phoneNumberPrivacy; a
@@ -143,7 +148,11 @@ export const usersService = {
         return true;
       })
       .map(({ phone, phoneNumberPrivacy, ...u }) =>
-        filterBirthday(currentUserId, filterAvatar(currentUserId, filterLastSeen(currentUserId, u, contactIds), contactIds), contactIds)
+        filterBirthday(
+          currentUserId,
+          filterAvatar(currentUserId, filterLastSeen(currentUserId, u, contactIds, exceptions), contactIds),
+          contactIds
+        )
       );
   },
 
@@ -206,5 +215,33 @@ export const usersService = {
     await prisma.user.delete({ where: { id: userId } });
 
     return { leaveResults };
+  },
+
+  /** Lists this user's "Last seen" privacy exceptions for specific other users. */
+  async listLastSeenExceptions(userId: string) {
+    const exceptions = await prisma.lastSeenException.findMany({
+      where: { ownerId: userId },
+      include: { exceptionUser: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+    return exceptions.map((e) => ({ user: e.exceptionUser, mode: e.mode }));
+  },
+
+  /** Sets (or replaces) a "Last seen" privacy exception for a specific other user. */
+  async setLastSeenException(userId: string, exceptionUserId: string, { mode }: SetLastSeenExceptionInput) {
+    if (exceptionUserId === userId) throw Errors.badRequest("O'zingiz uchun istisno qo'sha olmaysiz");
+    const target = await prisma.user.findUnique({ where: { id: exceptionUserId }, select: { id: true } });
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+
+    await prisma.lastSeenException.upsert({
+      where: { ownerId_exceptionUserId: { ownerId: userId, exceptionUserId } },
+      update: { mode },
+      create: { ownerId: userId, exceptionUserId, mode },
+    });
+  },
+
+  /** Removes a "Last seen" privacy exception, reverting to the global lastSeenPrivacy setting for that user. */
+  async removeLastSeenException(userId: string, exceptionUserId: string) {
+    await prisma.lastSeenException.deleteMany({ where: { ownerId: userId, exceptionUserId } });
   },
 };

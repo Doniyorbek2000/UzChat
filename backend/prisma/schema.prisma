@@ -41,6 +41,14 @@ enum LastSeenPrivacy {
   NOBODY
 }
 
+// A per-user exception to that user's lastSeenPrivacy setting: ALLOW always
+// shows their last-seen time to this one other user regardless of the global
+// setting, DENY always hides it from them.
+enum LastSeenExceptionMode {
+  ALLOW
+  DENY
+}
+
 enum GroupAddPrivacy {
   EVERYONE
   CONTACTS
@@ -159,6 +167,8 @@ model User {
   blockedByUsers   BlockedUser[]              @relation("BlockTarget")
   onlineNotifyRequestsOwned    OnlineNotifyRequest[] @relation("OnlineNotifyOwner")
   onlineNotifyRequestsTargeted OnlineNotifyRequest[] @relation("OnlineNotifyTarget")
+  lastSeenExceptionsOwned      LastSeenException[]   @relation("LastSeenExceptionOwner")
+  lastSeenExceptionsTargeted   LastSeenException[]   @relation("LastSeenExceptionTarget")
   pushTokens       PushToken[]
   chatFolders      ChatFolder[]
   reportsMade      Report[]                   @relation("ReportReporter")
@@ -255,6 +265,21 @@ model OnlineNotifyRequest {
 
   @@unique([ownerId, targetId])
   @@index([targetId])
+}
+
+// Per-user override of the owner's lastSeenPrivacy setting for one specific
+// other user (Telegram-style "Always share with" / "Never share with").
+model LastSeenException {
+  id              String                @id @default(uuid())
+  ownerId         String
+  owner           User                  @relation("LastSeenExceptionOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  exceptionUserId String
+  exceptionUser   User                  @relation("LastSeenExceptionTarget", fields: [exceptionUserId], references: [id], onDelete: Cascade)
+  mode            LastSeenExceptionMode
+  createdAt       DateTime              @default(now())
+
+  @@unique([ownerId, exceptionUserId])
+  @@index([exceptionUserId])
 }
 
 model Conversation {

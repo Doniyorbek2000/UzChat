@@ -46,7 +46,7 @@ const PHONE_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; descriptio
   { value: "NOBODY", label: "Hech kim", description: "Hech kim telefon raqamingiz orqali sizni topa olmaydi" },
 ];
 
-export function PrivacySettingsScreen({}: Props) {
+export function PrivacySettingsScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const [saving, setSaving] = useState<string | null>(null);
@@ -191,6 +191,17 @@ export function PrivacySettingsScreen({}: Props) {
           </TouchableOpacity>
         );
       })}
+
+      <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("LastSeenExceptions")}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>Istisnolar</Text>
+          <Text style={styles.rowDescription}>
+            Tanlangan kontaktlar uchun yuqoridagi sozlamadan qat'i nazar, oxirgi marta onlayn bo'lgan vaqtni har
+            doim ko'rsatish yoki yashirish
+          </Text>
+        </View>
+        <Text style={styles.rowArrow}>›</Text>
+      </TouchableOpacity>
 
       <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Profil rasmimni kim ko'ra oladi</Text>
       {AVATAR_PRIVACY_OPTIONS.map((option) => {
@@ -383,6 +394,7 @@ const styles = StyleSheet.create({
   rowText: { flex: 1 },
   rowLabel: { fontSize: 16, color: colors.text, fontWeight: "600" },
   rowDescription: { fontSize: 13, color: colors.textSecondary, marginTop: 4, lineHeight: 18 },
+  rowArrow: { fontSize: 22, color: colors.textSecondary },
   radio: {
     width: 22,
     height: 22,

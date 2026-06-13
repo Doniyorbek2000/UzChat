@@ -35,6 +35,7 @@ import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { ChangePhoneScreen } from "../screens/profile/ChangePhoneScreen";
 import { PrivacySettingsScreen } from "../screens/profile/PrivacySettingsScreen";
+import { LastSeenExceptionsScreen } from "../screens/profile/LastSeenExceptionsScreen";
 import { AppLockSettingsScreen } from "../screens/profile/AppLockSettingsScreen";
 import { TwoFactorSettingsScreen } from "../screens/profile/TwoFactorSettingsScreen";
 import { ChatTextSizeScreen } from "../screens/profile/ChatTextSizeScreen";
@@ -209,6 +210,7 @@ export function RootNavigator() {
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Parolni o'zgartirish" }} />
             <Stack.Screen name="ChangePhone" component={ChangePhoneScreen} options={{ title: "Telefon raqamni o'zgartirish" }} />
             <Stack.Screen name="PrivacySettings" component={PrivacySettingsScreen} options={{ title: "Maxfiylik" }} />
+            <Stack.Screen name="LastSeenExceptions" component={LastSeenExceptionsScreen} options={{ title: "Onlayn holati: istisnolar" }} />
             <Stack.Screen name="AppLockSettings" component={AppLockSettingsScreen} options={{ title: "Ilovani qulflash" }} />
             <Stack.Screen name="TwoFactorSettings" component={TwoFactorSettingsScreen} options={{ title: "Ikki bosqichli tekshiruv" }} />
             <Stack.Screen name="ChatTextSize" component={ChatTextSizeScreen} options={{ title: "Matn hajmi" }} />
