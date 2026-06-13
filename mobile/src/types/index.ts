@@ -198,6 +198,8 @@ export interface Conversation {
   pinnedMessages: PinnedMessageInfo[];
   participants: ConversationParticipant[];
   lastMessage?: Message | null;
+  // True if any unread message in this conversation @-mentions the current user.
+  hasUnreadMention?: boolean;
 }
 
 // A pending request to join a GROUP via invite link, awaiting owner/admin approval.

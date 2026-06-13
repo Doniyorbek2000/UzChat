@@ -469,6 +469,11 @@ export function ChatListScreen({ navigation }: Props) {
               )}
             </Text>
             {item.isMuted && <Text style={styles.muteIcon}>🔕</Text>}
+            {item.hasUnreadMention && (
+              <View style={styles.mentionBadge}>
+                <Text style={styles.mentionBadgeText}>@</Text>
+              </View>
+            )}
             {unread && <View style={styles.unreadDot} />}
           </View>
         </View>
@@ -745,6 +750,17 @@ const styles = StyleSheet.create({
   previewTyping: { color: colors.primary, fontWeight: "600" },
   draftLabel: { color: colors.danger },
   muteIcon: { fontSize: 12, marginLeft: 8, color: colors.textSecondary },
+  mentionBadge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    marginLeft: 8,
+  },
+  mentionBadgeText: { color: "#fff", fontSize: 11, fontWeight: "700" },
   unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary, marginLeft: 8 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   archiveRow: {

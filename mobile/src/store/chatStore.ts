@@ -879,6 +879,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
   markRead: async (conversationId) => {
     await chatsApi.markRead(conversationId);
     getSocket()?.emit("message:read", { conversationId });
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === conversationId ? { ...c, lastReadAt: new Date().toISOString(), hasUnreadMention: false } : c
+      ),
+    }));
   },
 
   markAllRead: async () => {
@@ -895,7 +900,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     );
     set((state) => ({
       conversations: state.conversations.map((c) =>
-        unread.some((u) => u.id === c.id) ? { ...c, lastReadAt: now, markedUnread: false } : c
+        unread.some((u) => u.id === c.id) ? { ...c, lastReadAt: now, markedUnread: false, hasUnreadMention: false } : c
       ),
     }));
   },
@@ -975,6 +980,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           ...conversation,
           lastReadAt: new Date().toISOString(),
           markedUnread: false,
+          hasUnreadMention: false,
         }),
       }));
     } else {
@@ -1356,6 +1362,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
             ...conversation,
             lastMessage: message,
             updatedAt: message.createdAt,
+            hasUnreadMention: conversation.hasUnreadMention || !!message.mentions?.includes(currentUser?.id ?? ""),
           }),
           ...(nextScheduled
             ? { scheduledMessagesByConversation: { ...state.scheduledMessagesByConversation, ...nextScheduled } }

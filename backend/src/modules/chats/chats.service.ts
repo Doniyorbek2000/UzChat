@@ -216,6 +216,23 @@ export const chatsService = {
 
     const blockedIds = new Set(blocked.map((b) => b.blockedId));
 
+    // Latest @-mention timestamp per conversation, used to flag conversations
+    // with an unread mention regardless of whether it's the most recent message.
+    const mentionRows =
+      participations.length === 0
+        ? []
+        : await prisma.message.groupBy({
+            by: ["conversationId"],
+            where: {
+              conversationId: { in: participations.map((p) => p.conversationId) },
+              mentions: { has: userId },
+              deletedAt: null,
+              NOT: { hiddenFor: { has: userId } },
+            },
+            _max: { createdAt: true },
+          });
+    const latestMentionByConversation = new Map(mentionRows.map((r) => [r.conversationId, r._max.createdAt]));
+
     return participations
       .filter((p) => {
         if (!p.hiddenAt) return true;
@@ -278,6 +295,13 @@ export const chatsService = {
             p.clearedAt && p.conversation.messages[0] && p.conversation.messages[0].createdAt <= p.clearedAt
               ? null
               : p.conversation.messages[0] ?? null,
+          hasUnreadMention: (() => {
+            const latestMention = latestMentionByConversation.get(p.conversation.id);
+            if (!latestMention) return false;
+            if (p.lastReadAt && latestMention <= p.lastReadAt) return false;
+            if (p.clearedAt && latestMention <= p.clearedAt) return false;
+            return true;
+          })(),
         };
       });
   },
