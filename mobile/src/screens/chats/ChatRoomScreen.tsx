@@ -22,6 +22,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import * as Clipboard from "expo-clipboard";
+import * as FileSystem from "expo-file-system/legacy";
 import {
   useAudioRecorder,
   useAudioRecorderState,
@@ -1014,6 +1015,32 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPendingMediaTotal(items.length);
   };
 
+  const pasteImage = async () => {
+    const hasImage = await Clipboard.hasImageAsync();
+    if (!hasImage) {
+      Alert.alert("Bo'sh", "Klipbordda rasm topilmadi");
+      return;
+    }
+    const image = await Clipboard.getImageAsync({ format: "png" });
+    if (!image) return;
+
+    const base64 = image.data.split(",")[1] ?? "";
+    const fileUri = `${FileSystem.cacheDirectory}clipboard-${Date.now()}.png`;
+    await FileSystem.writeAsStringAsync(fileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+
+    setMediaCaption("");
+    setPendingMedia({
+      uri: fileUri,
+      name: `clipboard-${Date.now()}.png`,
+      mimeType: "image/png",
+      width: image.size.width,
+      height: image.size.height,
+      type: "IMAGE",
+    });
+    setPendingMediaQueue([]);
+    setPendingMediaTotal(1);
+  };
+
   const cancelPendingMedia = () => {
     setPendingMedia(null);
     setPendingMediaQueue([]);
@@ -1064,6 +1091,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
       { text: "📊 So'rovnoma", onPress: openPollModal },
       { text: "💬 Tezkor javob", onPress: onOpenQuickReplies },
+      { text: "📋 Klipborddan rasm", onPress: pasteImage },
       { text: "Bekor qilish", style: "cancel" },
     ]);
   };
