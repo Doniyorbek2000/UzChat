@@ -1218,6 +1218,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const conversation = get().conversations.find((c) => c.id === message.conversationId);
       if (!conversation) return;
 
+      if (message.senderId !== useAuthStore.getState().user?.id) {
+        getSocket()?.emit("message:delivered", { conversationId: message.conversationId });
+      }
+
       const key = get().getConversationKey(conversation);
       const decrypted = decryptToMessage(key, message);
 
@@ -1432,6 +1436,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversations: state.conversations.map((c) =>
           c.id === conversationId
             ? { ...c, participants: c.participants.map((p) => (p.userId === userId ? { ...p, lastReadAt: at } : p)) }
+            : c
+        ),
+      }));
+    });
+
+    socket.on("message:delivered", ({ conversationId, userId, at }: { conversationId: string; userId: string; at: string }) => {
+      set((state) => ({
+        conversations: state.conversations.map((c) =>
+          c.id === conversationId
+            ? { ...c, participants: c.participants.map((p) => (p.userId === userId ? { ...p, lastDeliveredAt: at } : p)) }
             : c
         ),
       }));

@@ -3,7 +3,7 @@ import path from "path";
 import { ConversationType, GroupAuditAction, Message, MessageType, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { isUserOnline } from "../../sockets";
+import { getIo, isUserOnline } from "../../sockets";
 import { pushService } from "../push/push.service";
 import { chatsService, isParticipantMuted } from "../chats/chats.service";
 import { contactsService } from "../contacts/contacts.service";
@@ -207,6 +207,29 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   }
 }
 
+async function markDeliveredForOnlineRecipients(
+  conversationId: string,
+  senderId: string,
+  participants: { userId: string }[],
+  deliveredAt: Date
+) {
+  const onlineRecipients = participants.filter((p) => p.userId !== senderId && isUserOnline(p.userId));
+  if (onlineRecipients.length === 0) return;
+
+  await prisma.conversationParticipant.updateMany({
+    where: { conversationId, userId: { in: onlineRecipients.map((p) => p.userId) } },
+    data: { lastDeliveredAt: deliveredAt },
+  });
+
+  for (const p of onlineRecipients) {
+    getIo().to(`conversation:${conversationId}`).emit("message:delivered", {
+      conversationId,
+      userId: p.userId,
+      at: deliveredAt.toISOString(),
+    });
+  }
+}
+
 async function notifyReaction(reactorId: string, conversationId: string, message: Message, emoji: string) {
   if (isUserOnline(message.senderId) || message.senderId === reactorId) return;
 
@@ -355,6 +378,7 @@ export const messagesService = {
 
     if (!isScheduled) {
       notifyParticipants(userId, conversationId, message, input.silent ?? false).catch(() => {});
+      markDeliveredForOnlineRecipients(conversationId, userId, conversation?.participants ?? [], message.createdAt).catch(() => {});
     }
 
     return formatMessage(message, userId);
@@ -561,6 +585,14 @@ export const messagesService = {
     await prisma.conversationParticipant.update({
       where: { conversationId_userId: { conversationId, userId } },
       data: { lastReadAt: new Date(), markedUnread: false },
+    });
+  },
+
+  async markDelivered(userId: string, conversationId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+    await prisma.conversationParticipant.update({
+      where: { conversationId_userId: { conversationId, userId } },
+      data: { lastDeliveredAt: new Date() },
     });
   },
 

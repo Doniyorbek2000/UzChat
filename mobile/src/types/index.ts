@@ -59,6 +59,7 @@ export interface ConversationParticipant {
   role: ParticipantRole;
   user: User;
   lastReadAt: string | null;
+  lastDeliveredAt: string | null;
   restrictedUntil: string | null;
   customTitle: string | null;
 }

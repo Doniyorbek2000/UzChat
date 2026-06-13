@@ -88,6 +88,10 @@ function isMessageRead(message: { createdAt: string }, participant: Conversation
   return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);
 }
 
+function isMessageDelivered(message: { createdAt: string }, participant: ConversationParticipant) {
+  return !!participant.lastDeliveredAt && new Date(participant.lastDeliveredAt) >= new Date(message.createdAt);
+}
+
 // Matches 1-3 emoji "clusters" (a base emoji optionally followed by a variation selector,
 // skin-tone modifier, or ZWJ-joined emoji like family/profession emoji) and nothing else.
 const EMOJI_ONLY_PATTERN =
@@ -1535,7 +1539,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </Text>
             {isOwn && otherParticipant && (
               <Text style={[styles.receipt, isMessageRead(item, otherParticipant) && styles.receiptRead]}>
-                {isMessageRead(item, otherParticipant) ? "✓✓" : "✓"}
+                {isMessageRead(item, otherParticipant) || isMessageDelivered(item, otherParticipant) ? "✓✓" : "✓"}
               </Text>
             )}
           </View>

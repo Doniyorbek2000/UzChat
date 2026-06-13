@@ -58,6 +58,19 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
     }
   });
 
+  socket.on("message:delivered", async (payload: { conversationId: string }) => {
+    try {
+      await messagesService.markDelivered(socket.userId, payload.conversationId);
+      socket.to(`conversation:${payload.conversationId}`).emit("message:delivered", {
+        conversationId: payload.conversationId,
+        userId: socket.userId,
+        at: new Date().toISOString(),
+      });
+    } catch {
+      // ignore delivery receipts for conversations the user is not part of
+    }
+  });
+
   socket.on("conversation:join", async (payload: { conversationId: string }) => {
     try {
       await chatsService.assertParticipant(socket.userId, payload.conversationId);

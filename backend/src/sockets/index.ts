@@ -50,7 +50,14 @@ export function initSocketServer(httpServer: HttpServer): Server {
 
     const participations = await prisma.conversationParticipant.findMany({
       where: { userId: authed.userId },
-      include: { conversation: { include: { participants: { select: { userId: true } } } } },
+      include: {
+        conversation: {
+          include: {
+            participants: { select: { userId: true } },
+            messages: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
+          },
+        },
+      },
     });
 
     const relatedUserIds = new Set<string>();
@@ -61,6 +68,24 @@ export function initSocketServer(httpServer: HttpServer): Server {
       }
     }
     socket.join(`user:${authed.userId}`);
+
+    const undeliveredConversationIds = participations
+      .filter((p) => p.conversation.messages.length > 0 && (!p.lastDeliveredAt || p.lastDeliveredAt < p.conversation.messages[0].createdAt))
+      .map((p) => p.conversationId);
+    if (undeliveredConversationIds.length > 0) {
+      const deliveredAt = new Date();
+      await prisma.conversationParticipant.updateMany({
+        where: { userId: authed.userId, conversationId: { in: undeliveredConversationIds } },
+        data: { lastDeliveredAt: deliveredAt },
+      });
+      for (const conversationId of undeliveredConversationIds) {
+        socket.to(`conversation:${conversationId}`).emit("message:delivered", {
+          conversationId,
+          userId: authed.userId,
+          at: deliveredAt.toISOString(),
+        });
+      }
+    }
 
     const onlineUserIds = [...relatedUserIds].filter((id) => isUserOnline(id));
     socket.emit("presence:initial", { userIds: onlineUserIds });

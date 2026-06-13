@@ -347,6 +347,9 @@ model ConversationParticipant {
 
   joinedAt     DateTime  @default(now())
   lastReadAt   DateTime?
+  // Last time this participant's device received/synced messages in this
+  // conversation - used to show "delivered" (gray double-check) ticks to the sender.
+  lastDeliveredAt DateTime?
   // True when this conversation is muted indefinitely ("Doimiy").
   isMuted      Boolean   @default(false)
   // When set and in the future, this conversation is muted until this time.

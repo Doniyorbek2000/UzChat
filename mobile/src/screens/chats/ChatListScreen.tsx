@@ -18,6 +18,10 @@ function isMessageRead(message: { createdAt: string }, participant: Conversation
   return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);
 }
 
+function isMessageDelivered(message: { createdAt: string }, participant: ConversationParticipant): boolean {
+  return !!participant.lastDeliveredAt && new Date(participant.lastDeliveredAt) >= new Date(message.createdAt);
+}
+
 const MEDIA_LABELS: Record<string, string> = {
   IMAGE: "🖼 Rasm",
   VIDEO: "🎬 Video",
@@ -246,7 +250,9 @@ export function ChatListScreen({ navigation }: Props) {
               <View style={styles.timeRow}>
                 {showReceipt && (
                   <Text style={[styles.receipt, isMessageRead(item.lastMessage, otherParticipant!) && styles.receiptRead]}>
-                    {isMessageRead(item.lastMessage, otherParticipant!) ? "✓✓" : "✓"}
+                    {isMessageRead(item.lastMessage, otherParticipant!) || isMessageDelivered(item.lastMessage, otherParticipant!)
+                      ? "✓✓"
+                      : "✓"}
                   </Text>
                 )}
                 <Text style={styles.time}>{formatTime(item.lastMessage.createdAt)}</Text>
