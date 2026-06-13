@@ -4,6 +4,7 @@ import { env } from "./config/env";
 import { initSocketServer } from "./sockets";
 import { startMessageExpiryJob } from "./jobs/messageExpiry";
 import { startScheduledMessagesJob } from "./jobs/scheduledMessages";
+import { startBirthdayReminderJob } from "./jobs/birthdayReminders";
 
 const app = createApp();
 const httpServer = createServer(app);
@@ -11,6 +12,7 @@ const httpServer = createServer(app);
 initSocketServer(httpServer);
 startMessageExpiryJob();
 startScheduledMessagesJob();
+startBirthdayReminderJob();
 
 httpServer.listen(env.port, () => {
   console.log(`UzChat backend listening on port ${env.port}`);

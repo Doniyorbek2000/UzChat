@@ -1,4 +1,4 @@
-import { ContactStatus } from "@prisma/client";
+import { ContactStatus, LastSeenPrivacy } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { filterLastSeen, filterLastSeenSingle, getContactIds } from "../../utils/lastSeen";
@@ -147,6 +147,30 @@ export const contactsService = {
       where: { ownerId_blockedId: { ownerId, blockedId: targetUserId } },
     });
     return !!block;
+  },
+
+  // Notifies users whose accepted contacts have a birthday today (UTC date),
+  // unless that contact has set their birthday privacy to "nobody".
+  async sendBirthdayReminders() {
+    const now = new Date();
+    const month = now.getUTCMonth() + 1;
+    const day = now.getUTCDate();
+
+    const contacts = await prisma.contact.findMany({
+      where: {
+        status: ContactStatus.ACCEPTED,
+        target: { birthdayDay: day, birthdayMonth: month, birthdayPrivacy: { not: LastSeenPrivacy.NOBODY } },
+      },
+      select: { ownerId: true, target: { select: { id: true, displayName: true } } },
+    });
+
+    for (const contact of contacts) {
+      await pushService.sendToUsers([contact.ownerId], {
+        title: "🎂 Tug'ilgan kun",
+        body: `Bugun ${contact.target.displayName}ning tug'ilgan kuni!`,
+        data: { type: "birthday", userId: contact.target.id },
+      });
+    }
   },
 
   async isBlockedEitherWay(userId: string, otherUserId: string) {

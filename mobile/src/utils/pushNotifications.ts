@@ -8,6 +8,7 @@ export interface MessageNotificationData {
   conversationId?: string;
   messageId?: string;
   type?: string;
+  userId?: string;
 }
 
 let activeConversationId: string | null = null;
