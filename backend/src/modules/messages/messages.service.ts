@@ -632,6 +632,36 @@ export const messagesService = {
     });
   },
 
+  // All messages across the user's conversations that @-mention them, most recent first.
+  async listMentions(userId: string) {
+    const participations = await prisma.conversationParticipant.findMany({
+      where: { userId },
+      select: { conversationId: true, clearedAt: true },
+    });
+    if (participations.length === 0) return [];
+
+    const clearedAtMap = new Map(participations.map((p) => [p.conversationId, p.clearedAt]));
+
+    const messages = await prisma.message.findMany({
+      where: {
+        conversationId: { in: participations.map((p) => p.conversationId) },
+        mentions: { has: userId },
+        deletedAt: null,
+        NOT: { hiddenFor: { has: userId } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: messageInclude(userId),
+    });
+
+    return messages
+      .filter((m) => {
+        const clearedAt = clearedAtMap.get(m.conversationId);
+        return !clearedAt || m.createdAt > clearedAt;
+      })
+      .map((m) => formatMessage(m, userId));
+  },
+
   // Soft-deletes messages whose disappearing-messages timer has elapsed.
   async expireDueMessages() {
     const due = await prisma.message.findMany({

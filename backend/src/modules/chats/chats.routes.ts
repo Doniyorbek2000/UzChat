@@ -71,6 +71,7 @@ chatsRouter.post("/:id/join-requests/:requestId/decline", chatsController.declin
 chatsRouter.get("/:id/audit-log", chatsController.getAuditLog);
 
 chatsRouter.get("/starred/messages", messagesController.listStarred);
+chatsRouter.get("/mentions/messages", messagesController.listMentions);
 chatsRouter.get("/common-groups/:userId", chatsController.listCommonGroups);
 
 chatsRouter.get("/:id/scheduled-messages", messagesController.listScheduled);

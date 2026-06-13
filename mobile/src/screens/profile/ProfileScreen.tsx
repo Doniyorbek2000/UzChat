@@ -262,6 +262,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Mentions")}>
+        <Text style={styles.menuRowText}>@ Eslatishlar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("BlockedUsers")}>
         <Text style={styles.menuRowText}>🚫 Bloklangan foydalanuvchilar</Text>
         <Text style={styles.menuRowArrow}>›</Text>

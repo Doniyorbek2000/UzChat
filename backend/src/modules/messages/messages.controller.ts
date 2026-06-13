@@ -170,6 +170,15 @@ export const messagesController = {
     }
   },
 
+  async listMentions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const messages = await messagesService.listMentions(req.user!.sub);
+      res.json(messages);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async listScheduled(req: Request, res: Response, next: NextFunction) {
     try {
       const messages = await messagesService.listScheduledMessages(req.user!.sub, req.params.id);

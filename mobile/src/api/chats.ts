@@ -279,6 +279,10 @@ export const chatsApi = {
     return apiClient.get<Message[]>("/conversations/starred/messages").then((r) => r.data);
   },
 
+  listMentions() {
+    return apiClient.get<Message[]>("/conversations/mentions/messages").then((r) => r.data);
+  },
+
   listCommonGroups(userId: string) {
     return apiClient.get<CommonGroup[]>(`/conversations/common-groups/${userId}`).then((r) => r.data);
   },

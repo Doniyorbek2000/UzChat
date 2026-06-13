@@ -43,6 +43,7 @@ export type RootStackParamList = {
   ScheduledMessages: { conversationId: string };
   PinnedMessages: { conversationId: string; title: string };
   StarredMessages: undefined;
+  Mentions: undefined;
   ArchivedChats: undefined;
   ChatFolders: undefined;
   EditChatFolder: { folderId: string };
