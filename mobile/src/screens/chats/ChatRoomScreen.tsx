@@ -283,6 +283,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const clearHistory = useChatStore((s) => s.clearHistory);
   const pinMessage = useChatStore((s) => s.pinMessage);
   const unpinMessage = useChatStore((s) => s.unpinMessage);
+  const forwardMessage = useChatStore((s) => s.forwardMessage);
+  const getOrCreateSavedMessages = useChatStore((s) => s.getOrCreateSavedMessages);
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
   const setNoForwards = useChatStore((s) => s.setNoForwards);
   const markRead = useChatStore((s) => s.markRead);
@@ -1980,6 +1982,24 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               }}
             >
               <Text style={styles.actionButtonText}>➡️ Yo'naltirish</Text>
+            </TouchableOpacity>
+          )}
+          {actionMessage && canForwardOrCopy && !actionMessage.decryptFailed && !actionMessage.viewOnce && !conversation?.isSelf && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={async () => {
+                const message = actionMessage;
+                setActionMessage(null);
+                try {
+                  const saved = await getOrCreateSavedMessages();
+                  await forwardMessage(conversationId, message.id, saved.id, false);
+                  Alert.alert("Yuborildi", "Saqlangan xabarlarga yuborildi");
+                } catch {
+                  Alert.alert("Xatolik", "Saqlangan xabarlarga yuborib bo'lmadi");
+                }
+              }}
+            >
+              <Text style={styles.actionButtonText}>📥 Saqlangan xabarlarga yuborish</Text>
             </TouchableOpacity>
           )}
           {actionMessage &&
