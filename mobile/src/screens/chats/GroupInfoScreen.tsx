@@ -31,7 +31,7 @@ import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../
 import { SLOW_MODE_OPTIONS, formatSlowModeDuration } from "../../utils/slowMode";
 import { INVITE_EXPIRY_OPTIONS, INVITE_MAX_USES_OPTIONS, formatInviteStatus } from "../../utils/inviteLink";
 import { isParticipantRestricted } from "../../utils/restriction";
-import { formatJoinDate } from "../../utils/conversation";
+import { formatJoinDate, formatTime } from "../../utils/conversation";
 import { ConversationParticipant, ParticipantRole } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
@@ -47,6 +47,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const conversation = useChatStore((s) => s.conversations.find((c) => c.id === conversationId));
   const contactAliases = useChatStore((s) => s.contactAliases);
+  const onlineUsers = useChatStore((s) => s.onlineUsers);
   const updateGroupInfo = useChatStore((s) => s.updateGroupInfo);
   const removeParticipant = useChatStore((s) => s.removeParticipant);
   const banParticipant = useChatStore((s) => s.banParticipant);
@@ -763,24 +764,29 @@ export function GroupInfoScreen({ route, navigation }: Props) {
               </View>
             ) : null
           }
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.row}
-              activeOpacity={item.userId !== user?.id ? 0.6 : 1}
-              onPress={() => onMemberPress(item)}
-            >
-              <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
-              <View style={styles.nameContainer}>
-                <Text style={styles.name}>
-                  {contactAliases[item.userId] ?? item.user.displayName}
-                  {item.userId === user?.id ? " (Siz)" : ""}
-                </Text>
-                <Text style={styles.joinedDate}>Qo'shilgan: {formatJoinDate(item.joinedAt)}</Text>
-              </View>
-              {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{item.customTitle || ROLE_LABELS[item.role]}</Text>}
-              {isParticipantRestricted(item) && <Text style={styles.restrictedBadge}>🔇</Text>}
-            </TouchableOpacity>
-          )}
+          renderItem={({ item }) => {
+            const isOnline = onlineUsers.has(item.userId);
+            return (
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={item.userId !== user?.id ? 0.6 : 1}
+                onPress={() => onMemberPress(item)}
+              >
+                <Avatar uri={item.user.avatarUrl} name={item.user.displayName} online={isOnline} />
+                <View style={styles.nameContainer}>
+                  <Text style={styles.name}>
+                    {contactAliases[item.userId] ?? item.user.displayName}
+                    {item.userId === user?.id ? " (Siz)" : ""}
+                  </Text>
+                  <Text style={styles.joinedDate}>
+                    {isOnline ? "Onlayn" : item.user.lastSeenAt ? `Oxirgi marta: ${formatTime(item.user.lastSeenAt)}` : `Qo'shilgan: ${formatJoinDate(item.joinedAt)}`}
+                  </Text>
+                </View>
+                {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{item.customTitle || ROLE_LABELS[item.role]}</Text>}
+                {isParticipantRestricted(item) && <Text style={styles.restrictedBadge}>🔇</Text>}
+              </TouchableOpacity>
+            );
+          }}
         />
       )}
 
