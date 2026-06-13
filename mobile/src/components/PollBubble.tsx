@@ -6,9 +6,10 @@ import { colors } from "../theme/colors";
 interface Props {
   message: DecryptedMessage;
   conversationId: string;
+  onShowVotes?: () => void;
 }
 
-export function PollBubble({ message, conversationId }: Props) {
+export function PollBubble({ message, conversationId, onShowVotes }: Props) {
   const meta = message.pollMeta;
   const userId = useAuthStore((s) => s.user?.id);
   const votePoll = useChatStore((s) => s.votePoll);
@@ -101,6 +102,11 @@ export function PollBubble({ message, conversationId }: Props) {
         {!isQuiz && meta.anonymous ? " · 🔒 Anonim" : ""}
         {closed ? " · Yopilgan" : ""}
       </Text>
+      {!isQuiz && !meta.anonymous && totalVoters > 0 && onShowVotes && (
+        <TouchableOpacity onPress={onShowVotes}>
+          <Text style={styles.votesLink}>Ovozlarni ko'rish</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -142,4 +148,5 @@ const styles = StyleSheet.create({
   optionTextCorrect: { color: colors.primaryDark, fontWeight: "600" },
   optionPercent: { fontSize: 12, color: colors.textSecondary },
   footer: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  votesLink: { fontSize: 12, color: colors.primary, fontWeight: "600", marginTop: 6 },
 });

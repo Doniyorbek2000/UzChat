@@ -312,6 +312,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
   const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
   const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
+  const [pollVotesMessage, setPollVotesMessage] = useState<DecryptedMessage | null>(null);
   const [moreReactionsMessage, setMoreReactionsMessage] = useState<DecryptedMessage | null>(null);
   const [customReactionEmoji, setCustomReactionEmoji] = useState("");
   const [editHistoryMessage, setEditHistoryMessage] = useState<DecryptedMessage | null>(null);
@@ -1464,7 +1465,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } else if (item.type === "CONTACT") {
       content = <ContactCardBubble message={item} navigation={navigation} />;
     } else if (item.type === "POLL") {
-      content = <PollBubble message={item} conversationId={conversationId} />;
+      content = <PollBubble message={item} conversationId={conversationId} onShowVotes={() => setPollVotesMessage(item)} />;
     } else if (isSticker) {
       content = <Text style={styles.stickerText}>{item.text}</Text>;
     } else {
@@ -2206,6 +2207,44 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               ))}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setReactionDetailsMessage(null)}>
+            <Text style={styles.actionButtonText}>Yopish</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    <Modal
+      visible={!!pollVotesMessage}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setPollVotesMessage(null)}
+    >
+      <Pressable style={styles.actionBackdrop} onPress={() => setPollVotesMessage(null)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Ovozlar</Text>
+          <ScrollView style={styles.seenByList}>
+            {pollVotesMessage?.pollMeta?.options.map((option) => {
+              const voters = (pollVotesMessage.pollVotes ?? []).filter((v) => v.optionIds.includes(option.id));
+              return (
+                <View key={option.id}>
+                  <Text style={styles.seenBySectionLabel}>
+                    {option.text} · {voters.length}
+                  </Text>
+                  {voters.length === 0 && <Text style={styles.seenByName}>Hali ovoz yo'q</Text>}
+                  {voters.map((v) => {
+                    const uid = v.userId!;
+                    const participant = conversation?.participants.find((p) => p.userId === uid);
+                    return (
+                      <View key={uid} style={styles.seenByRow}>
+                        <Avatar uri={participant?.user.avatarUrl} name={getAuthorName(uid)} size={36} />
+                        <Text style={styles.seenByName}>{getAuthorName(uid)}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              );
+            })}
+          </ScrollView>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setPollVotesMessage(null)}>
             <Text style={styles.actionButtonText}>Yopish</Text>
           </TouchableOpacity>
         </Pressable>
