@@ -119,6 +119,9 @@ model User {
   quietHoursEnd     Int?
   // User's UTC offset in minutes (e.g. 300 for UTC+5), captured from the device.
   quietHoursTimezoneOffset Int?
+  // Default "disappearing messages" timer (in seconds), automatically applied
+  // to new conversations this user starts. Null means messages persist normally.
+  defaultDisappearingSeconds Int?
   // Optional second ("cloud") password, required after the account password
   // when logging in. Null means two-step verification is disabled.
   twoFactorHash String?

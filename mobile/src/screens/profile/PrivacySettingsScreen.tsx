@@ -6,6 +6,7 @@ import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
 import { colors } from "../../theme/colors";
 import { GroupAddPrivacy, LastSeenPrivacy, MessagePrivacy } from "../../types";
+import { DISAPPEARING_MESSAGE_OPTIONS } from "../../utils/disappearingMessages";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PrivacySettings">;
 
@@ -135,6 +136,19 @@ export function PrivacySettingsScreen({}: Props) {
     setSaving("readReceipts");
     try {
       await usersApi.updateMe({ readReceiptsEnabled: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectDefaultDisappearing = async (value: number | null) => {
+    if (value === user.defaultDisappearingSeconds || saving) return;
+    setSaving(`defaultDisappearing:${value}`);
+    try {
+      await usersApi.updateMe({ defaultDisappearingSeconds: value });
       await refreshProfile();
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
@@ -322,6 +336,33 @@ export function PrivacySettingsScreen({}: Props) {
           />
         )}
       </View>
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Yangi suhbatlar uchun o'chiriladigan xabarlar</Text>
+      <Text style={styles.rowDescription}>
+        Siz boshlagan yangi suhbatlarda xabarlar avtomatik shu vaqtdan so'ng o'chiriladi
+      </Text>
+      {DISAPPEARING_MESSAGE_OPTIONS.map((option) => {
+        const selected = (user.defaultDisappearingSeconds ?? null) === option.value;
+        return (
+          <TouchableOpacity
+            key={String(option.value)}
+            style={styles.row}
+            onPress={() => onSelectDefaultDisappearing(option.value)}
+            disabled={!!saving}
+          >
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+            </View>
+            {saving === `defaultDisappearing:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }

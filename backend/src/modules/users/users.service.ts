@@ -49,6 +49,7 @@ const profileSelect = {
   quietHoursStart: true,
   quietHoursEnd: true,
   quietHoursTimezoneOffset: true,
+  defaultDisappearingSeconds: true,
   twoFactorHash: true,
   twoFactorHint: true,
   createdAt: true,

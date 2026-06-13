@@ -148,11 +148,14 @@ export const chatsService = {
       await chatsService.assertCanMessage(userId, otherUser);
     }
 
+    const creator = users.find((u) => u.id === userId)!;
+
     const conversation = await prisma.conversation.create({
       data: {
         type: input.type === "GROUP" ? ConversationType.GROUP : ConversationType.DIRECT,
         title: input.title,
         isSelf: input.type === "DIRECT" && input.participants.length === 1,
+        disappearingSeconds: creator.defaultDisappearingSeconds,
         participants: {
           create: input.participants.map((p) => ({
             userId: p.userId,

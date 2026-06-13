@@ -2,6 +2,7 @@ import { z } from "zod";
 import { passwordSchema, usernameSchema } from "../auth/auth.schema";
 
 const MAX_DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const MAX_DISAPPEARING_SECONDS = 90 * 24 * 60 * 60;
 
 export const updateProfileSchema = z
   .object({
@@ -32,6 +33,8 @@ export const updateProfileSchema = z
     quietHoursStart: z.number().int().min(0).max(1439).nullable().optional(),
     quietHoursEnd: z.number().int().min(0).max(1439).nullable().optional(),
     quietHoursTimezoneOffset: z.number().int().min(-720).max(840).nullable().optional(),
+    // Default "disappearing messages" timer applied to new conversations this user starts.
+    defaultDisappearingSeconds: z.number().int().positive().max(MAX_DISAPPEARING_SECONDS).nullable().optional(),
   })
   .refine(
     (data) => {

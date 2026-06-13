@@ -39,6 +39,7 @@ export interface AuthUser extends User {
   quietHoursStart: number | null;
   quietHoursEnd: number | null;
   quietHoursTimezoneOffset: number | null;
+  defaultDisappearingSeconds: number | null;
   twoFactorEnabled: boolean;
   twoFactorHint: string | null;
 }
