@@ -73,6 +73,12 @@ export const chatsApi = {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}/preferences`, input).then((r) => r.data);
   },
 
+  reorderPinned(conversationId: string, direction: "up" | "down") {
+    return apiClient
+      .post<Conversation[]>(`/conversations/${conversationId}/pinned-order`, { direction })
+      .then((r) => r.data);
+  },
+
   clearHistory(conversationId: string) {
     return apiClient.post(`/conversations/${conversationId}/clear`);
   },

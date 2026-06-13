@@ -33,6 +33,7 @@ export function ChatListScreen({ navigation }: Props) {
   const typingUsers = useChatStore((s) => s.typingUsers);
   const recordingUsers = useChatStore((s) => s.recordingUsers);
   const togglePin = useChatStore((s) => s.togglePin);
+  const reorderPinned = useChatStore((s) => s.reorderPinned);
   const muteConversation = useChatStore((s) => s.muteConversation);
   const toggleArchive = useChatStore((s) => s.toggleArchive);
   const toggleUnread = useChatStore((s) => s.toggleUnread);
@@ -160,6 +161,8 @@ export function ChatListScreen({ navigation }: Props) {
   };
 
   const onLongPressConversation = (item: Conversation) => {
+    const pinned = conversations.filter((c) => c.isPinned);
+    const pinnedIndex = pinned.findIndex((c) => c.id === item.id);
     Alert.alert(item.title ?? "Suhbat", undefined, [
       {
         text: isConversationUnread(item, user!.id) ? "✅ O'qilgan deb belgilash" : "🔵 O'qilmagan deb belgilash",
@@ -169,6 +172,12 @@ export function ChatListScreen({ navigation }: Props) {
         text: item.isPinned ? "📌 Qadashni bekor qilish" : "📌 Qadab qo'yish",
         onPress: () => togglePin(item.id).catch(() => {}),
       },
+      ...(item.isPinned && pinnedIndex > 0
+        ? [{ text: "⬆️ Yuqoriga ko'tarish", onPress: () => reorderPinned(item.id, "up").catch(() => {}) }]
+        : []),
+      ...(item.isPinned && pinnedIndex < pinned.length - 1
+        ? [{ text: "⬇️ Pastga tushirish", onPress: () => reorderPinned(item.id, "down").catch(() => {}) }]
+        : []),
       {
         text: item.isMuted ? "🔔 Ovozli qilish" : "🔕 Ovozsiz qilish",
         onPress: () => onMutePress(item),

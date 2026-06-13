@@ -343,6 +343,10 @@ model ConversationParticipant {
   // When set and in the future, this conversation is muted until this time.
   mutedUntil   DateTime?
   pinnedAt     DateTime?
+  // Manual sort position among this user's pinned conversations (lower
+  // sorts first). Null means it hasn't been manually reordered yet, so it
+  // falls back to pinnedAt-based ordering.
+  pinnedOrder  Int?
   isArchived   Boolean   @default(false)
   // User manually flagged this conversation as unread; cleared on next markRead.
   markedUnread Boolean   @default(false)

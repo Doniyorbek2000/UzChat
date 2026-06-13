@@ -78,6 +78,15 @@ export const chatsController = {
     }
   },
 
+  async reorderPinned(req: Request, res: Response, next: NextFunction) {
+    try {
+      const conversations = await chatsService.reorderPinned(req.user!.sub, req.params.id, req.body.direction);
+      res.json(conversations);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async clearHistory(req: Request, res: Response, next: NextFunction) {
     try {
       await chatsService.clearHistory(req.user!.sub, req.params.id);

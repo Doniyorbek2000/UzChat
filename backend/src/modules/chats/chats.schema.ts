@@ -109,6 +109,10 @@ export const updatePreferencesSchema = z
     { message: "Hech narsa o'zgartirilmadi" }
   );
 
+export const reorderPinnedSchema = z.object({
+  direction: z.enum(["up", "down"]),
+});
+
 export const joinByInviteSchema = z.object({
   wrappedKey: z.string().min(1),
   wrappedKeyNonce: z.string().min(1),
@@ -147,6 +151,7 @@ export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSch
 export type UpdateParticipantRestrictionInput = z.infer<typeof updateParticipantRestrictionSchema>;
 export type UpdateParticipantCustomTitleInput = z.infer<typeof updateParticipantCustomTitleSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
+export type ReorderPinnedInput = z.infer<typeof reorderPinnedSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
 export type CreateInviteLinkInput = z.infer<typeof createInviteLinkSchema>;
 export type UpdateDisappearingMessagesInput = z.infer<typeof updateDisappearingMessagesSchema>;

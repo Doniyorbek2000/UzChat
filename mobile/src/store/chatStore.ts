@@ -138,6 +138,7 @@ interface ChatState {
   markRead: (conversationId: string) => Promise<void>;
   markAllRead: () => Promise<void>;
   togglePin: (conversationId: string) => Promise<void>;
+  reorderPinned: (conversationId: string, direction: "up" | "down") => Promise<void>;
   muteConversation: (conversationId: string, muteFor: MuteDuration) => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
@@ -891,6 +892,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));
+  },
+
+  reorderPinned: async (conversationId, direction) => {
+    const conversations = await chatsApi.reorderPinned(conversationId, direction);
+    set({ conversations });
   },
 
   muteConversation: async (conversationId, muteFor) => {

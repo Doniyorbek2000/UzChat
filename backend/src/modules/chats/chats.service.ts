@@ -184,7 +184,11 @@ export const chatsService = {
             },
           },
         },
-        orderBy: [{ pinnedAt: { sort: "desc", nulls: "last" } }, { conversation: { updatedAt: "desc" } }],
+        orderBy: [
+          { pinnedOrder: { sort: "asc", nulls: "last" } },
+          { pinnedAt: { sort: "desc", nulls: "last" } },
+          { conversation: { updatedAt: "desc" } },
+        ],
       }),
       prisma.blockedUser.findMany({ where: { ownerId: userId }, select: { blockedId: true } }),
       getContactIds(userId),
@@ -331,10 +335,25 @@ export const chatsService = {
     else if (input.muteFor !== undefined)
       muteData = { isMuted: false, mutedUntil: new Date(Date.now() + MUTE_DURATIONS_MS[input.muteFor]) };
 
+    let pinData: { pinnedAt?: Date | null; pinnedOrder?: number | null } = {};
+    if (input.isPinned !== undefined) {
+      if (input.isPinned) {
+        // New pins go to the top of the pinned list, like the previous
+        // pinnedAt-only ordering did.
+        const top = await prisma.conversationParticipant.aggregate({
+          where: { userId, pinnedAt: { not: null } },
+          _min: { pinnedOrder: true },
+        });
+        pinData = { pinnedAt: new Date(), pinnedOrder: (top._min.pinnedOrder ?? 0) - 1 };
+      } else {
+        pinData = { pinnedAt: null, pinnedOrder: null };
+      }
+    }
+
     await prisma.conversationParticipant.update({
       where: { id: participant.id },
       data: {
-        ...(input.isPinned !== undefined ? { pinnedAt: input.isPinned ? new Date() : null } : {}),
+        ...pinData,
         ...muteData,
         ...(input.isArchived !== undefined ? { isArchived: input.isArchived } : {}),
         ...(input.markedUnread !== undefined ? { markedUnread: input.markedUnread } : {}),
@@ -342,6 +361,29 @@ export const chatsService = {
     });
 
     return chatsService.getConversation(userId, conversationId);
+  },
+
+  /** Moves a pinned conversation up or down relative to the user's other pinned conversations. */
+  async reorderPinned(userId: string, conversationId: string, direction: "up" | "down") {
+    const pinned = await prisma.conversationParticipant.findMany({
+      where: { userId, pinnedAt: { not: null } },
+      orderBy: [{ pinnedOrder: { sort: "asc", nulls: "last" } }, { pinnedAt: "desc" }],
+    });
+
+    const index = pinned.findIndex((p) => p.conversationId === conversationId);
+    if (index === -1) throw Errors.notFound("Suhbat");
+
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex >= 0 && swapIndex < pinned.length) {
+      await prisma.$transaction(
+        pinned.map((p, i) => {
+          const order = i === index ? swapIndex : i === swapIndex ? index : i;
+          return prisma.conversationParticipant.update({ where: { id: p.id }, data: { pinnedOrder: order } });
+        })
+      );
+    }
+
+    return chatsService.listConversations(userId);
   },
 
   async clearHistory(userId: string, conversationId: string) {
