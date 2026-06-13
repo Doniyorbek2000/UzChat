@@ -4,6 +4,7 @@ import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
 import {
   addParticipantSchema,
+  clearHistorySchema,
   createConversationSchema,
   createInviteLinkSchema,
   joinByInviteSchema,
@@ -44,7 +45,7 @@ chatsRouter.post("/:id/invite-link", validateBody(createInviteLinkSchema), chats
 chatsRouter.delete("/:id/invite-link", chatsController.revokeInviteLink);
 chatsRouter.get("/invite/:code", chatsController.getInvitePreview);
 chatsRouter.post("/invite/:code/join", validateBody(joinByInviteSchema), chatsController.joinByInvite);
-chatsRouter.post("/:id/clear", chatsController.clearHistory);
+chatsRouter.post("/:id/clear", validateBody(clearHistorySchema), chatsController.clearHistory);
 chatsRouter.delete("/:id", chatsController.deleteConversation);
 chatsRouter.delete("/:id/for-everyone", chatsController.deleteConversationForEveryone);
 chatsRouter.post("/:id/leave", chatsController.leave);

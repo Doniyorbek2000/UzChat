@@ -88,8 +88,8 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
-  clearHistory(conversationId: string) {
-    return apiClient.post(`/conversations/${conversationId}/clear`);
+  clearHistory(conversationId: string, olderThanDays?: number) {
+    return apiClient.post(`/conversations/${conversationId}/clear`, { olderThanDays });
   },
 
   deleteConversation(conversationId: string) {

@@ -147,7 +147,7 @@ interface ChatState {
   setNotificationPreview: (conversationId: string, notificationPreview: "DEFAULT" | "SHOW" | "HIDE") => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
-  clearHistory: (conversationId: string) => Promise<void>;
+  clearHistory: (conversationId: string, olderThanDays?: number) => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
   deleteConversationForEveryone: (conversationId: string) => Promise<void>;
   pinMessage: (conversationId: string, messageId: string) => Promise<void>;
@@ -959,15 +959,34 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  clearHistory: async (conversationId) => {
+  clearHistory: async (conversationId, olderThanDays) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
-    await chatsApi.clearHistory(conversationId);
-    set((state) => ({
-      messagesByConversation: { ...state.messagesByConversation, [conversationId]: [] },
-      hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: false },
-      conversations: upsertConversation(state.conversations, { ...conversation, lastMessage: null }),
-    }));
+    await chatsApi.clearHistory(conversationId, olderThanDays);
+
+    if (olderThanDays === undefined) {
+      set((state) => ({
+        messagesByConversation: { ...state.messagesByConversation, [conversationId]: [] },
+        hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: false },
+        conversations: upsertConversation(state.conversations, { ...conversation, lastMessage: null }),
+      }));
+      return;
+    }
+
+    const cutoff = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
+    set((state) => {
+      const remaining = (state.messagesByConversation[conversationId] ?? []).filter(
+        (m) => new Date(m.createdAt).getTime() >= cutoff
+      );
+      const lastMessage =
+        conversation.lastMessage && new Date(conversation.lastMessage.createdAt).getTime() < cutoff
+          ? null
+          : conversation.lastMessage;
+      return {
+        messagesByConversation: { ...state.messagesByConversation, [conversationId]: remaining },
+        conversations: upsertConversation(state.conversations, { ...conversation, lastMessage }),
+      };
+    });
   },
 
   deleteConversation: async (conversationId) => {

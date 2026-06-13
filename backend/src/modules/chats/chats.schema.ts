@@ -149,6 +149,11 @@ export const patSchema = z.object({
   targetUserId: z.string().uuid(),
 });
 
+export const clearHistorySchema = z.object({
+  // When set, only messages older than this many days are cleared instead of everything.
+  olderThanDays: z.number().int().positive().optional(),
+});
+
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
@@ -160,3 +165,4 @@ export type ReorderPinnedInput = z.infer<typeof reorderPinnedSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
 export type CreateInviteLinkInput = z.infer<typeof createInviteLinkSchema>;
 export type UpdateDisappearingMessagesInput = z.infer<typeof updateDisappearingMessagesSchema>;
+export type ClearHistoryInput = z.infer<typeof clearHistorySchema>;

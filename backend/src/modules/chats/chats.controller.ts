@@ -89,7 +89,7 @@ export const chatsController = {
 
   async clearHistory(req: Request, res: Response, next: NextFunction) {
     try {
-      await chatsService.clearHistory(req.user!.sub, req.params.id);
+      await chatsService.clearHistory(req.user!.sub, req.params.id, req.body.olderThanDays);
       res.status(204).send();
     } catch (err) {
       next(err);

@@ -396,12 +396,21 @@ export const chatsService = {
     return chatsService.listConversations(userId);
   },
 
-  async clearHistory(userId: string, conversationId: string) {
+  /**
+   * Hides messages from this user's view of the conversation up to a cutoff time.
+   * With no `olderThanDays`, clears everything sent so far. Otherwise, only
+   * messages older than that many days are hidden (the cutoff never moves
+   * earlier than a previous clear).
+   */
+  async clearHistory(userId: string, conversationId: string, olderThanDays?: number) {
     const participant = await chatsService.assertParticipant(userId, conversationId);
+
+    const cutoff = olderThanDays ? new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000) : new Date();
+    const clearedAt = participant.clearedAt && participant.clearedAt > cutoff ? participant.clearedAt : cutoff;
 
     await prisma.conversationParticipant.update({
       where: { id: participant.id },
-      data: { clearedAt: new Date() },
+      data: { clearedAt },
     });
   },
 

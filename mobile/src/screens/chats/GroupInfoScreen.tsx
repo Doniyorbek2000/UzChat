@@ -455,14 +455,12 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   };
 
   const onClearHistory = () => {
-    Alert.alert(
-      "Suhbatni tozalash",
-      "Barcha xabarlar faqat sizning ko'rinishingizdan o'chiriladi. Davom etilsinmi?",
-      [
-        { text: "Bekor qilish", style: "cancel" },
-        { text: "Tozalash", style: "destructive", onPress: () => clearHistory(conversationId).catch(() => {}) },
-      ]
-    );
+    Alert.alert("Suhbatni tozalash", "Tozalangan xabarlar faqat sizning ko'rinishingizdan o'chiriladi", [
+      { text: "Bekor qilish", style: "cancel" },
+      { text: "30 kundan eski", onPress: () => clearHistory(conversationId, 30).catch(() => {}) },
+      { text: "90 kundan eski", onPress: () => clearHistory(conversationId, 90).catch(() => {}) },
+      { text: "Barchasi", style: "destructive", onPress: () => clearHistory(conversationId).catch(() => {}) },
+    ]);
   };
 
   const onLeave = () => {

@@ -148,9 +148,11 @@ export function ChatListScreen({ navigation }: Props) {
   };
 
   const onClearHistoryPress = (item: Conversation) => {
-    Alert.alert("Suhbatni tozalash", "Barcha xabarlar faqat sizning ko'rinishingizdan o'chiriladi. Davom etilsinmi?", [
+    Alert.alert("Suhbatni tozalash", "Tozalangan xabarlar faqat sizning ko'rinishingizdan o'chiriladi", [
       { text: "Bekor qilish", style: "cancel" },
-      { text: "Tozalash", style: "destructive", onPress: () => clearHistory(item.id).catch(() => {}) },
+      { text: "30 kundan eski", onPress: () => clearHistory(item.id, 30).catch(() => {}) },
+      { text: "90 kundan eski", onPress: () => clearHistory(item.id, 90).catch(() => {}) },
+      { text: "Barchasi", style: "destructive", onPress: () => clearHistory(item.id).catch(() => {}) },
     ]);
   };
 
