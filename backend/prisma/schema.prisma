@@ -79,6 +79,11 @@ model User {
   // Who can see this user's avatarUrl. Hidden users fall back to the
   // initials placeholder on the viewer's side.
   avatarPrivacy LastSeenPrivacy @default(EVERYONE)
+  // Birthday (day-of-month and month only, no year, to avoid revealing age).
+  birthdayDay   Int?
+  birthdayMonth Int?
+  // Who can see this user's birthday.
+  birthdayPrivacy LastSeenPrivacy @default(CONTACTS)
   // Who can add this user to a group directly (without an invite link).
   groupAddPrivacy GroupAddPrivacy @default(EVERYONE)
   // Who can start a new direct conversation with this user. Doesn't affect

@@ -15,12 +15,15 @@ export interface User {
   bio?: string | null;
   publicKey: string;
   lastSeenAt?: string | null;
+  birthdayDay?: number | null;
+  birthdayMonth?: number | null;
 }
 
 export interface AuthUser extends User {
   phone: string;
   lastSeenPrivacy: LastSeenPrivacy;
   avatarPrivacy: LastSeenPrivacy;
+  birthdayPrivacy: LastSeenPrivacy;
   groupAddPrivacy: GroupAddPrivacy;
   messagePrivacy: MessagePrivacy;
   phoneNumberPrivacy: LastSeenPrivacy;

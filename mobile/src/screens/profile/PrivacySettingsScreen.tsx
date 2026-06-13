@@ -21,6 +21,12 @@ const AVATAR_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; descripti
   { value: "NOBODY", label: "Hech kim", description: "Hech kim profil rasmingizni ko'ra olmaydi, o'rniga harf ko'rinadi" },
 ];
 
+const BIRTHDAY_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
+  { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar tug'ilgan kuningizni ko'ra oladi" },
+  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz tug'ilgan kuningizni ko'ra oladi" },
+  { value: "NOBODY", label: "Hech kim", description: "Hech kim tug'ilgan kuningizni ko'ra olmaydi" },
+];
+
 const GROUP_ADD_OPTIONS: { value: GroupAddPrivacy; label: string; description: string }[] = [
   { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi sizni guruhga qo'sha oladi" },
   { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz sizni guruhga qo'sha oladi" },
@@ -64,6 +70,19 @@ export function PrivacySettingsScreen({}: Props) {
     setSaving(`avatarPrivacy:${value}`);
     try {
       await usersApi.updateMe({ avatarPrivacy: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectBirthdayPrivacy = async (value: LastSeenPrivacy) => {
+    if (value === user.birthdayPrivacy || saving) return;
+    setSaving(`birthdayPrivacy:${value}`);
+    try {
+      await usersApi.updateMe({ birthdayPrivacy: value });
       await refreshProfile();
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
@@ -174,6 +193,31 @@ export function PrivacySettingsScreen({}: Props) {
               <Text style={styles.rowDescription}>{option.description}</Text>
             </View>
             {saving === `avatarPrivacy:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Tug'ilgan kunimni kim ko'ra oladi</Text>
+      {BIRTHDAY_PRIVACY_OPTIONS.map((option) => {
+        const selected = user.birthdayPrivacy === option.value;
+        return (
+          <TouchableOpacity
+            key={option.value}
+            style={styles.row}
+            onPress={() => onSelectBirthdayPrivacy(option.value)}
+            disabled={!!saving}
+          >
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+              <Text style={styles.rowDescription}>{option.description}</Text>
+            </View>
+            {saving === `birthdayPrivacy:${option.value}` ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
               <View style={[styles.radio, selected && styles.radioSelected]}>

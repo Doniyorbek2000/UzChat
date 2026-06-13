@@ -13,6 +13,9 @@ export const usersApi = {
     avatarUrl?: string;
     lastSeenPrivacy?: LastSeenPrivacy;
     avatarPrivacy?: LastSeenPrivacy;
+    birthdayDay?: number | null;
+    birthdayMonth?: number | null;
+    birthdayPrivacy?: LastSeenPrivacy;
     groupAddPrivacy?: GroupAddPrivacy;
     messagePrivacy?: MessagePrivacy;
     phoneNumberPrivacy?: LastSeenPrivacy;

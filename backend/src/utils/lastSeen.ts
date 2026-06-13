@@ -77,3 +77,36 @@ export async function filterAvatarSingle<
   const { avatarPrivacy, ...rest } = user;
   return { ...rest, avatarUrl: contact?.status === ContactStatus.ACCEPTED ? user.avatarUrl : null };
 }
+
+/** Strips `birthdayDay`/`birthdayMonth` from `user` if `viewerId` is not allowed to see them per `user.birthdayPrivacy`. */
+export function filterBirthday<
+  T extends { id: string; birthdayDay: number | null; birthdayMonth: number | null; birthdayPrivacy: LastSeenPrivacy },
+>(viewerId: string, user: T, contactIds: Set<string>): Omit<T, "birthdayPrivacy"> {
+  const { birthdayPrivacy, ...rest } = user;
+  let visible = true;
+  if (user.id !== viewerId) {
+    if (birthdayPrivacy === LastSeenPrivacy.NOBODY) visible = false;
+    else if (birthdayPrivacy === LastSeenPrivacy.CONTACTS) visible = contactIds.has(user.id);
+  }
+  return { ...rest, birthdayDay: visible ? user.birthdayDay : null, birthdayMonth: visible ? user.birthdayMonth : null };
+}
+
+/** Convenience for filtering a single user's birthday without pre-fetching the contact set. */
+export async function filterBirthdaySingle<
+  T extends { id: string; birthdayDay: number | null; birthdayMonth: number | null; birthdayPrivacy: LastSeenPrivacy },
+>(viewerId: string, user: T): Promise<Omit<T, "birthdayPrivacy">> {
+  if (user.id === viewerId || user.birthdayPrivacy === LastSeenPrivacy.EVERYONE) {
+    const { birthdayPrivacy, ...rest } = user;
+    return rest;
+  }
+  if (user.birthdayPrivacy === LastSeenPrivacy.NOBODY) {
+    const { birthdayPrivacy, ...rest } = user;
+    return { ...rest, birthdayDay: null, birthdayMonth: null };
+  }
+  const contact = await prisma.contact.findUnique({
+    where: { ownerId_targetId: { ownerId: viewerId, targetId: user.id } },
+  });
+  const { birthdayPrivacy, ...rest } = user;
+  const visible = contact?.status === ContactStatus.ACCEPTED;
+  return { ...rest, birthdayDay: visible ? user.birthdayDay : null, birthdayMonth: visible ? user.birthdayMonth : null };
+}

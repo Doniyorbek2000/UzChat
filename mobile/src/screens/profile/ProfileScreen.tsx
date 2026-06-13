@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Share } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Share, Modal, FlatList, Pressable } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
+import { formatBirthday, MAX_DAYS_IN_MONTH, UZ_MONTHS } from "../../utils/birthday";
 import { MainTabScreenProps } from "../../navigation/types";
+
+const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 
 type Props = MainTabScreenProps<"Profile">;
 
@@ -20,6 +23,10 @@ export function ProfileScreen({ navigation }: Props) {
   const [bio, setBio] = useState(user?.bio ?? "");
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [birthdayModalVisible, setBirthdayModalVisible] = useState(false);
+  const [savingBirthday, setSavingBirthday] = useState(false);
+  const [pickedDay, setPickedDay] = useState(1);
+  const [pickedMonth, setPickedMonth] = useState(1);
 
   if (!user) return null;
 
@@ -70,6 +77,38 @@ export function ProfileScreen({ navigation }: Props) {
 
   const onShare = () => {
     Share.share({ message: `UzChat'da menga qo'shilish uchun: @${user.username}` }).catch(() => {});
+  };
+
+  const onOpenBirthdayPicker = () => {
+    setPickedDay(user.birthdayDay ?? 1);
+    setPickedMonth(user.birthdayMonth ?? 1);
+    setBirthdayModalVisible(true);
+  };
+
+  const onSaveBirthday = async () => {
+    setSavingBirthday(true);
+    try {
+      await usersApi.updateMe({ birthdayDay: pickedDay, birthdayMonth: pickedMonth });
+      await refreshProfile();
+      setBirthdayModalVisible(false);
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
+    } finally {
+      setSavingBirthday(false);
+    }
+  };
+
+  const onClearBirthday = async () => {
+    setSavingBirthday(true);
+    try {
+      await usersApi.updateMe({ birthdayDay: null, birthdayMonth: null });
+      await refreshProfile();
+      setBirthdayModalVisible(false);
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "O'chirib bo'lmadi");
+    } finally {
+      setSavingBirthday(false);
+    }
   };
 
   const onLogout = () => {
@@ -157,6 +196,14 @@ export function ProfileScreen({ navigation }: Props) {
         </Text>
       </View>
 
+      <TouchableOpacity style={styles.menuRow} onPress={onOpenBirthdayPicker}>
+        <Text style={styles.menuRowText}>🎂 Tug'ilgan kun</Text>
+        <View style={styles.menuRowRight}>
+          <Text style={styles.menuRowValue}>{formatBirthday(user.birthdayDay, user.birthdayMonth) ?? "Belgilanmagan"}</Text>
+          <Text style={styles.menuRowArrow}>›</Text>
+        </View>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={onShare}>
         <Text style={styles.menuRowText}>📤 Profilni ulashish</Text>
         <Text style={styles.menuRowArrow}>›</Text>
@@ -229,6 +276,71 @@ export function ProfileScreen({ navigation }: Props) {
       <TouchableOpacity style={styles.deleteAccountButton} onPress={onDeleteAccount}>
         <Text style={styles.deleteAccountText}>Hisobni o'chirish</Text>
       </TouchableOpacity>
+
+      <Modal visible={birthdayModalVisible} transparent animationType="fade" onRequestClose={() => setBirthdayModalVisible(false)}>
+        <Pressable style={styles.birthdayBackdrop} onPress={() => setBirthdayModalVisible(false)}>
+          <Pressable style={styles.birthdaySheet}>
+            <Text style={styles.birthdayTitle}>Tug'ilgan kun</Text>
+            <View style={styles.birthdayPickerRow}>
+              <FlatList
+                data={DAYS.slice(0, MAX_DAYS_IN_MONTH[pickedMonth - 1])}
+                keyExtractor={(d) => String(d)}
+                style={styles.birthdayPickerColumn}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.birthdayPickerItem, pickedDay === item && styles.birthdayPickerItemSelected]}
+                    onPress={() => setPickedDay(item)}
+                  >
+                    <Text style={[styles.birthdayPickerItemText, pickedDay === item && styles.birthdayPickerItemTextSelected]}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+              <FlatList
+                data={UZ_MONTHS}
+                keyExtractor={(_, i) => String(i)}
+                style={styles.birthdayPickerColumn}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item, index }) => {
+                  const month = index + 1;
+                  const selected = pickedMonth === month;
+                  return (
+                    <TouchableOpacity
+                      style={[styles.birthdayPickerItem, selected && styles.birthdayPickerItemSelected]}
+                      onPress={() => {
+                        setPickedMonth(month);
+                        const max = MAX_DAYS_IN_MONTH[month - 1];
+                        if (pickedDay > max) setPickedDay(max);
+                      }}
+                    >
+                      <Text style={[styles.birthdayPickerItemText, selected && styles.birthdayPickerItemTextSelected]}>{item}</Text>
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            </View>
+            <View style={styles.birthdayButtonRow}>
+              {(user.birthdayDay != null || user.birthdayMonth != null) && (
+                <TouchableOpacity style={styles.birthdayButton} onPress={onClearBirthday} disabled={savingBirthday}>
+                  <Text style={styles.birthdayButtonDanger}>O'chirish</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.birthdayButton} onPress={() => setBirthdayModalVisible(false)} disabled={savingBirthday}>
+                <Text style={styles.birthdayButtonText}>Bekor qilish</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.birthdayButton} onPress={onSaveBirthday} disabled={savingBirthday}>
+                {savingBirthday ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={[styles.birthdayButtonText, styles.birthdayButtonPrimary]}>Saqlash</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -285,8 +397,30 @@ const styles = StyleSheet.create({
   },
   menuRowText: { fontSize: 15, color: colors.text },
   menuRowArrow: { fontSize: 18, color: colors.textSecondary },
+  menuRowRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+  menuRowValue: { fontSize: 14, color: colors.textSecondary },
   logoutButton: { marginTop: 32, alignItems: "center", paddingVertical: 14 },
   logoutText: { color: colors.danger, fontSize: 16, fontWeight: "600" },
   deleteAccountButton: { alignItems: "center", paddingVertical: 14, marginBottom: 16 },
   deleteAccountText: { color: colors.textSecondary, fontSize: 13 },
+  birthdayBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
+  birthdaySheet: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    width: "80%",
+    maxWidth: 320,
+  },
+  birthdayTitle: { fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 12, textAlign: "center" },
+  birthdayPickerRow: { flexDirection: "row", height: 220, gap: 8 },
+  birthdayPickerColumn: { flex: 1 },
+  birthdayPickerItem: { paddingVertical: 10, alignItems: "center", borderRadius: 8 },
+  birthdayPickerItemSelected: { backgroundColor: colors.primary },
+  birthdayPickerItemText: { fontSize: 15, color: colors.text },
+  birthdayPickerItemTextSelected: { color: "#fff", fontWeight: "700" },
+  birthdayButtonRow: { flexDirection: "row", justifyContent: "space-around", marginTop: 16 },
+  birthdayButton: { paddingVertical: 10, paddingHorizontal: 8, minWidth: 60, alignItems: "center" },
+  birthdayButtonText: { fontSize: 15, color: colors.text },
+  birthdayButtonPrimary: { color: colors.primary, fontWeight: "700" },
+  birthdayButtonDanger: { fontSize: 15, color: colors.danger },
 });

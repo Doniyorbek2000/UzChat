@@ -2,7 +2,15 @@ import { ConversationType } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { hashPassword, verifyPassword } from "../../utils/password";
-import { filterLastSeenSingle, getContactIds, filterLastSeen, filterAvatarSingle, filterAvatar } from "../../utils/lastSeen";
+import {
+  filterLastSeenSingle,
+  getContactIds,
+  filterLastSeen,
+  filterAvatarSingle,
+  filterAvatar,
+  filterBirthdaySingle,
+  filterBirthday,
+} from "../../utils/lastSeen";
 import { chatsService } from "../chats/chats.service";
 import {
   ChangePasswordInput,
@@ -23,6 +31,9 @@ const profileSelect = {
   lastSeenAt: true,
   lastSeenPrivacy: true,
   avatarPrivacy: true,
+  birthdayDay: true,
+  birthdayMonth: true,
+  birthdayPrivacy: true,
   groupAddPrivacy: true,
   messagePrivacy: true,
   phoneNumberPrivacy: true,
@@ -52,6 +63,9 @@ const publicSelect = {
   lastSeenAt: true,
   lastSeenPrivacy: true,
   avatarPrivacy: true,
+  birthdayDay: true,
+  birthdayMonth: true,
+  birthdayPrivacy: true,
 } as const;
 
 export const usersService = {
@@ -73,7 +87,7 @@ export const usersService = {
   async getPublicProfile(userId: string, targetId: string) {
     const user = await prisma.user.findUnique({ where: { id: targetId }, select: publicSelect });
     if (!user) throw Errors.notFound("Foydalanuvchi");
-    return filterAvatarSingle(userId, await filterLastSeenSingle(userId, user));
+    return filterBirthdaySingle(userId, await filterAvatarSingle(userId, await filterLastSeenSingle(userId, user)));
   },
 
   async searchUsers(currentUserId: string, query: string) {
@@ -98,7 +112,9 @@ export const usersService = {
         if (u.phoneNumberPrivacy === "CONTACTS") return contactIds.has(u.id);
         return true;
       })
-      .map(({ phone, phoneNumberPrivacy, ...u }) => filterAvatar(currentUserId, filterLastSeen(currentUserId, u, contactIds), contactIds));
+      .map(({ phone, phoneNumberPrivacy, ...u }) =>
+        filterBirthday(currentUserId, filterAvatar(currentUserId, filterLastSeen(currentUserId, u, contactIds), contactIds), contactIds)
+      );
   },
 
   async changePassword(userId: string, { currentPassword, newPassword }: ChangePasswordInput) {

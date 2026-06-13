@@ -9,6 +9,7 @@ import { Linkify } from "../../components/Linkify";
 import { colors } from "../../theme/colors";
 import { User } from "../../types";
 import { formatTime } from "../../utils/conversation";
+import { formatBirthday, isBirthdayToday } from "../../utils/birthday";
 
 type Props = NativeStackScreenProps<RootStackParamList, "UserProfile">;
 
@@ -90,6 +91,16 @@ export function UserProfileScreen({ route, navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Bio</Text>
           <Linkify text={profile.bio} style={styles.bio} />
+        </View>
+      )}
+
+      {!!formatBirthday(profile.birthdayDay, profile.birthdayMonth) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Tug'ilgan kun</Text>
+          <Text style={styles.bio}>
+            🎂 {formatBirthday(profile.birthdayDay, profile.birthdayMonth)}
+            {isBirthdayToday(profile.birthdayDay, profile.birthdayMonth) && "  🎉 Bugun tug'ilgan kuni!"}
+          </Text>
         </View>
       )}
 
