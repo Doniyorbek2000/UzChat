@@ -35,10 +35,13 @@ export function ArchivedChatsScreen({ navigation }: Props) {
   const muteConversation = useChatStore((s) => s.muteConversation);
   const toggleArchive = useChatStore((s) => s.toggleArchive);
   const toggleUnread = useChatStore((s) => s.toggleUnread);
+  const deleteConversation = useChatStore((s) => s.deleteConversation);
   const drafts = useChatStore((s) => s.drafts);
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const user = useAuthStore((s) => s.user);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setupSocketListeners();
@@ -59,6 +62,113 @@ export function ArchivedChatsScreen({ navigation }: Props) {
   };
 
   const archivedConversations = conversations.filter((c) => c.isArchived);
+
+  useEffect(() => {
+    if (!selectionMode) {
+      navigation.setOptions({ title: "Arxivlangan suhbatlar", headerLeft: undefined, headerRight: undefined });
+      return;
+    }
+    navigation.setOptions({
+      title: `${selectedIds.size} ta tanlandi`,
+      headerLeft: () => (
+        <TouchableOpacity onPress={exitSelectionMode} hitSlop={8}>
+          <Text style={styles.headerActionIcon}>✕</Text>
+        </TouchableOpacity>
+      ),
+      headerRight: () => (
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={onToggleSelectAll} hitSlop={8}>
+            <Text style={styles.headerActionIcon}>☑️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onBulkPin} hitSlop={8}>
+            <Text style={styles.headerActionIcon}>📌</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onBulkMarkRead} hitSlop={8}>
+            <Text style={styles.headerActionIcon}>✅</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onBulkUnarchive} hitSlop={8}>
+            <Text style={styles.headerActionIcon}>📤</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onBulkDelete} hitSlop={8}>
+            <Text style={styles.headerActionIcon}>🗑</Text>
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  }, [navigation, selectionMode, selectedIds, conversations]);
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const enterSelectionMode = (conversationId: string) => {
+    setSelectionMode(true);
+    setSelectedIds(new Set([conversationId]));
+  };
+
+  const toggleSelected = (conversationId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(conversationId)) next.delete(conversationId);
+      else next.add(conversationId);
+      if (next.size === 0) setSelectionMode(false);
+      return next;
+    });
+  };
+
+  const onToggleSelectAll = () => {
+    const ids = archivedConversations.map((c) => c.id);
+    if (selectedIds.size >= ids.length) {
+      exitSelectionMode();
+    } else {
+      setSelectedIds(new Set(ids));
+    }
+  };
+
+  const onBulkPin = async () => {
+    const items = conversations.filter((c) => selectedIds.has(c.id));
+    if (items.length === 0) return;
+    const allPinned = items.every((c) => c.isPinned);
+    for (const item of items) {
+      if (item.isPinned === allPinned) {
+        await togglePin(item.id).catch(() => {});
+      }
+    }
+    exitSelectionMode();
+  };
+
+  const onBulkMarkRead = async () => {
+    const ids = [...selectedIds];
+    await Promise.all(
+      ids.map((id) => {
+        const c = conversations.find((conv) => conv.id === id);
+        return c && isConversationUnread(c, user!.id) ? toggleUnread(id).catch(() => {}) : Promise.resolve();
+      })
+    );
+    exitSelectionMode();
+  };
+
+  const onBulkUnarchive = async () => {
+    const ids = [...selectedIds];
+    await Promise.all(ids.map((id) => toggleArchive(id).catch(() => {})));
+    exitSelectionMode();
+  };
+
+  const onBulkDelete = () => {
+    const ids = [...selectedIds];
+    Alert.alert("Suhbatlarni o'chirish", `${ids.length} ta suhbat ro'yxatdan o'chiriladi`, [
+      { text: "Bekor qilish", style: "cancel" },
+      {
+        text: "O'chirish",
+        style: "destructive",
+        onPress: async () => {
+          await Promise.all(ids.map((id) => deleteConversation(id).catch(() => {})));
+          exitSelectionMode();
+        },
+      },
+    ]);
+  };
 
   const renderPreview = (conversation: Conversation): string => {
     const lastMessage = conversation.lastMessage;
@@ -91,6 +201,10 @@ export function ArchivedChatsScreen({ navigation }: Props) {
   const onLongPressConversation = (item: Conversation) => {
     Alert.alert(item.title ?? "Suhbat", undefined, [
       {
+        text: "☑️ Tanlash",
+        onPress: () => enterSelectionMode(item.id),
+      },
+      {
         text: "📤 Arxivdan chiqarish",
         onPress: () => toggleArchive(item.id).catch(() => {}),
       },
@@ -119,9 +233,23 @@ export function ArchivedChatsScreen({ navigation }: Props) {
     return (
       <TouchableOpacity
         style={styles.row}
-        onPress={() => navigation.navigate("ChatRoom", { conversationId: item.id, title: display.title })}
-        onLongPress={() => onLongPressConversation(item)}
+        onPress={() => {
+          if (selectionMode) {
+            toggleSelected(item.id);
+            return;
+          }
+          navigation.navigate("ChatRoom", { conversationId: item.id, title: display.title });
+        }}
+        onLongPress={() => {
+          if (selectionMode) return;
+          onLongPressConversation(item);
+        }}
       >
+        {selectionMode && (
+          <View style={[styles.selectCheckbox, selectedIds.has(item.id) && styles.selectCheckboxSelected]}>
+            {selectedIds.has(item.id) && <Text style={styles.selectCheckmark}>✓</Text>}
+          </View>
+        )}
         <Avatar
           uri={display.avatarUrl}
           name={display.title}
@@ -178,6 +306,20 @@ export function ArchivedChatsScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
+  selectCheckbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  selectCheckboxSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  selectCheckmark: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 16 },
+  headerActionIcon: { fontSize: 20 },
   content: { flex: 1 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   titleRow: { flexDirection: "row", alignItems: "center", flex: 1, gap: 4 },
