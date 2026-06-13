@@ -58,4 +58,14 @@ export const authApi = {
   verifyPhoneChange(newPhone: string, code: string) {
     return apiClient.post<{ phone: string }>("/auth/change-phone/verify-otp", { newPhone, code }).then((r) => r.data);
   },
+
+  requestTwoFactorRecovery(pendingToken: string) {
+    return apiClient.post("/auth/login/2fa/recover/request-otp", { pendingToken });
+  },
+
+  recoverTwoFactor(pendingToken: string, code: string) {
+    return apiClient
+      .post<{ user: AuthUser } & AuthTokens>("/auth/login/2fa/recover/verify-otp", { pendingToken, code })
+      .then((r) => r.data);
+  },
 };

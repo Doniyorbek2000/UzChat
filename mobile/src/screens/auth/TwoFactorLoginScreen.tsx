@@ -10,7 +10,11 @@ type Props = NativeStackScreenProps<AuthStackParamList, "TwoFactorLogin">;
 export function TwoFactorLoginScreen({ route }: Props) {
   const { pendingToken, hint } = route.params;
   const completeTwoFactorLogin = useAuthStore((s) => s.completeTwoFactorLogin);
+  const requestTwoFactorRecovery = useAuthStore((s) => s.requestTwoFactorRecovery);
+  const recoverTwoFactorLogin = useAuthStore((s) => s.recoverTwoFactorLogin);
+  const [mode, setMode] = useState<"password" | "recover">("password");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
@@ -24,6 +28,59 @@ export function TwoFactorLoginScreen({ route }: Props) {
       setLoading(false);
     }
   };
+
+  const onRequestRecovery = async () => {
+    setLoading(true);
+    try {
+      await requestTwoFactorRecovery(pendingToken);
+      setMode("recover");
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod yuborib bo'lmadi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onVerifyRecovery = async () => {
+    if (code.length !== 6) {
+      Alert.alert("Xatolik", "6 xonali kodni kiriting");
+      return;
+    }
+    setLoading(true);
+    try {
+      await recoverTwoFactorLogin(pendingToken, code);
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod noto'g'ri");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (mode === "recover") {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Parolni tiklash</Text>
+        <Text style={styles.subtitle}>Telefon raqamingizga yuborilgan 6 xonali kodni kiriting</Text>
+
+        <TextInput
+          style={[styles.input, styles.codeInput]}
+          placeholder="000000"
+          keyboardType="number-pad"
+          maxLength={6}
+          value={code}
+          onChangeText={setCode}
+          autoFocus
+        />
+
+        <TouchableOpacity style={styles.button} onPress={onVerifyRecovery} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.linkButton} onPress={() => setMode("password")} disabled={loading}>
+          <Text style={styles.linkButtonText}>Orqaga</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -42,6 +99,9 @@ export function TwoFactorLoginScreen({ route }: Props) {
 
       <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.linkButton} onPress={onRequestRecovery} disabled={loading}>
+        <Text style={styles.linkButtonText}>Qo'shimcha parolni unutdingizmi?</Text>
       </TouchableOpacity>
     </View>
   );
@@ -62,6 +122,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  codeInput: { fontSize: 24, textAlign: "center", letterSpacing: 8 },
   button: {
     backgroundColor: colors.primary,
     borderRadius: 8,
@@ -70,4 +131,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  linkButton: { alignItems: "center", paddingVertical: 14 },
+  linkButtonText: { color: colors.primary, fontSize: 14 },
 });

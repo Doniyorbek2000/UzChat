@@ -110,4 +110,22 @@ export const authController = {
       next(err);
     }
   },
+
+  async requestTwoFactorRecovery(req: Request, res: Response, next: NextFunction) {
+    try {
+      await authService.requestTwoFactorRecovery(req.body.pendingToken);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async recoverTwoFactor(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await authService.recoverTwoFactor(req.body, req.headers["user-agent"]);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

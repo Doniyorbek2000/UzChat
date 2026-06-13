@@ -6,8 +6,10 @@ import {
   refreshSchema,
   requestOtpSchema,
   requestPhoneChangeSchema,
+  requestTwoFactorRecoverySchema,
   verifyOtpSchema,
   verifyPhoneChangeSchema,
+  verifyTwoFactorRecoverySchema,
   verifyTwoFactorSchema,
 } from "./auth.schema";
 import { authRateLimiter, apiRateLimiter } from "../../middleware/rateLimit.middleware";
@@ -35,6 +37,18 @@ authRouter.post(
   authRateLimiter,
   validateBody(verifyTwoFactorSchema),
   authController.verifyTwoFactor
+);
+authRouter.post(
+  "/login/2fa/recover/request-otp",
+  authRateLimiter,
+  validateBody(requestTwoFactorRecoverySchema),
+  authController.requestTwoFactorRecovery
+);
+authRouter.post(
+  "/login/2fa/recover/verify-otp",
+  authRateLimiter,
+  validateBody(verifyTwoFactorRecoverySchema),
+  authController.recoverTwoFactor
 );
 authRouter.post("/refresh", validateBody(refreshSchema), authController.refresh);
 authRouter.post("/logout", validateBody(refreshSchema), authController.logout);
