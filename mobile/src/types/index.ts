@@ -345,6 +345,11 @@ export interface ChatFolder {
   name: string;
   order: number;
   conversationIds: string[];
+  // Smart filters: auto-include conversations matching these criteria, in addition to conversationIds.
+  includeUnread: boolean;
+  includeGroups: boolean;
+  includeDirect: boolean;
+  excludeMuted: boolean;
 }
 
 /** A saved list of recipients; sending a message to it delivers individual

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Switch } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore } from "../../store/chatStore";
@@ -17,9 +17,14 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
   const folders = useChatStore((s) => s.folders);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const setFolderConversations = useChatStore((s) => s.setFolderConversations);
+  const setFolderFilters = useChatStore((s) => s.setFolderFilters);
   const user = useAuthStore((s) => s.user);
   const folder = folders.find((f) => f.id === folderId);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(folder?.conversationIds ?? []));
+  const [includeUnread, setIncludeUnread] = useState(folder?.includeUnread ?? false);
+  const [includeGroups, setIncludeGroups] = useState(folder?.includeGroups ?? false);
+  const [includeDirect, setIncludeDirect] = useState(folder?.includeDirect ?? false);
+  const [excludeMuted, setExcludeMuted] = useState(folder?.excludeMuted ?? false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -39,6 +44,7 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
     setSaving(true);
     try {
       await setFolderConversations(folderId, [...selectedIds]);
+      await setFolderFilters(folderId, { includeUnread, includeGroups, includeDirect, excludeMuted });
       navigation.goBack();
     } catch (err: any) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
@@ -59,7 +65,7 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
         ),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation, saving, selectedIds]);
+  }, [navigation, saving, selectedIds, includeUnread, includeGroups, includeDirect, excludeMuted]);
 
   const renderItem = ({ item }: { item: Conversation }) => {
     const display = getConversationDisplay(item, user!.id, contactAliases);
@@ -84,6 +90,28 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListHeaderComponent={
+          <View style={styles.filtersSection}>
+            <Text style={styles.filtersTitle}>Avtomatik qo'shish</Text>
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>O'qilmagan suhbatlar</Text>
+              <Switch value={includeUnread} onValueChange={setIncludeUnread} trackColor={{ true: colors.primary }} />
+            </View>
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Guruhlar</Text>
+              <Switch value={includeGroups} onValueChange={setIncludeGroups} trackColor={{ true: colors.primary }} />
+            </View>
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Shaxsiy suhbatlar</Text>
+              <Switch value={includeDirect} onValueChange={setIncludeDirect} trackColor={{ true: colors.primary }} />
+            </View>
+            <View style={styles.filterRow}>
+              <Text style={styles.filterLabel}>Ovozsizlarni chiqarib tashlash</Text>
+              <Switch value={excludeMuted} onValueChange={setExcludeMuted} trackColor={{ true: colors.primary }} />
+            </View>
+            <Text style={[styles.filtersTitle, styles.chatsTitle]}>Suhbatlar</Text>
+          </View>
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>Suhbatlar yo'q</Text>
@@ -98,6 +126,20 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   title: { fontSize: 16, color: colors.text, flex: 1 },
+  filtersSection: { paddingHorizontal: 12, paddingTop: 12 },
+  filtersTitle: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
+  chatsTitle: { marginTop: 16, marginBottom: 0 },
+  filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
+  },
+  filterLabel: { fontSize: 15, color: colors.text },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
   empty: { padding: 48, alignItems: "center" },
   emptyText: { color: colors.textSecondary },

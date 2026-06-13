@@ -9,9 +9,14 @@ export const updateFolderSchema = z
     name: z.string().trim().min(1).max(32).optional(),
     order: z.number().int().min(0).optional(),
     conversationIds: z.array(z.string().uuid()).max(200).optional(),
+    // Smart filters: auto-include conversations matching these criteria, in addition to conversationIds.
+    includeUnread: z.boolean().optional(),
+    includeGroups: z.boolean().optional(),
+    includeDirect: z.boolean().optional(),
+    excludeMuted: z.boolean().optional(),
   })
   .refine(
-    (data) => data.name !== undefined || data.order !== undefined || data.conversationIds !== undefined,
+    (data) => Object.values(data).some((v) => v !== undefined),
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

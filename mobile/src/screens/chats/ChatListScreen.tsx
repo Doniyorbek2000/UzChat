@@ -7,7 +7,7 @@ import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
-import { Conversation, ConversationParticipant } from "../../types";
+import { ChatFolder, Conversation, ConversationParticipant } from "../../types";
 import { getConversationDisplay, formatTime, isConversationUnread } from "../../utils/conversation";
 import { decryptMessage } from "../../crypto/e2ee";
 import { stripFormatting } from "../../utils/textFormat";
@@ -532,10 +532,20 @@ export function ChatListScreen({ navigation }: Props) {
   const countUnread = (convs: Conversation[]) => convs.filter((c) => isConversationUnread(c, user!.id)).length;
   const allUnreadCount = countUnread(visibleConversations);
 
+  const getFolderConversations = (folder: ChatFolder, convs: Conversation[]) =>
+    convs.filter((c) => {
+      const manuallyIncluded = folder.conversationIds.includes(c.id);
+      const matchesSmartFilter =
+        (folder.includeUnread && isConversationUnread(c, user!.id)) ||
+        (folder.includeGroups && c.type === "GROUP") ||
+        (folder.includeDirect && c.type === "DIRECT");
+      if (!manuallyIncluded && !matchesSmartFilter) return false;
+      if (folder.excludeMuted && c.isMuted) return false;
+      return true;
+    });
+
   const activeFolder = activeFolderId ? folders.find((f) => f.id === activeFolderId) : undefined;
-  const folderConversations = activeFolder
-    ? visibleConversations.filter((c) => activeFolder.conversationIds.includes(c.id))
-    : visibleConversations;
+  const folderConversations = activeFolder ? getFolderConversations(activeFolder, visibleConversations) : visibleConversations;
 
   const query = searchQuery.trim().toLowerCase();
   const filteredConversations = query
@@ -571,7 +581,7 @@ export function ChatListScreen({ navigation }: Props) {
           )}
         </TouchableOpacity>
         {folders.map((folder) => {
-          const folderUnreadCount = countUnread(visibleConversations.filter((c) => folder.conversationIds.includes(c.id)));
+          const folderUnreadCount = countUnread(getFolderConversations(folder, visibleConversations));
           return (
             <TouchableOpacity
               key={folder.id}

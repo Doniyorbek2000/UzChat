@@ -44,6 +44,10 @@ export const foldersService = {
         ...(input.name !== undefined ? { name: input.name } : {}),
         ...(input.order !== undefined ? { order: input.order } : {}),
         ...(conversationIds !== undefined ? { conversationIds } : {}),
+        ...(input.includeUnread !== undefined ? { includeUnread: input.includeUnread } : {}),
+        ...(input.includeGroups !== undefined ? { includeGroups: input.includeGroups } : {}),
+        ...(input.includeDirect !== undefined ? { includeDirect: input.includeDirect } : {}),
+        ...(input.excludeMuted !== undefined ? { excludeMuted: input.excludeMuted } : {}),
       },
     });
   },

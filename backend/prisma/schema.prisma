@@ -677,6 +677,14 @@ model ChatFolder {
   conversationIds String[] @default([])
   createdAt       DateTime @default(now())
 
+  // Smart filters (Telegram-style): in addition to conversationIds, automatically
+  // include conversations matching any of these criteria.
+  includeUnread Boolean @default(false)
+  includeGroups Boolean @default(false)
+  includeDirect Boolean @default(false)
+  // Excludes muted conversations from this folder, including manually added ones.
+  excludeMuted  Boolean @default(false)
+
   @@index([userId])
 }
 

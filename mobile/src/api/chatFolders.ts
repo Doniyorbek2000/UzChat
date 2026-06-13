@@ -10,7 +10,18 @@ export const chatFoldersApi = {
     return apiClient.post<ChatFolder>("/chat-folders", { name }).then((r) => r.data);
   },
 
-  update(id: string, input: { name?: string; order?: number; conversationIds?: string[] }) {
+  update(
+    id: string,
+    input: {
+      name?: string;
+      order?: number;
+      conversationIds?: string[];
+      includeUnread?: boolean;
+      includeGroups?: boolean;
+      includeDirect?: boolean;
+      excludeMuted?: boolean;
+    }
+  ) {
     return apiClient.patch<ChatFolder>(`/chat-folders/${id}`, input).then((r) => r.data);
   },
 
