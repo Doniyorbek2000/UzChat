@@ -312,6 +312,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AccountDataExport")}>
+        <Text style={styles.menuRowText}>📥 Mening ma'lumotlarim</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("TwoFactorSettings")}>
         <Text style={styles.menuRowText}>🛡️ Ikki bosqichli tekshiruv</Text>
         <Text style={styles.menuRowArrow}>›</Text>
