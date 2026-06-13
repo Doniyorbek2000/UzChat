@@ -182,6 +182,7 @@ interface ChatState {
     }
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;
+  banParticipant: (conversationId: string, userId: string) => Promise<void>;
   updateParticipantRole: (conversationId: string, userId: string, role: ParticipantRole) => Promise<void>;
   restrictParticipant: (conversationId: string, userId: string, restrictFor: RestrictDuration) => Promise<void>;
   updateParticipantCustomTitle: (conversationId: string, userId: string, customTitle: string | null) => Promise<void>;
@@ -1138,6 +1139,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   removeParticipant: async (conversationId, userId) => {
     const updated = await chatsApi.removeParticipant(conversationId, userId);
+    set((state) => {
+      const existing = state.conversations.find((c) => c.id === conversationId);
+      const merged = existing
+        ? {
+            ...updated,
+            wrappedKey: existing.wrappedKey,
+            wrappedKeyNonce: existing.wrappedKeyNonce,
+            keySenderPublicKey: existing.keySenderPublicKey,
+          }
+        : updated;
+      return { conversations: upsertConversation(state.conversations, merged) };
+    });
+  },
+
+  banParticipant: async (conversationId, userId) => {
+    const updated = await chatsApi.banParticipant(conversationId, userId);
     set((state) => {
       const existing = state.conversations.find((c) => c.id === conversationId);
       const merged = existing

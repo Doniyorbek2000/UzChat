@@ -49,6 +49,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const contactAliases = useChatStore((s) => s.contactAliases);
   const updateGroupInfo = useChatStore((s) => s.updateGroupInfo);
   const removeParticipant = useChatStore((s) => s.removeParticipant);
+  const banParticipant = useChatStore((s) => s.banParticipant);
   const updateParticipantRole = useChatStore((s) => s.updateParticipantRole);
   const restrictParticipant = useChatStore((s) => s.restrictParticipant);
   const updateParticipantCustomTitle = useChatStore((s) => s.updateParticipantCustomTitle);
@@ -449,6 +450,28 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             Alert.alert("Xatolik", "A'zoni chiqarib bo'lmadi");
           }),
       });
+      options.push({
+        text: "Chiqarish va bloklash",
+        style: "destructive",
+        onPress: () => {
+          const participantName = contactAliases[participant.userId] ?? participant.user.displayName;
+          Alert.alert(
+            "Chiqarish va bloklash",
+            `${participantName} guruhdan chiqariladi va qaytadan qo'shila olmaydi. Davom etilsinmi?`,
+            [
+              { text: "Bekor qilish", style: "cancel" },
+              {
+                text: "Bloklash",
+                style: "destructive",
+                onPress: () =>
+                  banParticipant(conversationId, participant.userId).catch(() => {
+                    Alert.alert("Xatolik", "A'zoni bloklab bo'lmadi");
+                  }),
+              },
+            ]
+          );
+        },
+      });
     }
 
     options.push({ text: "Bekor qilish", style: "cancel" });
@@ -675,6 +698,13 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           >
             <Text style={styles.inviteIcon}>📋</Text>
             <Text style={styles.inviteText}>So'nggi harakatlar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.inviteRow}
+            onPress={() => navigation.navigate("BannedUsers", { conversationId })}
+          >
+            <Text style={styles.inviteIcon}>🚫</Text>
+            <Text style={styles.inviteText}>Bloklangan foydalanuvchilar</Text>
           </TouchableOpacity>
         </View>
       )}

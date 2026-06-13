@@ -35,6 +35,7 @@ export type RootStackParamList = {
   JoinGroup: undefined;
   JoinRequests: { conversationId: string };
   GroupAuditLog: { conversationId: string };
+  BannedUsers: { conversationId: string };
   CommonGroups: { userId: string };
   UserProfile: { userId: string };
   EncryptionKey: { userId: string; displayName: string };

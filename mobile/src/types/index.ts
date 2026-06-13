@@ -201,7 +201,21 @@ export interface GroupJoinRequest {
   createdAt: string;
 }
 
-export type GroupAuditAction = "MEMBER_REMOVED" | "ROLE_CHANGED" | "MEMBER_RESTRICTED" | "MEMBER_UNRESTRICTED" | "MESSAGE_DELETED";
+// A user removed-and-banned from a GROUP by an owner/admin; can't rejoin or
+// be re-added until unbanned.
+export interface BannedGroupMember {
+  user: User;
+  createdAt: string;
+}
+
+export type GroupAuditAction =
+  | "MEMBER_REMOVED"
+  | "ROLE_CHANGED"
+  | "MEMBER_RESTRICTED"
+  | "MEMBER_UNRESTRICTED"
+  | "MESSAGE_DELETED"
+  | "MEMBER_BANNED"
+  | "MEMBER_UNBANNED";
 
 // An entry in a GROUP's "Recent actions" moderation log.
 export interface GroupAuditLogEntry {

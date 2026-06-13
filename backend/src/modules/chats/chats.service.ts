@@ -739,6 +739,11 @@ export const chatsService = {
 
     if (!isInviteLinkUsable(conversation)) throw Errors.notFound("Taklif havolasi");
 
+    const ban = await prisma.groupBan.findUnique({
+      where: { conversationId_bannedUserId: { conversationId: conversation.id, bannedUserId: userId } },
+    });
+    if (ban) throw Errors.notFound("Taklif havolasi");
+
     if (conversation.requireAdminApproval) {
       await prisma.groupJoinRequest.upsert({
         where: { conversationId_userId: { conversationId: conversation.id, userId } },
@@ -876,6 +881,11 @@ export const chatsService = {
     if (conversation.participants.some((p) => p.userId === input.userId)) {
       throw Errors.conflict("Foydalanuvchi allaqachon guruh a'zosi");
     }
+
+    const ban = await prisma.groupBan.findUnique({
+      where: { conversationId_bannedUserId: { conversationId, bannedUserId: input.userId } },
+    });
+    if (ban) throw Errors.forbidden("Foydalanuvchi ushbu guruhdan bloklangan");
 
     const target = await prisma.user.findUnique({ where: { id: input.userId } });
     if (!target) throw Errors.notFound("Foydalanuvchi");
@@ -1136,7 +1146,7 @@ export const chatsService = {
     return { conversation: await chatsService.getConversation(userId, conversationId), systemMessages };
   },
 
-  async removeParticipant(userId: string, conversationId: string, targetUserId: string) {
+  async removeParticipant(userId: string, conversationId: string, targetUserId: string, ban = false) {
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
       include: { participants: true },
@@ -1161,7 +1171,19 @@ export const chatsService = {
     }
 
     await prisma.conversationParticipant.delete({ where: { id: target.id } });
-    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_REMOVED, targetUserId);
+    if (ban) {
+      await prisma.groupBan.upsert({
+        where: { conversationId_bannedUserId: { conversationId, bannedUserId: targetUserId } },
+        update: { bannedBy: userId },
+        create: { conversationId, bannedUserId: targetUserId, bannedBy: userId },
+      });
+    }
+    await chatsService.logGroupAction(
+      conversationId,
+      userId,
+      ban ? GroupAuditAction.MEMBER_BANNED : GroupAuditAction.MEMBER_REMOVED,
+      targetUserId
+    );
 
     const [actor, targetUser] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } }),
@@ -1170,10 +1192,52 @@ export const chatsService = {
     const systemMessage = await createSystemMessage(
       conversationId,
       userId,
-      `${actor?.displayName} ${targetUser?.displayName} foydalanuvchisini guruhdan chiqardi`
+      ban
+        ? `${actor?.displayName} ${targetUser?.displayName} foydalanuvchisini guruhdan chiqarib, bloklab qo'ydi`
+        : `${actor?.displayName} ${targetUser?.displayName} foydalanuvchisini guruhdan chiqardi`
     );
 
     return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
+  },
+
+  /** GROUP only, OWNER/ADMIN only: users removed-and-banned from the group, who can't rejoin or be re-added. */
+  async listBannedUsers(userId: string, conversationId: string) {
+    await chatsService.assertGroupManager(userId, conversationId);
+
+    const bans = await prisma.groupBan.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: "desc" },
+    });
+    const users = await prisma.user.findMany({
+      where: { id: { in: bans.map((b) => b.bannedUserId) } },
+      select: userSummarySelect,
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+    const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
+
+    return bans
+      .map((b) => {
+        const user = userMap.get(b.bannedUserId);
+        if (!user) return null;
+        return {
+          user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, user, contactIds, exceptions), contactIds)),
+          createdAt: b.createdAt,
+        };
+      })
+      .filter((b) => b !== null);
+  },
+
+  /** GROUP only, OWNER/ADMIN only: lift a ban, allowing the user to rejoin or be re-added. */
+  async unbanUser(userId: string, conversationId: string, targetUserId: string) {
+    await chatsService.assertGroupManager(userId, conversationId);
+
+    const ban = await prisma.groupBan.findUnique({
+      where: { conversationId_bannedUserId: { conversationId, bannedUserId: targetUserId } },
+    });
+    if (!ban) throw Errors.notFound("Bloklangan foydalanuvchi");
+
+    await prisma.groupBan.delete({ where: { id: ban.id } });
+    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_UNBANNED, targetUserId);
   },
 
   async leaveConversation(userId: string, conversationId: string) {

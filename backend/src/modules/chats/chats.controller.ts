@@ -312,6 +312,41 @@ export const chatsController = {
     }
   },
 
+  async banParticipant(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, userId } = req.params;
+      const { conversation, systemMessage } = await chatsService.removeParticipant(req.user!.sub, id, userId, true);
+
+      getIo().to(`conversation:${id}`).emit("conversation:participantRemoved", { conversationId: id, userId });
+      getIo().to(`conversation:${id}`).except(`user:${userId}`).emit("conversation:updated", conversation);
+      getIo().to(`conversation:${id}`).except(`user:${userId}`).emit("message:new", systemMessage);
+      getIo().in(`user:${userId}`).socketsLeave(`conversation:${id}`);
+
+      res.json(conversation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async listBannedUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const bans = await chatsService.listBannedUsers(req.user!.sub, req.params.id);
+      res.json(bans);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async unbanUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id, userId } = req.params;
+      await chatsService.unbanUser(req.user!.sub, id, userId);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async leave(req: Request, res: Response, next: NextFunction) {
     try {
       const conversationId = req.params.id;

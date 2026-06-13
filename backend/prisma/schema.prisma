@@ -346,6 +346,7 @@ model Conversation {
   messages        Message[]
   joinRequests    GroupJoinRequest[]
   auditLogEntries GroupAuditLogEntry[]
+  bans            GroupBan[]
 }
 
 enum GroupAuditAction {
@@ -354,6 +355,22 @@ enum GroupAuditAction {
   MEMBER_RESTRICTED
   MEMBER_UNRESTRICTED
   MESSAGE_DELETED
+  MEMBER_BANNED
+  MEMBER_UNBANNED
+}
+
+// GROUP only: a user removed-and-banned from a group by an owner/admin. While
+// banned, the user can't rejoin via invite link or be re-added by an admin.
+model GroupBan {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  bannedUserId   String
+  bannedBy       String
+  createdAt      DateTime     @default(now())
+
+  @@unique([conversationId, bannedUserId])
+  @@index([conversationId])
 }
 
 // GROUP only: a log of moderation actions (removals, role changes,

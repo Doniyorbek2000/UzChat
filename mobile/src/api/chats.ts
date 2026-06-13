@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
+import { BannedGroupMember, CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -135,6 +135,18 @@ export const chatsApi = {
 
   removeParticipant(conversationId: string, userId: string) {
     return apiClient.delete<Conversation>(`/conversations/${conversationId}/participants/${userId}`).then((r) => r.data);
+  },
+
+  banParticipant(conversationId: string, userId: string) {
+    return apiClient.post<Conversation>(`/conversations/${conversationId}/participants/${userId}/ban`).then((r) => r.data);
+  },
+
+  listBannedUsers(conversationId: string) {
+    return apiClient.get<BannedGroupMember[]>(`/conversations/${conversationId}/bans`).then((r) => r.data);
+  },
+
+  unbanUser(conversationId: string, userId: string) {
+    return apiClient.delete(`/conversations/${conversationId}/bans/${userId}`);
   },
 
   updateParticipantRole(conversationId: string, userId: string, role: ParticipantRole) {

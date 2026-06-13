@@ -51,6 +51,9 @@ chatsRouter.delete("/:id/for-everyone", chatsController.deleteConversationForEve
 chatsRouter.post("/:id/leave", chatsController.leave);
 chatsRouter.post("/:id/participants", validateBody(addParticipantSchema), chatsController.addParticipant);
 chatsRouter.delete("/:id/participants/:userId", chatsController.removeParticipant);
+chatsRouter.post("/:id/participants/:userId/ban", chatsController.banParticipant);
+chatsRouter.get("/:id/bans", chatsController.listBannedUsers);
+chatsRouter.delete("/:id/bans/:userId", chatsController.unbanUser);
 chatsRouter.patch(
   "/:id/participants/:userId/role",
   validateBody(updateParticipantRoleSchema),
