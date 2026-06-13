@@ -271,6 +271,7 @@ export const chatsService = {
             lastDeliveredAt: cp.lastDeliveredAt,
             restrictedUntil: cp.restrictedUntil,
             customTitle: cp.customTitle,
+            joinedAt: cp.joinedAt,
           })),
           lastMessage:
             p.clearedAt && p.conversation.messages[0] && p.conversation.messages[0].createdAt <= p.clearedAt
@@ -357,6 +358,7 @@ export const chatsService = {
         lastDeliveredAt: cp.lastDeliveredAt,
         restrictedUntil: cp.restrictedUntil,
         customTitle: cp.customTitle,
+        joinedAt: cp.joinedAt,
       })),
     };
   },

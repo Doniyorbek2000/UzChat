@@ -31,6 +31,7 @@ import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../
 import { SLOW_MODE_OPTIONS, formatSlowModeDuration } from "../../utils/slowMode";
 import { INVITE_EXPIRY_OPTIONS, INVITE_MAX_USES_OPTIONS, formatInviteStatus } from "../../utils/inviteLink";
 import { isParticipantRestricted } from "../../utils/restriction";
+import { formatJoinDate } from "../../utils/conversation";
 import { ConversationParticipant, ParticipantRole } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
@@ -720,10 +721,13 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             onPress={() => onMemberPress(item)}
           >
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
-            <Text style={styles.name}>
-              {contactAliases[item.userId] ?? item.user.displayName}
-              {item.userId === user?.id ? " (Siz)" : ""}
-            </Text>
+            <View style={styles.nameContainer}>
+              <Text style={styles.name}>
+                {contactAliases[item.userId] ?? item.user.displayName}
+                {item.userId === user?.id ? " (Siz)" : ""}
+              </Text>
+              <Text style={styles.joinedDate}>Qo'shilgan: {formatJoinDate(item.joinedAt)}</Text>
+            </View>
             {item.role !== "MEMBER" && <Text style={styles.roleBadge}>{item.customTitle || ROLE_LABELS[item.role]}</Text>}
             {isParticipantRestricted(item) && <Text style={styles.restrictedBadge}>🔇</Text>}
           </TouchableOpacity>
@@ -813,7 +817,9 @@ const styles = StyleSheet.create({
   memberEmpty: { padding: 24, alignItems: "center" },
   memberEmptyText: { color: colors.textSecondary, fontSize: 14 },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
-  name: { fontSize: 16, color: colors.text, flex: 1 },
+  nameContainer: { flex: 1 },
+  name: { fontSize: 16, color: colors.text },
+  joinedDate: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   roleBadge: { fontSize: 12, color: colors.primary, fontWeight: "600" },
   restrictedBadge: { fontSize: 14, marginLeft: 8 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },

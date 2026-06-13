@@ -64,6 +64,7 @@ export interface ConversationParticipant {
   lastDeliveredAt: string | null;
   restrictedUntil: string | null;
   customTitle: string | null;
+  joinedAt: string;
 }
 
 export interface MessageReaction {

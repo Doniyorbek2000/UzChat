@@ -105,3 +105,9 @@ export function formatDateSeparator(iso: string): string {
   const day = `${date.getDate()} ${MONTH_NAMES[date.getMonth()]}`;
   return date.getFullYear() === now.getFullYear() ? day : `${day} ${date.getFullYear()}`;
 }
+
+/** Label for a group member's join date, e.g. "12-may, 2025-yil". */
+export function formatJoinDate(iso: string): string {
+  const date = new Date(iso);
+  return `${date.getDate()}-${MONTH_NAMES[date.getMonth()]}, ${date.getFullYear()}-yil`;
+}
