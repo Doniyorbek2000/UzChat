@@ -191,7 +191,10 @@ export function ArchivedChatsScreen({ navigation }: Props) {
     }
     Alert.alert("Ovozsiz qilish muddati", undefined, [
       { text: "1 soatga", onPress: () => muteConversation(item.id, "1h").catch(() => {}) },
+      { text: "2 soatga", onPress: () => muteConversation(item.id, "2h").catch(() => {}) },
       { text: "8 soatga", onPress: () => muteConversation(item.id, "8h").catch(() => {}) },
+      { text: "1 kunga", onPress: () => muteConversation(item.id, "1d").catch(() => {}) },
+      { text: "2 kunga", onPress: () => muteConversation(item.id, "2d").catch(() => {}) },
       { text: "1 haftaga", onPress: () => muteConversation(item.id, "1w").catch(() => {}) },
       { text: "Doimiy", onPress: () => muteConversation(item.id, "forever").catch(() => {}) },
       { text: "Bekor qilish", style: "cancel" },

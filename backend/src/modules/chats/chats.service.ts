@@ -30,10 +30,12 @@ const userSummarySelect = {
   readReceiptsEnabled: true,
 } as const;
 
-const MUTE_DURATIONS_MS: Record<"1h" | "8h" | "1d" | "1w", number> = {
+const MUTE_DURATIONS_MS: Record<"1h" | "2h" | "8h" | "1d" | "2d" | "1w", number> = {
   "1h": 60 * 60 * 1000,
+  "2h": 2 * 60 * 60 * 1000,
   "8h": 8 * 60 * 60 * 1000,
   "1d": 24 * 60 * 60 * 1000,
+  "2d": 2 * 24 * 60 * 60 * 1000,
   "1w": 7 * 24 * 60 * 60 * 1000,
 };
 

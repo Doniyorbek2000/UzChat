@@ -102,8 +102,8 @@ const MAX_AUTO_DELETE_SECONDS = 180 * 24 * 60 * 60;
 export const updatePreferencesSchema = z
   .object({
     isPinned: z.boolean().optional(),
-    // "1h"/"8h"/"1d"/"1w": mute for that duration; "forever": mute indefinitely; "off": unmute.
-    muteFor: z.enum(["1h", "8h", "1d", "1w", "forever", "off"]).optional(),
+    // "1h"/"2h"/"8h"/"1d"/"2d"/"1w": mute for that duration; "forever": mute indefinitely; "off": unmute.
+    muteFor: z.enum(["1h", "2h", "8h", "1d", "2d", "1w", "forever", "off"]).optional(),
     isArchived: z.boolean().optional(),
     markedUnread: z.boolean().optional(),
     // Per-conversation override of the global "hide notification content" setting.
