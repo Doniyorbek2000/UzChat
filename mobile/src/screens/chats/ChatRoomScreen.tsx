@@ -59,6 +59,7 @@ import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
 import { formatTime, formatDateSeparator, formatDateTime, getConversationDisplay } from "../../utils/conversation";
+import { UZ_MONTHS } from "../../utils/birthday";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { POLL_DEADLINE_OPTIONS, formatPollDeadline } from "../../utils/pollDeadline";
@@ -114,6 +115,8 @@ function isEmojiOnlyMessage(text: string): boolean {
   const stripped = text.replace(/\s+/g, "");
   return stripped.length > 0 && stripped.length <= 30 && EMOJI_ONLY_PATTERN.test(stripped);
 }
+
+const WEEKDAY_LABELS = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
 
 const MORE_REACTIONS = [
   "👎",
@@ -347,6 +350,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
   const [searchSenderId, setSearchSenderId] = useState<string | null>(null);
+  const [dateJumpVisible, setDateJumpVisible] = useState(false);
+  const [dateJumpMonth, setDateJumpMonth] = useState(() => new Date());
+  const [dateJumpSearching, setDateJumpSearching] = useState(false);
   const [stickerPickerVisible, setStickerPickerVisible] = useState(false);
   const [activeStickerPackIndex, setActiveStickerPackIndex] = useState(0);
   const [pollModalVisible, setPollModalVisible] = useState(false);
@@ -908,6 +914,56 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setHighlightedMessageId(message.id);
     setTimeout(() => setHighlightedMessageId((id) => (id === message.id ? null : id)), 1500);
   };
+
+  const onJumpToDate = async (day: number) => {
+    const targetEndOfDay = new Date(dateJumpMonth.getFullYear(), dateJumpMonth.getMonth(), day, 23, 59, 59, 999);
+    setDateJumpSearching(true);
+    try {
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const state = useChatStore.getState();
+        const current = state.messagesByConversation[conversationId] ?? [];
+        let match: DecryptedMessage | undefined;
+        for (let i = current.length - 1; i >= 0; i--) {
+          if (new Date(current[i].createdAt) <= targetEndOfDay) {
+            match = current[i];
+            break;
+          }
+        }
+        if (match) {
+          setDateJumpVisible(false);
+          setSearchVisible(false);
+          setSearchQuery("");
+          const index = [...current].reverse().findIndex((m) => m.id === match!.id);
+          if (index >= 0) {
+            setTimeout(() => listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.4 }), 100);
+          }
+          setHighlightedMessageId(match.id);
+          setTimeout(() => setHighlightedMessageId((id) => (id === match!.id ? null : id)), 1500);
+          return;
+        }
+        if (!state.hasMoreByConversation[conversationId]) break;
+        await loadOlderMessages(conversationId);
+      }
+      Alert.alert("Topilmadi", "Bu sana yoki undan oldingi xabarlar topilmadi");
+    } finally {
+      setDateJumpSearching(false);
+    }
+  };
+
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+  const dateJumpYear = dateJumpMonth.getFullYear();
+  const dateJumpMonthIndex = dateJumpMonth.getMonth();
+  const dateJumpDaysInMonth = new Date(dateJumpYear, dateJumpMonthIndex + 1, 0).getDate();
+  const dateJumpFirstWeekday = (new Date(dateJumpYear, dateJumpMonthIndex, 1).getDay() + 6) % 7;
+  const dateJumpCells: (number | null)[] = [
+    ...Array.from({ length: dateJumpFirstWeekday }, () => null),
+    ...Array.from({ length: dateJumpDaysInMonth }, (_, i) => i + 1),
+  ];
+  const dateJumpNowDate = new Date();
+  const canGoNextMonth =
+    dateJumpYear < dateJumpNowDate.getFullYear() ||
+    (dateJumpYear === dateJumpNowDate.getFullYear() && dateJumpMonthIndex < dateJumpNowDate.getMonth());
 
   const onSend = async (scheduledFor?: string, silent?: boolean) => {
     const trimmed = text.trim();
@@ -2721,6 +2777,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           />
           <TouchableOpacity
             onPress={() => {
+              setDateJumpMonth(new Date());
+              setDateJumpVisible(true);
+            }}
+            hitSlop={8}
+          >
+            <Text style={styles.searchDateIcon}>📅</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
               setSearchVisible(false);
               setSearchQuery("");
               setSearchSenderId(null);
@@ -2792,6 +2857,61 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           }
         />
       </View>
+    </Modal>
+    <Modal
+      visible={dateJumpVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setDateJumpVisible(false)}
+    >
+      <Pressable style={styles.actionBackdrop} onPress={() => setDateJumpVisible(false)}>
+        <Pressable style={styles.dateJumpSheet}>
+          <View style={styles.dateJumpHeader}>
+            <TouchableOpacity
+              onPress={() => setDateJumpMonth(new Date(dateJumpYear, dateJumpMonthIndex - 1, 1))}
+              hitSlop={8}
+            >
+              <Text style={styles.dateJumpNav}>‹</Text>
+            </TouchableOpacity>
+            <Text style={styles.dateJumpTitle}>
+              {UZ_MONTHS[dateJumpMonthIndex]} {dateJumpYear}
+            </Text>
+            <TouchableOpacity
+              onPress={() => canGoNextMonth && setDateJumpMonth(new Date(dateJumpYear, dateJumpMonthIndex + 1, 1))}
+              disabled={!canGoNextMonth}
+              hitSlop={8}
+            >
+              <Text style={[styles.dateJumpNav, !canGoNextMonth && styles.dateJumpNavDisabled]}>›</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.dateJumpWeekdays}>
+            {WEEKDAY_LABELS.map((label) => (
+              <Text key={label} style={styles.dateJumpWeekday}>
+                {label}
+              </Text>
+            ))}
+          </View>
+          <View style={styles.dateJumpGrid}>
+            {dateJumpCells.map((day, index) => {
+              if (day === null) {
+                return <View key={`empty-${index}`} style={styles.dateJumpCell} />;
+              }
+              const isFuture = new Date(dateJumpYear, dateJumpMonthIndex, day) > todayEnd;
+              return (
+                <TouchableOpacity
+                  key={day}
+                  style={styles.dateJumpCell}
+                  disabled={isFuture || dateJumpSearching}
+                  onPress={() => onJumpToDate(day)}
+                >
+                  <Text style={[styles.dateJumpCellText, isFuture && styles.dateJumpCellTextDisabled]}>{day}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {dateJumpSearching && <ActivityIndicator color={colors.primary} style={styles.dateJumpLoading} />}
+        </Pressable>
+      </Pressable>
     </Modal>
     <Modal
       visible={stickerPickerVisible}
@@ -3464,6 +3584,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   searchClose: { color: colors.primary, fontWeight: "600", fontSize: 15 },
+  searchDateIcon: { fontSize: 20 },
   searchResult: { paddingHorizontal: 16, paddingVertical: 12 },
   searchResultAuthor: { fontSize: 12, color: colors.primary, fontWeight: "600", marginBottom: 2 },
   searchResultText: { fontSize: 15, color: colors.text },
@@ -3481,6 +3602,41 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
+  dateJumpSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 32,
+  },
+  dateJumpHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  dateJumpNav: { fontSize: 22, color: colors.primary, fontWeight: "700", paddingHorizontal: 12 },
+  dateJumpNavDisabled: { color: colors.border },
+  dateJumpTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
+  dateJumpWeekdays: { flexDirection: "row", marginBottom: 4 },
+  dateJumpWeekday: {
+    flexBasis: "14.2857%",
+    textAlign: "center",
+    fontSize: 12,
+    color: colors.textSecondary,
+    paddingVertical: 6,
+  },
+  dateJumpGrid: { flexDirection: "row", flexWrap: "wrap" },
+  dateJumpCell: {
+    flexBasis: "14.2857%",
+    aspectRatio: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dateJumpCellText: { fontSize: 15, color: colors.text },
+  dateJumpCellTextDisabled: { color: colors.border },
+  dateJumpLoading: { marginTop: 12 },
   senderChip: {
     flexDirection: "row",
     alignItems: "center",
