@@ -11,20 +11,23 @@ import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
+import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { colors } from "../../theme/colors";
 import { formatTime, getConversationDisplay } from "../../utils/conversation";
+import { extractFirstUrl } from "../../utils/linkPreview";
 
 type Props = NativeStackScreenProps<RootStackParamList, "SharedMedia">;
 
 const PAGE_SIZE = 30;
 
-type MediaTab = "all" | "media" | "audio" | "files";
+type MediaTab = "all" | "media" | "audio" | "files" | "links";
 
 const TABS: { key: MediaTab; label: string }[] = [
   { key: "all", label: "Hammasi" },
   { key: "media", label: "Media" },
   { key: "audio", label: "Audio" },
   { key: "files", label: "Fayllar" },
+  { key: "links", label: "Havolalar" },
 ];
 
 function matchesTab(tab: MediaTab, type: DecryptedMessage["type"]) {
@@ -43,6 +46,7 @@ function matchesTab(tab: MediaTab, type: DecryptedMessage["type"]) {
 export function SharedMediaScreen({ route, navigation }: Props) {
   const { conversationId } = route.params;
   const conversation = useChatStore((s) => s.conversations.find((c) => c.id === conversationId));
+  const messages = useChatStore((s) => s.messagesByConversation[conversationId] ?? []);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const currentUser = useAuthStore((s) => s.user);
@@ -72,7 +76,7 @@ export function SharedMediaScreen({ route, navigation }: Props) {
   );
 
   const onEndReached = async () => {
-    if (loadingMore || !hasMore || !conversation || items.length === 0) return;
+    if (activeTab === "links" || loadingMore || !hasMore || !conversation || items.length === 0) return;
     setLoadingMore(true);
     try {
       const key = getConversationKey(conversation);
@@ -125,6 +129,32 @@ export function SharedMediaScreen({ route, navigation }: Props) {
     );
   };
 
+  const renderLinkItem = ({ item }: { item: DecryptedMessage }) => {
+    const sender = conversation.participants.find((p) => p.userId === item.senderId)?.user;
+    const url = extractFirstUrl(item.text ?? "") ?? "";
+
+    return (
+      <View style={styles.item}>
+        <View style={styles.itemHeader}>
+          {isGroup && sender && <Text style={styles.sender}>{contactAliases[sender.id] ?? sender.displayName}</Text>}
+          <Text style={styles.date}>{formatTime(item.createdAt)}</Text>
+          <TouchableOpacity style={styles.jumpButton} onPress={() => onJumpToMessage(item)} hitSlop={8}>
+            <Text style={styles.jumpButtonText}>↗️</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.linkText} numberOfLines={3}>
+          {item.text}
+        </Text>
+        <LinkPreviewCard url={url} />
+      </View>
+    );
+  };
+
+  const linkMessages = useMemo(
+    () => messages.filter((m) => m.type === "TEXT" && !m.deletedAt && !m.decryptFailed && extractFirstUrl(m.text ?? "")),
+    [messages]
+  );
+
   const senders = useMemo(() => {
     const seen = new Map<string, { id: string; displayName: string; avatarUrl: string | null }>();
     for (const item of items) {
@@ -169,7 +199,7 @@ export function SharedMediaScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         ))}
       </View>
-      {isGroup && senders.length > 1 && (
+      {activeTab !== "links" && isGroup && senders.length > 1 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.senderFilterBar}>
           <TouchableOpacity
             style={[styles.senderChip, !selectedSenderId && styles.senderChipActive]}
@@ -192,17 +222,21 @@ export function SharedMediaScreen({ route, navigation }: Props) {
         </ScrollView>
       )}
       <FlatList
-        data={filteredItems}
+        data={activeTab === "links" ? linkMessages : filteredItems}
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        renderItem={activeTab === "links" ? renderLinkItem : renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={loadingMore ? <ActivityIndicator style={styles.footer} color={colors.primary} /> : null}
+        ListFooterComponent={loadingMore && activeTab !== "links" ? <ActivityIndicator style={styles.footer} color={colors.primary} /> : null}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>
-              {activeTab === "all" ? "Hali umumiy media yo'q" : "Bu turdagi fayllar topilmadi"}
+              {activeTab === "links"
+                ? "Yuklangan xabarlar orasida havolalar topilmadi"
+                : activeTab === "all"
+                  ? "Hali umumiy media yo'q"
+                  : "Bu turdagi fayllar topilmadi"}
             </Text>
           </View>
         }
@@ -237,6 +271,7 @@ const styles = StyleSheet.create({
   date: { fontSize: 12, color: colors.textSecondary, marginLeft: "auto" },
   jumpButton: { marginLeft: 8, paddingHorizontal: 4 },
   jumpButtonText: { fontSize: 14 },
+  linkText: { fontSize: 14, color: colors.text, marginBottom: 2 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
   footer: { paddingVertical: 16 },
   empty: { padding: 48, alignItems: "center" },
