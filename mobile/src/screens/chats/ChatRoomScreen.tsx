@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -341,6 +341,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
+  const [searchSenderId, setSearchSenderId] = useState<string | null>(null);
   const [stickerPickerVisible, setStickerPickerVisible] = useState(false);
   const [activeStickerPackIndex, setActiveStickerPackIndex] = useState(0);
   const [pollModalVisible, setPollModalVisible] = useState(false);
@@ -857,10 +858,28 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             m.type === "TEXT" &&
             !m.deletedAt &&
             !m.decryptFailed &&
+            (!searchSenderId || m.senderId === searchSenderId) &&
             (m.text ?? "").toLowerCase().includes(trimmedSearchQuery)
         )
         .reverse()
     : [];
+
+  const searchableSenders = useMemo(() => {
+    if (conversation?.type !== "GROUP") return [];
+    const seen = new Map<string, { id: string; displayName: string; avatarUrl: string | null }>();
+    for (const m of messages) {
+      if (m.type !== "TEXT" || m.deletedAt || m.decryptFailed) continue;
+      if (seen.has(m.senderId)) continue;
+      const participant = conversation?.participants.find((p) => p.userId === m.senderId);
+      if (!participant) continue;
+      seen.set(m.senderId, {
+        id: m.senderId,
+        displayName: getAuthorName(m.senderId) || participant.user.displayName,
+        avatarUrl: participant.user.avatarUrl,
+      });
+    }
+    return [...seen.values()];
+  }, [messages, conversation?.type, conversation?.participants, contactAliases]);
 
   const onLoadMoreSearchResults = async () => {
     if (searchLoadingMore || !hasMore) return;
@@ -2624,12 +2643,38 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             onPress={() => {
               setSearchVisible(false);
               setSearchQuery("");
+              setSearchSenderId(null);
             }}
             hitSlop={8}
           >
             <Text style={styles.searchClose}>Yopish</Text>
           </TouchableOpacity>
         </View>
+        {isGroup && searchableSenders.length > 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.searchSenderFilterBar}>
+            <TouchableOpacity
+              style={[styles.senderChip, !searchSenderId && styles.senderChipActive]}
+              onPress={() => setSearchSenderId(null)}
+            >
+              <Text style={[styles.senderChipText, !searchSenderId && styles.senderChipTextActive]}>Hammasi</Text>
+            </TouchableOpacity>
+            {searchableSenders.map((sender) => (
+              <TouchableOpacity
+                key={sender.id}
+                style={[styles.senderChip, searchSenderId === sender.id && styles.senderChipActive]}
+                onPress={() => setSearchSenderId((prev) => (prev === sender.id ? null : sender.id))}
+              >
+                <Avatar uri={sender.avatarUrl} name={sender.displayName} size={20} />
+                <Text
+                  style={[styles.senderChipText, searchSenderId === sender.id && styles.senderChipTextActive]}
+                  numberOfLines={1}
+                >
+                  {sender.displayName}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
         <FlatList
           data={searchResults}
           keyExtractor={(item) => item.id}
@@ -3328,6 +3373,27 @@ const styles = StyleSheet.create({
   searchLoadMore: { padding: 16, alignItems: "center" },
   searchLoadMoreText: { color: colors.primary, fontWeight: "600" },
   searchEmpty: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 48 },
+  searchSenderFilterBar: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  senderChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.background,
+    maxWidth: 140,
+  },
+  senderChipActive: { backgroundColor: colors.primary },
+  senderChipText: { fontSize: 13, color: colors.text },
+  senderChipTextActive: { color: "#fff", fontWeight: "600" },
   pollContainer: { flex: 1, backgroundColor: colors.background },
   pollHeaderTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
   pollSendDisabled: { color: colors.textSecondary },
