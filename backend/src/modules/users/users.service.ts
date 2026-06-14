@@ -28,6 +28,12 @@ import {
 const DAY_MS = 24 * 60 * 60 * 1000;
 // How often a user may change their username.
 const USERNAME_CHANGE_COOLDOWN_DAYS = 7;
+
+const NOTIFICATIONS_PAUSE_DURATIONS_MS: Record<"1h" | "8h" | "1d", number> = {
+  "1h": 60 * 60 * 1000,
+  "8h": 8 * 60 * 60 * 1000,
+  "1d": 24 * 60 * 60 * 1000,
+};
 // How long a freed-up username stays reserved (can't be claimed by someone else).
 const USERNAME_RESERVATION_DAYS = 30;
 
@@ -63,6 +69,8 @@ const profileSelect = {
   quietHoursStart: true,
   quietHoursEnd: true,
   quietHoursTimezoneOffset: true,
+  notificationsPaused: true,
+  notificationsPausedUntil: true,
   defaultDisappearingSeconds: true,
   twoFactorHash: true,
   twoFactorHint: true,
@@ -100,7 +108,7 @@ export const usersService = {
   },
 
   async updateProfile(userId: string, data: UpdateProfileInput) {
-    const { customStatusClearAfterSeconds, ...rest } = data;
+    const { customStatusClearAfterSeconds, pauseNotificationsFor, ...rest } = data;
     let usernameChangedAt: Date | undefined;
     if (data.username) {
       const current = await prisma.user.findUnique({
@@ -144,12 +152,22 @@ export const usersService = {
           : null;
     }
 
+    let notificationsPauseData: { notificationsPaused: boolean; notificationsPausedUntil: Date | null } | undefined;
+    if (pauseNotificationsFor === "off") notificationsPauseData = { notificationsPaused: false, notificationsPausedUntil: null };
+    else if (pauseNotificationsFor === "forever") notificationsPauseData = { notificationsPaused: true, notificationsPausedUntil: null };
+    else if (pauseNotificationsFor !== undefined)
+      notificationsPauseData = {
+        notificationsPaused: false,
+        notificationsPausedUntil: new Date(Date.now() + NOTIFICATIONS_PAUSE_DURATIONS_MS[pauseNotificationsFor]),
+      };
+
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
         ...rest,
         ...(usernameChangedAt ? { usernameChangedAt } : {}),
         ...(customStatusExpiresAt !== undefined ? { customStatusExpiresAt } : {}),
+        ...(notificationsPauseData ?? {}),
       },
       select: profileSelect,
     });

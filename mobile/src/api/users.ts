@@ -33,6 +33,7 @@ export const usersApi = {
     quietHoursStart?: number | null;
     quietHoursEnd?: number | null;
     quietHoursTimezoneOffset?: number | null;
+    pauseNotificationsFor?: "1h" | "8h" | "1d" | "forever" | "off";
     defaultDisappearingSeconds?: number | null;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);

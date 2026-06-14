@@ -151,6 +151,12 @@ model User {
   quietHoursEnd     Int?
   // User's UTC offset in minutes (e.g. 300 for UTC+5), captured from the device.
   quietHoursTimezoneOffset Int?
+  // Global "Do not disturb": when notificationsPaused is true, or
+  // notificationsPausedUntil is in the future, ALL push notifications for new
+  // messages (incl. @-mentions and replies) are suppressed - mirrors the
+  // isMuted/mutedUntil pair used for per-conversation mutes.
+  notificationsPaused      Boolean   @default(false)
+  notificationsPausedUntil DateTime?
   // Default "disappearing messages" timer (in seconds), automatically applied
   // to new conversations this user starts. Null means messages persist normally.
   defaultDisappearingSeconds Int?

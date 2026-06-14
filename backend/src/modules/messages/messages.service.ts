@@ -134,6 +134,13 @@ function isInQuietHours(user: {
   return localMinutes >= start || localMinutes < end;
 }
 
+// Whether `user` has globally paused notifications ("do not disturb"),
+// either indefinitely (notificationsPaused) or until a future time
+// (notificationsPausedUntil) - mirrors isParticipantMuted for conversations.
+function isNotificationsPaused(user: { notificationsPaused: boolean; notificationsPausedUntil: Date | null }): boolean {
+  return user.notificationsPaused || (user.notificationsPausedUntil !== null && user.notificationsPausedUntil.getTime() > Date.now());
+}
+
 async function notifyParticipants(senderId: string, conversationId: string, message: Message, silent: boolean) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
@@ -152,6 +159,8 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
               quietHoursStart: true,
               quietHoursEnd: true,
               quietHoursTimezoneOffset: true,
+              notificationsPaused: true,
+              notificationsPausedUntil: true,
             },
           },
         },
@@ -168,7 +177,8 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
       p.userId !== senderId &&
       !p.mutedSenderIds.includes(senderId) &&
       !isUserOnline(p.userId) &&
-      !isInQuietHours(p.user)
+      !isInQuietHours(p.user) &&
+      !isNotificationsPaused(p.user)
   );
   if (recipients.length === 0) return;
 
@@ -268,11 +278,13 @@ async function notifyReaction(reactorId: string, conversationId: string, message
         quietHoursStart: true,
         quietHoursEnd: true,
         quietHoursTimezoneOffset: true,
+        notificationsPaused: true,
+        notificationsPausedUntil: true,
       },
     }),
   ]);
   if (!reactor || !recipient?.notifyReactions) return;
-  if (isInQuietHours(recipient)) return;
+  if (isInQuietHours(recipient) || isNotificationsPaused(recipient)) return;
 
   if (shouldHidePreview(participant.notificationPreview, recipient.hideNotificationContent)) {
     await pushService.sendToUsers([message.senderId], {

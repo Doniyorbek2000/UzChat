@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
 import { sendTestNotification } from "../../utils/pushNotifications";
+import { formatDateTime } from "../../utils/conversation";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NotificationSettings">;
@@ -68,6 +69,36 @@ export function NotificationSettingsScreen({}: Props) {
     }
   };
 
+  const isPaused =
+    user.notificationsPaused || (user.notificationsPausedUntil != null && new Date(user.notificationsPausedUntil).getTime() > Date.now());
+
+  const onPauseNotifications = async (duration: "1h" | "8h" | "1d" | "forever" | "off") => {
+    if (saving) return;
+    setSaving("pauseNotifications");
+    try {
+      await usersApi.updateMe({ pauseNotificationsFor: duration });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onPausePress = () => {
+    if (isPaused) {
+      onPauseNotifications("off");
+      return;
+    }
+    Alert.alert("Bezovta qilmang", "Bildirishnomalarni qancha vaqtga o'chirmoqchisiz?", [
+      { text: "1 soat", onPress: () => onPauseNotifications("1h") },
+      { text: "8 soat", onPress: () => onPauseNotifications("8h") },
+      { text: "1 kun", onPress: () => onPauseNotifications("1d") },
+      { text: "Doimiy", onPress: () => onPauseNotifications("forever") },
+      { text: "Bekor qilish", style: "cancel" },
+    ]);
+  };
+
   const onTestNotification = async () => {
     if (testing) return;
     setTesting(true);
@@ -88,6 +119,24 @@ export function NotificationSettingsScreen({}: Props) {
         qat'i nazar bildirishnoma yubormaydi, lekin sizga yo'naltirilgan eslatma va javoblar (eslatishlar
         o'chirilmagan bo'lsa) har doim keladi.
       </Text>
+
+      <TouchableOpacity style={styles.row} onPress={onPausePress} disabled={saving === "pauseNotifications"}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>🔕 Bezovta qilmang</Text>
+          <Text style={styles.rowDescription}>
+            {isPaused
+              ? user.notificationsPaused
+                ? "Bildirishnomalar doimiy o'chirilgan. Yoqish uchun bosing"
+                : `Bildirishnomalar ${formatDateTime(user.notificationsPausedUntil!)} gacha o'chirilgan. Yoqish uchun bosing`
+              : "Barcha bildirishnomalarni vaqtincha o'chirish"}
+          </Text>
+        </View>
+        {saving === "pauseNotifications" ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          isPaused && <Text style={styles.pausedBadge}>Yoniq</Text>
+        )}
+      </TouchableOpacity>
 
       <View style={styles.row}>
         <View style={styles.rowText}>
@@ -266,6 +315,7 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 16, color: colors.text, fontWeight: "600" },
   rowDescription: { fontSize: 13, color: colors.textSecondary, marginTop: 4, lineHeight: 18 },
   timeValue: { fontSize: 16, color: colors.primary, fontWeight: "600" },
+  pausedBadge: { fontSize: 13, fontWeight: "600", color: colors.danger },
   testButton: {
     backgroundColor: colors.background,
     borderRadius: 8,

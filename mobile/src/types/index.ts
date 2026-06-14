@@ -45,6 +45,10 @@ export interface AuthUser extends User {
   quietHoursStart: number | null;
   quietHoursEnd: number | null;
   quietHoursTimezoneOffset: number | null;
+  // Global "Do not disturb": when true, or notificationsPausedUntil is in the
+  // future, all message/reaction push notifications are suppressed.
+  notificationsPaused: boolean;
+  notificationsPausedUntil: string | null;
   defaultDisappearingSeconds: number | null;
   twoFactorEnabled: boolean;
   twoFactorHint: string | null;

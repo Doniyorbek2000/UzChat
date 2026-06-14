@@ -39,6 +39,9 @@ export const updateProfileSchema = z
     quietHoursTimezoneOffset: z.number().int().min(-720).max(840).nullable().optional(),
     // Default "disappearing messages" timer applied to new conversations this user starts.
     defaultDisappearingSeconds: z.number().int().positive().max(MAX_DISAPPEARING_SECONDS).nullable().optional(),
+    // Global "Do not disturb": "forever" pauses ALL message notifications until
+    // manually resumed with "off"; durations pause temporarily.
+    pauseNotificationsFor: z.enum(["1h", "8h", "1d", "forever", "off"]).optional(),
   })
   .refine(
     (data) => {
