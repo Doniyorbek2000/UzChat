@@ -27,3 +27,9 @@ export function isBirthdayToday(day?: number | null, month?: number | null): boo
   const now = new Date();
   return now.getDate() === day && now.getMonth() + 1 === month;
 }
+
+/** A draft congratulation message to pre-fill the composer for a contact's birthday. */
+export function getBirthdayWishText(displayName: string): string {
+  const firstName = displayName.trim().split(/\s+/)[0] || displayName;
+  return `🎉 ${firstName}, tug'ilgan kuningiz bilan tabriklayman! Sizga sog'lik, baxt-omad va yangi yutuqlar tilayman! 🎂`;
+}

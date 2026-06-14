@@ -1,13 +1,15 @@
 import { useCallback, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
+import { usersApi } from "../../api/users";
+import { useChatStore } from "../../store/chatStore";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { UpcomingBirthday } from "../../types";
-import { formatBirthday } from "../../utils/birthday";
+import { formatBirthday, getBirthdayWishText } from "../../utils/birthday";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Birthdays">;
 
@@ -20,6 +22,10 @@ function daysUntilLabel(daysUntil: number): string {
 export function BirthdaysScreen({ navigation }: Props) {
   const [birthdays, setBirthdays] = useState<UpcomingBirthday[]>([]);
   const [loading, setLoading] = useState(true);
+  const [congratulatingId, setCongratulatingId] = useState<string | null>(null);
+  const createDirectConversation = useChatStore((s) => s.createDirectConversation);
+  const setDraft = useChatStore((s) => s.setDraft);
+  const contactAliases = useChatStore((s) => s.contactAliases);
 
   const load = useCallback(() => {
     contactsApi
@@ -30,6 +36,24 @@ export function BirthdaysScreen({ navigation }: Props) {
   }, []);
 
   useFocusEffect(load);
+
+  const onCongratulate = async (item: UpcomingBirthday) => {
+    if (congratulatingId) return;
+    setCongratulatingId(item.user.id);
+    try {
+      const profile = await usersApi.getById(item.user.id);
+      const conversation = await createDirectConversation(profile);
+      await setDraft(conversation.id, getBirthdayWishText(item.user.displayName));
+      navigation.navigate("ChatRoom", {
+        conversationId: conversation.id,
+        title: contactAliases[item.user.id] ?? item.user.displayName,
+      });
+    } catch {
+      Alert.alert("Xatolik", "Suhbat ochib bo'lmadi");
+    } finally {
+      setCongratulatingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -52,7 +76,24 @@ export function BirthdaysScreen({ navigation }: Props) {
               <Text style={styles.name}>{item.user.displayName}</Text>
               <Text style={styles.date}>🎂 {formatBirthday(item.user.birthdayDay, item.user.birthdayMonth)}</Text>
             </View>
-            <Text style={[styles.daysLabel, item.daysUntil === 0 && styles.daysLabelToday]}>{daysUntilLabel(item.daysUntil)}</Text>
+            {item.daysUntil === 0 ? (
+              <TouchableOpacity
+                style={styles.congratsButton}
+                disabled={congratulatingId === item.user.id}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onCongratulate(item);
+                }}
+              >
+                {congratulatingId === item.user.id ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <Text style={styles.congratsButtonText}>🎉 Tabriklash</Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.daysLabel}>{daysUntilLabel(item.daysUntil)}</Text>
+            )}
           </TouchableOpacity>
         )}
         ListEmptyComponent={
@@ -74,6 +115,14 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, color: colors.text },
   date: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
   daysLabel: { fontSize: 12, color: colors.textSecondary, fontWeight: "500" },
-  daysLabelToday: { color: colors.primary, fontWeight: "700" },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 72 },
+  congratsButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: colors.primary + "20",
+    minWidth: 96,
+    alignItems: "center",
+  },
+  congratsButtonText: { fontSize: 12, color: colors.primary, fontWeight: "700" },
 });
