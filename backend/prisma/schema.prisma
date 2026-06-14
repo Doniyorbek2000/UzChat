@@ -576,11 +576,16 @@ model Message {
   // votes are accepted and clients show the final results as read-only.
   pollClosedAt DateTime?
 
+  // POLL only: when set, a background job auto-closes the poll (sets
+  // pollClosedAt and clears this field) once this time passes.
+  pollClosesAt DateTime?
+
   @@index([conversationId, createdAt])
   @@index([senderId])
   @@index([replyToId])
   @@index([expiresAt])
   @@index([scheduledFor])
+  @@index([pollClosesAt])
 }
 
 model MessageReaction {

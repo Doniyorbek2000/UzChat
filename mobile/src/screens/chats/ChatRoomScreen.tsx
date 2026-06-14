@@ -58,6 +58,7 @@ import { formatDuration } from "../../utils/mediaFile";
 import { formatTime, formatDateSeparator } from "../../utils/conversation";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
+import { POLL_DEADLINE_OPTIONS, formatPollDeadline } from "../../utils/pollDeadline";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 import { exportConversation } from "../../utils/chatExport";
 import { reportsApi } from "../../api/reports";
@@ -339,6 +340,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pollAnonymous, setPollAnonymous] = useState(false);
   const [pollQuiz, setPollQuiz] = useState(false);
   const [pollCorrectIndex, setPollCorrectIndex] = useState<number | null>(null);
+  const [pollDeadlineSeconds, setPollDeadlineSeconds] = useState<number | null>(null);
   const [pendingMedia, setPendingMedia] = useState<PendingMediaItem | null>(null);
   const [pendingMediaQueue, setPendingMediaQueue] = useState<PendingMediaItem[]>([]);
   const [pendingMediaTotal, setPendingMediaTotal] = useState(0);
@@ -1136,6 +1138,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPollAnonymous(false);
     setPollQuiz(false);
     setPollCorrectIndex(null);
+    setPollDeadlineSeconds(null);
     setPollModalVisible(true);
   };
 
@@ -1161,6 +1164,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     else setPollCorrectIndex(null);
   };
 
+  const onPickPollDeadline = () => {
+    Alert.alert(
+      "Yopilish vaqti",
+      "So'rovnoma avtomatik yopiladigan vaqtni tanlang",
+      POLL_DEADLINE_OPTIONS.map((option) => ({
+        text: option.label,
+        onPress: () => setPollDeadlineSeconds(option.value),
+      }))
+    );
+  };
+
   const onSubmitPoll = async () => {
     const question = pollQuestion.trim();
     const trimmedOptions = pollOptions.map((o) => o.trim());
@@ -1182,7 +1196,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         pollQuiz ? false : pollMultipleChoice,
         pollAnonymous,
         undefined,
-        quizCorrectOptionIndex
+        quizCorrectOptionIndex,
+        pollDeadlineSeconds ?? undefined
       );
       scrollToLatest();
     } catch (err: any) {
@@ -2578,6 +2593,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <Text style={styles.pollSwitchLabel}>Test rejimi (to'g'ri javob bilan)</Text>
             <Switch value={pollQuiz} onValueChange={onToggleQuiz} trackColor={{ true: colors.primary }} />
           </View>
+          <TouchableOpacity style={styles.pollSwitchRow} onPress={onPickPollDeadline}>
+            <Text style={styles.pollSwitchLabel}>Yopilish vaqti</Text>
+            <Text style={styles.pollDeadlineValue}>{formatPollDeadline(pollDeadlineSeconds)} ›</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </Modal>
@@ -3093,6 +3112,7 @@ const styles = StyleSheet.create({
   pollAddOption: { color: colors.primary, fontWeight: "600", fontSize: 15, marginTop: 12 },
   pollSwitchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 24 },
   pollSwitchLabel: { fontSize: 15, color: colors.text },
+  pollDeadlineValue: { fontSize: 15, color: colors.textSecondary },
   pollHint: { fontSize: 12, color: colors.textSecondary, marginTop: -2, marginBottom: 4 },
   pollCorrectRadio: {
     width: 22,

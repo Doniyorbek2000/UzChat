@@ -2,6 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DecryptedMessage, useChatStore } from "../store/chatStore";
 import { useAuthStore } from "../store/authStore";
 import { colors } from "../theme/colors";
+import { formatPollTimeRemaining } from "../utils/pollDeadline";
 
 interface Props {
   message: DecryptedMessage;
@@ -102,6 +103,9 @@ export function PollBubble({ message, conversationId, onShowVotes }: Props) {
         {!isQuiz && meta.anonymous ? " · 🔒 Anonim" : ""}
         {closed ? " · Yopilgan" : ""}
       </Text>
+      {!closed && message.pollClosesAt && formatPollTimeRemaining(message.pollClosesAt) && (
+        <Text style={styles.deadline}>{formatPollTimeRemaining(message.pollClosesAt)}</Text>
+      )}
       {!isQuiz && !meta.anonymous && totalVoters > 0 && onShowVotes && (
         <TouchableOpacity onPress={onShowVotes}>
           <Text style={styles.votesLink}>Ovozlarni ko'rish</Text>
@@ -148,5 +152,6 @@ const styles = StyleSheet.create({
   optionTextCorrect: { color: colors.primaryDark, fontWeight: "600" },
   optionPercent: { fontSize: 12, color: colors.textSecondary },
   footer: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  deadline: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   votesLink: { fontSize: 12, color: colors.primary, fontWeight: "600", marginTop: 6 },
 });

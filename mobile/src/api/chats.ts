@@ -25,6 +25,8 @@ export interface SendMessageInput {
   isSpoiler?: boolean;
   // POLL only: hides who voted for what from other participants.
   pollAnonymous?: boolean;
+  // POLL only: if set, the poll auto-closes this many seconds after creation.
+  pollClosesInSeconds?: number;
   // "Send without sound": recipients are notified silently (no notification sound).
   silent?: boolean;
 }

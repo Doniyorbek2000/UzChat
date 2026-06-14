@@ -388,6 +388,10 @@ export const messagesService = {
         ? new Date(Date.now() + conversation.disappearingSeconds * 1000)
         : null;
 
+    const pollClosesAt = input.pollClosesInSeconds
+      ? new Date(Date.now() + input.pollClosesInSeconds * 1000)
+      : null;
+
     const message = await prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
         data: {
@@ -406,6 +410,7 @@ export const messagesService = {
           viewOnce: input.viewOnce ?? false,
           isSpoiler: input.isSpoiler ?? false,
           pollAnonymous: input.pollAnonymous ?? false,
+          pollClosesAt,
         },
         include: messageInclude(userId),
       });
@@ -913,6 +918,26 @@ export const messagesService = {
         prisma.message.update({
           where: { id: m.id },
           data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date(), expiresAt: null },
+        })
+      )
+    );
+  },
+
+  // Auto-closes polls whose voting deadline has passed.
+  async closeDuePolls() {
+    const due = await prisma.message.findMany({
+      where: { pollClosesAt: { lte: new Date() }, pollClosedAt: null },
+      select: { id: true, conversationId: true },
+    });
+    if (due.length === 0) return [];
+
+    const closedAt = new Date();
+    return Promise.all(
+      due.map((m) =>
+        prisma.message.update({
+          where: { id: m.id },
+          data: { pollClosedAt: closedAt, pollClosesAt: null },
+          select: { id: true, conversationId: true, pollClosedAt: true },
         })
       )
     );

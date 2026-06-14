@@ -21,6 +21,8 @@ export const sendMessageSchema = z
     isSpoiler: z.boolean().optional(),
     // POLL only: hides who voted for what from other participants.
     pollAnonymous: z.boolean().optional(),
+    // POLL only: if set, the poll auto-closes this many seconds after creation.
+    pollClosesInSeconds: z.number().int().positive().optional(),
     // "Send without sound": recipients are notified silently (no notification sound).
     silent: z.boolean().optional(),
   })
@@ -39,6 +41,10 @@ export const sendMessageSchema = z
   .refine((data) => !data.pollAnonymous || data.type === "POLL", {
     message: "Anonim rejim faqat so'rovnomalar uchun mavjud",
     path: ["pollAnonymous"],
+  })
+  .refine((data) => !data.pollClosesInSeconds || data.type === "POLL", {
+    message: "Yopilish vaqti faqat so'rovnomalar uchun mavjud",
+    path: ["pollClosesInSeconds"],
   });
 
 export const rescheduleMessageSchema = z

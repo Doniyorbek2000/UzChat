@@ -126,6 +126,8 @@ export interface Message {
   isSpoiler: boolean;
   // POLL only: when set, the poll creator has closed voting.
   pollClosedAt: string | null;
+  // POLL only: when set, the poll auto-closes at this time.
+  pollClosesAt: string | null;
 }
 
 export interface Conversation {
