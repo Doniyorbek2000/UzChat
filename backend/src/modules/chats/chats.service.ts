@@ -282,7 +282,7 @@ export const chatsService = {
           hideHistoryForNewMembers: p.conversation.hideHistoryForNewMembers,
           hideMembersList: p.conversation.hideMembersList,
           isSelf: p.conversation.isSelf,
-          pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt, expiresAt: pm.expiresAt })),
+          pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt, expiresAt: pm.expiresAt, pinnedBy: pm.pinnedBy })),
           participants: p.conversation.participants.map((cp) => ({
             userId: cp.userId,
             role: cp.role,
@@ -378,7 +378,7 @@ export const chatsService = {
       hideHistoryForNewMembers: participant.conversation.hideHistoryForNewMembers,
       hideMembersList: participant.conversation.hideMembersList,
       isSelf: participant.conversation.isSelf,
-      pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt, expiresAt: pm.expiresAt })),
+      pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt, expiresAt: pm.expiresAt, pinnedBy: pm.pinnedBy })),
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,

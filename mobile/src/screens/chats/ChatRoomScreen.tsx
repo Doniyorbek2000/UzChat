@@ -1686,6 +1686,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <Text style={styles.replyText} numberOfLines={1}>
               {getPreviewLabel(pinnedPreview)}
             </Text>
+            {latestPinned && latestPinned.pinnedBy !== latestPinned.senderId && (
+              <Text style={styles.pinnedExpiry} numberOfLines={1}>
+                {`Qadagan: ${getAuthorName(latestPinned.pinnedBy)}`}
+              </Text>
+            )}
             {formatPinTimeRemaining(latestPinned?.expiresAt ?? null) && (
               <Text style={styles.pinnedExpiry}>{formatPinTimeRemaining(latestPinned?.expiresAt ?? null)}</Text>
             )}

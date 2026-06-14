@@ -113,6 +113,11 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
                 <Text style={styles.preview} numberOfLines={2}>
                   {preview ? getPreviewLabel(preview) : "🔒 Xabarni ochib bo'lmadi"}
                 </Text>
+                {item.pinnedBy !== item.senderId && (
+                  <Text style={styles.pinnedBy} numberOfLines={1}>
+                    {`📌 Qadagan: ${getAuthorName(item.pinnedBy)}`}
+                  </Text>
+                )}
                 {formatPinTimeRemaining(item.expiresAt) && (
                   <Text style={styles.expiry}>{formatPinTimeRemaining(item.expiresAt)}</Text>
                 )}
@@ -144,6 +149,7 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
   preview: { fontSize: 14, color: colors.text, marginTop: 2 },
   expiry: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  pinnedBy: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   unpinIcon: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   unpinAllButton: { fontSize: 14, color: colors.danger, fontWeight: "600" },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 12 },
