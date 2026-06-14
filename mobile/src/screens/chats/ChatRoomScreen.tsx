@@ -323,6 +323,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
   const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
   const [messageInfoMessage, setMessageInfoMessage] = useState<DecryptedMessage | null>(null);
+  const [descriptionBannerDismissed, setDescriptionBannerDismissed] = useState(false);
   const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
   const [pollVotesMessage, setPollVotesMessage] = useState<DecryptedMessage | null>(null);
   const [moreReactionsMessage, setMoreReactionsMessage] = useState<DecryptedMessage | null>(null);
@@ -1701,6 +1702,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
         </TouchableOpacity>
       )}
+      {isGroup && conversation?.description && !descriptionBannerDismissed && (
+        <TouchableOpacity
+          style={styles.descriptionBanner}
+          onPress={() => navigation.navigate("GroupInfo", { conversationId })}
+        >
+          <Text style={styles.descriptionBannerIcon}>ℹ️</Text>
+          <Text style={styles.descriptionBannerText} numberOfLines={2}>
+            {conversation.description}
+          </Text>
+          <TouchableOpacity onPress={() => setDescriptionBannerDismissed(true)} hitSlop={8}>
+            <Text style={styles.pinnedClose}>✕</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
       <FlatList
         ref={listRef}
         data={invertedData}
@@ -2970,6 +2985,18 @@ const styles = StyleSheet.create({
   pinnedExpiry: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   pinnedListIcon: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   pinnedClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
+  descriptionBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
+    gap: 8,
+  },
+  descriptionBannerIcon: { fontSize: 14 },
+  descriptionBannerText: { flex: 1, fontSize: 13, color: colors.textSecondary },
   messageText: { fontSize: 16, color: colors.text },
   stickerText: { fontSize: 56, lineHeight: 64 },
   mentionText: { color: colors.primary, fontWeight: "600" },
