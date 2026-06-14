@@ -217,6 +217,8 @@ export interface Conversation {
   // GROUP only: when true, regular members can't view the full member list
   // (only owner/admin can). Members still see the total member count.
   hideMembersList: boolean;
+  // GROUP only: when false, no one (including admins) can react to messages in this group.
+  reactionsEnabled: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.

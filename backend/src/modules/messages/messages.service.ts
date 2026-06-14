@@ -805,6 +805,12 @@ export const messagesService = {
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarga reaksiya qo'yib bo'lmaydi");
 
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { reactionsEnabled: true },
+    });
+    if (!conversation?.reactionsEnabled) throw Errors.forbidden("Bu guruhda reaksiyalar o'chirilgan");
+
     const existing = await prisma.messageReaction.findUnique({
       where: { messageId_userId: { messageId, userId } },
     });

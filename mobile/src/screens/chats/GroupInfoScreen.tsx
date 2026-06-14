@@ -297,6 +297,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleReactionsEnabled = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { reactionsEnabled: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onSetWelcomeMessage = () => {
     Alert.prompt(
       "Salomlashuv xabari",
@@ -843,6 +851,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteIcon}>👁️</Text>
             <Text style={styles.inviteText}>A'zolardan a'zolar ro'yxatini yashirish</Text>
             <Switch value={conversation.hideMembersList} onValueChange={onToggleHideMembersList} />
+          </View>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>😀</Text>
+            <Text style={styles.inviteText}>Reaksiyalarga ruxsat berish</Text>
+            <Switch value={conversation.reactionsEnabled} onValueChange={onToggleReactionsEnabled} />
           </View>
           <TouchableOpacity
             style={styles.inviteRow}

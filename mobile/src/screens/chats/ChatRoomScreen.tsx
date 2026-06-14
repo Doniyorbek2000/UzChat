@@ -1523,7 +1523,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const last = lastTapRef.current;
     if (last && last.id === item.id && now - last.time < 300) {
       lastTapRef.current = null;
-      toggleReaction(conversationId, item.id, quickReactionEmoji).catch(() => {});
+      if (conversation?.reactionsEnabled !== false) {
+        toggleReaction(conversationId, item.id, quickReactionEmoji).catch(() => {});
+      }
       return;
     }
     lastTapRef.current = { id: item.id, time: now };
@@ -2110,33 +2112,37 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     <Modal visible={!!actionMessage} transparent animationType="fade" onRequestClose={() => setActionMessage(null)}>
       <Pressable style={styles.actionBackdrop} onPress={() => setActionMessage(null)}>
         <Pressable style={styles.actionSheet}>
-          <View style={styles.reactionPickerRow}>
-            {recentEmojis.map((emoji) => (
-              <TouchableOpacity
-                key={emoji}
-                style={styles.reactionPickerOption}
-                onPress={() => {
-                  if (actionMessage) toggleReaction(conversationId, actionMessage.id, emoji).catch(() => {});
-                  recordEmoji(emoji).catch(() => {});
-                  setActionMessage(null);
-                }}
-                onLongPress={() => onSetQuickReaction(emoji)}
-              >
-                <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
-                {emoji === quickReactionEmoji && <View style={styles.quickReactionBadge} />}
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={styles.reactionPickerOption}
-              onPress={() => {
-                setMoreReactionsMessage(actionMessage);
-                setActionMessage(null);
-              }}
-            >
-              <Text style={styles.reactionPickerMore}>➕</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.quickReactionHint}>Ikki marta bosish uchun reaksiyani uzoq bosib tanlang</Text>
+          {conversation?.reactionsEnabled !== false && (
+            <>
+              <View style={styles.reactionPickerRow}>
+                {recentEmojis.map((emoji) => (
+                  <TouchableOpacity
+                    key={emoji}
+                    style={styles.reactionPickerOption}
+                    onPress={() => {
+                      if (actionMessage) toggleReaction(conversationId, actionMessage.id, emoji).catch(() => {});
+                      recordEmoji(emoji).catch(() => {});
+                      setActionMessage(null);
+                    }}
+                    onLongPress={() => onSetQuickReaction(emoji)}
+                  >
+                    <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
+                    {emoji === quickReactionEmoji && <View style={styles.quickReactionBadge} />}
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                  style={styles.reactionPickerOption}
+                  onPress={() => {
+                    setMoreReactionsMessage(actionMessage);
+                    setActionMessage(null);
+                  }}
+                >
+                  <Text style={styles.reactionPickerMore}>➕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.quickReactionHint}>Ikki marta bosish uchun reaksiyani uzoq bosib tanlang</Text>
+            </>
+          )}
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => {

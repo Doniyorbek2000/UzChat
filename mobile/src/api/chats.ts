@@ -70,6 +70,7 @@ export const chatsApi = {
       membersCanSendMedia?: boolean;
       hideHistoryForNewMembers?: boolean;
       hideMembersList?: boolean;
+      reactionsEnabled?: boolean;
     }
   ) {
     return apiClient.patch<Conversation>(`/conversations/${conversationId}`, input).then((r) => r.data);

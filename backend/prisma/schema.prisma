@@ -393,6 +393,9 @@ model Conversation {
   // (only OWNER/ADMIN can). MEMBERs still see the total member count.
   hideMembersList Boolean @default(false)
 
+  // GROUP only: when false, no one (including admins) can react to messages in this group.
+  reactionsEnabled Boolean @default(true)
+
   participants    ConversationParticipant[]
   messages        Message[]
   joinRequests    GroupJoinRequest[]

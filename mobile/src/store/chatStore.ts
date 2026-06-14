@@ -198,6 +198,7 @@ interface ChatState {
       membersCanSendMedia?: boolean;
       hideHistoryForNewMembers?: boolean;
       hideMembersList?: boolean;
+      reactionsEnabled?: boolean;
     }
   ) => Promise<void>;
   removeParticipant: (conversationId: string, userId: string) => Promise<void>;

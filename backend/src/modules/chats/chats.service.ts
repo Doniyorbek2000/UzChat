@@ -282,6 +282,7 @@ export const chatsService = {
           membersCanSendMedia: p.conversation.membersCanSendMedia,
           hideHistoryForNewMembers: p.conversation.hideHistoryForNewMembers,
           hideMembersList: p.conversation.hideMembersList,
+          reactionsEnabled: p.conversation.reactionsEnabled,
           isSelf: p.conversation.isSelf,
           pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt, expiresAt: pm.expiresAt, pinnedBy: pm.pinnedBy })),
           participants: p.conversation.participants.map((cp) => ({
@@ -379,6 +380,7 @@ export const chatsService = {
       membersCanSendMedia: participant.conversation.membersCanSendMedia,
       hideHistoryForNewMembers: participant.conversation.hideHistoryForNewMembers,
       hideMembersList: participant.conversation.hideMembersList,
+      reactionsEnabled: participant.conversation.reactionsEnabled,
       isSelf: participant.conversation.isSelf,
       pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt, expiresAt: pm.expiresAt, pinnedBy: pm.pinnedBy })),
       participants: participant.conversation.participants.map((cp) => ({
@@ -1105,6 +1107,7 @@ export const chatsService = {
           ? { hideHistoryForNewMembers: input.hideHistoryForNewMembers }
           : {}),
         ...(input.hideMembersList !== undefined ? { hideMembersList: input.hideMembersList } : {}),
+        ...(input.reactionsEnabled !== undefined ? { reactionsEnabled: input.reactionsEnabled } : {}),
       },
     });
 
@@ -1253,6 +1256,15 @@ export const chatsService = {
           input.hideMembersList
             ? `${name} a'zolar ro'yxatini yashirdi`
             : `${name} a'zolar ro'yxatini ko'rsatishni yoqdi`
+        )
+      );
+    }
+    if (input.reactionsEnabled !== undefined && input.reactionsEnabled !== conversation.reactionsEnabled) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.reactionsEnabled ? `${name} reaksiyalarni yoqdi` : `${name} reaksiyalarni o'chirdi`
         )
       );
     }
