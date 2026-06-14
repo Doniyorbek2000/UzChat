@@ -548,6 +548,64 @@ export const messagesService = {
     return stats;
   },
 
+  // Account-wide activity summary for the current user, across all their conversations.
+  async getMyActivityStats(userId: string) {
+    const [user, participations, sentCounts] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
+      prisma.conversationParticipant.findMany({ where: { userId }, select: { conversationId: true } }),
+      prisma.message.groupBy({
+        by: ["type"],
+        where: { senderId: userId, deletedAt: null, scheduledFor: null, type: { not: MessageType.SYSTEM } },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const conversationIds = participations.map((p) => p.conversationId);
+    const byType = new Map(sentCounts.map((c) => [c.type, c._count._all]));
+    const totalSent = sentCounts.reduce((sum, c) => sum + c._count._all, 0);
+
+    const totalReceived = await prisma.message.count({
+      where: {
+        conversationId: { in: conversationIds },
+        senderId: { not: userId },
+        deletedAt: null,
+        scheduledFor: null,
+        type: { not: MessageType.SYSTEM },
+        NOT: { hiddenFor: { has: userId } },
+      },
+    });
+
+    const topConversationCounts = await prisma.message.groupBy({
+      by: ["conversationId"],
+      where: { senderId: userId, deletedAt: null, scheduledFor: null, type: { not: MessageType.SYSTEM } },
+      _count: { _all: true },
+      orderBy: { _count: { conversationId: "desc" } },
+      take: 5,
+    });
+
+    // Weekday activity histogram, based on this user's most recent 1000 sent messages.
+    const recentMessages = await prisma.message.findMany({
+      where: { senderId: userId, deletedAt: null, scheduledFor: null, type: { not: MessageType.SYSTEM } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 1000,
+    });
+    const byWeekday = new Array(7).fill(0);
+    for (const m of recentMessages) byWeekday[m.createdAt.getDay()]++;
+
+    return {
+      totalSent,
+      totalReceived,
+      media: (byType.get(MessageType.IMAGE) ?? 0) + (byType.get(MessageType.VIDEO) ?? 0),
+      voice: byType.get(MessageType.AUDIO) ?? 0,
+      files: byType.get(MessageType.FILE) ?? 0,
+      conversationCount: conversationIds.length,
+      memberSince: user!.createdAt,
+      byWeekday,
+      topConversations: topConversationCounts.map((c) => ({ conversationId: c.conversationId, count: c._count._all })),
+    };
+  },
+
   async deleteMessage(userId: string, conversationId: string, messageId: string) {
     const participant = await chatsService.assertParticipant(userId, conversationId);
 

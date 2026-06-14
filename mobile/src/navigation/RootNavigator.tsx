@@ -43,6 +43,7 @@ import { TwoFactorSettingsScreen } from "../screens/profile/TwoFactorSettingsScr
 import { ChatTextSizeScreen } from "../screens/profile/ChatTextSizeScreen";
 import { StorageUsageScreen } from "../screens/profile/StorageUsageScreen";
 import { AccountDataExportScreen } from "../screens/profile/AccountDataExportScreen";
+import { MyActivityScreen } from "../screens/profile/MyActivityScreen";
 import { QuickRepliesScreen } from "../screens/profile/QuickRepliesScreen";
 import { NotificationSettingsScreen } from "../screens/profile/NotificationSettingsScreen";
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
@@ -220,6 +221,7 @@ export function RootNavigator() {
             <Stack.Screen name="ChatTextSize" component={ChatTextSizeScreen} options={{ title: "Matn hajmi" }} />
             <Stack.Screen name="StorageUsage" component={StorageUsageScreen} options={{ title: "Xotira va kesh" }} />
             <Stack.Screen name="AccountDataExport" component={AccountDataExportScreen} options={{ title: "Mening ma'lumotlarim" }} />
+            <Stack.Screen name="MyActivity" component={MyActivityScreen} options={{ title: "Mening faolligim" }} />
             <Stack.Screen name="QuickReplies" component={QuickRepliesScreen} options={{ title: "Tezkor javoblar" }} />
             <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ title: "Bildirishnomalar" }} />
             <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />

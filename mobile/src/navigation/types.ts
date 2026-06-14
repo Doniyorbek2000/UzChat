@@ -64,6 +64,7 @@ export type RootStackParamList = {
   ChatTextSize: undefined;
   StorageUsage: undefined;
   AccountDataExport: undefined;
+  MyActivity: undefined;
   QuickReplies: undefined;
   NotificationSettings: undefined;
   About: undefined;

@@ -298,6 +298,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("MyActivity")}>
+        <Text style={styles.menuRowText}>📊 Mening faolligim</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Mentions")}>
         <Text style={styles.menuRowText}>@ Eslatishlar</Text>
         <Text style={styles.menuRowArrow}>›</Text>

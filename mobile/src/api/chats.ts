@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { BannedGroupMember, CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
+import { ActivityStats, BannedGroupMember, CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -332,5 +332,9 @@ export const chatsApi = {
 
   listCommonGroups(userId: string) {
     return apiClient.get<CommonGroup[]>(`/conversations/common-groups/${userId}`).then((r) => r.data);
+  },
+
+  getMyActivityStats() {
+    return apiClient.get<ActivityStats>("/conversations/me/activity-stats").then((r) => r.data);
   },
 };

@@ -376,3 +376,16 @@ export interface Session {
   lastUsedAt: string;
   isCurrent: boolean;
 }
+
+/** Account-wide activity summary for the current user, across all their conversations. */
+export interface ActivityStats {
+  totalSent: number;
+  totalReceived: number;
+  media: number;
+  voice: number;
+  files: number;
+  conversationCount: number;
+  memberSince: string;
+  byWeekday: number[];
+  topConversations: { conversationId: string; count: number }[];
+}
