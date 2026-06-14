@@ -61,6 +61,7 @@ import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { POLL_DEADLINE_OPTIONS, formatPollDeadline } from "../../utils/pollDeadline";
 import { PIN_DURATION_OPTIONS, formatPinTimeRemaining } from "../../utils/pinExpiry";
 import { REMINDER_DURATION_OPTIONS } from "../../utils/messageReminders";
+import { AUTO_DELETE_OPTIONS, formatAutoDeleteDuration } from "../../utils/chatAutoDelete";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 import { exportConversation } from "../../utils/chatExport";
 import { reportsApi } from "../../api/reports";
@@ -291,6 +292,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const forwardMessage = useChatStore((s) => s.forwardMessage);
   const getOrCreateSavedMessages = useChatStore((s) => s.getOrCreateSavedMessages);
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
+  const setAutoDelete = useChatStore((s) => s.setAutoDelete);
   const setNoForwards = useChatStore((s) => s.setNoForwards);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
@@ -441,6 +443,23 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     );
   };
 
+  const onSetAutoDelete = () => {
+    Alert.alert(
+      "Faolsizlikda avtomatik o'chirish",
+      "Suhbatda uzoq vaqt yangi xabar bo'lmasa, u faqat sizning ro'yxatingizdan olib tashlanadi",
+      [
+        ...AUTO_DELETE_OPTIONS.map((option) => ({
+          text: option.label,
+          onPress: () =>
+            setAutoDelete(conversationId, option.value).catch(() => {
+              Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+            }),
+        })),
+        { text: "Bekor qilish", style: "cancel" as const },
+      ]
+    );
+  };
+
   const reportUser = (reportedUserId: string, reportConversationId?: string, messageId?: string) => {
     Alert.alert("Shikoyat sababi", "Nima uchun shikoyat qilmoqchisiz?", [
       ...REPORT_REASONS.map((option) => ({
@@ -466,6 +485,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       {
         text: `⏳ O'chiriladigan xabarlar (${formatDisappearingDuration(conversation?.disappearingSeconds ?? null)})`,
         onPress: onSetDisappearingMessages,
+      },
+      {
+        text: `🗑 Faolsizlikda o'chirish (${formatAutoDeleteDuration(conversation?.autoDeleteAfterSeconds ?? null)})`,
+        onPress: onSetAutoDelete,
       },
       {
         text: conversation?.noForwards

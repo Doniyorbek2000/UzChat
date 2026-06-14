@@ -9,6 +9,7 @@ import { startPollDeadlinesJob } from "./jobs/pollDeadlines";
 import { startCustomStatusExpiryJob } from "./jobs/customStatusExpiry";
 import { startPinExpiryJob } from "./jobs/pinExpiry";
 import { startMessageRemindersJob } from "./jobs/messageReminders";
+import { startChatAutoDeleteJob } from "./jobs/chatAutoDelete";
 
 const app = createApp();
 const httpServer = createServer(app);
@@ -21,6 +22,7 @@ startPollDeadlinesJob();
 startCustomStatusExpiryJob();
 startPinExpiryJob();
 startMessageRemindersJob();
+startChatAutoDeleteJob();
 
 httpServer.listen(env.port, () => {
   console.log(`UzChat backend listening on port ${env.port}`);

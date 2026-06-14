@@ -170,6 +170,9 @@ export interface Conversation {
   // GROUP only: userIds of other participants whose messages don't trigger
   // notifications for the current user in this conversation.
   mutedSenderIds: string[];
+  // When set, this chat is auto-removed from the current user's chat list once
+  // this many seconds pass with no new message; null disables it.
+  autoDeleteAfterSeconds: number | null;
   isBlocked: boolean;
   // The current group's invite code (only visible to OWNER/ADMIN), or null.
   inviteCode: string | null;

@@ -492,6 +492,10 @@ model ConversationParticipant {
   // history is cleared too). The conversation reappears once a message newer
   // than this arrives.
   hiddenAt     DateTime?
+  // When set, this chat is auto-removed from this user's chat list (like
+  // `deleteConversation`) once this many seconds pass with no new message
+  // after `conversation.updatedAt`. Null means auto-delete is off.
+  autoDeleteAfterSeconds Int?
   // GROUP only: when set and in the future, this MEMBER cannot send messages
   // until this time (admin-imposed restriction).
   restrictedUntil DateTime?

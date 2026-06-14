@@ -262,6 +262,7 @@ export const chatsService = {
           notificationPreview: p.notificationPreview,
           readReceiptsOverride: p.readReceiptsOverride,
           mutedSenderIds: p.mutedSenderIds,
+          autoDeleteAfterSeconds: p.autoDeleteAfterSeconds,
           isBlocked: p.conversation.type === ConversationType.DIRECT && !!other && blockedIds.has(other.userId),
           inviteCode: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCode,
           inviteCodeExpiresAt: p.role === ParticipantRole.MEMBER ? null : p.conversation.inviteCodeExpiresAt,
@@ -354,6 +355,7 @@ export const chatsService = {
       notificationPreview: participant.notificationPreview,
       readReceiptsOverride: participant.readReceiptsOverride,
       mutedSenderIds: participant.mutedSenderIds,
+      autoDeleteAfterSeconds: participant.autoDeleteAfterSeconds,
       isBlocked,
       inviteCode: participant.role === ParticipantRole.MEMBER ? null : participant.conversation.inviteCode,
       inviteCodeExpiresAt:
@@ -424,6 +426,7 @@ export const chatsService = {
         ...(input.notificationPreview !== undefined ? { notificationPreview: input.notificationPreview } : {}),
         ...(input.readReceiptsOverride !== undefined ? { readReceiptsOverride: input.readReceiptsOverride } : {}),
         ...(input.mutedSenderIds !== undefined ? { mutedSenderIds: input.mutedSenderIds } : {}),
+        ...(input.autoDeleteAfterSeconds !== undefined ? { autoDeleteAfterSeconds: input.autoDeleteAfterSeconds } : {}),
       },
     });
 
@@ -484,6 +487,43 @@ export const chatsService = {
       where: { id: participant.id },
       data: { hiddenAt: now, clearedAt: now, pinnedAt: null, isArchived: false, markedUnread: false },
     });
+  },
+
+  /**
+   * Removes (hides + clears) conversations the user enabled "auto-delete after
+   * inactivity" for, once no new message has arrived since `autoDeleteAfterSeconds`
+   * after the conversation's last activity. Pinned conversations are exempt.
+   * Idempotent: a chat won't be re-removed until a new message arrives and the
+   * inactivity window elapses again.
+   */
+  async applyInactivityAutoDeletes() {
+    const candidates = await prisma.conversationParticipant.findMany({
+      where: { autoDeleteAfterSeconds: { not: null }, pinnedAt: null },
+      select: {
+        id: true,
+        userId: true,
+        conversationId: true,
+        hiddenAt: true,
+        autoDeleteAfterSeconds: true,
+        conversation: { select: { updatedAt: true } },
+      },
+    });
+
+    const now = Date.now();
+    const due = candidates.filter((p) => {
+      const threshold = p.conversation.updatedAt.getTime() + p.autoDeleteAfterSeconds! * 1000;
+      if (threshold > now) return false;
+      return !p.hiddenAt || p.hiddenAt < p.conversation.updatedAt;
+    });
+    if (due.length === 0) return [];
+
+    const nowDate = new Date();
+    await prisma.conversationParticipant.updateMany({
+      where: { id: { in: due.map((p) => p.id) } },
+      data: { hiddenAt: nowDate, clearedAt: nowDate, isArchived: false, markedUnread: false },
+    });
+
+    return due.map((p) => ({ userId: p.userId, conversationId: p.conversationId }));
   },
 
   /**

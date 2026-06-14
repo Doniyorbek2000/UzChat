@@ -96,6 +96,9 @@ export const updateParticipantCustomTitleSchema = z.object({
     .nullable(),
 });
 
+// 180 days, the longest supported "auto-delete inactive chat" duration.
+const MAX_AUTO_DELETE_SECONDS = 180 * 24 * 60 * 60;
+
 export const updatePreferencesSchema = z
   .object({
     isPinned: z.boolean().optional(),
@@ -110,6 +113,9 @@ export const updatePreferencesSchema = z
     // GROUP only: full replacement list of participant userIds whose messages
     // shouldn't trigger notifications for this user.
     mutedSenderIds: z.array(z.string().uuid()).optional(),
+    // Seconds of inactivity (no new message) after which this chat is auto-removed
+    // from this user's chat list; null/undefined-with-other-fields turns it off.
+    autoDeleteAfterSeconds: z.number().int().positive().max(MAX_AUTO_DELETE_SECONDS).nullable().optional(),
   })
   .refine(
     (data) =>
@@ -119,7 +125,8 @@ export const updatePreferencesSchema = z
       data.markedUnread !== undefined ||
       data.notificationPreview !== undefined ||
       data.readReceiptsOverride !== undefined ||
-      data.mutedSenderIds !== undefined,
+      data.mutedSenderIds !== undefined ||
+      data.autoDeleteAfterSeconds !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 

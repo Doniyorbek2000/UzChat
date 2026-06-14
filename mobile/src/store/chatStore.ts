@@ -155,6 +155,7 @@ interface ChatState {
   muteConversation: (conversationId: string, muteFor: MuteDuration) => Promise<void>;
   setNotificationPreview: (conversationId: string, notificationPreview: "DEFAULT" | "SHOW" | "HIDE") => Promise<void>;
   setReadReceiptsOverride: (conversationId: string, readReceiptsOverride: "DEFAULT" | "ON" | "OFF") => Promise<void>;
+  setAutoDelete: (conversationId: string, autoDeleteAfterSeconds: number | null) => Promise<void>;
   toggleMutedSender: (conversationId: string, userId: string) => Promise<void>;
   toggleArchive: (conversationId: string) => Promise<void>;
   toggleUnread: (conversationId: string) => Promise<void>;
@@ -988,6 +989,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
+  setAutoDelete: async (conversationId, autoDeleteAfterSeconds) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) return;
+    const updated = await chatsApi.updatePreferences(conversationId, { autoDeleteAfterSeconds });
+    set((state) => ({
+      conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
+    }));
+  },
+
   toggleMutedSender: async (conversationId, userId) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
@@ -1616,6 +1626,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     socket.on("message:reminderDue", ({ messageId }: { conversationId: string; messageId: string }) => {
       set((state) => ({ reminders: state.reminders.filter((r) => r.message.id !== messageId) }));
+    });
+
+    socket.on("conversation:autoDeleted", ({ conversationId }: { conversationId: string }) => {
+      set((state) => ({
+        conversations: state.conversations.filter((c) => c.id !== conversationId),
+        messagesByConversation: dropConversation(state.messagesByConversation, conversationId),
+        hasMoreByConversation: dropConversation(state.hasMoreByConversation, conversationId),
+      }));
     });
 
     socket.on("message:read", ({ conversationId, userId, at }: { conversationId: string; userId: string; at: string }) => {
