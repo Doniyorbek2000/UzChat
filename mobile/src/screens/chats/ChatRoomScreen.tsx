@@ -988,6 +988,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
   };
 
+  const onShowFormatHelp = () => {
+    Alert.alert(
+      "Matnni formatlash",
+      "Xabar matnida belgilarni qo'llash mumkin:\n\n*qalin*\n_kursiv_\n~chizilgan~\n`kod`\n||spoiler||\n\nYoki matnni belgilang — formatlash tugmalari paydo bo'ladi."
+    );
+  };
+
   // Wraps the currently selected text with formatting markers (e.g. *bold*, _italic_).
   const onFormatSelection = (open: string, close: string = open) => {
     const { start, end } = selection;
@@ -1841,6 +1848,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.attachIcon}>@</Text>
               </TouchableOpacity>
             )}
+            <TouchableOpacity style={styles.attachButton} onPress={onShowFormatHelp} disabled={sending}>
+              <Text style={styles.formatHelpIcon}>Aa</Text>
+            </TouchableOpacity>
             <TextInput
               style={styles.input}
               value={text}
@@ -3123,6 +3133,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   attachIcon: { fontSize: 24, color: colors.primary, lineHeight: 26 },
+  formatHelpIcon: { fontSize: 14, fontWeight: "700", color: colors.primary },
   input: {
     flex: 1,
     backgroundColor: colors.background,
