@@ -149,7 +149,9 @@ interface ChatState {
   getOrCreateSavedMessages: () => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
   markRead: (conversationId: string) => Promise<void>;
-  markAllRead: () => Promise<void>;
+  // When conversationIds is given, only those conversations are marked as read
+  // (used for per-folder "mark all as read"); otherwise all unread conversations are.
+  markAllRead: (conversationIds?: string[]) => Promise<void>;
   togglePin: (conversationId: string) => Promise<void>;
   reorderPinned: (conversationId: string, direction: "up" | "down") => Promise<void>;
   muteConversation: (conversationId: string, muteFor: MuteDuration) => Promise<void>;
@@ -931,10 +933,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  markAllRead: async () => {
+  markAllRead: async (conversationIds) => {
     const userId = useAuthStore.getState().user?.id;
     if (!userId) return;
-    const unread = get().conversations.filter((c) => !c.isArchived && isConversationUnread(c, userId));
+    const scope = conversationIds ? new Set(conversationIds) : null;
+    const unread = get().conversations.filter(
+      (c) => !c.isArchived && isConversationUnread(c, userId) && (!scope || scope.has(c.id))
+    );
     if (unread.length === 0) return;
     const now = new Date().toISOString();
     await Promise.all(

@@ -524,13 +524,8 @@ export function ChatListScreen({ navigation }: Props) {
     );
   };
 
-  const onMarkAllRead = () => {
-    markAllRead().catch(() => {});
-  };
-
   const visibleConversations = conversations.filter((c) => !c.isArchived);
   const archivedCount = conversations.length - visibleConversations.length;
-  const hasUnread = visibleConversations.some((c) => isConversationUnread(c, user!.id));
 
   const countUnread = (convs: Conversation[]) => convs.filter((c) => isConversationUnread(c, user!.id)).length;
   const allUnreadCount = countUnread(visibleConversations);
@@ -549,6 +544,12 @@ export function ChatListScreen({ navigation }: Props) {
 
   const activeFolder = activeFolderId ? folders.find((f) => f.id === activeFolderId) : undefined;
   const folderConversations = activeFolder ? getFolderConversations(activeFolder, visibleConversations) : visibleConversations;
+
+  const hasUnread = folderConversations.some((c) => isConversationUnread(c, user!.id));
+
+  const onMarkAllRead = () => {
+    markAllRead(folderConversations.map((c) => c.id)).catch(() => {});
+  };
 
   const query = searchQuery.trim().toLowerCase();
   const filteredConversations = query
