@@ -16,6 +16,7 @@ import {
   Linking,
   Switch,
   Image,
+  Share,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
@@ -2088,6 +2089,29 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 }}
               >
                 <Text style={styles.actionButtonText}>📋 Nusxalash</Text>
+              </TouchableOpacity>
+            )}
+          {actionMessage &&
+            canForwardOrCopy &&
+            (actionMessage.type === "TEXT" ||
+              actionMessage.type === "IMAGE" ||
+              actionMessage.type === "VIDEO" ||
+              actionMessage.type === "FILE" ||
+              actionMessage.type === "AUDIO" ||
+              actionMessage.type === "POLL" ||
+              actionMessage.type === "CONTACT") &&
+            !actionMessage.decryptFailed &&
+            !actionMessage.deletedAt &&
+            !!actionMessage.text && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  const text = actionMessage.text ?? "";
+                  setActionMessage(null);
+                  Share.share({ message: text }).catch(() => {});
+                }}
+              >
+                <Text style={styles.actionButtonText}>↗️ Ulashish</Text>
               </TouchableOpacity>
             )}
           {actionMessage &&
