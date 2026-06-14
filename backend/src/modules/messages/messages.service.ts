@@ -8,7 +8,7 @@ import { pushService } from "../push/push.service";
 import { chatsService, isParticipantMuted } from "../chats/chats.service";
 import { contactsService } from "../contacts/contacts.service";
 import { uploadsDir } from "../media/upload";
-import { EditMessageInput, ListMessagesQuery, SendMessageInput } from "./messages.schema";
+import { EditMessageInput, ListMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
 
@@ -873,6 +873,54 @@ export const messagesService = {
         rest.type === MessageType.POLL && rest.pollAnonymous ? anonymizePollVotes(rest.pollVotes, userId) : rest.pollVotes;
       return { ...rest, pollVotes, isStarred: true };
     });
+  },
+
+  async setReminder(userId: string, conversationId: string, messageId: string, input: SetReminderInput) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+    if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabar uchun eslatma qo'yib bo'lmaydi");
+
+    const remindAt = new Date(Date.now() + input.remindInSeconds * 1000);
+    await prisma.messageReminder.upsert({
+      where: { messageId_userId: { messageId, userId } },
+      create: { messageId, userId, remindAt },
+      update: { remindAt },
+    });
+    return { remindAt };
+  },
+
+  async cancelReminder(userId: string, conversationId: string, messageId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+    await prisma.messageReminder.deleteMany({ where: { messageId, userId } });
+  },
+
+  // All pending reminders for a user, soonest first.
+  async listReminders(userId: string) {
+    const reminders = await prisma.messageReminder.findMany({
+      where: { userId, message: { deletedAt: null, NOT: { hiddenFor: { has: userId } } } },
+      orderBy: { remindAt: "asc" },
+      include: { message: { include: messageInclude(userId) } },
+    });
+
+    return reminders.map((r) => ({
+      message: formatMessage(r.message, userId),
+      remindAt: r.remindAt,
+      conversationId: r.message.conversationId,
+    }));
+  },
+
+  // Pops all reminders whose time has come, for the background job to notify.
+  async sendDueReminders() {
+    const due = await prisma.messageReminder.findMany({
+      where: { remindAt: { lte: new Date() } },
+      select: { id: true, userId: true, messageId: true, message: { select: { conversationId: true } } },
+    });
+    if (due.length === 0) return [];
+
+    await prisma.messageReminder.deleteMany({ where: { id: { in: due.map((r) => r.id) } } });
+    return due.map((r) => ({ userId: r.userId, messageId: r.messageId, conversationId: r.message.conversationId }));
   },
 
   // All messages across the user's conversations that @-mention them, most recent first.

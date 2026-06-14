@@ -60,6 +60,7 @@ import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { POLL_DEADLINE_OPTIONS, formatPollDeadline } from "../../utils/pollDeadline";
 import { PIN_DURATION_OPTIONS, formatPinTimeRemaining } from "../../utils/pinExpiry";
+import { REMINDER_DURATION_OPTIONS } from "../../utils/messageReminders";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 import { exportConversation } from "../../utils/chatExport";
 import { reportsApi } from "../../api/reports";
@@ -286,6 +287,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const clearHistory = useChatStore((s) => s.clearHistory);
   const pinMessage = useChatStore((s) => s.pinMessage);
   const unpinMessage = useChatStore((s) => s.unpinMessage);
+  const setReminder = useChatStore((s) => s.setReminder);
   const forwardMessage = useChatStore((s) => s.forwardMessage);
   const getOrCreateSavedMessages = useChatStore((s) => s.getOrCreateSavedMessages);
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
@@ -2006,6 +2008,28 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 </Text>
               </TouchableOpacity>
             )}
+          {actionMessage && !actionMessage.deletedAt && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                Alert.alert(
+                  "Yodga solish",
+                  "Bu xabar haqida qachon eslatilsin?",
+                  REMINDER_DURATION_OPTIONS.map((option) => ({
+                    text: option.label,
+                    onPress: () =>
+                      setReminder(conversationId, message.id, option.value)
+                        .then(() => Alert.alert("Yodga solish", "Eslatma o'rnatildi"))
+                        .catch(() => Alert.alert("Xatolik", "Eslatmani o'rnatib bo'lmadi")),
+                  }))
+                );
+              }}
+            >
+              <Text style={styles.actionButtonText}>⏰ Yodga solish</Text>
+            </TouchableOpacity>
+          )}
           {actionMessage && isGroup && actionMessage.senderId === user?.id && !actionMessage.deletedAt && (
             <TouchableOpacity
               style={styles.actionButton}

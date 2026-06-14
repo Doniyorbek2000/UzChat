@@ -78,9 +78,18 @@ export const votePollSchema = z.object({
   optionIds: z.array(z.string().min(1).max(50)).max(20),
 });
 
+// 30 days, the longest supported "remind me" delay.
+const MAX_REMINDER_SECONDS = 30 * 24 * 60 * 60;
+
+export const setReminderSchema = z.object({
+  // Seconds from now until the reminder fires.
+  remindInSeconds: z.number().int().positive().max(MAX_REMINDER_SECONDS),
+});
+
 export type RescheduleMessageInput = z.infer<typeof rescheduleMessageSchema>;
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type ListMessagesQuery = z.infer<typeof listMessagesQuerySchema>;
 export type SetReactionInput = z.infer<typeof setReactionSchema>;
 export type EditMessageInput = z.infer<typeof editMessageSchema>;
 export type VotePollInput = z.infer<typeof votePollSchema>;
+export type SetReminderInput = z.infer<typeof setReminderSchema>;

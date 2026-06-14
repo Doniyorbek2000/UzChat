@@ -25,6 +25,7 @@ import {
   rescheduleMessageSchema,
   sendMessageSchema,
   setReactionSchema,
+  setReminderSchema,
   votePollSchema,
 } from "../messages/messages.schema";
 
@@ -84,6 +85,7 @@ chatsRouter.get("/:id/audit-log", chatsController.getAuditLog);
 
 chatsRouter.get("/starred/messages", messagesController.listStarred);
 chatsRouter.get("/mentions/messages", messagesController.listMentions);
+chatsRouter.get("/reminders/messages", messagesController.listReminders);
 chatsRouter.get("/common-groups/:userId", chatsController.listCommonGroups);
 chatsRouter.get("/me/activity-stats", messagesController.getMyActivityStats);
 
@@ -118,3 +120,9 @@ chatsRouter.put(
   messagesController.votePoll
 );
 chatsRouter.put("/:id/messages/:messageId/poll-close", messagesController.closePoll);
+chatsRouter.put(
+  "/:id/messages/:messageId/reminder",
+  validateBody(setReminderSchema),
+  messagesController.setReminder
+);
+chatsRouter.delete("/:id/messages/:messageId/reminder", messagesController.cancelReminder);

@@ -26,6 +26,7 @@ import {
   MediaAsset,
   MediaMeta,
   MessageReaction,
+  MessageReminderInfo,
   MessageType,
   MuteDuration,
   ParticipantRole,
@@ -78,6 +79,7 @@ interface ChatState {
   contactAliases: Record<string, string>;
   favoriteContactIds: Set<string>;
   folders: ChatFolder[];
+  reminders: MessageReminderInfo[];
 
   loadConversations: () => Promise<void>;
   loadContactAliases: () => Promise<void>;
@@ -162,6 +164,9 @@ interface ChatState {
   pinMessage: (conversationId: string, messageId: string, expiresInSeconds?: number | null) => Promise<void>;
   unpinMessage: (conversationId: string, messageId: string) => Promise<void>;
   unpinAllMessages: (conversationId: string) => Promise<void>;
+  fetchReminders: () => Promise<void>;
+  setReminder: (conversationId: string, messageId: string, remindInSeconds: number) => Promise<void>;
+  cancelReminder: (conversationId: string, messageId: string) => Promise<void>;
   setDisappearingMessages: (conversationId: string, disappearingSeconds: number | null) => Promise<void>;
   setNoForwards: (conversationId: string, noForwards: boolean) => Promise<void>;
   patUser: (conversationId: string, targetUserId: string) => Promise<void>;
@@ -304,6 +309,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   contactAliases: {},
   favoriteContactIds: new Set(),
   folders: [],
+  reminders: [],
 
   loadConversations: async () => {
     const conversations = await chatsApi.list();
@@ -1103,6 +1109,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
+  fetchReminders: async () => {
+    const reminders = await chatsApi.listReminders();
+    set({ reminders });
+  },
+
+  setReminder: async (conversationId, messageId, remindInSeconds) => {
+    await chatsApi.setReminder(conversationId, messageId, remindInSeconds);
+  },
+
+  cancelReminder: async (conversationId, messageId) => {
+    await chatsApi.cancelReminder(conversationId, messageId);
+    set((state) => ({ reminders: state.reminders.filter((r) => r.message.id !== messageId) }));
+  },
+
   setDisappearingMessages: async (conversationId, disappearingSeconds) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
@@ -1592,6 +1612,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
             : c
         ),
       }));
+    });
+
+    socket.on("message:reminderDue", ({ messageId }: { conversationId: string; messageId: string }) => {
+      set((state) => ({ reminders: state.reminders.filter((r) => r.message.id !== messageId) }));
     });
 
     socket.on("message:read", ({ conversationId, userId, at }: { conversationId: string; userId: string; at: string }) => {

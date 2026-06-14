@@ -46,6 +46,7 @@ export type RootStackParamList = {
   PinnedMessages: { conversationId: string; title: string };
   StarredMessages: undefined;
   Mentions: undefined;
+  Reminders: undefined;
   ArchivedChats: undefined;
   ChatFolders: undefined;
   EditChatFolder: { folderId: string };

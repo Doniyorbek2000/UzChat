@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { ActivityStats, BannedGroupMember, CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
+import { ActivityStats, BannedGroupMember, CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageReminderInfo, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -331,6 +331,20 @@ export const chatsApi = {
 
   listMentions() {
     return apiClient.get<Message[]>("/conversations/mentions/messages").then((r) => r.data);
+  },
+
+  setReminder(conversationId: string, messageId: string, remindInSeconds: number) {
+    return apiClient
+      .put<{ remindAt: string }>(`/conversations/${conversationId}/messages/${messageId}/reminder`, { remindInSeconds })
+      .then((r) => r.data);
+  },
+
+  cancelReminder(conversationId: string, messageId: string) {
+    return apiClient.delete(`/conversations/${conversationId}/messages/${messageId}/reminder`);
+  },
+
+  listReminders() {
+    return apiClient.get<MessageReminderInfo[]>("/conversations/reminders/messages").then((r) => r.data);
   },
 
   listCommonGroups(userId: string) {

@@ -179,6 +179,35 @@ export const messagesController = {
     }
   },
 
+  async setReminder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      const result = await messagesService.setReminder(req.user!.sub, conversationId, messageId, req.body);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async cancelReminder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id: conversationId, messageId } = req.params;
+      await messagesService.cancelReminder(req.user!.sub, conversationId, messageId);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async listReminders(req: Request, res: Response, next: NextFunction) {
+    try {
+      const reminders = await messagesService.listReminders(req.user!.sub);
+      res.json(reminders);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async listMentions(req: Request, res: Response, next: NextFunction) {
     try {
       const messages = await messagesService.listMentions(req.user!.sub);

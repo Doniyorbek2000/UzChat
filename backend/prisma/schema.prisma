@@ -166,6 +166,7 @@ model User {
   messages         Message[]
   reactions        MessageReaction[]
   starredMessages  MessageStar[]
+  messageReminders MessageReminder[]
   pollVotes        PollVote[]
   sentContacts     Contact[]                  @relation("ContactOwner")
   receivedContacts Contact[]                  @relation("ContactTarget")
@@ -545,6 +546,7 @@ model Message {
   pollVotes   PollVote[]
   pins        PinnedMessage[]
   editHistory MessageEditHistory[]
+  reminders   MessageReminder[]
 
   createdAt DateTime  @default(now())
   editedAt  DateTime?
@@ -629,6 +631,22 @@ model MessageStar {
 
   @@unique([messageId, userId])
   @@index([userId])
+}
+
+// A user's reminder ("Yodga solish") to revisit a specific message later.
+// A background job notifies the user once remindAt passes, then deletes the row.
+model MessageReminder {
+  id        String   @id @default(uuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  remindAt  DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([userId])
+  @@index([remindAt])
 }
 
 // A user's vote(s) on a POLL message. The poll question and option text are

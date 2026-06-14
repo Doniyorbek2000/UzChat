@@ -100,6 +100,13 @@ export interface PinnedMessageInfo extends ReplyToSnapshot {
   expiresAt: string | null;
 }
 
+// A pending "remind me later" entry for a message, returned by /conversations/reminders/messages.
+export interface MessageReminderInfo {
+  message: Message;
+  remindAt: string;
+  conversationId: string;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
