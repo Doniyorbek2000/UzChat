@@ -20,7 +20,9 @@ import {
 import {
   LoginInput,
   RequestOtpInput,
+  RequestPasswordResetInput,
   RequestPhoneChangeInput,
+  ResetPasswordInput,
   VerifyOtpInput,
   VerifyPhoneChangeInput,
   VerifyTwoFactorInput,
@@ -371,5 +373,53 @@ export const authService = {
     const tokens = await issueTokens(user, userAgent);
     notifyNewLogin(user.id, userAgent);
     return { user: toPublicUser(user), ...tokens };
+  },
+
+  // Lets a logged-out user who forgot their password regain access via a
+  // phone OTP. Silently no-ops for unregistered phones to avoid leaking
+  // which numbers have accounts.
+  async requestPasswordReset({ phone }: RequestPasswordResetInput) {
+    const user = await prisma.user.findUnique({ where: { phone }, select: { id: true } });
+    if (!user) return;
+
+    const code = generateOtpCode();
+    const codeHash = await hashOtpCode(code);
+
+    await prisma.otpCode.create({
+      data: { phone, codeHash, expiresAt: new Date(Date.now() + OTP_TTL_MS) },
+    });
+
+    await sendOtpSms(phone, code);
+  },
+
+  async resetPassword({ phone, code, newPassword }: ResetPasswordInput) {
+    const user = await prisma.user.findUnique({ where: { phone } });
+    if (!user) throw Errors.badRequest("Tasdiqlash kodi noto'g'ri");
+
+    const otp = await prisma.otpCode.findFirst({
+      where: { phone },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!otp || otp.expiresAt < new Date()) {
+      throw Errors.badRequest("Tasdiqlash kodi muddati o'tgan, qaytadan so'rang");
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      throw Errors.badRequest("Urinishlar soni tugadi, qaytadan so'rang");
+    }
+
+    const valid = await verifyOtpCode(code, otp.codeHash);
+    if (!valid) {
+      await prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
+      throw Errors.badRequest("Tasdiqlash kodi noto'g'ri");
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+    await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+    await prisma.otpCode.delete({ where: { id: otp.id } });
+    await prisma.refreshToken.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
   },
 };

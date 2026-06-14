@@ -61,6 +61,16 @@ export const verifyTwoFactorRecoverySchema = z.object({
   code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
 });
 
+export const requestPasswordResetSchema = z.object({
+  phone: phoneSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  phone: phoneSchema,
+  code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
+  newPassword: passwordSchema,
+});
+
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -70,3 +80,5 @@ export type RequestPhoneChangeInput = z.infer<typeof requestPhoneChangeSchema>;
 export type VerifyPhoneChangeInput = z.infer<typeof verifyPhoneChangeSchema>;
 export type RequestTwoFactorRecoveryInput = z.infer<typeof requestTwoFactorRecoverySchema>;
 export type VerifyTwoFactorRecoveryInput = z.infer<typeof verifyTwoFactorRecoverySchema>;
+export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

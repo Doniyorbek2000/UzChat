@@ -5,8 +5,10 @@ import {
   loginSchema,
   refreshSchema,
   requestOtpSchema,
+  requestPasswordResetSchema,
   requestPhoneChangeSchema,
   requestTwoFactorRecoverySchema,
+  resetPasswordSchema,
   verifyOtpSchema,
   verifyPhoneChangeSchema,
   verifyTwoFactorRecoverySchema,
@@ -52,6 +54,19 @@ authRouter.post(
 );
 authRouter.post("/refresh", validateBody(refreshSchema), authController.refresh);
 authRouter.post("/logout", validateBody(refreshSchema), authController.logout);
+
+authRouter.post(
+  "/reset-password/request-otp",
+  authRateLimiter,
+  validateBody(requestPasswordResetSchema),
+  authController.requestPasswordReset
+);
+authRouter.post(
+  "/reset-password/verify-otp",
+  authRateLimiter,
+  validateBody(resetPasswordSchema),
+  authController.resetPassword
+);
 
 authRouter.get("/sessions", requireAuth, authController.listSessions);
 authRouter.delete("/sessions/:id", requireAuth, authController.revokeSession);

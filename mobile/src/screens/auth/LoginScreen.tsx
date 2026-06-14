@@ -52,6 +52,10 @@ export function LoginScreen({ navigation }: Props) {
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kirish</Text>}
       </TouchableOpacity>
 
+      <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+        <Text style={styles.link}>Parolni unutdingizmi?</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity onPress={() => navigation.navigate("Register")}>
         <Text style={styles.link}>Hisobingiz yo'qmi? Ro'yxatdan o'ting</Text>
       </TouchableOpacity>

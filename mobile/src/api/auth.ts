@@ -68,4 +68,12 @@ export const authApi = {
       .post<{ user: AuthUser } & AuthTokens>("/auth/login/2fa/recover/verify-otp", { pendingToken, code })
       .then((r) => r.data);
   },
+
+  requestPasswordReset(phone: string) {
+    return apiClient.post("/auth/reset-password/request-otp", { phone });
+  },
+
+  resetPassword(phone: string, code: string, newPassword: string) {
+    return apiClient.post("/auth/reset-password/verify-otp", { phone, code, newPassword });
+  },
 };

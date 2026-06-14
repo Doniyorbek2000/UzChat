@@ -128,4 +128,22 @@ export const authController = {
       next(err);
     }
   },
+
+  async requestPasswordReset(req: Request, res: Response, next: NextFunction) {
+    try {
+      await authService.requestPasswordReset(req.body);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      await authService.resetPassword(req.body);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
 };

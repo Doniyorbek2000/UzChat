@@ -16,6 +16,7 @@ export type AuthStackParamList = {
     pendingToken: string;
     hint: string | null;
   };
+  ForgotPassword: undefined;
 };
 
 export type MainTabParamList = {
