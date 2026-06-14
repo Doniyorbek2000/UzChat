@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -63,6 +63,21 @@ export function ContactsScreen({ navigation }: Props) {
       return bTime - aTime;
     });
   }, [filteredContacts, onlineUsers, sortOnlineFirst]);
+
+  const sectionListRef = useRef<SectionList<Contact>>(null);
+
+  const sections = useMemo(() => {
+    if (sortOnlineFirst) return [{ title: "", data: sortedContacts }];
+    const groups = new Map<string, Contact[]>();
+    for (const item of sortedContacts) {
+      const name = (item.alias ?? item.user.displayName).trim();
+      const first = name.charAt(0).toUpperCase();
+      const letter = /^\p{L}/u.test(first) ? first : "#";
+      if (!groups.has(letter)) groups.set(letter, []);
+      groups.get(letter)!.push(item);
+    }
+    return [...groups.entries()].map(([title, data]) => ({ title, data }));
+  }, [sortedContacts, sortOnlineFirst]);
 
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
 
@@ -317,36 +332,58 @@ export function ContactsScreen({ navigation }: Props) {
           <Text style={styles.sortToggleText}>Onlaynlarni birinchi ko'rsatish</Text>
         </TouchableOpacity>
       )}
-      <FlatList
-        data={sortedContacts}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        renderItem={({ item }) => {
-          const isOnline = onlineUsers.has(item.user.id);
-          return (
-            <TouchableOpacity style={styles.row} onPress={() => onOpenChat(item)} onLongPress={() => onLongPressContact(item)}>
-              <Avatar uri={item.user.avatarUrl} name={item.user.displayName} online={isOnline} />
-              <View style={styles.nameColumn}>
-                <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
-                {(isOnline || item.user.lastSeenAt) && (
-                  <Text style={styles.presenceLabel}>
-                    {isOnline ? "Onlayn" : `Oxirgi marta: ${formatTime(item.user.lastSeenAt!)}`}
-                  </Text>
-                )}
-              </View>
-              {item.note && <Text style={styles.noteIcon}>📝</Text>}
-              {item.isFavorite && <Text style={styles.favoriteStar}>⭐</Text>}
-            </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={styles.center}>
-            <Text style={styles.emptyText}>
-              {contacts.length === 0 ? "Hali kontaktlar yo'q" : "Hech narsa topilmadi"}
-            </Text>
+      <View style={styles.listContainer}>
+        <SectionList
+          ref={sectionListRef}
+          sections={sections}
+          keyExtractor={(item) => item.id}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          stickySectionHeadersEnabled
+          renderSectionHeader={({ section }) =>
+            section.title ? <Text style={styles.sectionHeader}>{section.title}</Text> : null
+          }
+          renderItem={({ item }) => {
+            const isOnline = onlineUsers.has(item.user.id);
+            return (
+              <TouchableOpacity style={styles.row} onPress={() => onOpenChat(item)} onLongPress={() => onLongPressContact(item)}>
+                <Avatar uri={item.user.avatarUrl} name={item.user.displayName} online={isOnline} />
+                <View style={styles.nameColumn}>
+                  <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
+                  {(isOnline || item.user.lastSeenAt) && (
+                    <Text style={styles.presenceLabel}>
+                      {isOnline ? "Onlayn" : `Oxirgi marta: ${formatTime(item.user.lastSeenAt!)}`}
+                    </Text>
+                  )}
+                </View>
+                {item.note && <Text style={styles.noteIcon}>📝</Text>}
+                {item.isFavorite && <Text style={styles.favoriteStar}>⭐</Text>}
+              </TouchableOpacity>
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.center}>
+              <Text style={styles.emptyText}>
+                {contacts.length === 0 ? "Hali kontaktlar yo'q" : "Hech narsa topilmadi"}
+              </Text>
+            </View>
+          }
+        />
+        {!sortOnlineFirst && !search.trim() && sections.length > 1 && (
+          <View style={styles.alphabetRail}>
+            {sections.map((section, index) => (
+              <TouchableOpacity
+                key={section.title}
+                style={styles.alphabetRailItem}
+                onPress={() =>
+                  sectionListRef.current?.scrollToLocation({ sectionIndex: index, itemIndex: 0, viewOffset: 0, animated: false })
+                }
+              >
+                <Text style={styles.alphabetRailText}>{section.title}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-        }
-      />
+        )}
+      </View>
 
       <Modal visible={!!aliasContact} transparent animationType="fade" onRequestClose={() => setAliasContact(null)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setAliasContact(null)}>
@@ -427,6 +464,25 @@ const styles = StyleSheet.create({
   birthdayIcon: { backgroundColor: colors.border },
   addIconText: { fontSize: 18 },
   addText: { fontSize: 16, fontWeight: "500", color: colors.text },
+  listContainer: { flex: 1 },
+  sectionHeader: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.textSecondary,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  alphabetRail: {
+    position: "absolute",
+    right: 2,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  alphabetRailItem: { paddingVertical: 1, paddingHorizontal: 4 },
+  alphabetRailText: { fontSize: 11, fontWeight: "600", color: colors.primary },
   row: { flexDirection: "row", alignItems: "center", padding: 12, gap: 12 },
   name: { fontSize: 16, color: colors.text, flex: 1 },
   nameColumn: { flex: 1 },
