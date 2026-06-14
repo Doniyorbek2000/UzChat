@@ -368,6 +368,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const wallpaperColor = getWallpaperColor(wallpaperId);
   const customWallpaperUri = getCustomWallpaperUri(wallpaperId);
   const fontScale = useChatSettingsStore((s) => s.fontScale);
+  const quickReactionEmoji = useChatSettingsStore((s) => s.quickReactionEmoji);
+  const setQuickReactionEmoji = useChatSettingsStore((s) => s.setQuickReactionEmoji);
   const recentEmojis = useRecentEmojiStore((s) => s.recentEmojis);
   const recordEmoji = useRecentEmojiStore((s) => s.recordEmoji);
   const recentStickers = useRecentStickersStore((s) => s.recentStickers);
@@ -1424,10 +1426,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const last = lastTapRef.current;
     if (last && last.id === item.id && now - last.time < 300) {
       lastTapRef.current = null;
-      toggleReaction(conversationId, item.id, "❤️").catch(() => {});
+      toggleReaction(conversationId, item.id, quickReactionEmoji).catch(() => {});
       return;
     }
     lastTapRef.current = { id: item.id, time: now };
+  };
+
+  const onSetQuickReaction = (emoji: string) => {
+    if (emoji === quickReactionEmoji) return;
+    setQuickReactionEmoji(emoji).catch(() => {});
+    recordEmoji(emoji).catch(() => {});
+    Alert.alert("Tezkor reaksiya o'rnatildi", `Endi xabarni ikki marta bosganda ${emoji} reaksiyasi qo'yiladi.`);
   };
 
   const onBulkForward = () => {
@@ -1987,8 +1996,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   recordEmoji(emoji).catch(() => {});
                   setActionMessage(null);
                 }}
+                onLongPress={() => onSetQuickReaction(emoji)}
               >
                 <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
+                {emoji === quickReactionEmoji && <View style={styles.quickReactionBadge} />}
               </TouchableOpacity>
             ))}
             <TouchableOpacity
@@ -2001,6 +2012,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.reactionPickerMore}>➕</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.quickReactionHint}>Ikki marta bosish uchun reaksiyani uzoq bosib tanlang</Text>
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => {
@@ -2364,8 +2376,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   setMoreReactionsMessage(null);
                   setCustomReactionEmoji("");
                 }}
+                onLongPress={() => onSetQuickReaction(emoji)}
               >
                 <Text style={styles.reactionPickerEmoji}>{emoji}</Text>
+                {emoji === quickReactionEmoji && <View style={styles.quickReactionBadge} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -2397,6 +2411,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 recordEmoji(emoji).catch(() => {});
                 setMoreReactionsMessage(null);
                 setCustomReactionEmoji("");
+              }}
+              onLongPress={() => {
+                const emoji = customReactionEmoji.trim();
+                if (emoji) onSetQuickReaction(emoji);
               }}
             >
               <Text style={styles.customReactionButtonText}>✓</Text>
@@ -3194,6 +3212,23 @@ const styles = StyleSheet.create({
   },
   reactionPickerEmoji: { fontSize: 26 },
   reactionPickerMore: { fontSize: 22, color: colors.textSecondary },
+  quickReactionBadge: {
+    position: "absolute",
+    bottom: 2,
+    right: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
+    borderWidth: 1.5,
+    borderColor: colors.surface,
+  },
+  quickReactionHint: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: "center",
+    marginBottom: 8,
+  },
   moreReactionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",

@@ -35,4 +35,15 @@ export const chatSettingsStorage = {
   async setAutoDownloadMedia(autoDownloadMedia: boolean): Promise<void> {
     await writeSettings({ autoDownloadMedia });
   },
+
+  async getQuickReactionEmoji(): Promise<string> {
+    const data = await readSettings();
+    return typeof data.quickReactionEmoji === "string" && data.quickReactionEmoji.length > 0
+      ? data.quickReactionEmoji
+      : "❤️";
+  },
+
+  async setQuickReactionEmoji(quickReactionEmoji: string): Promise<void> {
+    await writeSettings({ quickReactionEmoji });
+  },
 };
