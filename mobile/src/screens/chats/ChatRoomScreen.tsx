@@ -42,6 +42,7 @@ import { useChatSettingsStore } from "../../store/chatSettingsStore";
 import { useRecentEmojiStore } from "../../store/recentEmojiStore";
 import { useQuickRepliesStore } from "../../store/quickRepliesStore";
 import { getCustomWallpaperUri, getWallpaperColor } from "../../theme/wallpapers";
+import { STICKER_PACKS } from "../../utils/stickerPacks";
 import { ConversationParticipant, MessageReaction, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
@@ -329,6 +330,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
+  const [stickerPickerVisible, setStickerPickerVisible] = useState(false);
+  const [activeStickerPackIndex, setActiveStickerPackIndex] = useState(0);
   const [pollModalVisible, setPollModalVisible] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
@@ -1093,10 +1096,24 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       { text: "📄 Fayl", onPress: pickFile },
       { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
       { text: "📊 So'rovnoma", onPress: openPollModal },
+      { text: "🙂 Stiker", onPress: () => setStickerPickerVisible(true) },
       { text: "💬 Tezkor javob", onPress: onOpenQuickReplies },
       { text: "📋 Klipborddan rasm", onPress: pasteImage },
       { text: "Bekor qilish", style: "cancel" },
     ]);
+  };
+
+  const onSendSticker = async (sticker: string) => {
+    setStickerPickerVisible(false);
+    const replyToId = replyingTo?.id;
+    setReplyingTo(null);
+    try {
+      await sendTextMessage(conversationId, sticker, replyToId);
+      scrollToLatest();
+    } catch (err: any) {
+      const message = err?.response?.data?.error?.message;
+      if (message) Alert.alert("Xatolik", message);
+    }
   };
 
   const onOpenQuickReplies = () => {
@@ -2440,6 +2457,42 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         />
       </View>
     </Modal>
+    <Modal
+      visible={stickerPickerVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setStickerPickerVisible(false)}
+    >
+      <Pressable style={styles.actionBackdrop} onPress={() => setStickerPickerVisible(false)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Stiker tanlang</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stickerPackTabs}>
+            {STICKER_PACKS.map((pack, index) => (
+              <TouchableOpacity
+                key={pack.id}
+                style={[styles.stickerPackTab, activeStickerPackIndex === index && styles.stickerPackTabActive]}
+                onPress={() => setActiveStickerPackIndex(index)}
+              >
+                <Text style={styles.stickerPackTabIcon}>{pack.stickers[0]}</Text>
+                <Text
+                  style={[styles.stickerPackTabText, activeStickerPackIndex === index && styles.stickerPackTabTextActive]}
+                  numberOfLines={1}
+                >
+                  {pack.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <View style={styles.stickerGrid}>
+            {STICKER_PACKS[activeStickerPackIndex].stickers.map((sticker) => (
+              <TouchableOpacity key={sticker} style={styles.stickerOption} onPress={() => onSendSticker(sticker)}>
+                <Text style={styles.stickerEmoji}>{sticker}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
     <Modal visible={pollModalVisible} animationType="slide" onRequestClose={() => setPollModalVisible(false)}>
       <KeyboardAvoidingView
         style={styles.pollContainer}
@@ -2810,6 +2863,32 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     paddingBottom: 16,
   },
+  stickerPackTabs: { marginBottom: 12 },
+  stickerPackTab: {
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+  },
+  stickerPackTabActive: { backgroundColor: colors.primary },
+  stickerPackTabIcon: { fontSize: 22 },
+  stickerPackTabText: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  stickerPackTabTextActive: { color: "#fff" },
+  stickerGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-start",
+    paddingBottom: 16,
+  },
+  stickerOption: {
+    width: "25%",
+    aspectRatio: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stickerEmoji: { fontSize: 40 },
   customReactionRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingBottom: 8 },
   customReactionInput: {
     flex: 1,
