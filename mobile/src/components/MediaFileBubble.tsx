@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as Sharing from "expo-sharing";
-import { downloadAndDecryptFile, extensionFromName, formatFileSize } from "../utils/mediaFile";
+import { downloadAndDecryptFile, extensionFromName, formatDuration, formatFileSize } from "../utils/mediaFile";
 import { DecryptedMessage } from "../store/chatStore";
 import { colors } from "../theme/colors";
 
@@ -35,16 +35,21 @@ export function MediaFileBubble({ message, conversationKey }: Props) {
     }
   };
 
+  const isVideo = message.type === "VIDEO";
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} disabled={loading}>
       <View style={styles.icon}>
-        {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.iconText}>📄</Text>}
+        {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.iconText}>{isVideo ? "🎬" : "📄"}</Text>}
       </View>
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>
-          {meta.name}
+          {isVideo ? "Video" : meta.name}
         </Text>
-        <Text style={styles.size}>{formatFileSize(meta.size)}</Text>
+        <Text style={styles.size}>
+          {isVideo && meta.duration ? `${formatDuration(meta.duration)} · ` : ""}
+          {formatFileSize(meta.size)}
+        </Text>
       </View>
     </TouchableOpacity>
   );
