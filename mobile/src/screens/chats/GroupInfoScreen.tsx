@@ -32,6 +32,7 @@ import { SLOW_MODE_OPTIONS, formatSlowModeDuration } from "../../utils/slowMode"
 import { INVITE_EXPIRY_OPTIONS, INVITE_MAX_USES_OPTIONS, formatInviteStatus } from "../../utils/inviteLink";
 import { isParticipantRestricted } from "../../utils/restriction";
 import { formatJoinDate, formatTime } from "../../utils/conversation";
+import { showChatNotificationSettings } from "../../utils/chatNotificationSettings";
 import { ConversationParticipant, Message, MessageType, ParticipantRole } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
@@ -73,6 +74,8 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   const revokeInviteLink = useChatStore((s) => s.revokeInviteLink);
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
   const toggleMutedSender = useChatStore((s) => s.toggleMutedSender);
+  const setNotificationPreview = useChatStore((s) => s.setNotificationPreview);
+  const setReadReceiptsOverride = useChatStore((s) => s.setReadReceiptsOverride);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
 
   const [title, setTitle] = useState(conversation?.title ?? "");
@@ -741,6 +744,13 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         >
           <Text style={styles.inviteIcon}>🖼</Text>
           <Text style={styles.inviteText}>Umumiy media</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.inviteRow}
+          onPress={() => showChatNotificationSettings(conversation, setNotificationPreview, setReadReceiptsOverride)}
+        >
+          <Text style={styles.inviteIcon}>🔔</Text>
+          <Text style={styles.inviteText}>Bildirishnoma sozlamalari</Text>
         </TouchableOpacity>
         {(conversation.type !== "GROUP" || !conversation.noForwards || canManage) && (
           <TouchableOpacity style={styles.inviteRow} onPress={onExportChat} disabled={exporting}>

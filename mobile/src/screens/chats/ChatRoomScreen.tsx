@@ -73,6 +73,7 @@ import { exportConversation } from "../../utils/chatExport";
 import { reportsApi } from "../../api/reports";
 import { getPreviewLabel } from "../../utils/messagePreview";
 import { FORMAT_PATTERN } from "../../utils/textFormat";
+import { showChatNotificationSettings } from "../../utils/chatNotificationSettings";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
@@ -323,6 +324,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
   const setAutoDelete = useChatStore((s) => s.setAutoDelete);
   const setNoForwards = useChatStore((s) => s.setNoForwards);
+  const setNotificationPreview = useChatStore((s) => s.setNotificationPreview);
+  const setReadReceiptsOverride = useChatStore((s) => s.setReadReceiptsOverride);
   const markRead = useChatStore((s) => s.markRead);
   const setTyping = useChatStore((s) => s.setTyping);
   const typingUsers = useChatStore((s) => s.typingUsers[conversationId]);
@@ -524,10 +527,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const onChatMenu = () => {
-    if (!otherUser) return;
+    if (!otherUser || !conversation) return;
     Alert.alert(otherUserDisplayName, undefined, [
       { text: "🖼 Umumiy media", onPress: () => navigation.navigate("SharedMedia", { conversationId }) },
       { text: "👥 Umumiy guruhlar", onPress: () => navigation.navigate("CommonGroups", { userId: otherUser.id }) },
+      {
+        text: "🔔 Bildirishnoma sozlamalari",
+        onPress: () => showChatNotificationSettings(conversation, setNotificationPreview, setReadReceiptsOverride),
+      },
       { text: "📤 Suhbatni eksport qilish", onPress: onExportChat },
       { text: "🗑 Suhbatni tozalash", onPress: onClearHistory },
       {
