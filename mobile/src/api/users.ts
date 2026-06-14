@@ -11,6 +11,7 @@ export const usersApi = {
     displayName?: string;
     bio?: string;
     customStatus?: string;
+    customStatusClearAfterSeconds?: number | null;
     avatarUrl?: string;
     lastSeenPrivacy?: LastSeenPrivacy;
     avatarPrivacy?: LastSeenPrivacy;

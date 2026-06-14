@@ -101,6 +101,8 @@ model User {
   // Short custom status line (e.g. "📚 Mashg'ulotda", "🏖 Ta'tilda"), shown on
   // the user's profile separately from their bio.
   customStatus String?
+  // When set, customStatus is automatically cleared once this time passes.
+  customStatusExpiresAt DateTime?
   // Base64 X25519 public key used by clients for end-to-end encryption.
   // The matching private key never leaves the user's device.
   publicKey    String
@@ -184,6 +186,7 @@ model User {
 
   @@index([username])
   @@index([phone])
+  @@index([customStatusExpiresAt])
 }
 
 // A user-submitted report about another user (optionally about a specific

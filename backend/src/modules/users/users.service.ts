@@ -40,6 +40,7 @@ const profileSelect = {
   avatarUrl: true,
   bio: true,
   customStatus: true,
+  customStatusExpiresAt: true,
   publicKey: true,
   lastSeenAt: true,
   lastSeenPrivacy: true,
@@ -80,6 +81,7 @@ const publicSelect = {
   avatarUrl: true,
   bio: true,
   customStatus: true,
+  customStatusExpiresAt: true,
   publicKey: true,
   lastSeenAt: true,
   lastSeenPrivacy: true,
@@ -98,6 +100,7 @@ export const usersService = {
   },
 
   async updateProfile(userId: string, data: UpdateProfileInput) {
+    const { customStatusClearAfterSeconds, ...rest } = data;
     let usernameChangedAt: Date | undefined;
     if (data.username) {
       const current = await prisma.user.findUnique({
@@ -133,9 +136,21 @@ export const usersService = {
         usernameChangedAt = new Date();
       }
     }
+    let customStatusExpiresAt: Date | null | undefined;
+    if (data.customStatus !== undefined) {
+      customStatusExpiresAt =
+        data.customStatus && customStatusClearAfterSeconds
+          ? new Date(Date.now() + customStatusClearAfterSeconds * 1000)
+          : null;
+    }
+
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { ...data, ...(usernameChangedAt ? { usernameChangedAt } : {}) },
+      data: {
+        ...rest,
+        ...(usernameChangedAt ? { usernameChangedAt } : {}),
+        ...(customStatusExpiresAt !== undefined ? { customStatusExpiresAt } : {}),
+      },
       select: profileSelect,
     });
     return formatProfile(user);
@@ -305,5 +320,14 @@ export const usersService = {
   /** Removes a "Last seen" privacy exception, reverting to the global lastSeenPrivacy setting for that user. */
   async removeLastSeenException(userId: string, exceptionUserId: string) {
     await prisma.lastSeenException.deleteMany({ where: { ownerId: userId, exceptionUserId } });
+  },
+
+  /** Clears custom statuses whose auto-clear time has passed. */
+  async clearExpiredCustomStatuses() {
+    const { count } = await prisma.user.updateMany({
+      where: { customStatusExpiresAt: { lte: new Date() } },
+      data: { customStatus: null, customStatusExpiresAt: null },
+    });
+    return count;
   },
 };

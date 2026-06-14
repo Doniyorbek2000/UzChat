@@ -14,6 +14,8 @@ export interface User {
   avatarUrl: string | null;
   bio?: string | null;
   customStatus?: string | null;
+  // When set, customStatus is automatically cleared at this time.
+  customStatusExpiresAt?: string | null;
   publicKey: string;
   lastSeenAt?: string | null;
   birthdayDay?: number | null;

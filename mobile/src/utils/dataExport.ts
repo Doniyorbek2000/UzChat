@@ -18,6 +18,7 @@ export async function exportAccountData(user: AuthUser, conversations: Conversat
       phone: user.phone,
       bio: user.bio ?? null,
       customStatus: user.customStatus ?? null,
+      customStatusExpiresAt: user.customStatusExpiresAt ?? null,
       avatarUrl: user.avatarUrl,
       birthdayDay: user.birthdayDay ?? null,
       birthdayMonth: user.birthdayMonth ?? null,

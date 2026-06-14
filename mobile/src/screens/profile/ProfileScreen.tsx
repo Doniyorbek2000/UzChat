@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { formatBirthday, MAX_DAYS_IN_MONTH, UZ_MONTHS } from "../../utils/birthday";
+import { CUSTOM_STATUS_DURATION_OPTIONS, formatCustomStatusDuration, formatCustomStatusExpiry } from "../../utils/customStatusDuration";
 import { MainTabScreenProps } from "../../navigation/types";
 import { UsernameHistoryEntry } from "../../types";
 
@@ -27,6 +28,7 @@ export function ProfileScreen({ navigation }: Props) {
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
   const [customStatus, setCustomStatus] = useState(user?.customStatus ?? "");
+  const [customStatusClearAfterSeconds, setCustomStatusClearAfterSeconds] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [birthdayModalVisible, setBirthdayModalVisible] = useState(false);
@@ -91,11 +93,15 @@ export function ProfileScreen({ navigation }: Props) {
     }
     setSaving(true);
     try {
+      const trimmedStatus = customStatus.trim();
+      const statusChanged = trimmedStatus !== (user?.customStatus ?? "");
       await usersApi.updateMe({
         username: trimmedUsername,
         displayName: displayName.trim(),
         bio: bio.trim(),
-        customStatus: customStatus.trim(),
+        ...(statusChanged || customStatusClearAfterSeconds !== null
+          ? { customStatus: trimmedStatus, customStatusClearAfterSeconds }
+          : {}),
       });
       await refreshProfile();
       Alert.alert("Saqlandi", "Profil yangilandi");
@@ -104,6 +110,17 @@ export function ProfileScreen({ navigation }: Props) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const onPickCustomStatusDuration = () => {
+    Alert.alert(
+      "Holatni tozalash vaqti",
+      "Holat avtomatik tozalanadigan vaqtni tanlang",
+      CUSTOM_STATUS_DURATION_OPTIONS.map((option) => ({
+        text: option.label,
+        onPress: () => setCustomStatusClearAfterSeconds(option.value),
+      }))
+    );
   };
 
   const onChangeAvatar = async () => {
@@ -258,6 +275,13 @@ export function ProfileScreen({ navigation }: Props) {
         maxLength={70}
       />
       <Text style={styles.charCounter}>{customStatus.length}/70</Text>
+      <TouchableOpacity style={styles.statusDurationRow} onPress={onPickCustomStatusDuration}>
+        <Text style={styles.statusDurationLabel}>Avtomatik tozalash</Text>
+        <Text style={styles.statusDurationValue}>{formatCustomStatusDuration(customStatusClearAfterSeconds)} ›</Text>
+      </TouchableOpacity>
+      {!!user?.customStatus && user?.customStatusExpiresAt && formatCustomStatusExpiry(user.customStatusExpiresAt) && (
+        <Text style={styles.charCounter}>{formatCustomStatusExpiry(user.customStatusExpiresAt)}</Text>
+      )}
 
       <Text style={styles.label}>Bio</Text>
       <TextInput style={[styles.input, styles.bioInput]} value={bio} onChangeText={setBio} multiline maxLength={256} />
@@ -509,6 +533,14 @@ const styles = StyleSheet.create({
   },
   bioInput: { minHeight: 80, textAlignVertical: "top" },
   charCounter: { fontSize: 12, color: colors.textSecondary, textAlign: "right", marginTop: 4 },
+  statusDurationRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  statusDurationLabel: { fontSize: 14, color: colors.text },
+  statusDurationValue: { fontSize: 14, color: colors.textSecondary },
   usernameInputRow: {
     flexDirection: "row",
     alignItems: "center",

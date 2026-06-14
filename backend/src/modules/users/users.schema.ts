@@ -10,6 +10,9 @@ export const updateProfileSchema = z
     displayName: z.string().min(1).max(64).optional(),
     bio: z.string().max(256).optional(),
     customStatus: z.string().max(70).optional(),
+    // If set alongside customStatus, the status auto-clears this many seconds
+    // after saving. Pass null to keep the status without an expiry.
+    customStatusClearAfterSeconds: z.number().int().positive().nullable().optional(),
     avatarUrl: z.string().url().optional(),
     lastSeenPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     avatarPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
