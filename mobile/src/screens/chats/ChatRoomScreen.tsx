@@ -40,6 +40,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useWallpaperStore } from "../../store/wallpaperStore";
 import { useChatSettingsStore } from "../../store/chatSettingsStore";
 import { useRecentEmojiStore } from "../../store/recentEmojiStore";
+import { useRecentStickersStore } from "../../store/recentStickersStore";
 import { useQuickRepliesStore } from "../../store/quickRepliesStore";
 import { getCustomWallpaperUri, getWallpaperColor } from "../../theme/wallpapers";
 import { STICKER_PACKS } from "../../utils/stickerPacks";
@@ -365,6 +366,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const fontScale = useChatSettingsStore((s) => s.fontScale);
   const recentEmojis = useRecentEmojiStore((s) => s.recentEmojis);
   const recordEmoji = useRecentEmojiStore((s) => s.recordEmoji);
+  const recentStickers = useRecentStickersStore((s) => s.recentStickers);
+  const recordSticker = useRecentStickersStore((s) => s.recordSticker);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder);
 
@@ -1144,7 +1147,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       { text: "📄 Fayl", onPress: pickFile },
       { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
       { text: "📊 So'rovnoma", onPress: openPollModal },
-      { text: "🙂 Stiker", onPress: () => setStickerPickerVisible(true) },
+      {
+        text: "🙂 Stiker",
+        onPress: () => {
+          setActiveStickerPackIndex(recentStickers.length > 0 ? -1 : 0);
+          setStickerPickerVisible(true);
+        },
+      },
       { text: "💬 Tezkor javob", onPress: onOpenQuickReplies },
       { text: "📋 Klipborddan rasm", onPress: pasteImage },
       { text: "Bekor qilish", style: "cancel" },
@@ -1153,6 +1162,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const onSendSticker = async (sticker: string) => {
     setStickerPickerVisible(false);
+    recordSticker(sticker).catch(() => {});
     const replyToId = replyingTo?.id;
     setReplyingTo(null);
     try {
@@ -2668,6 +2678,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         <Pressable style={styles.actionSheet}>
           <Text style={styles.mentionPickerTitle}>Stiker tanlang</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stickerPackTabs}>
+            {recentStickers.length > 0 && (
+              <TouchableOpacity
+                style={[styles.stickerPackTab, activeStickerPackIndex === -1 && styles.stickerPackTabActive]}
+                onPress={() => setActiveStickerPackIndex(-1)}
+              >
+                <Text style={styles.stickerPackTabIcon}>🕘</Text>
+                <Text
+                  style={[styles.stickerPackTabText, activeStickerPackIndex === -1 && styles.stickerPackTabTextActive]}
+                  numberOfLines={1}
+                >
+                  Oxirgi
+                </Text>
+              </TouchableOpacity>
+            )}
             {STICKER_PACKS.map((pack, index) => (
               <TouchableOpacity
                 key={pack.id}
@@ -2685,11 +2709,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             ))}
           </ScrollView>
           <View style={styles.stickerGrid}>
-            {STICKER_PACKS[activeStickerPackIndex].stickers.map((sticker) => (
-              <TouchableOpacity key={sticker} style={styles.stickerOption} onPress={() => onSendSticker(sticker)}>
-                <Text style={styles.stickerEmoji}>{sticker}</Text>
-              </TouchableOpacity>
-            ))}
+            {(activeStickerPackIndex === -1 ? recentStickers : STICKER_PACKS[activeStickerPackIndex]?.stickers ?? STICKER_PACKS[0].stickers).map(
+              (sticker, i) => (
+                <TouchableOpacity key={`${sticker}-${i}`} style={styles.stickerOption} onPress={() => onSendSticker(sticker)}>
+                  <Text style={styles.stickerEmoji}>{sticker}</Text>
+                </TouchableOpacity>
+              )
+            )}
           </View>
         </Pressable>
       </Pressable>

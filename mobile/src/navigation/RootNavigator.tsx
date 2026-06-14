@@ -59,6 +59,7 @@ import { useWallpaperStore } from "../store/wallpaperStore";
 import { useChatSettingsStore } from "../store/chatSettingsStore";
 import { useContactsStore } from "../store/contactsStore";
 import { useRecentEmojiStore } from "../store/recentEmojiStore";
+import { useRecentStickersStore } from "../store/recentStickersStore";
 import { useVerifiedContactsStore } from "../store/verifiedContactsStore";
 import { useQuickRepliesStore } from "../store/quickRepliesStore";
 import { getConversationDisplay } from "../utils/conversation";
@@ -121,6 +122,7 @@ export function RootNavigator() {
   const wallpaperBootstrap = useWallpaperStore((s) => s.bootstrap);
   const chatSettingsBootstrap = useChatSettingsStore((s) => s.bootstrap);
   const recentEmojiBootstrap = useRecentEmojiStore((s) => s.bootstrap);
+  const recentStickersBootstrap = useRecentStickersStore((s) => s.bootstrap);
   const verifiedContactsBootstrap = useVerifiedContactsStore((s) => s.bootstrap);
   const quickRepliesBootstrap = useQuickRepliesStore((s) => s.bootstrap);
 
@@ -129,9 +131,18 @@ export function RootNavigator() {
     wallpaperBootstrap();
     chatSettingsBootstrap();
     recentEmojiBootstrap();
+    recentStickersBootstrap();
     verifiedContactsBootstrap();
     quickRepliesBootstrap();
-  }, [bootstrap, wallpaperBootstrap, chatSettingsBootstrap, recentEmojiBootstrap, verifiedContactsBootstrap, quickRepliesBootstrap]);
+  }, [
+    bootstrap,
+    wallpaperBootstrap,
+    chatSettingsBootstrap,
+    recentEmojiBootstrap,
+    recentStickersBootstrap,
+    verifiedContactsBootstrap,
+    quickRepliesBootstrap,
+  ]);
 
   useEffect(() => {
     if (isAuthenticated) appLockBootstrap();
