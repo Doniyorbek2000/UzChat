@@ -1989,7 +1989,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             (actionMessage.type === "TEXT" ||
               actionMessage.type === "IMAGE" ||
               actionMessage.type === "VIDEO" ||
-              actionMessage.type === "FILE") &&
+              actionMessage.type === "FILE" ||
+              actionMessage.type === "AUDIO" ||
+              actionMessage.type === "POLL" ||
+              actionMessage.type === "CONTACT") &&
             !actionMessage.decryptFailed &&
             !actionMessage.deletedAt &&
             !!actionMessage.text && (
