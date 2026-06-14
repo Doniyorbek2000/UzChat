@@ -89,9 +89,14 @@ async function resolveMentions(conversationId: string, userId: string, mentions:
   const resolved = mentions.filter((id) => id !== userId && participantIds.has(id));
 
   // Mentioning every other participant at once ("@hammasi") is reserved for the
-  // owner/admins so regular members can't mass-notify the whole group.
+  // owner/admins so regular members can't mass-notify the whole group. Mentioning
+  // only the owner/admins ("@adminlar") is always allowed, even if it happens to
+  // cover "everyone" in a small, admin-heavy group.
+  const adminIds = new Set(conversation.participants.filter((p) => p.role !== "MEMBER").map((p) => p.userId));
+  const mentionsOnlyAdmins = resolved.length > 0 && resolved.every((id) => adminIds.has(id));
   const senderRole = conversation.participants.find((p) => p.userId === userId)?.role;
-  const mentionsEveryone = conversation.participants.length > 2 && resolved.length >= conversation.participants.length - 1;
+  const mentionsEveryone =
+    conversation.participants.length > 2 && resolved.length >= conversation.participants.length - 1 && !mentionsOnlyAdmins;
   if (conversation.type === ConversationType.GROUP && senderRole === "MEMBER" && mentionsEveryone) {
     throw Errors.forbidden("Faqat guruh egasi va adminlar hammani eslatishi mumkin");
   }

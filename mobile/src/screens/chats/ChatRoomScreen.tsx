@@ -180,6 +180,7 @@ function groupReactions(reactions: MessageReaction[]) {
 
 const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|#[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
 const EVERYONE_MENTION = "@hammasi";
+const ADMIN_MENTION = "@adminlar";
 
 function SpoilerText({ text }: { text: string }) {
   const [revealed, setRevealed] = useState(false);
@@ -258,7 +259,7 @@ function renderMessageText(
   return (
     <Text style={[styles.messageText, { fontSize: 16 * fontScale }]}>
       {parts.map((part, i) => {
-        if (part === EVERYONE_MENTION) {
+        if (part === EVERYONE_MENTION || part === ADMIN_MENTION) {
           return (
             <Text key={i} style={styles.mentionText}>
               {part}
@@ -836,6 +837,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
   const canMentionEveryone = !conversation || conversation.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
+  const adminIds = (conversation?.participants ?? [])
+    .filter((p) => p.role !== "MEMBER" && p.userId !== user?.id)
+    .map((p) => p.userId);
+  const canMentionAdmins = conversation?.type === "GROUP" && adminIds.length > 0;
   const canForwardOrCopy =
     !conversation ||
     !conversation.noForwards ||
@@ -859,6 +864,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   name: "Barcha a'zolar",
                   avatarUrl: null as string | null,
                   userIds: (conversation?.participants ?? []).map((p) => p.userId).filter((id) => id !== user?.id),
+                },
+              ]
+            : []),
+          ...(canMentionAdmins && ADMIN_MENTION.slice(1).startsWith(mentionQuery.toLowerCase())
+            ? [
+                {
+                  key: "admins",
+                  username: ADMIN_MENTION.slice(1),
+                  label: ADMIN_MENTION,
+                  name: "Guruh adminlari",
+                  avatarUrl: null as string | null,
+                  userIds: adminIds,
                 },
               ]
             : []),
@@ -1011,6 +1028,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (!trimmed && !isMediaCaptionEdit) return;
     const mentions = pendingMentions.filter((id) => {
       if (trimmed.includes(EVERYONE_MENTION)) return true;
+      if (trimmed.includes(ADMIN_MENTION) && adminIds.includes(id)) return true;
       const username = conversation?.participants.find((p) => p.userId === id)?.user.username;
       return username && trimmed.includes(`@${username}`);
     });
@@ -1115,6 +1133,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       .map((p) => p.userId)
       .filter((id) => id !== user?.id);
     setPendingMentions((prev) => Array.from(new Set([...prev, ...everyoneIds])));
+    setMentionPickerVisible(false);
+  };
+
+  const onMentionAdmins = () => {
+    setText((prev) => {
+      const needsSpace = prev.length > 0 && !/\s$/.test(prev);
+      return `${prev}${needsSpace ? " " : ""}${ADMIN_MENTION} `;
+    });
+    setPendingMentions((prev) => Array.from(new Set([...prev, ...adminIds])));
     setMentionPickerVisible(false);
   };
 
@@ -2826,6 +2853,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <TouchableOpacity style={styles.actionButton} onPress={onMentionEveryone}>
               <Text style={styles.actionButtonText}>
                 <Text style={styles.mentionText}>{EVERYONE_MENTION}</Text> (barcha a'zolar)
+              </Text>
+            </TouchableOpacity>
+          )}
+          {canMentionAdmins && (
+            <TouchableOpacity style={styles.actionButton} onPress={onMentionAdmins}>
+              <Text style={styles.actionButtonText}>
+                <Text style={styles.mentionText}>{ADMIN_MENTION}</Text> (guruh adminlari)
               </Text>
             </TouchableOpacity>
           )}
