@@ -8,6 +8,7 @@ import { colors } from "../../theme/colors";
 import { PinnedMessageInfo } from "../../types";
 import { formatTime } from "../../utils/conversation";
 import { getPreviewLabel } from "../../utils/messagePreview";
+import { formatPinTimeRemaining } from "../../utils/pinExpiry";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PinnedMessages">;
 
@@ -112,6 +113,9 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
                 <Text style={styles.preview} numberOfLines={2}>
                   {preview ? getPreviewLabel(preview) : "🔒 Xabarni ochib bo'lmadi"}
                 </Text>
+                {formatPinTimeRemaining(item.expiresAt) && (
+                  <Text style={styles.expiry}>{formatPinTimeRemaining(item.expiresAt)}</Text>
+                )}
               </View>
               {canManagePins && (
                 <TouchableOpacity onPress={() => onUnpin(item)} hitSlop={8}>
@@ -139,6 +143,7 @@ const styles = StyleSheet.create({
   author: { fontSize: 14, fontWeight: "600", color: colors.primary, flex: 1 },
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
   preview: { fontSize: 14, color: colors.text, marginTop: 2 },
+  expiry: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   unpinIcon: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   unpinAllButton: { fontSize: 14, color: colors.danger, fontWeight: "600" },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 12 },

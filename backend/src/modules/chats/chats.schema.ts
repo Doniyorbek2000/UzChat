@@ -127,6 +127,14 @@ export const reorderPinnedSchema = z.object({
   direction: z.enum(["up", "down"]),
 });
 
+// 30 days, the longest supported temporary message-pin duration.
+const MAX_PIN_EXPIRES_SECONDS = 30 * 24 * 60 * 60;
+
+export const pinMessageSchema = z.object({
+  // Seconds until the pin is automatically removed; null/undefined means it never expires.
+  expiresInSeconds: z.number().int().positive().max(MAX_PIN_EXPIRES_SECONDS).nullable().optional(),
+});
+
 export const joinByInviteSchema = z.object({
   wrappedKey: z.string().min(1),
   wrappedKeyNonce: z.string().min(1),
@@ -171,6 +179,7 @@ export type UpdateParticipantRestrictionInput = z.infer<typeof updateParticipant
 export type UpdateParticipantCustomTitleInput = z.infer<typeof updateParticipantCustomTitleSchema>;
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
 export type ReorderPinnedInput = z.infer<typeof reorderPinnedSchema>;
+export type PinMessageInput = z.infer<typeof pinMessageSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
 export type CreateInviteLinkInput = z.infer<typeof createInviteLinkSchema>;
 export type UpdateDisappearingMessagesInput = z.infer<typeof updateDisappearingMessagesSchema>;

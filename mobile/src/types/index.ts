@@ -96,6 +96,8 @@ export interface ReplyToSnapshot {
 
 export interface PinnedMessageInfo extends ReplyToSnapshot {
   pinnedAt: string;
+  // When set, this pin is automatically removed once this time passes.
+  expiresAt: string | null;
 }
 
 export interface Message {

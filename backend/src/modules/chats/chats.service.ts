@@ -11,6 +11,7 @@ import {
   CreateConversationInput,
   CreateInviteLinkInput,
   JoinByInviteInput,
+  PinMessageInput,
   UpdateConversationInput,
   UpdateParticipantRestrictionInput,
   UpdatePreferencesInput,
@@ -278,7 +279,7 @@ export const chatsService = {
           hideHistoryForNewMembers: p.conversation.hideHistoryForNewMembers,
           hideMembersList: p.conversation.hideMembersList,
           isSelf: p.conversation.isSelf,
-          pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
+          pinnedMessages: p.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt, expiresAt: pm.expiresAt })),
           participants: p.conversation.participants.map((cp) => ({
             userId: cp.userId,
             role: cp.role,
@@ -373,7 +374,7 @@ export const chatsService = {
       hideHistoryForNewMembers: participant.conversation.hideHistoryForNewMembers,
       hideMembersList: participant.conversation.hideMembersList,
       isSelf: participant.conversation.isSelf,
-      pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt })),
+      pinnedMessages: participant.conversation.pinnedMessages.map((pm) => ({ ...pm.message, pinnedAt: pm.pinnedAt, expiresAt: pm.expiresAt })),
       participants: participant.conversation.participants.map((cp) => ({
         userId: cp.userId,
         role: cp.role,
@@ -529,7 +530,7 @@ export const chatsService = {
     }));
   },
 
-  async pinMessage(userId: string, conversationId: string, messageId: string) {
+  async pinMessage(userId: string, conversationId: string, messageId: string, input: PinMessageInput) {
     await chatsService.assertCanManagePins(userId, conversationId);
 
     const message = await prisma.message.findUnique({ where: { id: messageId } });
@@ -540,10 +541,12 @@ export const chatsService = {
       where: { conversationId_messageId: { conversationId, messageId } },
     });
 
+    const expiresAt = input.expiresInSeconds ? new Date(Date.now() + input.expiresInSeconds * 1000) : null;
+
     await prisma.pinnedMessage.upsert({
       where: { conversationId_messageId: { conversationId, messageId } },
-      create: { conversationId, messageId, pinnedBy: userId },
-      update: {},
+      create: { conversationId, messageId, pinnedBy: userId, expiresAt },
+      update: { expiresAt },
     });
 
     let systemMessage = null;
@@ -569,6 +572,18 @@ export const chatsService = {
     await prisma.pinnedMessage.deleteMany({ where: { conversationId } });
 
     return chatsService.getConversation(userId, conversationId);
+  },
+
+  /** Removes pinned messages whose temporary-pin duration has passed. */
+  async unpinExpiredMessages() {
+    const due = await prisma.pinnedMessage.findMany({
+      where: { expiresAt: { lte: new Date() } },
+      select: { id: true, conversationId: true, messageId: true },
+    });
+    if (due.length === 0) return [];
+
+    await prisma.pinnedMessage.deleteMany({ where: { id: { in: due.map((p) => p.id) } } });
+    return due.map(({ conversationId, messageId }) => ({ conversationId, messageId }));
   },
 
   async setDisappearingMessages(userId: string, conversationId: string, disappearingSeconds: number | null) {

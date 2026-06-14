@@ -159,7 +159,7 @@ interface ChatState {
   clearHistory: (conversationId: string, olderThanDays?: number) => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
   deleteConversationForEveryone: (conversationId: string) => Promise<void>;
-  pinMessage: (conversationId: string, messageId: string) => Promise<void>;
+  pinMessage: (conversationId: string, messageId: string, expiresInSeconds?: number | null) => Promise<void>;
   unpinMessage: (conversationId: string, messageId: string) => Promise<void>;
   unpinAllMessages: (conversationId: string) => Promise<void>;
   setDisappearingMessages: (conversationId: string, disappearingSeconds: number | null) => Promise<void>;
@@ -1076,10 +1076,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  pinMessage: async (conversationId, messageId) => {
+  pinMessage: async (conversationId, messageId, expiresInSeconds) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
-    const updated = await chatsApi.pinMessage(conversationId, messageId);
+    const updated = await chatsApi.pinMessage(conversationId, messageId, expiresInSeconds);
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));
@@ -1583,6 +1583,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
         });
       }
     );
+
+    socket.on("pinnedMessage:expired", ({ conversationId, messageId }: { conversationId: string; messageId: string }) => {
+      set((state) => ({
+        conversations: state.conversations.map((c) =>
+          c.id === conversationId
+            ? { ...c, pinnedMessages: c.pinnedMessages.filter((pm) => pm.id !== messageId) }
+            : c
+        ),
+      }));
+    });
 
     socket.on("message:read", ({ conversationId, userId, at }: { conversationId: string; userId: string; at: string }) => {
       set((state) => ({

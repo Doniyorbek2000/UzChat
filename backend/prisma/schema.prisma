@@ -658,9 +658,12 @@ model PinnedMessage {
   message        Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
   pinnedBy       String
   pinnedAt       DateTime     @default(now())
+  // When set, this pin is automatically removed once this time passes.
+  expiresAt      DateTime?
 
   @@unique([conversationId, messageId])
   @@index([conversationId, pinnedAt])
+  @@index([expiresAt])
 }
 
 model PushToken {

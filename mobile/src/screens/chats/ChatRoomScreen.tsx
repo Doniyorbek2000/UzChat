@@ -59,6 +59,7 @@ import { formatTime, formatDateSeparator } from "../../utils/conversation";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { POLL_DEADLINE_OPTIONS, formatPollDeadline } from "../../utils/pollDeadline";
+import { PIN_DURATION_OPTIONS, formatPinTimeRemaining } from "../../utils/pinExpiry";
 import { setActiveConversationId } from "../../utils/pushNotifications";
 import { exportConversation } from "../../utils/chatExport";
 import { reportsApi } from "../../api/reports";
@@ -1637,6 +1638,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <Text style={styles.replyText} numberOfLines={1}>
               {getPreviewLabel(pinnedPreview)}
             </Text>
+            {formatPinTimeRemaining(latestPinned?.expiresAt ?? null) && (
+              <Text style={styles.pinnedExpiry}>{formatPinTimeRemaining(latestPinned?.expiresAt ?? null)}</Text>
+            )}
           </View>
           {pinnedMessages.length > 1 && (
             <TouchableOpacity onPress={() => navigation.navigate("PinnedMessages", { conversationId, title })} hitSlop={8}>
@@ -1983,8 +1987,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   const message = actionMessage;
                   setActionMessage(null);
                   const isPinned = pinnedMessages.some((pm) => pm.id === message.id);
-                  (isPinned ? unpinMessage(conversationId, message.id) : pinMessage(conversationId, message.id)).catch(
-                    () => {}
+                  if (isPinned) {
+                    unpinMessage(conversationId, message.id).catch(() => {});
+                    return;
+                  }
+                  Alert.alert(
+                    "Xabarni qadash",
+                    "Qadalgan xabar qancha vaqt ko'rsatilishini tanlang",
+                    PIN_DURATION_OPTIONS.map((option) => ({
+                      text: option.label,
+                      onPress: () => pinMessage(conversationId, message.id, option.value).catch(() => {}),
+                    }))
                   );
                 }}
               >
@@ -2797,6 +2810,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pinnedIcon: { fontSize: 14 },
+  pinnedExpiry: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
   pinnedListIcon: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   pinnedClose: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
   messageText: { fontSize: 16, color: colors.text },

@@ -9,6 +9,7 @@ import {
   createInviteLinkSchema,
   joinByInviteSchema,
   patSchema,
+  pinMessageSchema,
   reorderPinnedSchema,
   setNoForwardsSchema,
   updateConversationSchema,
@@ -37,7 +38,7 @@ chatsRouter.get("/:id", chatsController.get);
 chatsRouter.patch("/:id", validateBody(updateConversationSchema), chatsController.update);
 chatsRouter.patch("/:id/preferences", validateBody(updatePreferencesSchema), chatsController.updatePreferences);
 chatsRouter.post("/:id/pinned-order", validateBody(reorderPinnedSchema), chatsController.reorderPinned);
-chatsRouter.put("/:id/pinned-messages/:messageId", chatsController.pinMessage);
+chatsRouter.put("/:id/pinned-messages/:messageId", validateBody(pinMessageSchema), chatsController.pinMessage);
 chatsRouter.delete("/:id/pinned-messages/:messageId", chatsController.unpinMessage);
 chatsRouter.delete("/:id/pinned-messages", chatsController.unpinAllMessages);
 chatsRouter.put(
