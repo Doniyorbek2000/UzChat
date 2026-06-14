@@ -12,6 +12,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import * as Sharing from "expo-sharing";
 import { DecryptedMessage } from "../store/chatStore";
 import { downloadAndDecryptFile, extensionFromName, getCachedFileUri } from "../utils/mediaFile";
 import { colors } from "../theme/colors";
@@ -29,6 +30,7 @@ export function ImageGalleryViewer({ visible, messages, initialMessageId, conver
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
   const initialIndex = Math.max(0, messages.findIndex((m) => m.id === initialMessageId));
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [resolvedUris, setResolvedUris] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (visible) setCurrentIndex(initialIndex);
@@ -38,6 +40,16 @@ export function ImageGalleryViewer({ visible, messages, initialMessageId, conver
 
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     setCurrentIndex(Math.round(e.nativeEvent.contentOffset.x / width));
+  };
+
+  const currentMessage = messages[currentIndex];
+  const currentUri = currentMessage ? resolvedUris[currentMessage.id] : undefined;
+
+  const onShare = async () => {
+    if (!currentUri || !currentMessage?.meta) return;
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(currentUri, { mimeType: currentMessage.meta.mimeType, dialogTitle: currentMessage.meta.name });
+    }
   };
 
   return (
@@ -54,12 +66,23 @@ export function ImageGalleryViewer({ visible, messages, initialMessageId, conver
           getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
           onMomentumScrollEnd={onMomentumScrollEnd}
           renderItem={({ item }) => (
-            <GalleryImage message={item} conversationKey={conversationKey} width={width} height={height} />
+            <GalleryImage
+              message={item}
+              conversationKey={conversationKey}
+              width={width}
+              height={height}
+              onResolved={(uri) => setResolvedUris((prev) => (prev[item.id] === uri ? prev : { ...prev, [item.id]: uri }))}
+            />
           )}
         />
         <Pressable style={styles.closeButton} onPress={onClose} hitSlop={12}>
           <Text style={styles.closeIcon}>✕</Text>
         </Pressable>
+        {currentUri && (
+          <Pressable style={styles.shareButton} onPress={onShare} hitSlop={12}>
+            <Text style={styles.closeIcon}>⬇️</Text>
+          </Pressable>
+        )}
         {messages.length > 1 && (
           <View style={styles.counter}>
             <Text style={styles.counterText}>
@@ -77,11 +100,13 @@ function GalleryImage({
   conversationKey,
   width,
   height,
+  onResolved,
 }: {
   message: DecryptedMessage;
   conversationKey: string;
   width: number;
   height: number;
+  onResolved: (uri: string) => void;
 }) {
   const [uri, setUri] = useState<string | null>(null);
   const [error, setError] = useState(false);
@@ -95,11 +120,15 @@ function GalleryImage({
       if (cancelled) return;
       if (cached) {
         setUri(cached);
+        onResolved(cached);
         return;
       }
       downloadAndDecryptFile(message.mediaUrl!, meta.fileNonce, conversationKey, cacheKey)
         .then((localUri) => {
-          if (!cancelled) setUri(localUri);
+          if (!cancelled) {
+            setUri(localUri);
+            onResolved(localUri);
+          }
         })
         .catch(() => {
           if (!cancelled) setError(true);
@@ -127,6 +156,7 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.95)" },
   page: { alignItems: "center", justifyContent: "center" },
   closeButton: { position: "absolute", top: 48, right: 16, padding: 8 },
+  shareButton: { position: "absolute", top: 48, left: 16, padding: 8 },
   closeIcon: { color: "#fff", fontSize: 22, fontWeight: "700" },
   counter: { position: "absolute", top: 52, left: 0, right: 0, alignItems: "center" },
   counterText: { color: "#fff", fontSize: 14, fontWeight: "600" },
