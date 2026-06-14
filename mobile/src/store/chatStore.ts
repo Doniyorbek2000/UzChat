@@ -86,6 +86,7 @@ interface ChatState {
   loadFolders: () => Promise<void>;
   createFolder: (name: string) => Promise<ChatFolder>;
   renameFolder: (folderId: string, name: string) => Promise<void>;
+  setFolderIcon: (folderId: string, icon: string | null) => Promise<void>;
   reorderFolders: (folderIds: string[]) => Promise<void>;
   setFolderConversations: (folderId: string, conversationIds: string[]) => Promise<void>;
   setFolderFilters: (
@@ -343,6 +344,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   renameFolder: async (folderId, name) => {
     const folder = await chatFoldersApi.update(folderId, { name });
+    set((state) => ({ folders: state.folders.map((f) => (f.id === folderId ? folder : f)) }));
+  },
+
+  setFolderIcon: async (folderId, icon) => {
+    const folder = await chatFoldersApi.update(folderId, { icon });
     set((state) => ({ folders: state.folders.map((f) => (f.id === folderId ? folder : f)) }));
   },
 

@@ -362,6 +362,7 @@ export interface PollMeta {
 export interface ChatFolder {
   id: string;
   name: string;
+  icon: string | null;
   order: number;
   conversationIds: string[];
   // Smart filters: auto-include conversations matching these criteria, in addition to conversationIds.

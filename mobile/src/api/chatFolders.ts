@@ -6,14 +6,15 @@ export const chatFoldersApi = {
     return apiClient.get<ChatFolder[]>("/chat-folders").then((r) => r.data);
   },
 
-  create(name: string) {
-    return apiClient.post<ChatFolder>("/chat-folders", { name }).then((r) => r.data);
+  create(name: string, icon?: string | null) {
+    return apiClient.post<ChatFolder>("/chat-folders", { name, icon }).then((r) => r.data);
   },
 
   update(
     id: string,
     input: {
       name?: string;
+      icon?: string | null;
       order?: number;
       conversationIds?: string[];
       includeUnread?: boolean;

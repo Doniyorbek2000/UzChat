@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, Pressable } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -11,15 +11,22 @@ type Props = NativeStackScreenProps<RootStackParamList, "ChatFolders">;
 
 const MAX_FOLDERS = 10;
 
+const FOLDER_ICONS = [
+  "📁", "💬", "👥", "⭐", "🔔", "🔕", "📌", "🏠",
+  "💼", "🎮", "📚", "🛠", "❤️", "🎯", "🎵", "✈️",
+];
+
 export function ChatFoldersScreen({ navigation }: Props) {
   const folders = useChatStore((s) => s.folders);
   const loadFolders = useChatStore((s) => s.loadFolders);
   const createFolder = useChatStore((s) => s.createFolder);
   const renameFolder = useChatStore((s) => s.renameFolder);
+  const setFolderIcon = useChatStore((s) => s.setFolderIcon);
   const reorderFolders = useChatStore((s) => s.reorderFolders);
   const deleteFolder = useChatStore((s) => s.deleteFolder);
   const [newName, setNewName] = useState("");
   const [names, setNames] = useState<Record<string, string>>({});
+  const [iconPickerFolderId, setIconPickerFolderId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -73,6 +80,9 @@ export function ChatFoldersScreen({ navigation }: Props) {
           <Text style={[styles.arrow, index === folders.length - 1 && styles.arrowDisabled]}>▼</Text>
         </TouchableOpacity>
       </View>
+      <TouchableOpacity style={styles.iconButton} onPress={() => setIconPickerFolderId(item.id)}>
+        <Text style={styles.iconButtonText}>{item.icon ?? "🏷"}</Text>
+      </TouchableOpacity>
       <TextInput
         style={styles.nameInput}
         value={names[item.id] ?? item.name}
@@ -122,6 +132,36 @@ export function ChatFoldersScreen({ navigation }: Props) {
           ) : null
         }
       />
+      <Modal visible={!!iconPickerFolderId} transparent animationType="fade" onRequestClose={() => setIconPickerFolderId(null)}>
+        <Pressable style={styles.iconPickerBackdrop} onPress={() => setIconPickerFolderId(null)}>
+          <View style={styles.iconPickerSheet}>
+            <Text style={styles.iconPickerTitle}>Papka belgisi</Text>
+            <View style={styles.iconPickerGrid}>
+              <TouchableOpacity
+                style={styles.iconOption}
+                onPress={() => {
+                  if (iconPickerFolderId) setFolderIcon(iconPickerFolderId, null).catch(() => {});
+                  setIconPickerFolderId(null);
+                }}
+              >
+                <Text style={styles.iconOptionClearText}>🚫</Text>
+              </TouchableOpacity>
+              {FOLDER_ICONS.map((icon) => (
+                <TouchableOpacity
+                  key={icon}
+                  style={styles.iconOption}
+                  onPress={() => {
+                    if (iconPickerFolderId) setFolderIcon(iconPickerFolderId, icon).catch(() => {});
+                    setIconPickerFolderId(null);
+                  }}
+                >
+                  <Text style={styles.iconOptionText}>{icon}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -156,4 +196,27 @@ const styles = StyleSheet.create({
   },
   addButton: { backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
   addButtonText: { color: "#fff", fontWeight: "600" },
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconButtonText: { fontSize: 18 },
+  iconPickerBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  iconPickerSheet: { backgroundColor: colors.surface, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16 },
+  iconPickerTitle: { fontSize: 15, fontWeight: "600", color: colors.text, marginBottom: 12 },
+  iconPickerGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  iconOption: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconOptionText: { fontSize: 22 },
+  iconOptionClearText: { fontSize: 18 },
 });

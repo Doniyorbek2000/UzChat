@@ -593,7 +593,7 @@ export function ChatListScreen({ navigation }: Props) {
               onPress={() => setActiveFolderId(folder.id)}
             >
               <Text style={[styles.folderChipText, activeFolderId === folder.id && styles.folderChipTextActive]}>
-                {folder.name}
+                {folder.icon ? `${folder.icon} ${folder.name}` : folder.name}
               </Text>
               {folderUnreadCount > 0 && (
                 <View style={[styles.folderBadge, activeFolderId === folder.id && styles.folderBadgeActive]}>

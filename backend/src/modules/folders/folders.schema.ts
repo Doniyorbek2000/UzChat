@@ -2,11 +2,13 @@ import { z } from "zod";
 
 export const createFolderSchema = z.object({
   name: z.string().trim().min(1).max(32),
+  icon: z.string().trim().min(1).max(8).nullable().optional(),
 });
 
 export const updateFolderSchema = z
   .object({
     name: z.string().trim().min(1).max(32).optional(),
+    icon: z.string().trim().min(1).max(8).nullable().optional(),
     order: z.number().int().min(0).optional(),
     conversationIds: z.array(z.string().uuid()).max(200).optional(),
     // Smart filters: auto-include conversations matching these criteria, in addition to conversationIds.

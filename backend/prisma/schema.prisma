@@ -708,6 +708,8 @@ model ChatFolder {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   name   String
+  // Optional emoji icon shown next to the folder name in the chat list tab bar.
+  icon   String?
   order  Int    @default(0)
   // IDs of conversations included in this folder. Not enforced as a foreign key;
   // stale IDs (e.g. for left groups) are simply filtered out client-side.

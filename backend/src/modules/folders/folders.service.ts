@@ -20,7 +20,7 @@ export const foldersService = {
     }
 
     return prisma.chatFolder.create({
-      data: { userId, name: input.name, order: count },
+      data: { userId, name: input.name, icon: input.icon ?? null, order: count },
     });
   },
 
@@ -42,6 +42,7 @@ export const foldersService = {
       where: { id: folderId },
       data: {
         ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.icon !== undefined ? { icon: input.icon } : {}),
         ...(input.order !== undefined ? { order: input.order } : {}),
         ...(conversationIds !== undefined ? { conversationIds } : {}),
         ...(input.includeUnread !== undefined ? { includeUnread: input.includeUnread } : {}),
