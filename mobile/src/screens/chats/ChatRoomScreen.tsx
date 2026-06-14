@@ -45,7 +45,7 @@ import { useRecentStickersStore } from "../../store/recentStickersStore";
 import { useQuickRepliesStore } from "../../store/quickRepliesStore";
 import { getCustomWallpaperUri, getWallpaperColor } from "../../theme/wallpapers";
 import { STICKER_PACKS } from "../../utils/stickerPacks";
-import { ConversationParticipant, MessageReaction, ReportReason } from "../../types";
+import { ConversationParticipant, MessageReaction, MessageType, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
@@ -117,6 +117,15 @@ function isEmojiOnlyMessage(text: string): boolean {
 }
 
 const WEEKDAY_LABELS = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
+
+const SEARCH_TYPE_FILTERS: { type: MessageType | "ALL"; label: string }[] = [
+  { type: "ALL", label: "Hammasi" },
+  { type: "IMAGE", label: "🖼 Rasm" },
+  { type: "VIDEO", label: "🎬 Video" },
+  { type: "AUDIO", label: "🎤 Ovozli" },
+  { type: "FILE", label: "📄 Fayl" },
+  { type: "POLL", label: "📊 So'rovnoma" },
+];
 
 const MORE_REACTIONS = [
   "👎",
@@ -358,6 +367,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoadingMore, setSearchLoadingMore] = useState(false);
   const [searchSenderId, setSearchSenderId] = useState<string | null>(null);
+  const [searchTypeFilter, setSearchTypeFilter] = useState<MessageType | "ALL">("ALL");
   const [dateJumpVisible, setDateJumpVisible] = useState(false);
   const [dateJumpMonth, setDateJumpMonth] = useState(() => new Date());
   const [dateJumpSearching, setDateJumpSearching] = useState(false);
@@ -875,15 +885,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const trimmedSearchQuery = searchQuery.trim().toLowerCase();
-  const searchResults = trimmedSearchQuery
+  const searchActive = trimmedSearchQuery.length > 0 || searchTypeFilter !== "ALL";
+  const searchResults = searchActive
     ? messages
         .filter(
           (m) =>
-            m.type === "TEXT" &&
             !m.deletedAt &&
             !m.decryptFailed &&
             (!searchSenderId || m.senderId === searchSenderId) &&
-            (m.text ?? "").toLowerCase().includes(trimmedSearchQuery)
+            (searchTypeFilter === "ALL" ? m.type === "TEXT" : m.type === searchTypeFilter) &&
+            (!trimmedSearchQuery || (m.text ?? "").toLowerCase().includes(trimmedSearchQuery))
         )
         .reverse()
     : [];
@@ -2815,12 +2826,26 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               setSearchVisible(false);
               setSearchQuery("");
               setSearchSenderId(null);
+              setSearchTypeFilter("ALL");
             }}
             hitSlop={8}
           >
             <Text style={styles.searchClose}>Yopish</Text>
           </TouchableOpacity>
         </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.searchSenderFilterBar}>
+          {SEARCH_TYPE_FILTERS.map((filter) => (
+            <TouchableOpacity
+              key={filter.type}
+              style={[styles.senderChip, searchTypeFilter === filter.type && styles.senderChipActive]}
+              onPress={() => setSearchTypeFilter(filter.type)}
+            >
+              <Text style={[styles.senderChipText, searchTypeFilter === filter.type && styles.senderChipTextActive]}>
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
         {isGroup && searchableSenders.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.searchSenderFilterBar}>
             <TouchableOpacity
@@ -2857,14 +2882,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 </Text>
               )}
               <Text style={styles.searchResultText} numberOfLines={2}>
-                {highlightMatch(item.text ?? "", trimmedSearchQuery)}
+                {highlightMatch(getPreviewLabel(item), trimmedSearchQuery)}
               </Text>
               <Text style={styles.searchResultTime}>{formatTime(item.createdAt)}</Text>
             </TouchableOpacity>
           )}
           ItemSeparatorComponent={() => <View style={styles.searchSeparator} />}
           ListFooterComponent={
-            trimmedSearchQuery && searchResults.length === 0 && hasMore ? (
+            searchActive && searchResults.length === 0 && hasMore ? (
               <TouchableOpacity style={styles.searchLoadMore} onPress={onLoadMoreSearchResults} disabled={searchLoadingMore}>
                 {searchLoadingMore ? (
                   <ActivityIndicator color={colors.primary} />
@@ -2875,7 +2900,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             ) : null
           }
           ListEmptyComponent={
-            trimmedSearchQuery ? (
+            searchActive ? (
               <View style={styles.searchEmpty}>
                 <Text style={styles.emptyText}>Hech narsa topilmadi</Text>
               </View>
