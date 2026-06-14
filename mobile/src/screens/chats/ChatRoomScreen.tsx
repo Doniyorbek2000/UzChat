@@ -36,8 +36,9 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage, ReplyPreview, decryptReplyPreview } from "../../store/chatStore";
 import { chatsApi } from "../../api/chats";
-import { decryptMessage } from "../../crypto/e2ee";
+import { decryptMessage, getSecurityCode } from "../../crypto/e2ee";
 import { useAuthStore } from "../../store/authStore";
+import { useVerifiedContactsStore } from "../../store/verifiedContactsStore";
 import { useWallpaperStore } from "../../store/wallpaperStore";
 import { useChatSettingsStore } from "../../store/chatSettingsStore";
 import { useRecentEmojiStore } from "../../store/recentEmojiStore";
@@ -406,6 +407,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const otherParticipant =
     conversation?.type === "DIRECT" ? conversation.participants.find((p) => p.userId !== user?.id) : null;
   const otherUser = otherParticipant?.user ?? null;
+  const verifiedSecurityCodes = useVerifiedContactsStore((s) => s.verified);
+  const currentSecurityCode = otherUser && user ? getSecurityCode(user.publicKey, otherUser.publicKey) : null;
+  const verifiedSecurityCode = otherUser ? verifiedSecurityCodes[otherUser.id] : undefined;
+  const securityCodeChanged = !!verifiedSecurityCode && !!currentSecurityCode && verifiedSecurityCode !== currentSecurityCode;
+  const [keyChangeBannerDismissed, setKeyChangeBannerDismissed] = useState(false);
   const otherUserDisplayName = otherUser ? (contactAliases[otherUser.id] ?? otherUser.displayName) : "";
   const isOtherOnline = otherUser ? onlineUsers.has(otherUser.id) : false;
   const presenceLabel = otherUser
@@ -1863,6 +1869,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.pinnedClose}>✕</Text>
             </TouchableOpacity>
           )}
+        </TouchableOpacity>
+      )}
+      {securityCodeChanged && !keyChangeBannerDismissed && otherUser && (
+        <TouchableOpacity
+          style={styles.keyChangeBanner}
+          onPress={() => navigation.navigate("EncryptionKey", { userId: otherUser.id, displayName: otherUserDisplayName })}
+        >
+          <Text style={styles.keyChangeBannerIcon}>⚠️</Text>
+          <Text style={styles.keyChangeBannerText} numberOfLines={2}>
+            {`${otherUserDisplayName} bilan xavfsizlik kodi o'zgardi. Tekshirish uchun bosing`}
+          </Text>
+          <TouchableOpacity onPress={() => setKeyChangeBannerDismissed(true)} hitSlop={8}>
+            <Text style={styles.keyChangeBannerClose}>✕</Text>
+          </TouchableOpacity>
         </TouchableOpacity>
       )}
       {isGroup && conversation?.description && !descriptionBannerDismissed && (
@@ -3330,6 +3350,17 @@ const styles = StyleSheet.create({
   },
   descriptionBannerIcon: { fontSize: 14 },
   descriptionBannerText: { flex: 1, fontSize: 13, color: colors.textSecondary },
+  keyChangeBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.danger,
+    gap: 8,
+  },
+  keyChangeBannerIcon: { fontSize: 14 },
+  keyChangeBannerText: { flex: 1, fontSize: 13, color: "#fff", fontWeight: "600" },
+  keyChangeBannerClose: { fontSize: 14, color: "#fff", fontWeight: "700", padding: 4 },
   messageText: { fontSize: 16, color: colors.text },
   stickerText: { fontSize: 56, lineHeight: 64 },
   mentionText: { color: colors.primary, fontWeight: "600" },
