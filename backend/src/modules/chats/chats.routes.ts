@@ -8,6 +8,7 @@ import {
   createConversationSchema,
   createInviteLinkSchema,
   joinByInviteSchema,
+  markReadSchema,
   patSchema,
   pinMessageSchema,
   reorderPinnedSchema,
@@ -102,7 +103,7 @@ chatsRouter.get("/:id/messages", messagesController.list);
 chatsRouter.get("/:id/media", messagesController.listMedia);
 chatsRouter.get("/:id/stats", messagesController.getStats);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);
-chatsRouter.post("/:id/read", messagesController.markRead);
+chatsRouter.post("/:id/read", validateBody(markReadSchema), messagesController.markRead);
 chatsRouter.delete("/:id/messages/:messageId", messagesController.remove);
 chatsRouter.post("/:id/messages/:messageId/hide", messagesController.hideForMe);
 chatsRouter.post("/:id/messages/:messageId/view", messagesController.view);

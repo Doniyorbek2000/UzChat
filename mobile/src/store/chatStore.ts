@@ -149,7 +149,7 @@ interface ChatState {
   createDirectConversation: (target: User) => Promise<Conversation>;
   getOrCreateSavedMessages: () => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
-  markRead: (conversationId: string) => Promise<void>;
+  markRead: (conversationId: string, upToMessageId?: string, upToCreatedAt?: string) => Promise<void>;
   // When conversationIds is given, only those conversations are marked as read
   // (used for per-folder "mark all as read"); otherwise all unread conversations are.
   markAllRead: (conversationIds?: string[]) => Promise<void>;
@@ -929,13 +929,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return conversation;
   },
 
-  markRead: async (conversationId) => {
-    await chatsApi.markRead(conversationId);
+  markRead: async (conversationId, upToMessageId, upToCreatedAt) => {
+    await chatsApi.markRead(conversationId, upToMessageId);
     getSocket()?.emit("message:read", { conversationId });
     set((state) => ({
-      conversations: state.conversations.map((c) =>
-        c.id === conversationId ? { ...c, lastReadAt: new Date().toISOString(), hasUnreadMention: false } : c
-      ),
+      conversations: state.conversations.map((c) => {
+        if (c.id !== conversationId) return c;
+        const candidate = upToCreatedAt ?? new Date().toISOString();
+        // Never move the read marker backward client-side either.
+        const lastReadAt = c.lastReadAt && new Date(c.lastReadAt) >= new Date(candidate) ? c.lastReadAt : candidate;
+        return { ...c, lastReadAt, hasUnreadMention: false };
+      }),
     }));
   },
 

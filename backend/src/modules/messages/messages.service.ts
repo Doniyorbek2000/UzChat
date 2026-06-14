@@ -755,11 +755,26 @@ export const messagesService = {
     return history.map((h) => ({ ciphertext: h.ciphertext, nonce: h.nonce, editedAt: h.editedAt }));
   },
 
-  async markRead(userId: string, conversationId: string) {
+  async markRead(userId: string, conversationId: string, upToMessageId?: string) {
     await chatsService.assertParticipant(userId, conversationId);
+
+    let lastReadAt = new Date();
+    if (upToMessageId) {
+      const message = await prisma.message.findUnique({ where: { id: upToMessageId } });
+      if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
+
+      const target = message.createdAt < lastReadAt ? message.createdAt : lastReadAt;
+      const participant = await prisma.conversationParticipant.findUnique({
+        where: { conversationId_userId: { conversationId, userId } },
+        select: { lastReadAt: true },
+      });
+      // Never move the read marker backward - "mark as read up to here" only advances it.
+      lastReadAt = participant?.lastReadAt && participant.lastReadAt >= target ? participant.lastReadAt : target;
+    }
+
     await prisma.conversationParticipant.update({
       where: { conversationId_userId: { conversationId, userId } },
-      data: { lastReadAt: new Date(), markedUnread: false },
+      data: { lastReadAt, markedUnread: false },
     });
   },
 

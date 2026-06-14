@@ -56,7 +56,7 @@ export const messagesController = {
 
   async markRead(req: Request, res: Response, next: NextFunction) {
     try {
-      await messagesService.markRead(req.user!.sub, req.params.id);
+      await messagesService.markRead(req.user!.sub, req.params.id, req.body.upToMessageId);
       res.status(204).send();
     } catch (err) {
       next(err);

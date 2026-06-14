@@ -270,8 +270,8 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
-  markRead(conversationId: string) {
-    return apiClient.post(`/conversations/${conversationId}/read`);
+  markRead(conversationId: string, upToMessageId?: string) {
+    return apiClient.post(`/conversations/${conversationId}/read`, { upToMessageId });
   },
 
   deleteMessage(conversationId: string, messageId: string) {

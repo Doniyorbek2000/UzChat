@@ -178,6 +178,11 @@ export const clearHistorySchema = z.object({
   olderThanDays: z.number().int().positive().optional(),
 });
 
+export const markReadSchema = z.object({
+  // When set, marks read up to (and including) this message instead of the latest one.
+  upToMessageId: z.string().uuid().optional(),
+});
+
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type AddParticipantInput = z.infer<typeof addParticipantSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
@@ -191,3 +196,4 @@ export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
 export type CreateInviteLinkInput = z.infer<typeof createInviteLinkSchema>;
 export type UpdateDisappearingMessagesInput = z.infer<typeof updateDisappearingMessagesSchema>;
 export type ClearHistoryInput = z.infer<typeof clearHistorySchema>;
+export type MarkReadInput = z.infer<typeof markReadSchema>;

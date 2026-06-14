@@ -2387,6 +2387,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.actionButtonText}>👋 Chimchilash</Text>
             </TouchableOpacity>
           )}
+          {actionMessage && actionMessage.senderId !== user?.id && actionMessage.type !== "SYSTEM" && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                const message = actionMessage;
+                setActionMessage(null);
+                markRead(conversationId, message.id, message.createdAt).catch(() => {});
+              }}
+            >
+              <Text style={styles.actionButtonText}>📍 Shu yergacha o'qilgan deb belgilash</Text>
+            </TouchableOpacity>
+          )}
           {actionMessage &&
             actionMessage.senderId !== user?.id &&
             !actionMessage.deletedAt &&
