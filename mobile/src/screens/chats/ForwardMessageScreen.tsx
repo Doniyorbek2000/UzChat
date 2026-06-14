@@ -22,6 +22,9 @@ import { broadcastsApi } from "../../api/broadcasts";
 import { contactsApi } from "../../api/contacts";
 import { BroadcastList, Contact, Conversation } from "../../types";
 import { getConversationDisplay } from "../../utils/conversation";
+import { recentForwardTargetsStorage } from "../../storage/recentForwardTargetsStorage";
+
+const MAX_RECENT_TARGETS = 8;
 
 type Props = NativeStackScreenProps<RootStackParamList, "ForwardMessage">;
 
@@ -41,6 +44,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
   const [hideSender, setHideSender] = useState(false);
   const [sending, setSending] = useState(false);
   const [search, setSearch] = useState("");
+  const [recentTargetIds, setRecentTargetIds] = useState<string[]>([]);
 
   useEffect(() => {
     broadcastsApi
@@ -51,7 +55,18 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
       .list()
       .then(setContacts)
       .catch(() => {});
+    recentForwardTargetsStorage
+      .getRecent()
+      .then(setRecentTargetIds)
+      .catch(() => {});
   }, []);
+
+  const recentConversations = useMemo(() => {
+    return recentTargetIds
+      .map((id) => conversations.find((c) => c.id === id))
+      .filter((c): c is Conversation => !!c)
+      .slice(0, MAX_RECENT_TARGETS);
+  }, [recentTargetIds, conversations]);
 
   const filteredConversations = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -90,10 +105,19 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
 
   const totalSelected = selectedIds.size + selectedBroadcastIds.size;
 
+  const recordRecentTargets = async (ids: string[]) => {
+    const unique = Array.from(new Set(ids));
+    if (unique.length === 0) return;
+    const next = [...unique, ...recentTargetIds.filter((id) => !unique.includes(id))].slice(0, MAX_RECENT_TARGETS);
+    setRecentTargetIds(next);
+    await recentForwardTargetsStorage.setRecent(next).catch(() => {});
+  };
+
   const onSend = async () => {
     if (sending || totalSelected === 0) return;
     setSending(true);
     const trimmedComment = comment.trim();
+    const usedTargetIds: string[] = [];
     try {
       for (const targetId of selectedIds) {
         for (const messageId of messageIds) {
@@ -102,6 +126,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
         if (trimmedComment) {
           await sendTextMessage(targetId, trimmedComment);
         }
+        usedTargetIds.push(targetId);
       }
       for (const listId of selectedBroadcastIds) {
         const list = broadcastLists.find((l) => l.id === listId);
@@ -116,8 +141,10 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
           if (trimmedComment) {
             await sendTextMessage(targetConversation.id, trimmedComment);
           }
+          usedTargetIds.push(targetConversation.id);
         }
       }
+      await recordRecentTargets(usedTargetIds);
       navigation.goBack();
     } catch {
       Alert.alert("Xatolik", "Xabarni yo'naltirib bo'lmadi");
@@ -138,6 +165,26 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
         <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
           {selected && <Text style={styles.checkboxIcon}>✓</Text>}
         </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderRecentItem = (item: Conversation) => {
+    const display = getConversationDisplay(item, user!.id, contactAliases);
+    const selected = selectedIds.has(item.id);
+    return (
+      <TouchableOpacity key={item.id} style={styles.recentItem} onPress={() => toggleSelect(item)} disabled={sending}>
+        <View>
+          <Avatar uri={display.avatarUrl} name={display.title} size={52} />
+          {selected && (
+            <View style={styles.recentCheckOverlay}>
+              <Text style={styles.recentCheckIcon}>✓</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.recentName} numberOfLines={1}>
+          {display.title}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -189,7 +236,22 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
-          filteredBroadcastLists.length > 0 ? (
+          !search.trim() && recentConversations.length > 0 ? (
+            <View>
+              <Text style={styles.sectionHeader}>Tez-tez yuborilgan</Text>
+              <FlatList
+                data={recentConversations}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => renderRecentItem(item)}
+                contentContainerStyle={styles.recentList}
+              />
+              {filteredBroadcastLists.length > 0 && <Text style={styles.sectionHeader}>Tarqatish ro'yxatlari</Text>}
+              {filteredBroadcastLists.map(renderBroadcastItem)}
+              <Text style={styles.sectionHeader}>Suhbatlar</Text>
+            </View>
+          ) : filteredBroadcastLists.length > 0 ? (
             <View>
               <Text style={styles.sectionHeader}>Tarqatish ro'yxatlari</Text>
               {filteredBroadcastLists.map(renderBroadcastItem)}
@@ -255,6 +317,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   broadcastIconText: { fontSize: 20 },
+  recentList: { paddingHorizontal: 12, gap: 16 },
+  recentItem: { alignItems: "center", width: 64 },
+  recentCheckOverlay: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    borderWidth: 2,
+    borderColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  recentCheckIcon: { color: "#fff", fontSize: 11, fontWeight: "700" },
+  recentName: { fontSize: 12, color: colors.text, marginTop: 4, textAlign: "center" },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
