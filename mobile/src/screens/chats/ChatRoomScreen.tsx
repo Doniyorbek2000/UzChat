@@ -51,6 +51,7 @@ import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
 import { ViewOnceImageBubble } from "../../components/ViewOnceImageBubble";
+import { ViewOnceAudioBubble } from "../../components/ViewOnceAudioBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { ContactCardBubble } from "../../components/ContactCardBubble";
@@ -1428,7 +1429,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setVoiceRecording(conversationId, false);
   };
 
-  const sendRecording = async () => {
+  const sendRecording = async (viewOnce: boolean) => {
     const durationMs = recorderState.durationMillis;
     await recorder.stop();
     await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
@@ -1446,7 +1447,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         conversationId,
         { uri, name: `voice-${Date.now()}.m4a`, mimeType: "audio/m4a", duration: Math.round(durationMs / 1000) },
         "AUDIO",
-        replyToId
+        replyToId,
+        viewOnce
       );
       scrollToLatest();
     } catch (err: any) {
@@ -1703,6 +1705,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } else if (item.type === "IMAGE" && conversationKey) {
       content = (
         <MediaImageBubble message={item} conversationKey={conversationKey} onOpenViewer={() => setGalleryMessageId(item.id)} />
+      );
+    } else if (item.type === "AUDIO" && item.viewOnce && conversationKey) {
+      content = (
+        <ViewOnceAudioBubble
+          message={item}
+          conversationKey={conversationKey}
+          conversationId={conversationId}
+          isOwn={isOwn}
+          canView={!item.viewedAt && (!isOwn || !!conversation?.isSelf)}
+        />
       );
     } else if (item.type === "AUDIO" && conversationKey) {
       content = <MediaAudioBubble message={item} conversationKey={conversationKey} />;
@@ -1996,7 +2008,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <TouchableOpacity style={styles.recordingCancel} onPress={cancelRecording}>
             <Text style={styles.recordingCancelText}>Bekor qilish</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sendButton} onPress={sendRecording}>
+          <TouchableOpacity style={styles.mediaPreviewViewOnce} onPress={() => sendRecording(true)}>
+            <Text style={styles.mediaPreviewViewOnceText}>🔥</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.sendButton} onPress={() => sendRecording(false)}>
             <Text style={styles.sendText}>Yuborish</Text>
           </TouchableOpacity>
         </View>

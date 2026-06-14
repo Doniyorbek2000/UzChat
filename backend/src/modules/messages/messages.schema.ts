@@ -17,7 +17,7 @@ export const sendMessageSchema = z
     forwardCount: z.number().int().min(0).max(50).optional(),
     // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
     scheduledFor: z.string().datetime().optional(),
-    // "View once": media is deleted after the recipient views it (IMAGE only).
+    // "View once": media is deleted after the recipient views/plays it (IMAGE/AUDIO only).
     viewOnce: z.boolean().optional(),
     // Media sent with a blur overlay; recipient taps to reveal (IMAGE/VIDEO only).
     isSpoiler: z.boolean().optional(),
@@ -32,8 +32,8 @@ export const sendMessageSchema = z
     message: "Yuborish vaqti kelajakda bo'lishi kerak",
     path: ["scheduledFor"],
   })
-  .refine((data) => !data.viewOnce || data.type === "IMAGE", {
-    message: "Bir martalik ko'rish faqat rasmlar uchun mavjud",
+  .refine((data) => !data.viewOnce || data.type === "IMAGE" || data.type === "AUDIO", {
+    message: "Bir martalik ko'rish faqat rasm va ovozli xabarlar uchun mavjud",
     path: ["viewOnce"],
   })
   .refine((data) => !data.isSpoiler || data.type === "IMAGE" || data.type === "VIDEO", {
