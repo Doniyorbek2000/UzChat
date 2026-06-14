@@ -56,7 +56,7 @@ import { Avatar } from "../../components/Avatar";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
-import { formatTime, formatDateSeparator } from "../../utils/conversation";
+import { formatTime, formatDateSeparator, getConversationDisplay } from "../../utils/conversation";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { POLL_DEADLINE_OPTIONS, formatPollDeadline } from "../../utils/pollDeadline";
@@ -292,6 +292,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const setReminder = useChatStore((s) => s.setReminder);
   const forwardMessage = useChatStore((s) => s.forwardMessage);
   const getOrCreateSavedMessages = useChatStore((s) => s.getOrCreateSavedMessages);
+  const createDirectConversation = useChatStore((s) => s.createDirectConversation);
   const setDisappearingMessages = useChatStore((s) => s.setDisappearingMessages);
   const setAutoDelete = useChatStore((s) => s.setAutoDelete);
   const setNoForwards = useChatStore((s) => s.setNoForwards);
@@ -1920,6 +1921,34 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           >
             <Text style={styles.actionButtonText}>↩️ Javob berish</Text>
           </TouchableOpacity>
+          {actionMessage &&
+            isGroup &&
+            actionMessage.senderId !== user?.id &&
+            actionMessage.type !== "SYSTEM" &&
+            canForwardOrCopy &&
+            !actionMessage.decryptFailed &&
+            !actionMessage.viewOnce &&
+            !actionMessage.deletedAt && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={async () => {
+                  const message = actionMessage;
+                  const senderUser = conversation?.participants.find((p) => p.userId === message.senderId)?.user;
+                  setActionMessage(null);
+                  if (!senderUser) return;
+                  try {
+                    const dm = await createDirectConversation(senderUser);
+                    await forwardMessage(conversationId, message.id, dm.id, false);
+                    const { title } = getConversationDisplay(dm, user?.id ?? "", contactAliases);
+                    navigation.navigate("ChatRoom", { conversationId: dm.id, title });
+                  } catch {
+                    Alert.alert("Xatolik", "Shaxsiy javob yuborib bo'lmadi");
+                  }
+                }}
+              >
+                <Text style={styles.actionButtonText}>↪️ Shaxsiy javob</Text>
+              </TouchableOpacity>
+            )}
           {actionMessage && !actionMessage.deletedAt && (
             <TouchableOpacity
               style={styles.actionButton}
