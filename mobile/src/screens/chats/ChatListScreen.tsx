@@ -57,6 +57,7 @@ export function ChatListScreen({ navigation }: Props) {
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const folders = useChatStore((s) => s.folders);
   const loadFolders = useChatStore((s) => s.loadFolders);
+  const setFolderConversations = useChatStore((s) => s.setFolderConversations);
   const searchAllMessages = useChatStore((s) => s.searchAllMessages);
   const isConnected = useChatStore((s) => s.isConnected);
   const user = useAuthStore((s) => s.user);
@@ -196,6 +197,31 @@ export function ChatListScreen({ navigation }: Props) {
     ]);
   };
 
+  const onAddToFolderPress = (item: Conversation) => {
+    if (folders.length === 0) {
+      Alert.alert("Papkalar yo'q", "Avval suhbatlar papkasini yarating", [
+        { text: "Bekor qilish", style: "cancel" },
+        { text: "Papka yaratish", onPress: () => navigation.navigate("ChatFolders") },
+      ]);
+      return;
+    }
+    Alert.alert("Papkaga qo'shish", undefined, [
+      ...folders.map((folder) => {
+        const inFolder = folder.conversationIds.includes(item.id);
+        return {
+          text: `${inFolder ? "✓ " : ""}${folder.icon ?? "📁"} ${folder.name}`,
+          onPress: () => {
+            const nextIds = inFolder
+              ? folder.conversationIds.filter((id) => id !== item.id)
+              : [...folder.conversationIds, item.id];
+            setFolderConversations(folder.id, nextIds).catch(() => {});
+          },
+        };
+      }),
+      { text: "Bekor qilish", style: "cancel" },
+    ]);
+  };
+
   const onClearHistoryPress = (item: Conversation) => {
     Alert.alert("Suhbatni tozalash", "Tozalangan xabarlar faqat sizning ko'rinishingizdan o'chiriladi", [
       { text: "Bekor qilish", style: "cancel" },
@@ -297,6 +323,10 @@ export function ChatListScreen({ navigation }: Props) {
       {
         text: "👁 O'qildi belgisi",
         onPress: () => onReadReceiptsPress(item),
+      },
+      {
+        text: "📁 Papkaga qo'shish",
+        onPress: () => onAddToFolderPress(item),
       },
       {
         text: item.isArchived ? "📤 Arxivdan chiqarish" : "🗄 Arxivlash",
