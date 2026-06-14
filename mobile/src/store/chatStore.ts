@@ -131,7 +131,8 @@ interface ChatState {
     anonymous: boolean,
     replyToId?: string,
     quizCorrectOptionIndex?: number,
-    closesInSeconds?: number
+    closesInSeconds?: number,
+    quizExplanation?: string
   ) => Promise<void>;
   votePoll: (conversationId: string, messageId: string, optionIds: string[]) => Promise<void>;
   closePoll: (conversationId: string, messageId: string) => Promise<void>;
@@ -648,7 +649,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
   },
 
-  sendPollMessage: async (conversationId, question, options, multipleChoice, anonymous, replyToId, quizCorrectOptionIndex, closesInSeconds) => {
+  sendPollMessage: async (conversationId, question, options, multipleChoice, anonymous, replyToId, quizCorrectOptionIndex, closesInSeconds, quizExplanation) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
@@ -659,6 +660,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       multipleChoice,
       anonymous,
       ...(quizCorrectOptionIndex !== undefined ? { quizCorrectOptionId: String(quizCorrectOptionIndex) } : {}),
+      ...(quizExplanation ? { quizExplanation } : {}),
     };
     const { ciphertext, nonce } = encryptMessage(JSON.stringify(meta), key);
 

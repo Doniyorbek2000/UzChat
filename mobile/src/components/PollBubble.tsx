@@ -103,6 +103,7 @@ export function PollBubble({ message, conversationId, onShowVotes }: Props) {
         {!isQuiz && meta.anonymous ? " · 🔒 Anonim" : ""}
         {closed ? " · Yopilgan" : ""}
       </Text>
+      {isQuiz && answered && meta.quizExplanation && <Text style={styles.explanation}>{meta.quizExplanation}</Text>}
       {!closed && message.pollClosesAt && formatPollTimeRemaining(message.pollClosesAt) && (
         <Text style={styles.deadline}>{formatPollTimeRemaining(message.pollClosesAt)}</Text>
       )}
@@ -152,6 +153,7 @@ const styles = StyleSheet.create({
   optionTextCorrect: { color: colors.primaryDark, fontWeight: "600" },
   optionPercent: { fontSize: 12, color: colors.textSecondary },
   footer: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
+  explanation: { fontSize: 12, color: colors.text, marginTop: 6, lineHeight: 16 },
   deadline: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   votesLink: { fontSize: 12, color: colors.primary, fontWeight: "600", marginTop: 6 },
 });

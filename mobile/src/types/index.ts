@@ -362,6 +362,8 @@ export interface PollMeta {
   anonymous: boolean;
   // Quiz mode: the id of the correct option, revealed to a participant after they vote.
   quizCorrectOptionId?: string;
+  // Quiz mode: optional explanation shown to a participant after they answer.
+  quizExplanation?: string;
 }
 
 /** A user-defined chat list tab (Telegram-style folder) grouping a subset of conversations. */

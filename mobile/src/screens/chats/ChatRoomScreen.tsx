@@ -382,6 +382,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pollAnonymous, setPollAnonymous] = useState(false);
   const [pollQuiz, setPollQuiz] = useState(false);
   const [pollCorrectIndex, setPollCorrectIndex] = useState<number | null>(null);
+  const [pollQuizExplanation, setPollQuizExplanation] = useState("");
   const [pollDeadlineSeconds, setPollDeadlineSeconds] = useState<number | null>(null);
   const [pendingMedia, setPendingMedia] = useState<PendingMediaItem | null>(null);
   const [galleryMessageId, setGalleryMessageId] = useState<string | null>(null);
@@ -1342,6 +1343,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPollAnonymous(false);
     setPollQuiz(false);
     setPollCorrectIndex(null);
+    setPollQuizExplanation("");
     setPollDeadlineSeconds(null);
     setPollModalVisible(true);
   };
@@ -1401,7 +1403,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         pollAnonymous,
         undefined,
         quizCorrectOptionIndex,
-        pollDeadlineSeconds ?? undefined
+        pollDeadlineSeconds ?? undefined,
+        pollQuiz ? pollQuizExplanation.trim() || undefined : undefined
       );
       scrollToLatest();
     } catch (err: any) {
@@ -3136,6 +3139,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <Text style={styles.pollSwitchLabel}>Test rejimi (to'g'ri javob bilan)</Text>
             <Switch value={pollQuiz} onValueChange={onToggleQuiz} trackColor={{ true: colors.primary }} />
           </View>
+          {pollQuiz && (
+            <>
+              <Text style={styles.pollLabel}>Tushuntirish (ixtiyoriy)</Text>
+              <TextInput
+                style={styles.pollInput}
+                value={pollQuizExplanation}
+                onChangeText={setPollQuizExplanation}
+                placeholder="Javobdan keyin ko'rsatiladigan izoh"
+                placeholderTextColor={colors.textSecondary}
+                multiline
+                maxLength={300}
+              />
+            </>
+          )}
           <TouchableOpacity style={styles.pollSwitchRow} onPress={onPickPollDeadline}>
             <Text style={styles.pollSwitchLabel}>Yopilish vaqti</Text>
             <Text style={styles.pollDeadlineValue}>{formatPollDeadline(pollDeadlineSeconds)} ›</Text>
