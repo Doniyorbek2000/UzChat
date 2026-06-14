@@ -145,6 +145,8 @@ const MAX_PIN_EXPIRES_SECONDS = 30 * 24 * 60 * 60;
 export const pinMessageSchema = z.object({
   // Seconds until the pin is automatically removed; null/undefined means it never expires.
   expiresInSeconds: z.number().int().positive().max(MAX_PIN_EXPIRES_SECONDS).nullable().optional(),
+  // When false, no "X pinned a message" system message is created. Defaults to true.
+  notify: z.boolean().optional(),
 });
 
 export const joinByInviteSchema = z.object({

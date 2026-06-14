@@ -2325,7 +2325,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                     "Qadalgan xabar qancha vaqt ko'rsatilishini tanlang",
                     PIN_DURATION_OPTIONS.map((option) => ({
                       text: option.label,
-                      onPress: () => pinMessage(conversationId, message.id, option.value).catch(() => {}),
+                      onPress: () => {
+                        const doPin = (notify: boolean) =>
+                          pinMessage(conversationId, message.id, option.value, notify).catch(() => {});
+                        if (!isGroup) {
+                          doPin(true);
+                          return;
+                        }
+                        Alert.alert("Bildirishnoma", "Barcha a'zolarga xabar berilsinmi?", [
+                          { text: "Yo'q", onPress: () => doPin(false) },
+                          { text: "Ha", onPress: () => doPin(true) },
+                        ]);
+                      },
                     }))
                   );
                 }}

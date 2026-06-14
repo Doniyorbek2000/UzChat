@@ -166,7 +166,7 @@ interface ChatState {
   clearHistory: (conversationId: string, olderThanDays?: number) => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
   deleteConversationForEveryone: (conversationId: string) => Promise<void>;
-  pinMessage: (conversationId: string, messageId: string, expiresInSeconds?: number | null) => Promise<void>;
+  pinMessage: (conversationId: string, messageId: string, expiresInSeconds?: number | null, notify?: boolean) => Promise<void>;
   unpinMessage: (conversationId: string, messageId: string) => Promise<void>;
   unpinAllMessages: (conversationId: string) => Promise<void>;
   fetchReminders: () => Promise<void>;
@@ -1113,10 +1113,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  pinMessage: async (conversationId, messageId, expiresInSeconds) => {
+  pinMessage: async (conversationId, messageId, expiresInSeconds, notify) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
-    const updated = await chatsApi.pinMessage(conversationId, messageId, expiresInSeconds);
+    const updated = await chatsApi.pinMessage(conversationId, messageId, expiresInSeconds, notify);
     set((state) => ({
       conversations: upsertConversation(state.conversations, { ...conversation, ...updated }),
     }));

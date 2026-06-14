@@ -110,9 +110,9 @@ export const chatsApi = {
     return apiClient.delete(`/conversations/${conversationId}/for-everyone`);
   },
 
-  pinMessage(conversationId: string, messageId: string, expiresInSeconds?: number | null) {
+  pinMessage(conversationId: string, messageId: string, expiresInSeconds?: number | null, notify?: boolean) {
     return apiClient
-      .put<Conversation>(`/conversations/${conversationId}/pinned-messages/${messageId}`, { expiresInSeconds })
+      .put<Conversation>(`/conversations/${conversationId}/pinned-messages/${messageId}`, { expiresInSeconds, notify })
       .then((r) => r.data);
   },
 

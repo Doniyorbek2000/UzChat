@@ -596,7 +596,7 @@ export const chatsService = {
     });
 
     let systemMessage = null;
-    if (!alreadyPinned) {
+    if (!alreadyPinned && input.notify !== false) {
       const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
       systemMessage = await createSystemMessage(conversationId, userId, `${actor?.displayName} xabarni qadab qo'ydi`);
     }
