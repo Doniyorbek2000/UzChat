@@ -300,6 +300,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onToggleMembersCanSendPolls = async (value: boolean) => {
+    try {
+      await updateGroupInfo(conversationId, { membersCanSendPolls: value });
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    }
+  };
+
   const onToggleReactionsEnabled = async (value: boolean) => {
     try {
       await updateGroupInfo(conversationId, { reactionsEnabled: value });
@@ -851,6 +859,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteIcon}>🖼️</Text>
             <Text style={styles.inviteText}>A'zolar media yuborishi mumkin</Text>
             <Switch value={conversation.membersCanSendMedia} onValueChange={onToggleMembersCanSendMedia} />
+          </View>
+          <View style={styles.inviteRow}>
+            <Text style={styles.inviteIcon}>📊</Text>
+            <Text style={styles.inviteText}>A'zolar so'rovnoma yaratishi mumkin</Text>
+            <Switch value={conversation.membersCanSendPolls} onValueChange={onToggleMembersCanSendPolls} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>🙈</Text>

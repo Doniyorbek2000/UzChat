@@ -59,6 +59,7 @@ export const updateConversationSchema = z
     membersCanPinMessages: z.boolean().optional(),
     membersCanChangeInfo: z.boolean().optional(),
     membersCanSendMedia: z.boolean().optional(),
+    membersCanSendPolls: z.boolean().optional(),
     hideHistoryForNewMembers: z.boolean().optional(),
     hideMembersList: z.boolean().optional(),
     reactionsEnabled: z.boolean().optional(),
@@ -77,6 +78,7 @@ export const updateConversationSchema = z
       data.membersCanPinMessages !== undefined ||
       data.membersCanChangeInfo !== undefined ||
       data.membersCanSendMedia !== undefined ||
+      data.membersCanSendPolls !== undefined ||
       data.hideHistoryForNewMembers !== undefined ||
       data.hideMembersList !== undefined ||
       data.reactionsEnabled !== undefined,

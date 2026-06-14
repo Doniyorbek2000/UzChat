@@ -1302,7 +1302,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       { text: "🖼 Rasm (siqilmagan, fayl sifatida)", onPress: pickImageAsFile },
       { text: "📄 Fayl", onPress: pickFile },
       { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
-      { text: "📊 So'rovnoma", onPress: openPollModal },
+      {
+        text: "📊 So'rovnoma",
+        onPress: () => {
+          if (!canSendPolls) {
+            Alert.alert("Cheklangan", "Bu guruhda a'zolar so'rovnoma yarata olmaydi");
+            return;
+          }
+          openPollModal();
+        },
+      },
       {
         text: "🙂 Stiker",
         onPress: () => {
@@ -1620,6 +1629,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const canSend = !isGroup || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
   const canSendMedia =
     !isGroup || conversation?.membersCanSendMedia !== false || myRole === "OWNER" || myRole === "ADMIN";
+  const canSendPolls =
+    !isGroup || conversation?.membersCanSendPolls !== false || myRole === "OWNER" || myRole === "ADMIN";
 
   const slowModeSeconds = isGroup && myRole === "MEMBER" ? conversation?.slowModeSeconds ?? 0 : 0;
   const [now, setNow] = useState(Date.now());

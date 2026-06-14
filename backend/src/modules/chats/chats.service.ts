@@ -280,6 +280,7 @@ export const chatsService = {
           membersCanPinMessages: p.conversation.membersCanPinMessages,
           membersCanChangeInfo: p.conversation.membersCanChangeInfo,
           membersCanSendMedia: p.conversation.membersCanSendMedia,
+          membersCanSendPolls: p.conversation.membersCanSendPolls,
           hideHistoryForNewMembers: p.conversation.hideHistoryForNewMembers,
           hideMembersList: p.conversation.hideMembersList,
           reactionsEnabled: p.conversation.reactionsEnabled,
@@ -378,6 +379,7 @@ export const chatsService = {
       membersCanPinMessages: participant.conversation.membersCanPinMessages,
       membersCanChangeInfo: participant.conversation.membersCanChangeInfo,
       membersCanSendMedia: participant.conversation.membersCanSendMedia,
+      membersCanSendPolls: participant.conversation.membersCanSendPolls,
       hideHistoryForNewMembers: participant.conversation.hideHistoryForNewMembers,
       hideMembersList: participant.conversation.hideMembersList,
       reactionsEnabled: participant.conversation.reactionsEnabled,
@@ -1103,6 +1105,7 @@ export const chatsService = {
         ...(input.membersCanPinMessages !== undefined ? { membersCanPinMessages: input.membersCanPinMessages } : {}),
         ...(input.membersCanChangeInfo !== undefined ? { membersCanChangeInfo: input.membersCanChangeInfo } : {}),
         ...(input.membersCanSendMedia !== undefined ? { membersCanSendMedia: input.membersCanSendMedia } : {}),
+        ...(input.membersCanSendPolls !== undefined ? { membersCanSendPolls: input.membersCanSendPolls } : {}),
         ...(input.hideHistoryForNewMembers !== undefined
           ? { hideHistoryForNewMembers: input.hideHistoryForNewMembers }
           : {}),
@@ -1231,6 +1234,20 @@ export const chatsService = {
           input.membersCanSendMedia
             ? `${name} a'zolarga media yuborishga ruxsat berdi`
             : `${name} a'zolarga faqat matnli xabar yuborishni ruxsat berdi`
+        )
+      );
+    }
+    if (
+      input.membersCanSendPolls !== undefined &&
+      input.membersCanSendPolls !== conversation.membersCanSendPolls
+    ) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.membersCanSendPolls
+            ? `${name} a'zolarga so'rovnoma yaratishga ruxsat berdi`
+            : `${name} a'zolarga so'rovnoma yaratishni man qildi`
         )
       );
     }

@@ -68,6 +68,7 @@ export const chatsApi = {
       membersCanPinMessages?: boolean;
       membersCanChangeInfo?: boolean;
       membersCanSendMedia?: boolean;
+      membersCanSendPolls?: boolean;
       hideHistoryForNewMembers?: boolean;
       hideMembersList?: boolean;
       reactionsEnabled?: boolean;
