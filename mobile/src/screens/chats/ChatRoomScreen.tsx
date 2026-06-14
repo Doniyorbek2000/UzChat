@@ -166,7 +166,7 @@ function groupReactions(reactions: MessageReaction[]) {
   return [...groups.entries()].map(([emoji, userIds]) => ({ emoji, userIds }));
 }
 
-const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
+const TOKEN_PATTERN = /(@[a-zA-Z0-9_]+|#[a-zA-Z0-9_]+|https?:\/\/[^\s<>"]+)/g;
 const EVERYONE_MENTION = "@hammasi";
 
 function SpoilerText({ text }: { text: string }) {
@@ -238,7 +238,8 @@ function renderMessageText(
   text: string,
   participants: ConversationParticipant[],
   fontScale: number,
-  navigation: Props["navigation"]
+  navigation: Props["navigation"],
+  onHashtagPress: (tag: string) => void
 ) {
   const usernameToId = new Map(participants.map((p) => [p.user.username, p.userId]));
   const parts = text.split(TOKEN_PATTERN);
@@ -256,6 +257,13 @@ function renderMessageText(
           const userId = usernameToId.get(part.slice(1))!;
           return (
             <Text key={i} style={styles.mentionText} onPress={() => navigation.navigate("UserProfile", { userId })}>
+              {part}
+            </Text>
+          );
+        }
+        if (/^#[a-zA-Z0-9_]+$/.test(part)) {
+          return (
+            <Text key={i} style={styles.hashtagText} onPress={() => onHashtagPress(part)}>
               {part}
             </Text>
           );
@@ -902,6 +910,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setSearchLoadingMore(true);
     await loadOlderMessages(conversationId).catch(() => {});
     setSearchLoadingMore(false);
+  };
+
+  const onHashtagPress = (tag: string) => {
+    setSearchSenderId(null);
+    setSearchQuery(tag);
+    setSearchVisible(true);
   };
 
   const onSelectSearchResult = (message: DecryptedMessage) => {
@@ -1684,7 +1698,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } else if (isSticker) {
       content = <Text style={styles.stickerText}>{item.text}</Text>;
     } else {
-      content = renderMessageText(item.text ?? "", conversation?.participants ?? [], fontScale, navigation);
+      content = renderMessageText(item.text ?? "", conversation?.participants ?? [], fontScale, navigation, onHashtagPress);
     }
 
     const linkUrl =
@@ -1755,7 +1769,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             !!item.text &&
             (item.type === "FILE" || (item.type === "IMAGE" && !item.viewOnce) || item.type === "VIDEO") && (
               <View style={styles.mediaCaption}>
-                {renderMessageText(item.text, conversation?.participants ?? [], fontScale, navigation)}
+                {renderMessageText(item.text, conversation?.participants ?? [], fontScale, navigation, onHashtagPress)}
               </View>
             )}
           {linkUrl && <LinkPreviewCard url={linkUrl} />}
@@ -3295,6 +3309,7 @@ const styles = StyleSheet.create({
   stickerText: { fontSize: 56, lineHeight: 64 },
   mentionText: { color: colors.primary, fontWeight: "600" },
   linkText: { color: colors.primary, textDecorationLine: "underline" },
+  hashtagText: { color: colors.primary, fontWeight: "600" },
   boldText: { fontWeight: "700" },
   italicText: { fontStyle: "italic" },
   strikeText: { textDecorationLine: "line-through" },
