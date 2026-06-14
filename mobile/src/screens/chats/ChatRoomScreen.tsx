@@ -328,6 +328,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
   const [messageInfoMessage, setMessageInfoMessage] = useState<DecryptedMessage | null>(null);
   const [descriptionBannerDismissed, setDescriptionBannerDismissed] = useState(false);
+  const [pinnedIndex, setPinnedIndex] = useState(0);
   const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
   const [pollVotesMessage, setPollVotesMessage] = useState<DecryptedMessage | null>(null);
   const [moreReactionsMessage, setMoreReactionsMessage] = useState<DecryptedMessage | null>(null);
@@ -838,17 +839,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       : [];
 
   const pinnedMessages = conversation?.pinnedMessages ?? [];
-  const latestPinned = pinnedMessages[0] ?? null;
-  const pinnedPreview = latestPinned && conversationKey ? decryptReplyPreview(conversationKey, latestPinned) : null;
+  const activePinned = pinnedMessages.length > 0 ? pinnedMessages[pinnedIndex % pinnedMessages.length] : null;
+  const pinnedPreview = activePinned && conversationKey ? decryptReplyPreview(conversationKey, activePinned) : null;
 
   const onPinnedBarPress = () => {
-    if (!latestPinned) return;
-    navigation.setParams({ highlightMessageId: latestPinned.id });
+    if (!activePinned) return;
+    navigation.setParams({ highlightMessageId: activePinned.id });
+    if (pinnedMessages.length > 1) {
+      setPinnedIndex((i) => (i + 1) % pinnedMessages.length);
+    }
   };
 
   const onUnpinLatest = () => {
-    if (!latestPinned) return;
-    const messageId = latestPinned.id;
+    if (!activePinned) return;
+    const messageId = activePinned.id;
     Alert.alert("Qadalgan xabar", "Xabarni qadashdan olib tashlansinmi?", [
       { text: "Bekor qilish", style: "cancel" },
       { text: "Olib tashlash", style: "destructive", onPress: () => unpinMessage(conversationId, messageId).catch(() => {}) },
@@ -1753,18 +1757,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <View style={styles.replyContent}>
             <Text style={styles.replyAuthor} numberOfLines={1}>
               {getAuthorName(pinnedPreview.senderId)}
-              {pinnedMessages.length > 1 ? ` · 1/${pinnedMessages.length}` : ""}
+              {pinnedMessages.length > 1 ? ` · ${(pinnedIndex % pinnedMessages.length) + 1}/${pinnedMessages.length}` : ""}
             </Text>
             <Text style={styles.replyText} numberOfLines={1}>
               {getPreviewLabel(pinnedPreview)}
             </Text>
-            {latestPinned && latestPinned.pinnedBy !== latestPinned.senderId && (
+            {activePinned && activePinned.pinnedBy !== activePinned.senderId && (
               <Text style={styles.pinnedExpiry} numberOfLines={1}>
-                {`Qadagan: ${getAuthorName(latestPinned.pinnedBy)}`}
+                {`Qadagan: ${getAuthorName(activePinned.pinnedBy)}`}
               </Text>
             )}
-            {formatPinTimeRemaining(latestPinned?.expiresAt ?? null) && (
-              <Text style={styles.pinnedExpiry}>{formatPinTimeRemaining(latestPinned?.expiresAt ?? null)}</Text>
+            {formatPinTimeRemaining(activePinned?.expiresAt ?? null) && (
+              <Text style={styles.pinnedExpiry}>{formatPinTimeRemaining(activePinned?.expiresAt ?? null)}</Text>
             )}
           </View>
           {pinnedMessages.length > 1 && (
