@@ -808,6 +808,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           : aliases[message.senderId] ??
             sourceConversation.participants.find((p) => p.userId === message.senderId)?.user.displayName);
     const forwardedFromUserId = hideSender ? undefined : message.forwardedFromUserId ?? message.senderId;
+    const forwardCount = hideSender ? 0 : (message.forwardCount ?? 0) + 1;
 
     let sentMessage: Message;
     if (MEDIA_TYPES.includes(message.type) && message.mediaUrl && message.meta) {
@@ -827,16 +828,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         mediaUrl: url,
         forwardedFromName,
         forwardedFromUserId,
+        forwardCount,
       });
     } else if (message.type === "CONTACT" && message.contactMeta) {
       const { ciphertext, nonce } = encryptMessage(JSON.stringify(message.contactMeta), targetKey);
-      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "CONTACT", ciphertext, nonce, forwardedFromName, forwardedFromUserId });
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "CONTACT", ciphertext, nonce, forwardedFromName, forwardedFromUserId, forwardCount });
     } else if (message.type === "POLL" && message.pollMeta) {
       const { ciphertext, nonce } = encryptMessage(JSON.stringify(message.pollMeta), targetKey);
-      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "POLL", ciphertext, nonce, forwardedFromName, forwardedFromUserId });
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "POLL", ciphertext, nonce, forwardedFromName, forwardedFromUserId, forwardCount });
     } else {
       const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
-      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce, forwardedFromName, forwardedFromUserId });
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce, forwardedFromName, forwardedFromUserId, forwardCount });
     }
 
     const decrypted = decryptToMessage(targetKey, sentMessage);

@@ -13,6 +13,8 @@ export const sendMessageSchema = z
     // original sender's display name, set when forwarding a message from another conversation
     forwardedFromName: z.string().min(1).max(100).optional(),
     forwardedFromUserId: z.string().uuid().optional(),
+    // Number of hops this message has been forwarded along its chain (0 = not forwarded).
+    forwardCount: z.number().int().min(0).max(50).optional(),
     // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
     scheduledFor: z.string().datetime().optional(),
     // "View once": media is deleted after the recipient views it (IMAGE only).

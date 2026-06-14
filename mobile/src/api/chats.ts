@@ -17,6 +17,8 @@ export interface SendMessageInput {
   mentions?: string[];
   forwardedFromName?: string;
   forwardedFromUserId?: string;
+  // Number of hops this message has been forwarded along its chain (0 = not forwarded).
+  forwardCount?: number;
   // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
   scheduledFor?: string;
   // "View once" (IMAGE only): media is deleted server-side after the recipient views it.

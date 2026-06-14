@@ -540,6 +540,10 @@ model Message {
   forwardedFromName String?
   // Original sender's user id, so the "Forwarded from" label can link to their profile.
   forwardedFromUserId String?
+  // Number of hops this message has been forwarded along its chain. 0 = not
+  // forwarded, 1 = single forward (shows "Forwarded from X"), 2+ = forwarded
+  // multiple times (shows the generic "Forwarded many times" label instead).
+  forwardCount Int @default(0)
 
   replyToId String?
   replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)

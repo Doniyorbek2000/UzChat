@@ -122,6 +122,8 @@ export interface Message {
   mentions: string[];
   forwardedFromName: string | null;
   forwardedFromUserId: string | null;
+  // Number of hops this message has been forwarded along its chain (0 = not forwarded).
+  forwardCount: number;
   isStarred: boolean;
   createdAt: string;
   editedAt: string | null;

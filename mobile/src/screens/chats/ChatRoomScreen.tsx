@@ -1573,12 +1573,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <Text
               style={styles.forwardedLabel}
               onPress={
-                item.forwardedFromUserId && item.forwardedFromUserId !== user?.id
+                item.forwardCount <= 1 && item.forwardedFromUserId && item.forwardedFromUserId !== user?.id
                   ? () => navigation.navigate("UserProfile", { userId: item.forwardedFromUserId! })
                   : undefined
               }
             >
-              ↪ Yo'naltirilgan: {item.forwardedFromName}
+              {item.forwardCount > 1 ? "↪ Ko'p marta yo'naltirilgan" : `↪ Yo'naltirilgan: ${item.forwardedFromName}`}
             </Text>
           )}
           {item.replyPreview && (
