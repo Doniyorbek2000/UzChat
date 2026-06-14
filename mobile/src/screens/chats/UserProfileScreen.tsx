@@ -198,6 +198,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
           <Text style={styles.actionIcon}>👥</Text>
           <Text style={styles.actionText}>Umumiy guruhlar</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("MutualContacts", { userId: profile.id })}>
+          <Text style={styles.actionIcon}>🤝</Text>
+          <Text style={styles.actionText}>Umumiy kontaktlar</Text>
+        </TouchableOpacity>
         {!contact && profile.id !== currentUser?.id && (
           <TouchableOpacity style={styles.actionRow} onPress={onAddContact} disabled={sendingRequest || requestSent}>
             <Text style={styles.actionIcon}>👤➕</Text>

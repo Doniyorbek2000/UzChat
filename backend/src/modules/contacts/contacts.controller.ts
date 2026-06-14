@@ -120,4 +120,13 @@ export const contactsController = {
       next(err);
     }
   },
+
+  async listMutual(req: Request, res: Response, next: NextFunction) {
+    try {
+      const users = await contactsService.listMutualContacts(req.user!.sub, req.params.userId);
+      res.json(users);
+    } catch (err) {
+      next(err);
+    }
+  },
 };

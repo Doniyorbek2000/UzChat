@@ -319,6 +319,19 @@ export const contactsService = {
       .sort((a, b) => a.daysUntil - b.daysUntil);
   },
 
+  // Accepted contacts that `userId` and `otherUserId` both have, excluding `otherUserId` themselves.
+  async listMutualContacts(userId: string, otherUserId: string) {
+    const [myContactIds, theirContactIds] = await Promise.all([getContactIds(userId), getContactIds(otherUserId)]);
+    const mutualIds = [...myContactIds].filter((id) => theirContactIds.has(id) && id !== otherUserId);
+    if (mutualIds.length === 0) return [];
+
+    const [users, exceptions] = await Promise.all([
+      prisma.user.findMany({ where: { id: { in: mutualIds } }, select: userSummarySelect }),
+      getLastSeenExceptions(userId),
+    ]);
+    return users.map((u) => filterBio(userId, filterLastSeen(userId, u, myContactIds, exceptions), myContactIds));
+  },
+
   async isBlockedEitherWay(userId: string, otherUserId: string) {
     const block = await prisma.blockedUser.findFirst({
       where: {

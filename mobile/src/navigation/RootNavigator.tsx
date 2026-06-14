@@ -16,6 +16,7 @@ import { JoinRequestsScreen } from "../screens/chats/JoinRequestsScreen";
 import { GroupAuditLogScreen } from "../screens/chats/GroupAuditLogScreen";
 import { BannedUsersScreen } from "../screens/chats/BannedUsersScreen";
 import { CommonGroupsScreen } from "../screens/chats/CommonGroupsScreen";
+import { MutualContactsScreen } from "../screens/contacts/MutualContactsScreen";
 import { UserProfileScreen } from "../screens/chats/UserProfileScreen";
 import { EncryptionKeyScreen } from "../screens/chats/EncryptionKeyScreen";
 import { ForwardMessageScreen } from "../screens/chats/ForwardMessageScreen";
@@ -206,6 +207,7 @@ export function RootNavigator() {
             <Stack.Screen name="GroupAuditLog" component={GroupAuditLogScreen} options={{ title: "So'nggi harakatlar" }} />
             <Stack.Screen name="BannedUsers" component={BannedUsersScreen} options={{ title: "Bloklangan foydalanuvchilar" }} />
             <Stack.Screen name="CommonGroups" component={CommonGroupsScreen} options={{ title: "Umumiy guruhlar" }} />
+            <Stack.Screen name="MutualContacts" component={MutualContactsScreen} options={{ title: "Umumiy kontaktlar" }} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ title: "Profil" }} />
             <Stack.Screen name="EncryptionKey" component={EncryptionKeyScreen} options={{ title: "Shifrlash kaliti" }} />
             <Stack.Screen name="ForwardMessage" component={ForwardMessageScreen} options={{ title: "Yo'naltirish" }} />

@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { BlockedUser, Contact, ContactRequest, ContactSuggestion, UpcomingBirthday } from "../types";
+import { BlockedUser, Contact, ContactRequest, ContactSuggestion, UpcomingBirthday, User } from "../types";
 
 export const contactsApi = {
   list() {
@@ -62,5 +62,9 @@ export const contactsApi = {
 
   listUpcomingBirthdays() {
     return apiClient.get<UpcomingBirthday[]>("/contacts/birthdays").then((r) => r.data);
+  },
+
+  listMutual(userId: string) {
+    return apiClient.get<User[]>(`/contacts/mutual/${userId}`).then((r) => r.data);
   },
 };

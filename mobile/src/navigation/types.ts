@@ -38,6 +38,7 @@ export type RootStackParamList = {
   GroupAuditLog: { conversationId: string };
   BannedUsers: { conversationId: string };
   CommonGroups: { userId: string };
+  MutualContacts: { userId: string };
   UserProfile: { userId: string };
   EncryptionKey: { userId: string; displayName: string };
   ForwardMessage: { conversationId: string; messageIds: string[] };

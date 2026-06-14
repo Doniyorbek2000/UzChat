@@ -16,6 +16,7 @@ contactsRouter.post("/requests/:requestId/decline", contactsController.decline);
 contactsRouter.get("/suggestions", contactsController.listSuggestions);
 contactsRouter.post("/suggestions/:userId/dismiss", contactsController.dismissSuggestion);
 contactsRouter.get("/birthdays", contactsController.listUpcomingBirthdays);
+contactsRouter.get("/mutual/:userId", contactsController.listMutual);
 contactsRouter.get("/blocked", contactsController.listBlocked);
 contactsRouter.post("/blocked/:userId", contactsController.block);
 contactsRouter.delete("/blocked/:userId", contactsController.unblock);

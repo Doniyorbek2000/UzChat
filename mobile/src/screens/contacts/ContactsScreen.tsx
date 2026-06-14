@@ -256,7 +256,9 @@ export function ContactsScreen({ navigation }: Props) {
               <View style={styles.requestInfo}>
                 <Text style={styles.name}>{req.owner.displayName}</Text>
                 {req.mutualCount > 0 && (
-                  <Text style={styles.requestMutual}>{req.mutualCount} umumiy kontakt</Text>
+                  <TouchableOpacity onPress={() => navigation.navigate("MutualContacts", { userId: req.owner.id })}>
+                    <Text style={styles.requestMutual}>{req.mutualCount} umumiy kontakt</Text>
+                  </TouchableOpacity>
                 )}
               </View>
               <TouchableOpacity style={styles.acceptButton} onPress={() => onAccept(req.id)}>
@@ -285,9 +287,11 @@ export function ContactsScreen({ navigation }: Props) {
                 <Text style={styles.suggestionName} numberOfLines={1}>
                   {s.user.displayName}
                 </Text>
-                <Text style={styles.suggestionMutual} numberOfLines={1}>
-                  {s.mutualCount} umumiy kontakt
-                </Text>
+                <TouchableOpacity onPress={() => navigation.navigate("MutualContacts", { userId: s.user.id })}>
+                  <Text style={styles.suggestionMutual} numberOfLines={1}>
+                    {s.mutualCount} umumiy kontakt
+                  </Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.suggestionAddButton}
                   onPress={() => onAddSuggestion(s)}
