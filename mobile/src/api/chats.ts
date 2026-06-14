@@ -21,6 +21,8 @@ export interface SendMessageInput {
   forwardCount?: number;
   // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
   scheduledFor?: string;
+  // DIRECT only: hold the message until the recipient comes online, instead of a fixed time.
+  sendWhenOnline?: boolean;
   // "View once" (IMAGE only): media is deleted server-side after the recipient views it.
   viewOnce?: boolean;
   // Media (IMAGE/VIDEO) sent with a blur overlay; tap to reveal.

@@ -17,6 +17,8 @@ export const sendMessageSchema = z
     forwardCount: z.number().int().min(0).max(50).optional(),
     // ISO timestamp; if set and in the future, the message is delivered later instead of immediately.
     scheduledFor: z.string().datetime().optional(),
+    // DIRECT only: hold the message until the recipient comes online, instead of a fixed time.
+    sendWhenOnline: z.boolean().optional(),
     // "View once": media is deleted after the recipient views/plays it (IMAGE/AUDIO only).
     viewOnce: z.boolean().optional(),
     // Media sent with a blur overlay; recipient taps to reveal (IMAGE/VIDEO only).
@@ -31,6 +33,10 @@ export const sendMessageSchema = z
   .refine((data) => !data.scheduledFor || new Date(data.scheduledFor).getTime() > Date.now(), {
     message: "Yuborish vaqti kelajakda bo'lishi kerak",
     path: ["scheduledFor"],
+  })
+  .refine((data) => !data.sendWhenOnline || !data.scheduledFor, {
+    message: "Vaqt belgilash va onlayn bo'lganda yuborishni birga tanlab bo'lmaydi",
+    path: ["sendWhenOnline"],
   })
   .refine((data) => !data.viewOnce || data.type === "IMAGE" || data.type === "AUDIO", {
     message: "Bir martalik ko'rish faqat rasm va ovozli xabarlar uchun mavjud",

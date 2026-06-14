@@ -138,6 +138,9 @@ export interface Message {
   // ISO timestamp; if set, this message hasn't been delivered yet and is only
   // visible to its sender in the "Scheduled Messages" list.
   scheduledFor: string | null;
+  // DIRECT only: when true, this pending message is delivered as soon as the
+  // recipient comes online, instead of at a fixed scheduledFor time.
+  sendWhenOnline: boolean;
   // "View once" media (IMAGE/AUDIO only): the media is deleted server-side
   // after the recipient views/plays it once.
   viewOnce: boolean;

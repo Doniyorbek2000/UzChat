@@ -12,6 +12,10 @@ import { EditMessageInput, ListMessagesQuery, SendMessageInput, SetReminderInput
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
 
+// Placeholder scheduledFor value for "send when online" messages: far enough in
+// the future that the scheduled-messages job never publishes it by time alone.
+const SEND_WHEN_ONLINE_DATE = new Date("9999-12-31T23:59:59.999Z");
+
 const replyToSelect = {
   select: {
     id: true,
@@ -377,7 +381,12 @@ export const messagesService = {
       throw Errors.forbidden("Siz vaqtincha xabar yubora olmaysiz: admin sizni cheklagan");
     }
 
-    const isScheduled = !!input.scheduledFor;
+    const sendWhenOnline = input.sendWhenOnline ?? false;
+    if (sendWhenOnline && (conversation?.type !== ConversationType.DIRECT || conversation.isSelf)) {
+      throw Errors.badRequest("Bu funksiya faqat shaxsiy suhbatlarda mavjud");
+    }
+
+    const isScheduled = !!input.scheduledFor || sendWhenOnline;
 
     if (
       !isScheduled &&
@@ -433,7 +442,8 @@ export const messagesService = {
           forwardedFromUserId: input.forwardedFromUserId,
           forwardCount: input.forwardCount ?? 0,
           expiresAt,
-          scheduledFor: isScheduled ? new Date(input.scheduledFor!) : null,
+          scheduledFor: sendWhenOnline ? SEND_WHEN_ONLINE_DATE : input.scheduledFor ? new Date(input.scheduledFor) : null,
+          sendWhenOnline,
           viewOnce: input.viewOnce ?? false,
           isSpoiler: input.isSpoiler ?? false,
           pollAnonymous: input.pollAnonymous ?? false,
@@ -1101,6 +1111,34 @@ export const messagesService = {
 
     const published = [];
     for (const m of due) {
+      published.push(await publishScheduledMessage(m));
+    }
+    return published;
+  },
+
+  // Delivers pending "send when online" messages addressed to `recipientUserId`,
+  // called when that user's socket connects (comes online).
+  async publishWhenOnlineMessages(recipientUserId: string) {
+    const directConversationIds = (
+      await prisma.conversationParticipant.findMany({
+        where: { userId: recipientUserId, conversation: { type: ConversationType.DIRECT, isSelf: false } },
+        select: { conversationId: true },
+      })
+    ).map((p) => p.conversationId);
+    if (directConversationIds.length === 0) return [];
+
+    const pending = await prisma.message.findMany({
+      where: {
+        conversationId: { in: directConversationIds },
+        sendWhenOnline: true,
+        scheduledFor: { not: null },
+        senderId: { not: recipientUserId },
+      },
+    });
+    if (pending.length === 0) return [];
+
+    const published = [];
+    for (const m of pending) {
       published.push(await publishScheduledMessage(m));
     }
     return published;

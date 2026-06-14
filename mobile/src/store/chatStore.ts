@@ -106,7 +106,8 @@ interface ChatState {
     replyToId?: string,
     mentions?: string[],
     scheduledFor?: string,
-    silent?: boolean
+    silent?: boolean,
+    sendWhenOnline?: boolean
   ) => Promise<void>;
   loadScheduledMessages: (conversationId: string) => Promise<void>;
   cancelScheduledMessage: (conversationId: string, messageId: string) => Promise<void>;
@@ -477,7 +478,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return results.slice(0, 30);
   },
 
-  sendTextMessage: async (conversationId, text, replyToId, mentions, scheduledFor, silent) => {
+  sendTextMessage: async (conversationId, text, replyToId, mentions, scheduledFor, silent, sendWhenOnline) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
@@ -492,6 +493,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       mentions,
       scheduledFor,
       silent,
+      sendWhenOnline,
     });
     const decrypted = decryptToMessage(key, message);
 

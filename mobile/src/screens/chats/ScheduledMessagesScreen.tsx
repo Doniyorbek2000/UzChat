@@ -80,7 +80,7 @@ export function ScheduledMessagesScreen({ route }: Props) {
   const onItemActions = (item: DecryptedMessage) => {
     Alert.alert("Rejalashtirilgan xabar", undefined, [
       { text: "🚀 Hozir yuborish", onPress: () => onSendNow(item) },
-      { text: "🕒 Vaqtni o'zgartirish", onPress: () => onReschedule(item) },
+      ...(item.sendWhenOnline ? [] : [{ text: "🕒 Vaqtni o'zgartirish", onPress: () => onReschedule(item) }]),
       { text: "🗑 Bekor qilish", style: "destructive", onPress: () => onCancel(item) },
       { text: "Yopish", style: "cancel" },
     ]);
@@ -92,7 +92,9 @@ export function ScheduledMessagesScreen({ route }: Props) {
         <Text style={styles.preview} numberOfLines={3}>
           {getPreview(item)}
         </Text>
-        <Text style={styles.time}>🕒 {formatScheduledTime(item.scheduledFor!)}</Text>
+        <Text style={styles.time}>
+          {item.sendWhenOnline ? "🟢 Onlayn bo'lganda yuboriladi" : `🕒 ${formatScheduledTime(item.scheduledFor!)}`}
+        </Text>
       </View>
       <TouchableOpacity style={styles.menuButton} onPress={() => onItemActions(item)} hitSlop={8}>
         <Text style={styles.menuButtonText}>•••</Text>

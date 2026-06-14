@@ -587,6 +587,11 @@ model Message {
   // from other participants until a background job "publishes" it at this time.
   scheduledFor DateTime?
 
+  // DIRECT only: when true, this message (held pending via scheduledFor with a
+  // far-future placeholder) is delivered as soon as the recipient comes online,
+  // instead of at a fixed time.
+  sendWhenOnline Boolean @default(false)
+
   // User IDs who chose "delete for me": the message is hidden from their view
   // only, other participants are unaffected.
   hiddenFor String[] @default([])

@@ -1022,7 +1022,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     dateJumpYear < dateJumpNowDate.getFullYear() ||
     (dateJumpYear === dateJumpNowDate.getFullYear() && dateJumpMonthIndex < dateJumpNowDate.getMonth());
 
-  const onSend = async (scheduledFor?: string, silent?: boolean) => {
+  const onSend = async (scheduledFor?: string, silent?: boolean, sendWhenOnline?: boolean) => {
     const trimmed = text.trim();
     const isMediaCaptionEdit = !!editingMessage && editingMessage.type !== "TEXT";
     if (!trimmed && !isMediaCaptionEdit) return;
@@ -1056,8 +1056,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPendingMentions([]);
     setTyping(conversationId, false);
     try {
-      await sendTextMessage(conversationId, trimmed, replyToId, mentions.length > 0 ? mentions : undefined, scheduledFor, silent);
-      if (scheduledFor) {
+      await sendTextMessage(
+        conversationId,
+        trimmed,
+        replyToId,
+        mentions.length > 0 ? mentions : undefined,
+        scheduledFor,
+        silent,
+        sendWhenOnline
+      );
+      if (sendWhenOnline) {
+        Alert.alert("Rejalashtirildi", "Foydalanuvchi onlayn bo'lganda xabar yuboriladi");
+      } else if (scheduledFor) {
         Alert.alert("Rejalashtirildi", "Xabar belgilangan vaqtda yuboriladi");
       } else {
         scrollToLatest();
@@ -1068,6 +1078,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       if (message) Alert.alert("Xatolik", message);
     }
   };
+
+  const canSendWhenOnline = conversation?.type === "DIRECT" && !conversation?.isSelf && !isOtherOnline;
 
   const onSendOptions = () => {
     if (!text.trim() || editingMessage) return;
@@ -1080,6 +1092,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           text: option.label,
           onPress: () => onSend(option.getDate().toISOString()),
         })),
+        ...(canSendWhenOnline
+          ? [{ text: "🟢 Onlayn bo'lganda yuborish", onPress: () => onSend(undefined, undefined, true) }]
+          : []),
         { text: "Bekor qilish", style: "cancel" as const },
       ]
     );

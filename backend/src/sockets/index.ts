@@ -5,6 +5,7 @@ import { env } from "../config/env";
 import { registerChatHandlers } from "./chat.gateway";
 import { prisma } from "../config/prisma";
 import { pushService } from "../modules/push/push.service";
+import { messagesService } from "../modules/messages/messages.service";
 
 let io: Server | undefined;
 
@@ -105,6 +106,11 @@ export function initSocketServer(httpServer: HttpServer): Server {
         data: { type: "user_online", userId: authed.userId },
       });
       await prisma.onlineNotifyRequest.deleteMany({ where: { targetId: authed.userId } });
+    }
+
+    const publishedWhenOnline = await messagesService.publishWhenOnlineMessages(authed.userId);
+    for (const message of publishedWhenOnline) {
+      io!.to(`conversation:${message.conversationId}`).emit("message:new", message);
     }
 
     registerChatHandlers(io!, authed);
