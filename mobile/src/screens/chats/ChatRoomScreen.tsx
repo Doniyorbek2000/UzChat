@@ -79,6 +79,9 @@ interface PendingMediaItem {
   width?: number;
   height?: number;
   type: "IMAGE" | "FILE";
+  // True when this is an image picked to be sent uncompressed as a document
+  // (type is "FILE" on send, but the preview still shows the image thumbnail).
+  isUncompressedImage?: boolean;
 }
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
@@ -1074,6 +1077,36 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPendingMediaTotal(items.length);
   };
 
+  const pickImageAsFile = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Ruxsat kerak", "Rasm yuborish uchun galereyaga ruxsat bering");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 1,
+      allowsMultipleSelection: true,
+      selectionLimit: 10,
+    });
+    if (result.canceled || result.assets.length === 0) return;
+
+    const items: PendingMediaItem[] = result.assets.map((asset, i) => ({
+      uri: asset.uri,
+      name: asset.fileName ?? `IMG-${Date.now()}-${i}.jpg`,
+      mimeType: asset.mimeType ?? "image/jpeg",
+      width: asset.width,
+      height: asset.height,
+      type: "FILE",
+      isUncompressedImage: true,
+    }));
+
+    setMediaCaption("");
+    setPendingMedia(items[0]);
+    setPendingMediaQueue(items.slice(1));
+    setPendingMediaTotal(items.length);
+  };
+
   const pickFile = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "*/*", copyToCacheDirectory: true, multiple: true });
     if (result.canceled || result.assets.length === 0) return;
@@ -1163,6 +1196,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
     Alert.alert("Yuborish", "Nimani yubormoqchisiz?", [
       { text: "🖼 Rasm", onPress: pickImage },
+      { text: "🖼 Rasm (siqilmagan, fayl sifatida)", onPress: pickImageAsFile },
       { text: "📄 Fayl", onPress: pickFile },
       { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
       { text: "📊 So'rovnoma", onPress: openPollModal },
@@ -2876,7 +2910,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               {pendingMediaTotal - pendingMediaQueue.length} / {pendingMediaTotal}
             </Text>
           )}
-          {pendingMedia?.type === "IMAGE" ? (
+          {pendingMedia?.type === "IMAGE" || pendingMedia?.isUncompressedImage ? (
             <Image source={{ uri: pendingMedia.uri }} style={styles.mediaPreviewImage} resizeMode="contain" />
           ) : (
             <View style={styles.mediaPreviewFile}>
@@ -2885,6 +2919,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 {pendingMedia?.name}
               </Text>
             </View>
+          )}
+          {pendingMedia?.isUncompressedImage && (
+            <Text style={styles.mediaPreviewFileBadge}>📄 Siqilmagan rasm fayl sifatida yuboriladi</Text>
           )}
           <TextInput
             style={styles.mediaCaptionInput}
@@ -3452,6 +3489,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: colors.textSecondary,
+  },
+  mediaPreviewFileBadge: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: "center",
   },
   mediaPreviewImage: {
     width: "100%",
