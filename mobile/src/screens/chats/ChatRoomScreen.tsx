@@ -56,7 +56,7 @@ import { Avatar } from "../../components/Avatar";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
-import { formatTime, formatDateSeparator, getConversationDisplay } from "../../utils/conversation";
+import { formatTime, formatDateSeparator, formatDateTime, getConversationDisplay } from "../../utils/conversation";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
 import { POLL_DEADLINE_OPTIONS, formatPollDeadline } from "../../utils/pollDeadline";
@@ -322,6 +322,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [editingMessage, setEditingMessage] = useState<DecryptedMessage | null>(null);
   const [actionMessage, setActionMessage] = useState<DecryptedMessage | null>(null);
   const [seenByMessage, setSeenByMessage] = useState<DecryptedMessage | null>(null);
+  const [messageInfoMessage, setMessageInfoMessage] = useState<DecryptedMessage | null>(null);
   const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
   const [pollVotesMessage, setPollVotesMessage] = useState<DecryptedMessage | null>(null);
   const [moreReactionsMessage, setMoreReactionsMessage] = useState<DecryptedMessage | null>(null);
@@ -2117,6 +2118,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.actionButtonText}>👁 Kim ko'rdi</Text>
             </TouchableOpacity>
           )}
+          {actionMessage &&
+            !isGroup &&
+            !conversation?.isSelf &&
+            actionMessage.senderId === user?.id &&
+            !actionMessage.deletedAt && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  setMessageInfoMessage(message);
+                }}
+              >
+                <Text style={styles.actionButtonText}>ℹ️ Xabar haqida</Text>
+              </TouchableOpacity>
+            )}
           {actionMessage && canForwardOrCopy && !actionMessage.decryptFailed && !actionMessage.viewOnce && (
             <TouchableOpacity
               style={styles.actionButton}
@@ -2337,6 +2354,40 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               })()}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setSeenByMessage(null)}>
+            <Text style={styles.actionButtonText}>Yopish</Text>
+          </TouchableOpacity>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    <Modal visible={!!messageInfoMessage} transparent animationType="fade" onRequestClose={() => setMessageInfoMessage(null)}>
+      <Pressable style={styles.actionBackdrop} onPress={() => setMessageInfoMessage(null)}>
+        <Pressable style={styles.actionSheet}>
+          <Text style={styles.mentionPickerTitle}>Xabar haqida</Text>
+          {messageInfoMessage && (
+            <View style={styles.messageInfoList}>
+              <View style={styles.messageInfoRow}>
+                <Text style={styles.messageInfoLabel}>Yuborildi</Text>
+                <Text style={styles.messageInfoValue}>{formatDateTime(messageInfoMessage.createdAt)}</Text>
+              </View>
+              <View style={styles.messageInfoRow}>
+                <Text style={styles.messageInfoLabel}>Yetkazildi</Text>
+                <Text style={styles.messageInfoValue}>
+                  {otherParticipant && isMessageDelivered(messageInfoMessage, otherParticipant)
+                    ? formatDateTime(otherParticipant.lastDeliveredAt!)
+                    : "Hali yo'q"}
+                </Text>
+              </View>
+              <View style={styles.messageInfoRow}>
+                <Text style={styles.messageInfoLabel}>O'qildi</Text>
+                <Text style={styles.messageInfoValue}>
+                  {otherParticipant && isMessageRead(messageInfoMessage, otherParticipant)
+                    ? formatDateTime(otherParticipant.lastReadAt!)
+                    : "Hali yo'q"}
+                </Text>
+              </View>
+            </View>
+          )}
+          <TouchableOpacity style={styles.actionButton} onPress={() => setMessageInfoMessage(null)}>
             <Text style={styles.actionButtonText}>Yopish</Text>
           </TouchableOpacity>
         </Pressable>
@@ -2942,6 +2993,10 @@ const styles = StyleSheet.create({
   seenBySectionLabel: { fontSize: 13, fontWeight: "600", color: colors.textSecondary, marginTop: 12, marginBottom: 6 },
   seenByRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 6 },
   seenByName: { fontSize: 15, color: colors.text },
+  messageInfoList: { marginBottom: 8 },
+  messageInfoRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8 },
+  messageInfoLabel: { fontSize: 14, color: colors.textSecondary },
+  messageInfoValue: { fontSize: 14, color: colors.text, fontWeight: "600" },
   editHistoryLoader: { marginVertical: 24 },
   editHistoryRow: {
     paddingVertical: 8,
