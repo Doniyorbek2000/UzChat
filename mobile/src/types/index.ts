@@ -50,6 +50,8 @@ export interface AuthUser extends User {
   notificationsPaused: boolean;
   notificationsPausedUntil: string | null;
   defaultDisappearingSeconds: number | null;
+  // Days of inactivity after which the account is automatically deleted.
+  selfDestructDays: 30 | 90 | 180 | 365;
   twoFactorEnabled: boolean;
   twoFactorHint: string | null;
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Switch } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Switch, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -50,6 +50,13 @@ const PHONE_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; descriptio
   { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi telefon raqamingiz orqali sizni topa oladi" },
   { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz telefon raqamingiz orqali sizni topa oladi" },
   { value: "NOBODY", label: "Hech kim", description: "Hech kim telefon raqamingiz orqali sizni topa olmaydi" },
+];
+
+const SELF_DESTRUCT_OPTIONS: { value: 30 | 90 | 180 | 365; label: string }[] = [
+  { value: 30, label: "1 oy" },
+  { value: 90, label: "3 oy" },
+  { value: 180, label: "6 oy" },
+  { value: 365, label: "1 yil" },
 ];
 
 export function PrivacySettingsScreen({ navigation }: Props) {
@@ -176,6 +183,19 @@ export function PrivacySettingsScreen({ navigation }: Props) {
     }
   };
 
+  const onSelectSelfDestruct = async (value: 30 | 90 | 180 | 365) => {
+    if (value === user.selfDestructDays || saving) return;
+    setSaving(`selfDestruct:${value}`);
+    try {
+      await usersApi.updateMe({ selfDestructDays: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
   const onToggleTypingIndicators = async (value: boolean) => {
     if (saving) return;
     setSaving("typingIndicators");
@@ -190,7 +210,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.sectionTitle}>Oxirgi marta onlayn bo'lgan vaqtni kim ko'ra oladi</Text>
       {LAST_SEEN_OPTIONS.map((option) => {
         const selected = user.lastSeenPrivacy === option.value;
@@ -418,12 +438,41 @@ export function PrivacySettingsScreen({ navigation }: Props) {
           </TouchableOpacity>
         );
       })}
-    </View>
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Hisobni o'chirish</Text>
+      <Text style={styles.rowDescription}>
+        Agar belgilangan muddat davomida hisobingizga kirmasangiz, hisobingiz va barcha ma'lumotlaringiz avtomatik
+        o'chiriladi
+      </Text>
+      {SELF_DESTRUCT_OPTIONS.map((option) => {
+        const selected = user.selfDestructDays === option.value;
+        return (
+          <TouchableOpacity
+            key={option.value}
+            style={styles.row}
+            onPress={() => onSelectSelfDestruct(option.value)}
+            disabled={!!saving}
+          >
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+            </View>
+            {saving === `selfDestruct:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
+  container: { flex: 1, backgroundColor: colors.surface },
+  content: { padding: 16 },
   sectionTitle: { fontSize: 13, color: colors.textSecondary, marginBottom: 12 },
   sectionSpacer: { marginTop: 12 },
   row: {

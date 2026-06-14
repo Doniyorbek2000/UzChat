@@ -160,6 +160,9 @@ model User {
   // Default "disappearing messages" timer (in seconds), automatically applied
   // to new conversations this user starts. Null means messages persist normally.
   defaultDisappearingSeconds Int?
+  // Number of days of inactivity (no login/connection) after which this
+  // account is automatically deleted. Mirrors Telegram's "self-destruct" setting.
+  selfDestructDays Int @default(180)
   // Optional second ("cloud") password, required after the account password
   // when logging in. Null means two-step verification is disabled.
   twoFactorHash String?
@@ -194,6 +197,7 @@ model User {
   @@index([username])
   @@index([phone])
   @@index([customStatusExpiresAt])
+  @@index([lastSeenAt])
 }
 
 // A user-submitted report about another user (optionally about a specific

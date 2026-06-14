@@ -35,6 +35,7 @@ export const usersApi = {
     quietHoursTimezoneOffset?: number | null;
     pauseNotificationsFor?: "1h" | "8h" | "1d" | "forever" | "off";
     defaultDisappearingSeconds?: number | null;
+    selfDestructDays?: 30 | 90 | 180 | 365;
   }) {
     return apiClient.patch<AuthUser>("/users/me", data).then((r) => r.data);
   },

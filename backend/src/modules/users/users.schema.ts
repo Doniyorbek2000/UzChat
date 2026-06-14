@@ -42,6 +42,8 @@ export const updateProfileSchema = z
     // Global "Do not disturb": "forever" pauses ALL message notifications until
     // manually resumed with "off"; durations pause temporarily.
     pauseNotificationsFor: z.enum(["1h", "8h", "1d", "forever", "off"]).optional(),
+    // Days of inactivity after which the account is automatically deleted.
+    selfDestructDays: z.union([z.literal(30), z.literal(90), z.literal(180), z.literal(365)]).optional(),
   })
   .refine(
     (data) => {

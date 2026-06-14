@@ -98,7 +98,26 @@ const publicSelect = {
   birthdayDay: true,
   birthdayMonth: true,
   birthdayPrivacy: true,
+  selfDestructDays: true,
 } as const;
+
+/** Leaves all of the user's groups (transferring ownership / cleaning up empty groups as needed), then deletes the account. */
+async function leaveGroupsAndDeleteUser(userId: string) {
+  const groups = await prisma.conversationParticipant.findMany({
+    where: { userId, conversation: { type: ConversationType.GROUP } },
+    select: { conversationId: true },
+  });
+
+  const leaveResults: { conversationId: string; deleted: boolean; newOwnerId: string | null }[] = [];
+  for (const { conversationId } of groups) {
+    const result = await chatsService.leaveConversation(userId, conversationId);
+    leaveResults.push({ conversationId, ...result });
+  }
+
+  await prisma.user.delete({ where: { id: userId } });
+
+  return { leaveResults };
+}
 
 export const usersService = {
   async getOwnProfile(userId: string) {
@@ -294,22 +313,26 @@ export const usersService = {
     const valid = await verifyPassword(currentPassword, user.passwordHash);
     if (!valid) throw Errors.badRequest("Joriy parol noto'g'ri");
 
-    // Leave every group first so ownership transfers/empty-group cleanup happen
-    // the same way they would via the regular "leave group" flow.
-    const groups = await prisma.conversationParticipant.findMany({
-      where: { userId, conversation: { type: ConversationType.GROUP } },
-      select: { conversationId: true },
-    });
+    return leaveGroupsAndDeleteUser(userId);
+  },
 
-    const leaveResults: { conversationId: string; deleted: boolean; newOwnerId: string | null }[] = [];
-    for (const { conversationId } of groups) {
-      const result = await chatsService.leaveConversation(userId, conversationId);
-      leaveResults.push({ conversationId, ...result });
+  /**
+   * Permanently deletes accounts that have been inactive (no login/connection)
+   * longer than their configured selfDestructDays. Mirrors Telegram's
+   * "self-destruct" account setting. Run periodically by a background job.
+   */
+  async deleteInactiveAccounts() {
+    const users = await prisma.user.findMany({ select: { id: true, lastSeenAt: true, selfDestructDays: true } });
+
+    const now = Date.now();
+    let deletedCount = 0;
+    for (const user of users) {
+      if (now - user.lastSeenAt.getTime() >= user.selfDestructDays * DAY_MS) {
+        await leaveGroupsAndDeleteUser(user.id);
+        deletedCount++;
+      }
     }
-
-    await prisma.user.delete({ where: { id: userId } });
-
-    return { leaveResults };
+    return { deletedCount };
   },
 
   /** Lists this user's "Last seen" privacy exceptions for specific other users. */
