@@ -11,9 +11,12 @@ const MAX_HEIGHT = 280;
 interface Props {
   message: DecryptedMessage;
   conversationKey: string;
+  // When provided, tapping a revealed image calls this instead of opening the
+  // built-in single-image modal (used to open a swipeable gallery instead).
+  onOpenViewer?: () => void;
 }
 
-export function MediaImageBubble({ message, conversationKey }: Props) {
+export function MediaImageBubble({ message, conversationKey, onOpenViewer }: Props) {
   const [uri, setUri] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [needsDownload, setNeedsDownload] = useState(false);
@@ -94,7 +97,9 @@ export function MediaImageBubble({ message, conversationKey }: Props) {
 
   return (
     <>
-      <Pressable onPress={() => (revealed ? setViewerOpen(true) : setRevealed(true))}>
+      <Pressable
+        onPress={() => (revealed ? (onOpenViewer ? onOpenViewer() : setViewerOpen(true)) : setRevealed(true))}
+      >
         <Image
           source={{ uri }}
           style={[styles.image, { width, height }, !revealed && styles.spoilerImage]}
@@ -108,11 +113,13 @@ export function MediaImageBubble({ message, conversationKey }: Props) {
           </View>
         )}
       </Pressable>
-      <Modal visible={viewerOpen} transparent animationType="fade" onRequestClose={() => setViewerOpen(false)}>
-        <Pressable style={styles.viewerOverlay} onPress={() => setViewerOpen(false)}>
-          <Image source={{ uri }} style={styles.viewerImage} resizeMode="contain" />
-        </Pressable>
-      </Modal>
+      {!onOpenViewer && (
+        <Modal visible={viewerOpen} transparent animationType="fade" onRequestClose={() => setViewerOpen(false)}>
+          <Pressable style={styles.viewerOverlay} onPress={() => setViewerOpen(false)}>
+            <Image source={{ uri }} style={styles.viewerImage} resizeMode="contain" />
+          </Pressable>
+        </Modal>
+      )}
     </>
   );
 }

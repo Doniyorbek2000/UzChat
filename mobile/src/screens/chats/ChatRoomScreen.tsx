@@ -46,6 +46,7 @@ import { STICKER_PACKS } from "../../utils/stickerPacks";
 import { ConversationParticipant, MessageReaction, ReportReason } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
+import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
 import { ViewOnceImageBubble } from "../../components/ViewOnceImageBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
@@ -347,6 +348,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pollCorrectIndex, setPollCorrectIndex] = useState<number | null>(null);
   const [pollDeadlineSeconds, setPollDeadlineSeconds] = useState<number | null>(null);
   const [pendingMedia, setPendingMedia] = useState<PendingMediaItem | null>(null);
+  const [galleryMessageId, setGalleryMessageId] = useState<string | null>(null);
   const [pendingMediaQueue, setPendingMediaQueue] = useState<PendingMediaItem[]>([]);
   const [pendingMediaTotal, setPendingMediaTotal] = useState(0);
   const [mediaCaption, setMediaCaption] = useState("");
@@ -1517,7 +1519,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         />
       );
     } else if (item.type === "IMAGE" && conversationKey) {
-      content = <MediaImageBubble message={item} conversationKey={conversationKey} />;
+      content = (
+        <MediaImageBubble message={item} conversationKey={conversationKey} onOpenViewer={() => setGalleryMessageId(item.id)} />
+      );
     } else if (item.type === "AUDIO" && conversationKey) {
       content = <MediaAudioBubble message={item} conversationKey={conversationKey} />;
     } else if ((item.type === "FILE" || item.type === "VIDEO") && conversationKey) {
@@ -1641,6 +1645,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const typingCount = typingUsers?.size ?? 0;
   const recordingCount = recordingUsers?.size ?? 0;
   const invertedData = [...messages].reverse();
+  const galleryImages = messages.filter((m) => m.type === "IMAGE" && !m.viewOnce && !m.deletedAt && !m.decryptFailed);
 
   return (
     <>
@@ -2726,6 +2731,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         </View>
       </KeyboardAvoidingView>
     </Modal>
+    <ImageGalleryViewer
+      visible={!!galleryMessageId}
+      messages={galleryImages}
+      initialMessageId={galleryMessageId ?? ""}
+      conversationKey={conversationKey ?? ""}
+      onClose={() => setGalleryMessageId(null)}
+    />
     </>
   );
 }

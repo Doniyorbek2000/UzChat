@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { chatsApi } from "../../api/chats";
 import { Avatar } from "../../components/Avatar";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
+import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { colors } from "../../theme/colors";
@@ -52,6 +53,7 @@ export function SharedMediaScreen({ route, navigation }: Props) {
   const [hasMore, setHasMore] = useState(true);
   const [activeTab, setActiveTab] = useState<MediaTab>("all");
   const [selectedSenderId, setSelectedSenderId] = useState<string | null>(null);
+  const [galleryMessageId, setGalleryMessageId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -100,7 +102,9 @@ export function SharedMediaScreen({ route, navigation }: Props) {
 
     let content;
     if (item.type === "IMAGE") {
-      content = <MediaImageBubble message={item} conversationKey={conversationKey} />;
+      content = (
+        <MediaImageBubble message={item} conversationKey={conversationKey} onOpenViewer={() => setGalleryMessageId(item.id)} />
+      );
     } else if (item.type === "AUDIO") {
       content = <MediaAudioBubble message={item} conversationKey={conversationKey} />;
     } else {
@@ -137,6 +141,11 @@ export function SharedMediaScreen({ route, navigation }: Props) {
         (item) => matchesTab(activeTab, item.type) && (!selectedSenderId || item.senderId === selectedSenderId)
       ),
     [items, activeTab, selectedSenderId]
+  );
+
+  const galleryImages = useMemo(
+    () => items.filter((item) => item.type === "IMAGE" && !item.viewOnce && !item.deletedAt && !item.decryptFailed),
+    [items]
   );
 
   if (loading) {
@@ -197,6 +206,13 @@ export function SharedMediaScreen({ route, navigation }: Props) {
             </Text>
           </View>
         }
+      />
+      <ImageGalleryViewer
+        visible={!!galleryMessageId}
+        messages={galleryImages}
+        initialMessageId={galleryMessageId ?? ""}
+        conversationKey={conversationKey}
+        onClose={() => setGalleryMessageId(null)}
       />
     </View>
   );
