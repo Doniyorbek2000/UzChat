@@ -33,7 +33,7 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
-import { useChatStore, DecryptedMessage, decryptReplyPreview } from "../../store/chatStore";
+import { useChatStore, DecryptedMessage, ReplyPreview, decryptReplyPreview } from "../../store/chatStore";
 import { chatsApi } from "../../api/chats";
 import { decryptMessage } from "../../crypto/e2ee";
 import { useAuthStore } from "../../store/authStore";
@@ -763,6 +763,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const getAuthorName = (senderId: string) => {
     if (senderId === user?.id) return "Siz";
     return contactAliases[senderId] ?? conversation?.participants.find((p) => p.userId === senderId)?.user.displayName ?? "";
+  };
+
+  const onReplyPreviewPress = (replyPreview: ReplyPreview) => {
+    if (replyPreview.deletedAt) {
+      Alert.alert("Xabar o'chirilgan", "Bu xabar o'chirilgan");
+      return;
+    }
+    navigation.setParams({ highlightMessageId: replyPreview.id });
   };
 
   const formatActivityLabel = (userIds: Set<string> | undefined, suffix: string): string | null => {
@@ -1594,7 +1602,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </Text>
           )}
           {item.replyPreview && (
-            <View style={styles.replyBox}>
+            <TouchableOpacity style={styles.replyBox} activeOpacity={0.6} onPress={() => onReplyPreviewPress(item.replyPreview!)}>
               <View style={styles.replyBar} />
               <View style={styles.replyContent}>
                 <Text style={styles.replyAuthor} numberOfLines={1}>
@@ -1604,7 +1612,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   {getPreviewLabel(item.replyPreview)}
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
           {content}
           {!item.deletedAt &&
