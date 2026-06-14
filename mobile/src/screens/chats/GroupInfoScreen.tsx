@@ -297,6 +297,21 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     }
   };
 
+  const onSetWelcomeMessage = () => {
+    Alert.prompt(
+      "Salomlashuv xabari",
+      "Yangi a'zo guruhga qo'shilganda unga avtomatik yuboriladigan xabar. Bo'sh qoldirsangiz, o'chiriladi.",
+      (text) => {
+        const trimmed = (text ?? "").trim();
+        updateGroupInfo(conversationId, { welcomeMessage: trimmed || null }).catch(() => {
+          Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+        });
+      },
+      "plain-text",
+      conversation.welcomeMessage ?? ""
+    );
+  };
+
   const onSetSlowMode = () => {
     Alert.alert(
       "Sekin rejim",
@@ -786,6 +801,13 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.inviteIcon}>🐢</Text>
             <Text style={styles.inviteText}>Sekin rejim</Text>
             <Text style={styles.inviteValue}>{formatSlowModeDuration(conversation.slowModeSeconds)}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.inviteRow} onPress={onSetWelcomeMessage}>
+            <Text style={styles.inviteIcon}>👋</Text>
+            <Text style={styles.inviteText}>Salomlashuv xabari</Text>
+            <Text style={[styles.inviteValue, { maxWidth: 140 }]} numberOfLines={1}>
+              {conversation.welcomeMessage || "O'rnatilmagan"}
+            </Text>
           </TouchableOpacity>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>🔒</Text>

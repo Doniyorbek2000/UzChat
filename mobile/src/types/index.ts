@@ -153,6 +153,8 @@ export interface Conversation {
   type: ConversationType;
   title: string | null;
   description: string | null;
+  // GROUP only: sent as a SYSTEM message to new members when they join; null disables it.
+  welcomeMessage: string | null;
   avatarUrl: string | null;
   updatedAt: string;
   // base64 NaCl box: this conversation's symmetric key, encrypted for the current user

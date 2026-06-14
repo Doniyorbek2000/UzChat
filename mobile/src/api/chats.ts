@@ -59,6 +59,7 @@ export const chatsApi = {
       title?: string;
       avatarUrl?: string;
       description?: string | null;
+      welcomeMessage?: string | null;
       onlyAdminsCanSend?: boolean;
       slowModeSeconds?: number;
       noForwards?: boolean;

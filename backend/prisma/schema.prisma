@@ -333,6 +333,8 @@ model Conversation {
   title       String?
   // Group description/announcement, shown to all members.
   description String?
+  // Sent as a SYSTEM message to new members when they join the group; null disables it.
+  welcomeMessage String?
   avatarUrl   String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt

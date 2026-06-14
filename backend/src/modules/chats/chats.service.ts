@@ -250,6 +250,7 @@ export const chatsService = {
           type: p.conversation.type,
           title: p.conversation.title,
           description: p.conversation.description,
+          welcomeMessage: p.conversation.welcomeMessage,
           avatarUrl: p.conversation.avatarUrl,
           updatedAt: p.conversation.updatedAt,
           wrappedKey: p.wrappedKey,
@@ -343,6 +344,7 @@ export const chatsService = {
       type: participant.conversation.type,
       title: participant.conversation.title,
       description: participant.conversation.description,
+      welcomeMessage: participant.conversation.welcomeMessage,
       avatarUrl: participant.conversation.avatarUrl,
       updatedAt: participant.conversation.updatedAt,
       wrappedKey: participant.wrappedKey,
@@ -816,7 +818,7 @@ export const chatsService = {
         pending: false as const,
         conversation: await chatsService.getConversation(userId, conversation.id),
         alreadyMember: true,
-        systemMessage: null,
+        systemMessages: [],
       };
     }
 
@@ -875,13 +877,16 @@ export const chatsService = {
     ]);
 
     const joiner = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
-    const systemMessage = await createSystemMessage(conversation.id, userId, `${joiner?.displayName} guruhga qo'shildi`);
+    const systemMessages = [await createSystemMessage(conversation.id, userId, `${joiner?.displayName} guruhga qo'shildi`)];
+    if (conversation.welcomeMessage) {
+      systemMessages.push(await createSystemMessage(conversation.id, userId, conversation.welcomeMessage));
+    }
 
     return {
       pending: false as const,
       conversation: await chatsService.getConversation(userId, conversation.id),
       alreadyMember: false,
-      systemMessage,
+      systemMessages,
     };
   },
 
@@ -902,7 +907,7 @@ export const chatsService = {
   },
 
   async approveJoinRequest(userId: string, conversationId: string, requestId: string) {
-    await chatsService.assertGroupManager(userId, conversationId);
+    const conversation = await chatsService.assertGroupManager(userId, conversationId);
 
     const request = await prisma.groupJoinRequest.findUnique({ where: { id: requestId } });
     if (!request || request.conversationId !== conversationId) throw Errors.notFound("So'rov");
@@ -926,11 +931,14 @@ export const chatsService = {
     ]);
 
     const joiner = await prisma.user.findUnique({ where: { id: request.userId }, select: { displayName: true } });
-    const systemMessage = await createSystemMessage(conversationId, request.userId, `${joiner?.displayName} guruhga qo'shildi`);
+    const systemMessages = [await createSystemMessage(conversationId, request.userId, `${joiner?.displayName} guruhga qo'shildi`)];
+    if (conversation.welcomeMessage) {
+      systemMessages.push(await createSystemMessage(conversationId, request.userId, conversation.welcomeMessage));
+    }
 
     return {
       conversation: await chatsService.getConversation(userId, conversationId),
-      systemMessage,
+      systemMessages,
       newParticipantId: request.userId,
     };
   },
@@ -987,13 +995,14 @@ export const chatsService = {
     });
 
     const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
-    const systemMessage = await createSystemMessage(
-      conversationId,
-      userId,
-      `${actor?.displayName} ${target.displayName} foydalanuvchisini guruhga qo'shdi`
-    );
+    const systemMessages = [
+      await createSystemMessage(conversationId, userId, `${actor?.displayName} ${target.displayName} foydalanuvchisini guruhga qo'shdi`),
+    ];
+    if (conversation.welcomeMessage) {
+      systemMessages.push(await createSystemMessage(conversationId, input.userId, conversation.welcomeMessage));
+    }
 
-    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
+    return { conversation: await chatsService.getConversation(userId, conversationId), systemMessages };
   },
 
   async assertParticipant(userId: string, conversationId: string) {
@@ -1083,6 +1092,7 @@ export const chatsService = {
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
         ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.welcomeMessage !== undefined ? { welcomeMessage: input.welcomeMessage } : {}),
         ...(input.onlyAdminsCanSend !== undefined ? { onlyAdminsCanSend: input.onlyAdminsCanSend } : {}),
         ...(input.slowModeSeconds !== undefined ? { slowModeSeconds: input.slowModeSeconds } : {}),
         ...(input.noForwards !== undefined ? { noForwards: input.noForwards } : {}),
@@ -1114,6 +1124,15 @@ export const chatsService = {
           conversationId,
           userId,
           input.description ? `${name} guruh tavsifini o'zgartirdi` : `${name} guruh tavsifini o'chirdi`
+        )
+      );
+    }
+    if (input.welcomeMessage !== undefined && input.welcomeMessage !== conversation.welcomeMessage) {
+      systemMessages.push(
+        await createSystemMessage(
+          conversationId,
+          userId,
+          input.welcomeMessage ? `${name} guruh uchun salomlashuv xabarini o'rnatdi` : `${name} guruh salomlashuv xabarini o'chirdi`
         )
       );
     }

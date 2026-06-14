@@ -36,7 +36,7 @@ export const chatsController = {
 
   async addParticipant(req: Request, res: Response, next: NextFunction) {
     try {
-      const { conversation, systemMessage } = await chatsService.addParticipant(req.user!.sub, req.params.id, req.body);
+      const { conversation, systemMessages } = await chatsService.addParticipant(req.user!.sub, req.params.id, req.body);
       const newParticipantId: string = req.body.userId;
 
       getIo().to(`user:${newParticipantId}`).socketsJoin(`conversation:${conversation.id}`);
@@ -48,7 +48,9 @@ export const chatsController = {
         .to(`conversation:${conversation.id}`)
         .except(`user:${newParticipantId}`)
         .emit("conversation:updated", conversation);
-      getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+      for (const systemMessage of systemMessages) {
+        getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+      }
 
       res.status(201).json(conversation);
     } catch (err) {
@@ -231,14 +233,16 @@ export const chatsController = {
         return;
       }
 
-      const { conversation, alreadyMember, systemMessage } = result;
+      const { conversation, alreadyMember, systemMessages } = result;
       if (!alreadyMember) {
         getIo().to(`user:${userId}`).socketsJoin(`conversation:${conversation.id}`);
         getIo()
           .to(`conversation:${conversation.id}`)
           .except(`user:${userId}`)
           .emit("conversation:updated", conversation);
-        getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+        for (const systemMessage of systemMessages) {
+          getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+        }
       }
 
       res.status(alreadyMember ? 200 : 201).json(conversation);
@@ -269,7 +273,7 @@ export const chatsController = {
   async approveJoinRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, requestId } = req.params;
-      const { conversation, systemMessage, newParticipantId } = await chatsService.approveJoinRequest(
+      const { conversation, systemMessages, newParticipantId } = await chatsService.approveJoinRequest(
         req.user!.sub,
         id,
         requestId
@@ -283,7 +287,9 @@ export const chatsController = {
         .to(`conversation:${conversation.id}`)
         .except(`user:${newParticipantId}`)
         .emit("conversation:updated", conversation);
-      getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+      for (const systemMessage of systemMessages) {
+        getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
+      }
 
       res.json(conversation);
     } catch (err) {

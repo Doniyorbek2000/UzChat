@@ -49,6 +49,8 @@ export const updateConversationSchema = z
     title: z.string().min(1).max(64).optional(),
     avatarUrl: z.string().url().optional(),
     description: z.string().max(500).nullable().optional(),
+    // Sent as a SYSTEM message to new members when they join the group; null disables it.
+    welcomeMessage: z.string().trim().min(1).max(500).nullable().optional(),
     onlyAdminsCanSend: z.boolean().optional(),
     slowModeSeconds: z.number().int().min(0).max(MAX_SLOW_MODE_SECONDS).optional(),
     noForwards: z.boolean().optional(),
@@ -65,6 +67,7 @@ export const updateConversationSchema = z
       data.title !== undefined ||
       data.avatarUrl !== undefined ||
       data.description !== undefined ||
+      data.welcomeMessage !== undefined ||
       data.onlyAdminsCanSend !== undefined ||
       data.slowModeSeconds !== undefined ||
       data.noForwards !== undefined ||
