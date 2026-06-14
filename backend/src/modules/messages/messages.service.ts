@@ -510,6 +510,7 @@ export const messagesService = {
       files: number;
       topSenders?: { userId: string; count: number }[];
       byWeekday?: number[];
+      topReactedMessages?: { message: ReturnType<typeof formatMessage>; reactionCount: number }[];
     } = {
       total,
       media: (byType.get(MessageType.IMAGE) ?? 0) + (byType.get(MessageType.VIDEO) ?? 0),
@@ -522,8 +523,8 @@ export const messagesService = {
       select: { type: true },
     });
 
-    // Group-only breakdown: most active members and weekday activity histogram,
-    // based on the most recent 1000 non-system messages.
+    // Group-only breakdown: most active members, weekday activity histogram, and
+    // most-reacted messages, based on the most recent 1000 non-system messages.
     if (conversation?.type === ConversationType.GROUP) {
       const senderCounts = await prisma.message.groupBy({
         by: ["senderId"],
@@ -543,6 +544,25 @@ export const messagesService = {
       const byWeekday = new Array(7).fill(0);
       for (const m of recentMessages) byWeekday[m.createdAt.getDay()]++;
       stats.byWeekday = byWeekday;
+
+      const reactionCounts = await prisma.messageReaction.groupBy({
+        by: ["messageId"],
+        where: { message: { ...baseWhere, type: { not: MessageType.SYSTEM } } },
+        _count: { _all: true },
+        orderBy: { _count: { messageId: "desc" } },
+        take: 5,
+      });
+      if (reactionCounts.length > 0) {
+        const reactedMessages = await prisma.message.findMany({
+          where: { id: { in: reactionCounts.map((r) => r.messageId) } },
+          include: messageInclude(userId),
+        });
+        const messageById = new Map(reactedMessages.map((m) => [m.id, m]));
+        stats.topReactedMessages = reactionCounts.flatMap((r) => {
+          const message = messageById.get(r.messageId);
+          return message ? [{ message: formatMessage(message, userId), reactionCount: r._count._all }] : [];
+        });
+      }
     }
 
     return stats;

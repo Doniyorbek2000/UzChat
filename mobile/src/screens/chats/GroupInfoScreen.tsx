@@ -26,13 +26,13 @@ import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { chatsApi } from "../../api/chats";
 import { exportConversation } from "../../utils/chatExport";
-import { encodeInviteLink } from "../../crypto/e2ee";
+import { encodeInviteLink, decryptMessage } from "../../crypto/e2ee";
 import { DISAPPEARING_MESSAGE_OPTIONS, formatDisappearingDuration } from "../../utils/disappearingMessages";
 import { SLOW_MODE_OPTIONS, formatSlowModeDuration } from "../../utils/slowMode";
 import { INVITE_EXPIRY_OPTIONS, INVITE_MAX_USES_OPTIONS, formatInviteStatus } from "../../utils/inviteLink";
 import { isParticipantRestricted } from "../../utils/restriction";
 import { formatJoinDate, formatTime } from "../../utils/conversation";
-import { ConversationParticipant, ParticipantRole } from "../../types";
+import { ConversationParticipant, Message, MessageType, ParticipantRole } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
 
@@ -45,6 +45,15 @@ const ROLE_LABELS: Record<ParticipantRole, string> = {
 // JS Date#getDay(): 0=Yakshanba..6=Shanba. Reordered to start the week on Monday.
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const WEEKDAY_LABELS = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
+
+const MEDIA_LABELS: Partial<Record<MessageType, string>> = {
+  IMAGE: "🖼 Rasm",
+  VIDEO: "🎬 Video",
+  AUDIO: "🎵 Ovozli xabar",
+  FILE: "📄 Fayl",
+  CONTACT: "👤 Kontakt",
+  POLL: "📊 So'rovnoma",
+};
 
 export function GroupInfoScreen({ route, navigation }: Props) {
   const { conversationId } = route.params;
@@ -79,6 +88,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     files: number;
     topSenders?: { userId: string; count: number }[];
     byWeekday?: number[];
+    topReactedMessages?: { message: Message; reactionCount: number }[];
   } | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
 
@@ -92,6 +102,17 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   );
 
   if (!conversation) return null;
+
+  const getMessagePreview = (message: Message): string => {
+    if (message.deletedAt) return "🚫 Xabar o'chirildi";
+    if (message.type !== "TEXT") return MEDIA_LABELS[message.type] ?? "Xabar";
+    try {
+      const key = getConversationKey(conversation);
+      return decryptMessage(message.ciphertext, message.nonce, key);
+    } catch {
+      return "🔒 Xabarni ochib bo'lmadi";
+    }
+  };
 
   const me = conversation.participants.find((p) => p.userId === user?.id);
   const isOwner = me?.role === "OWNER";
@@ -653,6 +674,43 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       )}
 
+      {stats?.topReactedMessages && stats.topReactedMessages.length > 0 && (
+        <View style={styles.activitySection}>
+          <Text style={styles.activityTitle}>Eng ko'p reaksiya olgan xabarlar</Text>
+          {stats.topReactedMessages.map(({ message, reactionCount }) => {
+            const sender = conversation.participants.find((p) => p.userId === message.senderId);
+            const senderName =
+              message.senderId === user?.id
+                ? "Siz"
+                : contactAliases[message.senderId] ?? sender?.user.displayName ?? "";
+            return (
+              <TouchableOpacity
+                key={message.id}
+                style={styles.reactedMessageRow}
+                onPress={() =>
+                  navigation.navigate("ChatRoom", {
+                    conversationId,
+                    title: conversation.title ?? "",
+                    highlightMessageId: message.id,
+                  })
+                }
+              >
+                <Avatar uri={sender?.user.avatarUrl} name={senderName} size={28} />
+                <View style={styles.activityBarContainer}>
+                  <Text style={styles.activityName} numberOfLines={1}>
+                    {senderName}
+                  </Text>
+                  <Text style={styles.reactedMessagePreview} numberOfLines={1}>
+                    {getMessagePreview(message)}
+                  </Text>
+                </View>
+                <Text style={styles.reactedMessageCount}>❤️ {reactionCount}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
       <View style={styles.inviteSection}>
         <TouchableOpacity
           style={styles.inviteRow}
@@ -930,6 +988,9 @@ const styles = StyleSheet.create({
   },
   weekdayBarFill: { width: "100%", borderRadius: 4, backgroundColor: colors.primary, minHeight: 2 },
   weekdayLabel: { fontSize: 11, color: colors.textSecondary },
+  reactedMessageRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  reactedMessagePreview: { fontSize: 12, color: colors.textSecondary },
+  reactedMessageCount: { fontSize: 13, color: colors.textSecondary, marginLeft: 8 },
   inviteSection: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,

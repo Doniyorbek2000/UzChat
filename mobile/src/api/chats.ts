@@ -236,6 +236,7 @@ export const chatsApi = {
         files: number;
         topSenders?: { userId: string; count: number }[];
         byWeekday?: number[];
+        topReactedMessages?: { message: Message; reactionCount: number }[];
       }>(`/conversations/${conversationId}/stats`)
       .then((r) => r.data);
   },
