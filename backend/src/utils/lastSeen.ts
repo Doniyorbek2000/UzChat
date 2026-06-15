@@ -42,21 +42,38 @@ export function filterLastSeen<T extends { id: string; lastSeenAt: Date | null; 
   return { ...rest, lastSeenAt: visible ? user.lastSeenAt : null };
 }
 
+/** Returns the subset of `candidateIds` that have a block relationship (either direction) with `userId`. */
+async function getBlockedIdsAmong(userId: string, candidateIds: string[]): Promise<Set<string>> {
+  if (candidateIds.length === 0) return new Set();
+  const blocks = await prisma.blockedUser.findMany({
+    where: {
+      OR: [
+        { ownerId: userId, blockedId: { in: candidateIds } },
+        { blockedId: userId, ownerId: { in: candidateIds } },
+      ],
+    },
+    select: { ownerId: true, blockedId: true },
+  });
+  return new Set(blocks.map((b) => (b.ownerId === userId ? b.blockedId : b.ownerId)));
+}
+
 /**
  * Returns the subset of `ownerIds` whose current online/last-seen status
- * `viewerId` is allowed to see, per each owner's lastSeenPrivacy and any
- * exception that owner set for `viewerId`. Mirrors filterLastSeen's
- * visibility rule for a batch of owners viewed by a single viewer.
+ * `viewerId` is allowed to see, per each owner's lastSeenPrivacy, any
+ * exception that owner set for `viewerId`, and block status. Mirrors
+ * filterLastSeen's visibility rule for a batch of owners viewed by a single viewer.
  */
 export async function filterVisibleOnlineOwners(viewerId: string, ownerIds: string[]): Promise<Set<string>> {
   if (ownerIds.length === 0) return new Set();
-  const [owners, contactIds, exceptions] = await Promise.all([
+  const [owners, contactIds, exceptions, blockedIds] = await Promise.all([
     prisma.user.findMany({ where: { id: { in: ownerIds } }, select: { id: true, lastSeenPrivacy: true } }),
     getContactIds(viewerId),
     getLastSeenExceptions(viewerId),
+    getBlockedIdsAmong(viewerId, ownerIds),
   ]);
   const visible = new Set<string>();
   for (const owner of owners) {
+    if (blockedIds.has(owner.id)) continue;
     const exception = exceptions.get(owner.id);
     let isVisible: boolean;
     if (exception) isVisible = exception === LastSeenExceptionMode.ALLOW;
@@ -70,8 +87,9 @@ export async function filterVisibleOnlineOwners(viewerId: string, ownerIds: stri
 
 /**
  * Returns the subset of `viewerIds` who are allowed to see `ownerId`'s
- * current online/last-seen status, per `ownerId`'s lastSeenPrivacy and any
- * exceptions they've set for individual viewers. The broadcast-side
+ * current online/last-seen status, per `ownerId`'s lastSeenPrivacy, any
+ * exceptions they've set for individual viewers, and block status (which
+ * overrides any ALLOW exception in either direction). The broadcast-side
  * counterpart to filterVisibleOnlineOwners.
  */
 export async function filterViewersForLastSeen(ownerId: string, viewerIds: string[]): Promise<Set<string>> {
@@ -92,14 +110,18 @@ export async function filterViewersForLastSeen(ownerId: string, viewerIds: strin
     visible = new Set();
   }
 
-  const exceptions = await prisma.lastSeenException.findMany({
-    where: { ownerId, exceptionUserId: { in: viewerIds } },
-    select: { exceptionUserId: true, mode: true },
-  });
+  const [exceptions, blockedIds] = await Promise.all([
+    prisma.lastSeenException.findMany({
+      where: { ownerId, exceptionUserId: { in: viewerIds } },
+      select: { exceptionUserId: true, mode: true },
+    }),
+    getBlockedIdsAmong(ownerId, viewerIds),
+  ]);
   for (const e of exceptions) {
     if (e.mode === LastSeenExceptionMode.ALLOW) visible.add(e.exceptionUserId);
     else visible.delete(e.exceptionUserId);
   }
+  for (const id of blockedIds) visible.delete(id);
 
   return visible;
 }
