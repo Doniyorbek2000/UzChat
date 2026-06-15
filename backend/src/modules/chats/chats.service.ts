@@ -1436,6 +1436,14 @@ export const chatsService = {
         : `${actor?.displayName} ${targetUser?.displayName} foydalanuvchisini guruhdan chiqardi`
     );
 
+    await pushService.sendToUsers([targetUserId], {
+      title: conversation.title ?? "Guruh",
+      body: ban
+        ? `${actor?.displayName} sizni guruhdan chiqarib, bloklab qo'ydi`
+        : `${actor?.displayName} sizni guruhdan chiqardi`,
+      data: { type: "group_removed" },
+    });
+
     return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
   },
 
