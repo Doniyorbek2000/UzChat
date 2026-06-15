@@ -894,6 +894,8 @@ export const chatsService = {
       }),
     ]);
 
+    await chatsService.logGroupAction(conversation.id, userId, GroupAuditAction.MEMBER_ADDED, userId);
+
     const joiner = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
     const systemMessages = [await createSystemMessage(conversation.id, userId, `${joiner?.displayName} guruhga qo'shildi`)];
     if (conversation.welcomeMessage) {

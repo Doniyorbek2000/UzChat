@@ -91,6 +91,7 @@ function describeEntry(entry: GroupAuditLogEntry): string {
     case "MEMBER_UNBANNED":
       return `${actor} ${target}ning blokini olib tashladi`;
     case "MEMBER_ADDED":
+      if (entry.actor?.id === entry.target?.id) return `${actor} taklif havolasi orqali guruhga qo'shildi`;
       return `${actor} ${target}ni guruhga qo'shdi`;
     case "MESSAGE_PINNED":
       return `${actor} ${target} yuborgan xabarni qadab qo'ydi (${MESSAGE_TYPE_LABELS[entry.details ?? ""] ?? "xabar"})`;
