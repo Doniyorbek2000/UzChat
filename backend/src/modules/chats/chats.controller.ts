@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { chatsService } from "./chats.service";
-import { getIo } from "../../sockets";
+import { getIo, isUserOnline } from "../../sockets";
 
 export const chatsController = {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -10,6 +10,21 @@ export const chatsController = {
         getIo().to(`user:${participant.userId}`).socketsJoin(`conversation:${conversation.id}`);
       }
       getIo().to(`conversation:${conversation.id}`).emit("conversation:new", conversation);
+
+      // Each participant's online-status cache may not include the others yet
+      // if they had no shared conversation before now (presence:initial is
+      // only computed from conversations that existed at connect time). Only
+      // online participants need announcing - offline ones are already
+      // reflected via the lastSeenAt included in `conversation`, and a false
+      // "online: false" here would overwrite that with "last seen just now".
+      for (const participant of conversation.participants) {
+        for (const other of conversation.participants) {
+          if (other.userId === participant.userId) continue;
+          if (!isUserOnline(other.userId)) continue;
+          getIo().to(`user:${participant.userId}`).emit("presence:update", { userId: other.userId, online: true });
+        }
+      }
+
       res.status(201).json(conversation);
     } catch (err) {
       next(err);
