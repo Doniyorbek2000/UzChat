@@ -136,28 +136,27 @@ export function initSocketServer(httpServer: HttpServer): Server {
 
     registerChatHandlers(io!, authed);
 
+    // Clear any "typing"/"recording" indicators left behind by an abrupt
+    // disconnect (app closed/crashed mid-keystroke), so peers don't see a
+    // stuck indicator until the next message. Runs on "disconnecting" (before
+    // socket.io removes the socket from its rooms) so it also covers
+    // conversations joined mid-session via "conversation:join", not just the
+    // ones from the initial `participations` snapshot.
+    socket.on("disconnecting", () => {
+      for (const room of socket.rooms) {
+        if (!room.startsWith("conversation:")) continue;
+        const conversationId = room.slice("conversation:".length);
+        socket.to(room).emit("typing", { conversationId, userId: authed.userId, isTyping: false });
+        socket.to(room).emit("voice-recording", { conversationId, userId: authed.userId, isRecording: false });
+      }
+    });
+
     socket.on("disconnect", async () => {
       await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
       // Only broadcast "offline" once the user's last device disconnects -
       // socket.io has already removed this socket from `user:${userId}` by now.
       if (!isUserOnline(authed.userId)) {
         io!.emit("presence:update", { userId: authed.userId, online: false });
-      }
-
-      // Clear any "typing"/"recording" indicators left behind by an abrupt
-      // disconnect (app closed/crashed mid-keystroke), so peers don't see a
-      // stuck indicator until the next message.
-      for (const p of participations) {
-        socket.to(`conversation:${p.conversationId}`).emit("typing", {
-          conversationId: p.conversationId,
-          userId: authed.userId,
-          isTyping: false,
-        });
-        socket.to(`conversation:${p.conversationId}`).emit("voice-recording", {
-          conversationId: p.conversationId,
-          userId: authed.userId,
-          isRecording: false,
-        });
       }
     });
   });
