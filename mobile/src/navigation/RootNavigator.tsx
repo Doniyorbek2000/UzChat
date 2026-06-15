@@ -162,7 +162,12 @@ export function RootNavigator() {
   }, [isAuthenticated, appLockBootstrap]);
 
   useEffect(() => {
-    if (isAuthenticated) useContactsStore.getState().refreshPendingRequestCount();
+    if (isAuthenticated) {
+      useContactsStore.getState().refreshPendingRequestCount();
+      // Registers immediately so the "Contacts" tab badge updates in real time even
+      // if the user never opens that tab (it otherwise only registers on its mount).
+      useContactsStore.getState().setupSocketListeners();
+    }
   }, [isAuthenticated]);
 
   useEffect(() => {
