@@ -8,6 +8,7 @@ import { createSystemMessage } from "../messages/systemMessages";
 import { pushService } from "../push/push.service";
 import {
   AddParticipantInput,
+  BanUserByIdInput,
   CreateConversationInput,
   CreateInviteLinkInput,
   JoinByInviteInput,
@@ -1395,6 +1396,37 @@ export const chatsService = {
 
     await prisma.groupBan.delete({ where: { id: ban.id } });
     await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_UNBANNED, targetUserId);
+  },
+
+  /**
+   * GROUP only, OWNER/ADMIN only: pre-emptively bans a user who isn't (or no
+   * longer is) a member, preventing them from joining via invite link or
+   * being re-added by an admin.
+   */
+  async banUserById(userId: string, conversationId: string, { userId: targetUserId }: BanUserByIdInput) {
+    const conversation = await chatsService.assertGroupManager(userId, conversationId);
+
+    if (targetUserId === userId) throw Errors.badRequest("O'zingizni bloklay olmaysiz");
+    if (conversation.participants.some((p) => p.userId === targetUserId)) {
+      throw Errors.conflict("Foydalanuvchi guruh a'zosi - avval uni guruhdan chiqaring");
+    }
+
+    const target = await prisma.user.findUnique({ where: { id: targetUserId }, select: userSummarySelect });
+    if (!target) throw Errors.notFound("Foydalanuvchi");
+
+    const existing = await prisma.groupBan.findUnique({
+      where: { conversationId_bannedUserId: { conversationId, bannedUserId: targetUserId } },
+    });
+    if (existing) throw Errors.conflict("Foydalanuvchi allaqachon bloklangan");
+
+    const ban = await prisma.groupBan.create({ data: { conversationId, bannedUserId: targetUserId, bannedBy: userId } });
+    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_BANNED, targetUserId);
+
+    const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
+    return {
+      user: omitPrivacyFlags(filterAvatar(userId, filterLastSeen(userId, target, contactIds, exceptions), contactIds)),
+      createdAt: ban.createdAt,
+    };
   },
 
   async leaveConversation(userId: string, conversationId: string) {

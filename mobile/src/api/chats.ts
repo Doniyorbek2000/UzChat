@@ -156,6 +156,10 @@ export const chatsApi = {
     return apiClient.get<BannedGroupMember[]>(`/conversations/${conversationId}/bans`).then((r) => r.data);
   },
 
+  banUserById(conversationId: string, userId: string) {
+    return apiClient.post<BannedGroupMember>(`/conversations/${conversationId}/bans`, { userId }).then((r) => r.data);
+  },
+
   unbanUser(conversationId: string, userId: string) {
     return apiClient.delete(`/conversations/${conversationId}/bans/${userId}`);
   },

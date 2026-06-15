@@ -4,6 +4,7 @@ import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
 import {
   addParticipantSchema,
+  banUserByIdSchema,
   clearHistorySchema,
   createConversationSchema,
   createInviteLinkSchema,
@@ -62,6 +63,7 @@ chatsRouter.post("/:id/participants", validateBody(addParticipantSchema), chatsC
 chatsRouter.delete("/:id/participants/:userId", chatsController.removeParticipant);
 chatsRouter.post("/:id/participants/:userId/ban", chatsController.banParticipant);
 chatsRouter.get("/:id/bans", chatsController.listBannedUsers);
+chatsRouter.post("/:id/bans", validateBody(banUserByIdSchema), chatsController.banUserById);
 chatsRouter.delete("/:id/bans/:userId", chatsController.unbanUser);
 chatsRouter.patch(
   "/:id/participants/:userId/role",

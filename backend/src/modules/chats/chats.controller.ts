@@ -348,6 +348,15 @@ export const chatsController = {
     }
   },
 
+  async banUserById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const ban = await chatsService.banUserById(req.user!.sub, req.params.id, req.body);
+      res.status(201).json(ban);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async unbanUser(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;

@@ -151,6 +151,11 @@ export const pinMessageSchema = z.object({
   notify: z.boolean().optional(),
 });
 
+// Pre-emptively bans a user who isn't (or no longer is) a group member.
+export const banUserByIdSchema = z.object({
+  userId: z.string().uuid(),
+});
+
 export const joinByInviteSchema = z.object({
   wrappedKey: z.string().min(1),
   wrappedKeyNonce: z.string().min(1),
@@ -201,6 +206,7 @@ export type UpdateParticipantCustomTitleInput = z.infer<typeof updateParticipant
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
 export type ReorderPinnedInput = z.infer<typeof reorderPinnedSchema>;
 export type PinMessageInput = z.infer<typeof pinMessageSchema>;
+export type BanUserByIdInput = z.infer<typeof banUserByIdSchema>;
 export type JoinByInviteInput = z.infer<typeof joinByInviteSchema>;
 export type CreateInviteLinkInput = z.infer<typeof createInviteLinkSchema>;
 export type UpdateDisappearingMessagesInput = z.infer<typeof updateDisappearingMessagesSchema>;
