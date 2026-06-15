@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "GroupAuditAction" ADD VALUE 'GROUP_SETTINGS_CHANGED';

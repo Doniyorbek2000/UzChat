@@ -25,6 +25,22 @@ const ACTION_ICONS: Record<GroupAuditLogEntry["action"], string> = {
   MESSAGE_PINNED: "📌",
   MESSAGE_UNPINNED: "📍",
   ALL_MESSAGES_UNPINNED: "🧹",
+  GROUP_SETTINGS_CHANGED: "⚙️",
+};
+
+const SETTINGS_FIELD_LABELS: Record<string, string> = {
+  onlyAdminsCanSend: "faqat adminlar yozishi",
+  slowModeSeconds: "sekin rejim",
+  noForwards: "nusxalash/yo'naltirishni man qilish",
+  requireAdminApproval: "qo'shilish so'rovlari",
+  membersCanAddMembers: "a'zo qo'shish huquqi",
+  membersCanPinMessages: "xabar qadash huquqi",
+  membersCanChangeInfo: "ma'lumot tahrirlash huquqi",
+  membersCanSendMedia: "media yuborish huquqi",
+  membersCanSendPolls: "so'rovnoma yaratish huquqi",
+  hideHistoryForNewMembers: "eski xabarlar tarixini yashirish",
+  hideMembersList: "a'zolar ro'yxatini yashirish",
+  reactionsEnabled: "reaksiyalar",
 };
 
 const RESTRICTION_LABELS: Record<string, string> = {
@@ -76,6 +92,13 @@ function describeEntry(entry: GroupAuditLogEntry): string {
       return `${actor} ${target} yuborgan xabarni qadovdan oldi (${MESSAGE_TYPE_LABELS[entry.details ?? ""] ?? "xabar"})`;
     case "ALL_MESSAGES_UNPINNED":
       return `${actor} barcha qadalgan xabarlarni qadovdan oldi (${entry.details ?? "0"} ta)`;
+    case "GROUP_SETTINGS_CHANGED": {
+      const fields = (entry.details ?? "")
+        .split(",")
+        .filter(Boolean)
+        .map((f) => SETTINGS_FIELD_LABELS[f] ?? f);
+      return `${actor} guruh sozlamalarini o'zgartirdi: ${fields.join(", ")}`;
+    }
     default:
       return "";
   }

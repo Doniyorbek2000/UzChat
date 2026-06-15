@@ -1130,6 +1130,7 @@ export const chatsService = {
     });
 
     const systemMessages: Awaited<ReturnType<typeof createSystemMessage>>[] = [];
+    const changedSettingsFields: string[] = [];
     const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
     const name = actor?.displayName;
 
@@ -1158,6 +1159,7 @@ export const chatsService = {
       );
     }
     if (input.onlyAdminsCanSend !== undefined && input.onlyAdminsCanSend !== conversation.onlyAdminsCanSend) {
+      changedSettingsFields.push("onlyAdminsCanSend");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1169,6 +1171,7 @@ export const chatsService = {
       );
     }
     if (input.slowModeSeconds !== undefined && input.slowModeSeconds !== conversation.slowModeSeconds) {
+      changedSettingsFields.push("slowModeSeconds");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1178,6 +1181,7 @@ export const chatsService = {
       );
     }
     if (input.noForwards !== undefined && input.noForwards !== conversation.noForwards) {
+      changedSettingsFields.push("noForwards");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1189,6 +1193,7 @@ export const chatsService = {
       );
     }
     if (input.requireAdminApproval !== undefined && input.requireAdminApproval !== conversation.requireAdminApproval) {
+      changedSettingsFields.push("requireAdminApproval");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1200,6 +1205,7 @@ export const chatsService = {
       );
     }
     if (input.membersCanAddMembers !== undefined && input.membersCanAddMembers !== conversation.membersCanAddMembers) {
+      changedSettingsFields.push("membersCanAddMembers");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1214,6 +1220,7 @@ export const chatsService = {
       input.membersCanPinMessages !== undefined &&
       input.membersCanPinMessages !== conversation.membersCanPinMessages
     ) {
+      changedSettingsFields.push("membersCanPinMessages");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1228,6 +1235,7 @@ export const chatsService = {
       input.membersCanChangeInfo !== undefined &&
       input.membersCanChangeInfo !== conversation.membersCanChangeInfo
     ) {
+      changedSettingsFields.push("membersCanChangeInfo");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1242,6 +1250,7 @@ export const chatsService = {
       input.membersCanSendMedia !== undefined &&
       input.membersCanSendMedia !== conversation.membersCanSendMedia
     ) {
+      changedSettingsFields.push("membersCanSendMedia");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1256,6 +1265,7 @@ export const chatsService = {
       input.membersCanSendPolls !== undefined &&
       input.membersCanSendPolls !== conversation.membersCanSendPolls
     ) {
+      changedSettingsFields.push("membersCanSendPolls");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1270,6 +1280,7 @@ export const chatsService = {
       input.hideHistoryForNewMembers !== undefined &&
       input.hideHistoryForNewMembers !== conversation.hideHistoryForNewMembers
     ) {
+      changedSettingsFields.push("hideHistoryForNewMembers");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1281,6 +1292,7 @@ export const chatsService = {
       );
     }
     if (input.hideMembersList !== undefined && input.hideMembersList !== conversation.hideMembersList) {
+      changedSettingsFields.push("hideMembersList");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1292,12 +1304,23 @@ export const chatsService = {
       );
     }
     if (input.reactionsEnabled !== undefined && input.reactionsEnabled !== conversation.reactionsEnabled) {
+      changedSettingsFields.push("reactionsEnabled");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
           userId,
           input.reactionsEnabled ? `${name} reaksiyalarni yoqdi` : `${name} reaksiyalarni o'chirdi`
         )
+      );
+    }
+
+    if (changedSettingsFields.length > 0) {
+      await chatsService.logGroupAction(
+        conversationId,
+        userId,
+        GroupAuditAction.GROUP_SETTINGS_CHANGED,
+        null,
+        changedSettingsFields.join(",")
       );
     }
 
