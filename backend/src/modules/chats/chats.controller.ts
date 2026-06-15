@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { chatsService } from "./chats.service";
 import { getIo, isUserOnline } from "../../sockets";
 import { filterViewersForLastSeen } from "../../utils/lastSeen";
+import { getAuditLogQuerySchema } from "./chats.schema";
 
 // A participant's online-status cache may not include some other member yet
 // if they had no shared conversation before now (presence:initial is only
@@ -292,8 +293,8 @@ export const chatsController = {
 
   async getAuditLog(req: Request, res: Response, next: NextFunction) {
     try {
-      const { before } = req.query;
-      const entries = await chatsService.getAuditLog(req.user!.sub, req.params.id, before as string | undefined);
+      const { before } = getAuditLogQuerySchema.parse(req.query);
+      const entries = await chatsService.getAuditLog(req.user!.sub, req.params.id, before);
       res.json(entries);
     } catch (err) {
       next(err);
