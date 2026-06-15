@@ -6,6 +6,7 @@ import { getContactIds, getLastSeenExceptions, filterLastSeen, filterAvatar } fr
 import { contactsService } from "../contacts/contacts.service";
 import { createSystemMessage } from "../messages/systemMessages";
 import { pushService } from "../push/push.service";
+import { isInQuietHours, isNotificationsPaused } from "../../utils/notificationPreferences";
 import {
   AddParticipantInput,
   BanUserByIdInput,
@@ -1697,7 +1698,18 @@ export const chatsService = {
 
     const [actor, recipient] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } }),
-      prisma.user.findUnique({ where: { id: targetUserId }, select: { displayName: true } }),
+      prisma.user.findUnique({
+        where: { id: targetUserId },
+        select: {
+          displayName: true,
+          quietHoursEnabled: true,
+          quietHoursStart: true,
+          quietHoursEnd: true,
+          quietHoursTimezoneOffset: true,
+          notificationsPaused: true,
+          notificationsPausedUntil: true,
+        },
+      }),
     ]);
 
     const text =
@@ -1705,7 +1717,14 @@ export const chatsService = {
         ? `${actor?.displayName} o'zini elkasidan qoqib qo'ydi 👋`
         : `${actor?.displayName} ${recipient?.displayName}ni elkasidan qoqib qo'ydi 👋`;
 
-    if (userId !== targetUserId && !isParticipantMuted(target) && !target.mutedSenderIds.includes(userId)) {
+    if (
+      userId !== targetUserId &&
+      !isParticipantMuted(target) &&
+      !target.mutedSenderIds.includes(userId) &&
+      recipient &&
+      !isInQuietHours(recipient) &&
+      !isNotificationsPaused(recipient)
+    ) {
       await pushService.sendToUsers([targetUserId], {
         title: actor?.displayName ?? "UzChat",
         body: "sizni elkangizdan qoqib qo'ydi 👋",
