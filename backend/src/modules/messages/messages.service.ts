@@ -1105,15 +1105,21 @@ export const messagesService = {
     if (due.length === 0) return [];
 
     const closedAt = new Date();
-    return Promise.all(
-      due.map((m) =>
-        prisma.message.update({
-          where: { id: m.id },
-          data: { pollClosedAt: closedAt, pollClosesAt: null },
-          select: { id: true, conversationId: true, pollClosedAt: true },
-        })
-      )
-    );
+    const closed = [];
+    for (const m of due) {
+      try {
+        closed.push(
+          await prisma.message.update({
+            where: { id: m.id },
+            data: { pollClosedAt: closedAt, pollClosesAt: null },
+            select: { id: true, conversationId: true, pollClosedAt: true },
+          })
+        );
+      } catch (err) {
+        console.error(`Failed to close poll ${m.id}:`, err);
+      }
+    }
+    return closed;
   },
 
   async listScheduledMessages(userId: string, conversationId: string) {
@@ -1178,7 +1184,11 @@ export const messagesService = {
 
     const published = [];
     for (const m of due) {
-      published.push(await publishScheduledMessage(m));
+      try {
+        published.push(await publishScheduledMessage(m));
+      } catch (err) {
+        console.error(`Failed to publish scheduled message ${m.id}:`, err);
+      }
     }
     return published;
   },
@@ -1206,7 +1216,11 @@ export const messagesService = {
 
     const published = [];
     for (const m of pending) {
-      published.push(await publishScheduledMessage(m));
+      try {
+        published.push(await publishScheduledMessage(m));
+      } catch (err) {
+        console.error(`Failed to publish "send when online" message ${m.id}:`, err);
+      }
     }
     return published;
   },
