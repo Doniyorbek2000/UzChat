@@ -56,12 +56,26 @@ export function AddGroupMemberScreen({ route, navigation }: Props) {
     setSaving(true);
     try {
       const targets = candidates.filter((c) => selected.has(c.user.id)).map((c) => c.user);
+      let added = 0;
+      let failed = 0;
+      let lastErrorMessage: string | undefined;
       for (const target of targets) {
-        await addParticipant(conversationId, target);
+        try {
+          await addParticipant(conversationId, target);
+          added++;
+        } catch (err: any) {
+          failed++;
+          lastErrorMessage = err?.response?.data?.error?.message;
+        }
+      }
+      if (added === 0) {
+        Alert.alert("Xatolik", lastErrorMessage ?? "A'zo qo'shib bo'lmadi");
+        return;
+      }
+      if (failed > 0) {
+        Alert.alert("Qo'shildi", `${added} kishi qo'shildi, ${failed} kishini qo'shib bo'lmadi`);
       }
       navigation.goBack();
-    } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "A'zo qo'shib bo'lmadi");
     } finally {
       setSaving(false);
     }
