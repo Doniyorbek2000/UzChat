@@ -1592,6 +1592,17 @@ export const chatsService = {
       `${actor?.displayName} ${targetUser?.displayName} foydalanuvchisini ${roleAction}`
     );
 
+    await pushService.sendToUsers([targetUserId], {
+      title: conversation.title ?? "Guruh",
+      body:
+        role === ParticipantRole.OWNER
+          ? `${actor?.displayName} sizni guruh egasi etib tayinladi`
+          : role === ParticipantRole.ADMIN
+            ? `${actor?.displayName} sizni admin etib tayinladi`
+            : `${actor?.displayName} sizni adminlikdan tushirdi`,
+      data: { type: "group_role_changed", conversationId },
+    });
+
     return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
   },
 
