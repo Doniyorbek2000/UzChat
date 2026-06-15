@@ -454,5 +454,11 @@ export const authService = {
       where: { userId: user.id, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+
+    await pushService.sendToUsers([user.id], {
+      title: "Parol tiklandi",
+      body: "Hisobingiz paroli telefon raqamingiz orqali tiklandi. Agar bu siz bo'lmasangiz, darhol hisobingizni tekshiring",
+      data: { type: "security" },
+    });
   },
 };
