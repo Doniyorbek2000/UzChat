@@ -1,4 +1,4 @@
-import { ContactStatus, LastSeenPrivacy } from "@prisma/client";
+import { ContactStatus, ConversationType, LastSeenPrivacy } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import {
@@ -371,5 +371,21 @@ export const contactsService = {
       },
     });
     return !!block;
+  },
+
+  // For DIRECT conversations, checks whether `userId` and the other participant
+  // have blocked each other (either direction). Always false for GROUP chats,
+  // where blocking doesn't restrict shared activity.
+  async isBlockedInDirectConversation(userId: string, conversationId: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { type: true, participants: { select: { userId: true } } },
+    });
+    if (conversation?.type !== ConversationType.DIRECT) return false;
+
+    const other = conversation.participants.find((p) => p.userId !== userId);
+    if (!other) return false;
+
+    return contactsService.isBlockedEitherWay(userId, other.userId);
   },
 };

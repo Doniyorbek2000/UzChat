@@ -3,6 +3,7 @@ import { AuthenticatedSocket } from "./index";
 import { messagesService } from "../modules/messages/messages.service";
 import { sendMessageSchema } from "../modules/messages/messages.schema";
 import { chatsService } from "../modules/chats/chats.service";
+import { contactsService } from "../modules/contacts/contacts.service";
 
 export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
   socket.on("message:send", async (payload, ack?: (response: unknown) => void) => {
@@ -21,6 +22,7 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
     try {
       if (!socket.typingIndicatorsEnabled) return;
       await chatsService.assertParticipant(socket.userId, payload.conversationId);
+      if (await contactsService.isBlockedInDirectConversation(socket.userId, payload.conversationId)) return;
       socket.to(`conversation:${payload.conversationId}`).emit("typing", {
         conversationId: payload.conversationId,
         userId: socket.userId,
@@ -35,6 +37,7 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
     try {
       if (!socket.typingIndicatorsEnabled) return;
       await chatsService.assertParticipant(socket.userId, payload.conversationId);
+      if (await contactsService.isBlockedInDirectConversation(socket.userId, payload.conversationId)) return;
       socket.to(`conversation:${payload.conversationId}`).emit("voice-recording", {
         conversationId: payload.conversationId,
         userId: socket.userId,
