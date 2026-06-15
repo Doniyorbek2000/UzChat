@@ -2,6 +2,8 @@ import { ContactStatus, LastSeenPrivacy } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import {
+  filterAvatar,
+  filterAvatarSingle,
   filterBio,
   filterBioSingle,
   filterBirthday,
@@ -27,6 +29,7 @@ const userSummarySelect = {
   username: true,
   displayName: true,
   avatarUrl: true,
+  avatarPrivacy: true,
   bio: true,
   bioPrivacy: true,
   publicKey: true,
@@ -61,7 +64,10 @@ export const contactsService = {
       data: { type: "contact_request" },
     });
 
-    return { ...contact, target: await filterBioSingle(ownerId, await filterLastSeenSingle(ownerId, contact.target)) };
+    return {
+      ...contact,
+      target: await filterAvatarSingle(ownerId, await filterBioSingle(ownerId, await filterLastSeenSingle(ownerId, contact.target))),
+    };
   },
 
   async listIncomingRequests(userId: string) {
@@ -89,7 +95,7 @@ export const contactsService = {
     return requests.map((r) => ({
       ...r,
       mutualCount: mutualCountByUserId.get(r.ownerId) ?? 0,
-      owner: filterBio(userId, filterLastSeen(userId, r.owner, contactIds, exceptions), contactIds),
+      owner: filterAvatar(userId, filterBio(userId, filterLastSeen(userId, r.owner, contactIds, exceptions), contactIds), contactIds),
     }));
   },
 
@@ -104,7 +110,7 @@ export const contactsService = {
     return requests.map((r) => ({
       id: r.id,
       createdAt: r.createdAt,
-      target: filterBio(userId, filterLastSeen(userId, r.target, contactIds, exceptions), contactIds),
+      target: filterAvatar(userId, filterBio(userId, filterLastSeen(userId, r.target, contactIds, exceptions), contactIds), contactIds),
     }));
   },
 
@@ -151,7 +157,7 @@ export const contactsService = {
       alias: c.alias,
       isFavorite: c.isFavorite,
       note: c.note,
-      user: filterBio(userId, filterLastSeen(userId, c.target, contactIds, exceptions), contactIds),
+      user: filterAvatar(userId, filterBio(userId, filterLastSeen(userId, c.target, contactIds, exceptions), contactIds), contactIds),
     }));
   },
 
@@ -192,7 +198,10 @@ export const contactsService = {
       orderBy: { createdAt: "desc" },
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(ownerId), getLastSeenExceptions(ownerId)]);
-    return blocked.map((b) => ({ id: b.id, user: filterBio(ownerId, filterLastSeen(ownerId, b.blocked, contactIds, exceptions), contactIds) }));
+    return blocked.map((b) => ({
+      id: b.id,
+      user: filterAvatar(ownerId, filterBio(ownerId, filterLastSeen(ownerId, b.blocked, contactIds, exceptions), contactIds), contactIds),
+    }));
   },
 
   async hasBlocked(ownerId: string, targetUserId: string) {
@@ -279,7 +288,7 @@ export const contactsService = {
         const user = usersById.get(c.targetId);
         if (!user) return null;
         return {
-          user: filterBio(userId, filterLastSeen(userId, user, contactIds, exceptions), contactIds),
+          user: filterAvatar(userId, filterBio(userId, filterLastSeen(userId, user, contactIds, exceptions), contactIds), contactIds),
           mutualCount: c._count.ownerId,
         };
       })
@@ -313,6 +322,7 @@ export const contactsService = {
             username: true,
             displayName: true,
             avatarUrl: true,
+            avatarPrivacy: true,
             birthdayDay: true,
             birthdayMonth: true,
             birthdayPrivacy: true,
@@ -326,7 +336,7 @@ export const contactsService = {
 
     return contacts
       .map((c) => {
-        const user = filterBirthday(userId, c.target, contactIds);
+        const user = filterAvatar(userId, filterBirthday(userId, c.target, contactIds), contactIds);
         if (user.birthdayDay == null || user.birthdayMonth == null) return null;
         return { user, daysUntil: daysUntilBirthday(user.birthdayMonth, user.birthdayDay, now) };
       })
@@ -344,7 +354,7 @@ export const contactsService = {
       prisma.user.findMany({ where: { id: { in: mutualIds } }, select: userSummarySelect }),
       getLastSeenExceptions(userId),
     ]);
-    return users.map((u) => filterBio(userId, filterLastSeen(userId, u, myContactIds, exceptions), myContactIds));
+    return users.map((u) => filterAvatar(userId, filterBio(userId, filterLastSeen(userId, u, myContactIds, exceptions), myContactIds), myContactIds));
   },
 
   async isBlockedEitherWay(userId: string, otherUserId: string) {
