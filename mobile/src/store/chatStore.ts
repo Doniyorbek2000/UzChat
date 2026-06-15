@@ -80,6 +80,7 @@ interface ChatState {
   favoriteContactIds: Set<string>;
   folders: ChatFolder[];
   reminders: MessageReminderInfo[];
+  joinRequestUpdates: Record<string, number>;
 
   loadConversations: () => Promise<void>;
   loadContactAliases: () => Promise<void>;
@@ -319,6 +320,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   favoriteContactIds: new Set(),
   folders: [],
   reminders: [],
+  joinRequestUpdates: {},
 
   loadConversations: async () => {
     const conversations = await chatsApi.list();
@@ -1662,6 +1664,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
         conversations: state.conversations.filter((c) => c.id !== conversationId),
         messagesByConversation: dropConversation(state.messagesByConversation, conversationId),
         hasMoreByConversation: dropConversation(state.hasMoreByConversation, conversationId),
+      }));
+    });
+
+    socket.on("conversation:joinRequest", ({ conversationId }: { conversationId: string }) => {
+      set((state) => ({
+        joinRequestUpdates: { ...state.joinRequestUpdates, [conversationId]: Date.now() },
       }));
     });
 

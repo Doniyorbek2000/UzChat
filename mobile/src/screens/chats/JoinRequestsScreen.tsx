@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -7,6 +7,7 @@ import { chatsApi } from "../../api/chats";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { GroupJoinRequest } from "../../types";
+import { useChatStore } from "../../store/chatStore";
 
 type Props = NativeStackScreenProps<RootStackParamList, "JoinRequests">;
 
@@ -14,6 +15,7 @@ export function JoinRequestsScreen({ route }: Props) {
   const { conversationId } = route.params;
   const [requests, setRequests] = useState<GroupJoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const joinRequestUpdatedAt = useChatStore((state) => state.joinRequestUpdates[conversationId]);
 
   const load = useCallback(() => {
     chatsApi
@@ -24,6 +26,12 @@ export function JoinRequestsScreen({ route }: Props) {
   }, [conversationId]);
 
   useFocusEffect(load);
+
+  // Refresh live when a new join request arrives via the
+  // "conversation:joinRequest" socket event while this screen is open.
+  useEffect(() => {
+    if (joinRequestUpdatedAt !== undefined) load();
+  }, [joinRequestUpdatedAt, load]);
 
   const onApprove = async (id: string) => {
     setRequests((prev) => prev.filter((r) => r.id !== id));
