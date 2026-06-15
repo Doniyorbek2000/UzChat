@@ -25,7 +25,11 @@ export function ChangePasswordScreen({ navigation }: Props) {
     setSaving(true);
     try {
       await usersApi.changePassword(currentPassword, newPassword);
-      Alert.alert("Saqlandi", "Parol muvaffaqiyatli o'zgartirildi", [{ text: "OK", onPress: () => navigation.goBack() }]);
+      Alert.alert(
+        "Saqlandi",
+        "Parol muvaffaqiyatli o'zgartirildi. Boshqa qurilmalardagi seanslar tugatildi",
+        [{ text: "OK", onPress: () => navigation.goBack() }]
+      );
     } catch (err: any) {
       Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Parolni o'zgartirib bo'lmadi");
     } finally {

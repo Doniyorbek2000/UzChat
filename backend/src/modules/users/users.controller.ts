@@ -33,7 +33,7 @@ export const usersController = {
 
   async changePassword(req: Request, res: Response, next: NextFunction) {
     try {
-      await usersService.changePassword(req.user!.sub, req.body);
+      await usersService.changePassword(req.user!.sub, req.user!.sid, req.body);
       res.status(204).send();
     } catch (err) {
       next(err);

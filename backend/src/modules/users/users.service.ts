@@ -16,6 +16,7 @@ import {
   filterBio,
 } from "../../utils/lastSeen";
 import { chatsService } from "../chats/chats.service";
+import { pushService } from "../push/push.service";
 import {
   ChangePasswordInput,
   DeleteAccountInput,
@@ -272,7 +273,7 @@ export const usersService = {
       );
   },
 
-  async changePassword(userId: string, { currentPassword, newPassword }: ChangePasswordInput) {
+  async changePassword(userId: string, currentSessionId: string, { currentPassword, newPassword }: ChangePasswordInput) {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
     if (!user) throw Errors.notFound("Foydalanuvchi");
 
@@ -281,6 +282,18 @@ export const usersService = {
 
     const passwordHash = await hashPassword(newPassword);
     await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+
+    // Force re-login on other devices in case the old password was compromised.
+    await prisma.refreshToken.updateMany({
+      where: { userId, id: { not: currentSessionId }, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+
+    await pushService.sendToUsers([userId], {
+      title: "Parol o'zgartirildi",
+      body: "Hisobingiz paroli o'zgartirildi. Agar bu siz bo'lmasangiz, darhol hisobingizni tekshiring",
+      data: { type: "security" },
+    });
   },
 
   async setTwoFactor(userId: string, { currentPassword, twoFactorPassword, hint }: SetTwoFactorInput) {
