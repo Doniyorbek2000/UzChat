@@ -33,7 +33,10 @@ export const contactsController = {
 
   async accept(req: Request, res: Response, next: NextFunction) {
     try {
-      await contactsService.acceptRequest(req.user!.sub, req.params.requestId);
+      const { ownerId } = await contactsService.acceptRequest(req.user!.sub, req.params.requestId);
+      // Reuse "contact:request" to tell the requester's Contacts screen to
+      // refresh - their outgoing request just got resolved.
+      getIo().to(`user:${ownerId}`).emit("contact:request");
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -42,7 +45,8 @@ export const contactsController = {
 
   async decline(req: Request, res: Response, next: NextFunction) {
     try {
-      await contactsService.declineRequest(req.user!.sub, req.params.requestId);
+      const { ownerId } = await contactsService.declineRequest(req.user!.sub, req.params.requestId);
+      getIo().to(`user:${ownerId}`).emit("contact:request");
       res.status(204).send();
     } catch (err) {
       next(err);

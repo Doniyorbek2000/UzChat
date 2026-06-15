@@ -135,6 +135,8 @@ export const contactsService = {
       body: `${accepter?.displayName} so'rovingizni qabul qildi`,
       data: { type: "contact_accepted" },
     });
+
+    return { ownerId: request.ownerId };
   },
 
   async declineRequest(userId: string, requestId: string) {
@@ -143,6 +145,8 @@ export const contactsService = {
       throw Errors.notFound("So'rov");
     }
     await prisma.contact.delete({ where: { id: requestId } });
+
+    return { ownerId: request.ownerId };
   },
 
   async listContacts(userId: string) {
