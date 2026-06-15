@@ -1546,6 +1546,14 @@ export const chatsService = {
     const systemMessage = await createSystemMessage(conversationId, userId, `${leaver?.displayName} guruhdan chiqdi`);
     await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_LEFT);
 
+    if (newOwnerId) {
+      await pushService.sendToUsers([newOwnerId], {
+        title: conversation.title ?? "Guruh",
+        body: "Endi siz ushbu guruhning egasisiz",
+        data: { type: "group_role_changed", conversationId },
+      });
+    }
+
     return { deleted: false as const, newOwnerId, systemMessage };
   },
 
