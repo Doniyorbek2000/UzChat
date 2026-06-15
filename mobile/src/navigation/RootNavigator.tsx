@@ -65,6 +65,7 @@ import { useVerifiedContactsStore } from "../store/verifiedContactsStore";
 import { useQuickRepliesStore } from "../store/quickRepliesStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
+import { getSocket } from "../socket/socket";
 import { colors } from "../theme/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -173,9 +174,16 @@ export function RootNavigator() {
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "background") lockApp();
+      // The OS can suspend the socket's underlying connection without ever firing
+      // socket.io's "disconnect" event, leaving it in a phantom "connected" state
+      // that never auto-reconnects. Force a reconnect attempt on resume.
+      if (state === "active" && isAuthenticated) {
+        const socket = getSocket();
+        if (socket && !socket.connected) socket.connect();
+      }
     });
     return () => subscription.remove();
-  }, [lockApp]);
+  }, [lockApp, isAuthenticated]);
 
   const conversations = useChatStore((s) => s.conversations);
   useEffect(() => {
