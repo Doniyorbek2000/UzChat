@@ -30,6 +30,10 @@ const ACTION_ICONS: Record<GroupAuditLogEntry["action"], string> = {
 };
 
 const SETTINGS_FIELD_LABELS: Record<string, string> = {
+  title: "guruh nomi",
+  avatarUrl: "guruh rasmi",
+  description: "guruh tavsifi",
+  welcomeMessage: "salomlashuv xabari",
   onlyAdminsCanSend: "faqat adminlar yozishi",
   slowModeSeconds: "sekin rejim",
   noForwards: "nusxalash/yo'naltirishni man qilish",

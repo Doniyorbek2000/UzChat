@@ -1138,12 +1138,15 @@ export const chatsService = {
     const name = actor?.displayName;
 
     if (input.title !== undefined && input.title !== conversation.title) {
+      changedSettingsFields.push("title");
       systemMessages.push(await createSystemMessage(conversationId, userId, `${name} guruh nomini «${input.title}» ga o'zgartirdi`));
     }
     if (input.avatarUrl !== undefined && input.avatarUrl !== conversation.avatarUrl) {
+      changedSettingsFields.push("avatarUrl");
       systemMessages.push(await createSystemMessage(conversationId, userId, `${name} guruh rasmini o'zgartirdi`));
     }
     if (input.description !== undefined && input.description !== conversation.description) {
+      changedSettingsFields.push("description");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
@@ -1153,6 +1156,7 @@ export const chatsService = {
       );
     }
     if (input.welcomeMessage !== undefined && input.welcomeMessage !== conversation.welcomeMessage) {
+      changedSettingsFields.push("welcomeMessage");
       systemMessages.push(
         await createSystemMessage(
           conversationId,
