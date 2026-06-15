@@ -27,6 +27,8 @@ const ACTION_ICONS: Record<GroupAuditLogEntry["action"], string> = {
   ALL_MESSAGES_UNPINNED: "🧹",
   GROUP_SETTINGS_CHANGED: "⚙️",
   MEMBER_LEFT: "🚪",
+  INVITE_LINK_RESET: "🔗",
+  INVITE_LINK_REVOKED: "❌",
 };
 
 const SETTINGS_FIELD_LABELS: Record<string, string> = {
@@ -108,6 +110,10 @@ function describeEntry(entry: GroupAuditLogEntry): string {
     }
     case "MEMBER_LEFT":
       return `${actor} guruhdan chiqdi`;
+    case "INVITE_LINK_RESET":
+      return `${actor} taklif havolasini yangiladi`;
+    case "INVITE_LINK_REVOKED":
+      return `${actor} taklif havolasini bekor qildi`;
     default:
       return "";
   }

@@ -789,6 +789,7 @@ export const chatsService = {
           where: { id: conversationId },
           data: { inviteCode, inviteCodeExpiresAt: expiresAt, inviteCodeMaxUses: maxUses, inviteCodeUseCount: 0 },
         });
+        await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.INVITE_LINK_RESET);
         return { inviteCode, inviteCodeExpiresAt: expiresAt, inviteCodeMaxUses: maxUses, inviteCodeUseCount: 0 };
       } catch (err: any) {
         if (err?.code !== "P2002") throw err;
@@ -798,11 +799,14 @@ export const chatsService = {
   },
 
   async revokeInviteLink(userId: string, conversationId: string) {
-    await chatsService.assertGroupManager(userId, conversationId);
+    const conversation = await chatsService.assertGroupManager(userId, conversationId);
+    if (!conversation.inviteCode) return;
+
     await prisma.conversation.update({
       where: { id: conversationId },
       data: { inviteCode: null, inviteCodeExpiresAt: null, inviteCodeMaxUses: null, inviteCodeUseCount: 0 },
     });
+    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.INVITE_LINK_REVOKED);
   },
 
   async getInvitePreview(code: string) {

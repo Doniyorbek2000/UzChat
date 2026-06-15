@@ -433,6 +433,8 @@ enum GroupAuditAction {
   ALL_MESSAGES_UNPINNED
   GROUP_SETTINGS_CHANGED
   MEMBER_LEFT
+  INVITE_LINK_RESET
+  INVITE_LINK_REVOKED
 }
 
 // GROUP only: a user removed-and-banned from a group by an owner/admin. While
