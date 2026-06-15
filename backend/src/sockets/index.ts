@@ -133,6 +133,22 @@ export function initSocketServer(httpServer: HttpServer): Server {
     socket.on("disconnect", async () => {
       await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
       io!.emit("presence:update", { userId: authed.userId, online: false });
+
+      // Clear any "typing"/"recording" indicators left behind by an abrupt
+      // disconnect (app closed/crashed mid-keystroke), so peers don't see a
+      // stuck indicator until the next message.
+      for (const p of participations) {
+        socket.to(`conversation:${p.conversationId}`).emit("typing", {
+          conversationId: p.conversationId,
+          userId: authed.userId,
+          isTyping: false,
+        });
+        socket.to(`conversation:${p.conversationId}`).emit("voice-recording", {
+          conversationId: p.conversationId,
+          userId: authed.userId,
+          isRecording: false,
+        });
+      }
     });
   });
 
