@@ -1486,6 +1486,7 @@ export const chatsService = {
 
     const leaver = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
     const systemMessage = await createSystemMessage(conversationId, userId, `${leaver?.displayName} guruhdan chiqdi`);
+    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_LEFT);
 
     return { deleted: false as const, newOwnerId, systemMessage };
   },

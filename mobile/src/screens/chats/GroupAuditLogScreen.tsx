@@ -26,6 +26,7 @@ const ACTION_ICONS: Record<GroupAuditLogEntry["action"], string> = {
   MESSAGE_UNPINNED: "📍",
   ALL_MESSAGES_UNPINNED: "🧹",
   GROUP_SETTINGS_CHANGED: "⚙️",
+  MEMBER_LEFT: "🚪",
 };
 
 const SETTINGS_FIELD_LABELS: Record<string, string> = {
@@ -99,6 +100,8 @@ function describeEntry(entry: GroupAuditLogEntry): string {
         .map((f) => SETTINGS_FIELD_LABELS[f] ?? f);
       return `${actor} guruh sozlamalarini o'zgartirdi: ${fields.join(", ")}`;
     }
+    case "MEMBER_LEFT":
+      return `${actor} guruhdan chiqdi`;
     default:
       return "";
   }

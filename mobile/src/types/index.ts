@@ -267,7 +267,8 @@ export type GroupAuditAction =
   | "MESSAGE_PINNED"
   | "MESSAGE_UNPINNED"
   | "ALL_MESSAGES_UNPINNED"
-  | "GROUP_SETTINGS_CHANGED";
+  | "GROUP_SETTINGS_CHANGED"
+  | "MEMBER_LEFT";
 
 // An entry in a GROUP's "Recent actions" moderation log.
 export interface GroupAuditLogEntry {
