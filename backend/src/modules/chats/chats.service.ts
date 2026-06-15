@@ -673,6 +673,9 @@ export const chatsService = {
           ? `${actor?.displayName} o'chiriladigan xabarlar taymerini ${formatDisappearingDuration(disappearingSeconds)}ga o'rnatdi`
           : `${actor?.displayName} o'chiriladigan xabarlar taymerini o'chirdi`
       );
+      if (conversation.type === ConversationType.GROUP) {
+        await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.GROUP_SETTINGS_CHANGED, null, "disappearingSeconds");
+      }
     }
 
     return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };

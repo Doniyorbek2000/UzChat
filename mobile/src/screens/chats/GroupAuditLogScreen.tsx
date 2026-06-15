@@ -42,6 +42,7 @@ const SETTINGS_FIELD_LABELS: Record<string, string> = {
   hideHistoryForNewMembers: "eski xabarlar tarixini yashirish",
   hideMembersList: "a'zolar ro'yxatini yashirish",
   reactionsEnabled: "reaksiyalar",
+  disappearingSeconds: "o'chiriladigan xabarlar taymeri",
 };
 
 const RESTRICTION_LABELS: Record<string, string> = {
