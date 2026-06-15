@@ -9,12 +9,16 @@ export function startMessageRemindersJob() {
     try {
       const due = await messagesService.sendDueReminders();
       for (const { userId, conversationId, messageId } of due) {
-        getIo().to(`user:${userId}`).emit("message:reminderDue", { conversationId, messageId });
-        await pushService.sendToUsers([userId], {
-          title: "⏰ Eslatma",
-          body: "Yodga solgan xabaringizni ko'rib chiqing",
-          data: { type: "message_reminder", conversationId, messageId },
-        });
+        try {
+          getIo().to(`user:${userId}`).emit("message:reminderDue", { conversationId, messageId });
+          await pushService.sendToUsers([userId], {
+            title: "⏰ Eslatma",
+            body: "Yodga solgan xabaringizni ko'rib chiqing",
+            data: { type: "message_reminder", conversationId, messageId },
+          });
+        } catch (err) {
+          console.error(`Failed to deliver reminder for message ${messageId} to user ${userId}:`, err);
+        }
       }
     } catch (err) {
       console.error("Message reminders job failed:", err);
