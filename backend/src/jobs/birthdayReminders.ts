@@ -10,9 +10,9 @@ export function startBirthdayReminderJob() {
   const run = async () => {
     const today = new Date().toISOString().slice(0, 10);
     if (today === lastRunDate) return;
-    lastRunDate = today;
     try {
       await contactsService.sendBirthdayReminders();
+      lastRunDate = today;
     } catch (err) {
       console.error("Birthday reminder job failed:", err);
     }

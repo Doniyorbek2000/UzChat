@@ -231,11 +231,15 @@ export const contactsService = {
     });
 
     for (const contact of contacts) {
-      await pushService.sendToUsers([contact.ownerId], {
-        title: "🎂 Tug'ilgan kun",
-        body: `Bugun ${contact.target.displayName}ning tug'ilgan kuni!`,
-        data: { type: "birthday", userId: contact.target.id },
-      });
+      try {
+        await pushService.sendToUsers([contact.ownerId], {
+          title: "🎂 Tug'ilgan kun",
+          body: `Bugun ${contact.target.displayName}ning tug'ilgan kuni!`,
+          data: { type: "birthday", userId: contact.target.id },
+        });
+      } catch (err) {
+        console.error(`Failed to send birthday reminder to ${contact.ownerId}:`, err);
+      }
     }
   },
 
