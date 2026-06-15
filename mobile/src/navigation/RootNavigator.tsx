@@ -75,6 +75,10 @@ function navigateFromNotification(data?: MessageNotificationData) {
     navigationRef.navigate("ActiveSessions");
     return;
   }
+  if (data?.type === "account_inactivity_warning") {
+    navigationRef.navigate("PrivacySettings");
+    return;
+  }
   if (data?.type === "contact_request" || data?.type === "contact_accepted") {
     navigationRef.navigate("MainTabs", { screen: "Contacts" });
     return;

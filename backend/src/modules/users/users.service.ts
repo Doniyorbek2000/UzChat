@@ -354,9 +354,17 @@ export const usersService = {
     const now = Date.now();
     let deletedCount = 0;
     for (const user of users) {
-      if (now - user.lastSeenAt.getTime() >= user.selfDestructDays * DAY_MS) {
+      const inactiveMs = now - user.lastSeenAt.getTime();
+      const deadlineMs = user.selfDestructDays * DAY_MS;
+      if (inactiveMs >= deadlineMs) {
         await leaveGroupsAndDeleteUser(user.id);
         deletedCount++;
+      } else if (inactiveMs >= deadlineMs - DAY_MS) {
+        await pushService.sendToUsers([user.id], {
+          title: "Hisobingiz o'chirilishi mumkin",
+          body: "Uzoq muddat faolsizlik tufayli hisobingiz ertaga avtomatik o'chiriladi. Faol bo'lish uchun ilovaga kiring",
+          data: { type: "account_inactivity_warning" },
+        });
       }
     }
     return { deletedCount };
