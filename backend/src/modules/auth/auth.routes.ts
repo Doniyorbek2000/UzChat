@@ -52,8 +52,8 @@ authRouter.post(
   validateBody(verifyTwoFactorRecoverySchema),
   authController.recoverTwoFactor
 );
-authRouter.post("/refresh", validateBody(refreshSchema), authController.refresh);
-authRouter.post("/logout", validateBody(refreshSchema), authController.logout);
+authRouter.post("/refresh", apiRateLimiter, validateBody(refreshSchema), authController.refresh);
+authRouter.post("/logout", apiRateLimiter, validateBody(refreshSchema), authController.logout);
 
 authRouter.post(
   "/reset-password/request-otp",
@@ -68,9 +68,9 @@ authRouter.post(
   authController.resetPassword
 );
 
-authRouter.get("/sessions", requireAuth, authController.listSessions);
-authRouter.delete("/sessions/:id", requireAuth, authController.revokeSession);
-authRouter.post("/sessions/revoke-others", requireAuth, authController.revokeOtherSessions);
+authRouter.get("/sessions", requireAuth, apiRateLimiter, authController.listSessions);
+authRouter.delete("/sessions/:id", requireAuth, apiRateLimiter, authController.revokeSession);
+authRouter.post("/sessions/revoke-others", requireAuth, apiRateLimiter, authController.revokeOtherSessions);
 
 authRouter.post(
   "/change-phone/request-otp",
