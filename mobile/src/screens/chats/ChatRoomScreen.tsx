@@ -2515,18 +2515,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🙈 Mendan o'chirish</Text>
             </TouchableOpacity>
           )}
-          {actionMessage && actionMessage.senderId !== user?.id && actionMessage.type !== "SYSTEM" && !actionMessage.deletedAt && (
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => {
-                const message = actionMessage;
-                setActionMessage(null);
-                patUser(conversationId, message.senderId).catch(() => {});
-              }}
-            >
-              <Text style={styles.actionButtonText}>👋 Chimchilash</Text>
-            </TouchableOpacity>
-          )}
+          {actionMessage &&
+            actionMessage.senderId !== user?.id &&
+            actionMessage.type !== "SYSTEM" &&
+            !actionMessage.deletedAt &&
+            !conversation?.isBlocked && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => {
+                  const message = actionMessage;
+                  setActionMessage(null);
+                  patUser(conversationId, message.senderId).catch(() => {});
+                }}
+              >
+                <Text style={styles.actionButtonText}>👋 Chimchilash</Text>
+              </TouchableOpacity>
+            )}
           {actionMessage && actionMessage.senderId !== user?.id && actionMessage.type !== "SYSTEM" && (
             <TouchableOpacity
               style={styles.actionButton}

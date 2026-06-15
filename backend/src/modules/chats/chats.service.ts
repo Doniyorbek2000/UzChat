@@ -1729,6 +1729,10 @@ export const chatsService = {
     const target = conversation.participants.find((p) => p.userId === targetUserId);
     if (!target) throw Errors.notFound("Foydalanuvchi");
 
+    if (conversation.type === ConversationType.DIRECT && userId !== targetUserId) {
+      if (await contactsService.isBlockedEitherWay(userId, targetUserId)) throw Errors.blocked();
+    }
+
     const [actor, recipient] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } }),
       prisma.user.findUnique({
