@@ -1037,7 +1037,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         setText(trimmed);
         setEditingMessage(editingMessage);
         const message = err?.response?.data?.error?.message;
-        if (message) Alert.alert("Xatolik", message);
+        Alert.alert("Xatolik", message ?? "Xabarni tahrirlab bo'lmadi. Internet aloqasini tekshiring");
       }
       return;
     }
@@ -1067,7 +1067,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } catch (err: any) {
       setText(trimmed);
       const message = err?.response?.data?.error?.message;
-      if (message) Alert.alert("Xatolik", message);
+      Alert.alert("Xatolik", message ?? "Xabar yuborilmadi. Internet aloqasini tekshiring");
     }
   };
 
@@ -1369,7 +1369,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       scrollToLatest();
     } catch (err: any) {
       const message = err?.response?.data?.error?.message;
-      if (message) Alert.alert("Xatolik", message);
+      Alert.alert("Xatolik", message ?? "Xabar yuborilmadi. Internet aloqasini tekshiring");
     }
   };
 
