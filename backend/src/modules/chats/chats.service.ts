@@ -969,10 +969,15 @@ export const chatsService = {
       data: { type: "group_join_approved", conversationId },
     });
 
+    const otherManagerIds = conversation.participants
+      .filter((p) => (p.role === ParticipantRole.OWNER || p.role === ParticipantRole.ADMIN) && p.userId !== userId)
+      .map((p) => p.userId);
+
     return {
       conversation: await chatsService.getConversation(userId, conversationId),
       systemMessages,
       newParticipantId: request.userId,
+      otherManagerIds,
     };
   },
 
@@ -989,6 +994,12 @@ export const chatsService = {
       body: `"${conversation.title}" guruhiga qo'shilish so'rovingiz rad etildi`,
       data: { type: "group_join_declined", conversationId },
     });
+
+    const otherManagerIds = conversation.participants
+      .filter((p) => (p.role === ParticipantRole.OWNER || p.role === ParticipantRole.ADMIN) && p.userId !== userId)
+      .map((p) => p.userId);
+
+    return { otherManagerIds };
   },
 
   // Pending requests the current user has sent to join groups via invite links

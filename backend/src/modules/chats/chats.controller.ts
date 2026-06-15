@@ -303,7 +303,7 @@ export const chatsController = {
   async approveJoinRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, requestId } = req.params;
-      const { conversation, systemMessages, newParticipantId } = await chatsService.approveJoinRequest(
+      const { conversation, systemMessages, newParticipantId, otherManagerIds } = await chatsService.approveJoinRequest(
         req.user!.sub,
         id,
         requestId
@@ -320,6 +320,11 @@ export const chatsController = {
       for (const systemMessage of systemMessages) {
         getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
       }
+      if (otherManagerIds.length > 0) {
+        getIo()
+          .to(otherManagerIds.map((managerId) => `user:${managerId}`))
+          .emit("conversation:joinRequest", { conversationId: conversation.id });
+      }
 
       await syncNewParticipantsPresence(conversation.participants, [newParticipantId]);
 
@@ -332,7 +337,12 @@ export const chatsController = {
   async declineJoinRequest(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, requestId } = req.params;
-      await chatsService.declineJoinRequest(req.user!.sub, id, requestId);
+      const { otherManagerIds } = await chatsService.declineJoinRequest(req.user!.sub, id, requestId);
+      if (otherManagerIds.length > 0) {
+        getIo()
+          .to(otherManagerIds.map((managerId) => `user:${managerId}`))
+          .emit("conversation:joinRequest", { conversationId: id });
+      }
       res.status(204).send();
     } catch (err) {
       next(err);
