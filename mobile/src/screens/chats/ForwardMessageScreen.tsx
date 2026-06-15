@@ -118,15 +118,22 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
     setSending(true);
     const trimmedComment = comment.trim();
     const usedTargetIds: string[] = [];
+    let delivered = 0;
+    let failed = 0;
     try {
       for (const targetId of selectedIds) {
-        for (const messageId of messageIds) {
-          await forwardMessage(conversationId, messageId, targetId, hideSender);
+        try {
+          for (const messageId of messageIds) {
+            await forwardMessage(conversationId, messageId, targetId, hideSender);
+          }
+          if (trimmedComment) {
+            await sendTextMessage(targetId, trimmedComment);
+          }
+          usedTargetIds.push(targetId);
+          delivered++;
+        } catch {
+          failed++;
         }
-        if (trimmedComment) {
-          await sendTextMessage(targetId, trimmedComment);
-        }
-        usedTargetIds.push(targetId);
       }
       for (const listId of selectedBroadcastIds) {
         const list = broadcastLists.find((l) => l.id === listId);
@@ -134,20 +141,30 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
         for (const memberId of list.memberIds) {
           const contact = contacts.find((c) => c.user.id === memberId);
           if (!contact) continue;
-          const targetConversation = await createDirectConversation(contact.user);
-          for (const messageId of messageIds) {
-            await forwardMessage(conversationId, messageId, targetConversation.id, hideSender);
+          try {
+            const targetConversation = await createDirectConversation(contact.user);
+            for (const messageId of messageIds) {
+              await forwardMessage(conversationId, messageId, targetConversation.id, hideSender);
+            }
+            if (trimmedComment) {
+              await sendTextMessage(targetConversation.id, trimmedComment);
+            }
+            usedTargetIds.push(targetConversation.id);
+            delivered++;
+          } catch {
+            failed++;
           }
-          if (trimmedComment) {
-            await sendTextMessage(targetConversation.id, trimmedComment);
-          }
-          usedTargetIds.push(targetConversation.id);
         }
       }
       await recordRecentTargets(usedTargetIds);
+      if (delivered === 0) {
+        Alert.alert("Xatolik", "Xabarni yo'naltirib bo'lmadi");
+        return;
+      }
+      if (failed > 0) {
+        Alert.alert("Yo'naltirildi", `${delivered} ta suhbatga yuborildi, ${failed} tasiga yuborilmadi`);
+      }
       navigation.goBack();
-    } catch {
-      Alert.alert("Xatolik", "Xabarni yo'naltirib bo'lmadi");
     } finally {
       setSending(false);
     }
