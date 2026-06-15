@@ -961,15 +961,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
     );
     if (unread.length === 0) return;
     const now = new Date().toISOString();
+    const succeeded = new Set<string>();
     await Promise.all(
-      unread.map((c) => {
-        getSocket()?.emit("message:read", { conversationId: c.id });
-        return chatsApi.markRead(c.id);
+      unread.map(async (c) => {
+        try {
+          getSocket()?.emit("message:read", { conversationId: c.id });
+          await chatsApi.markRead(c.id);
+          succeeded.add(c.id);
+        } catch {
+          // leave this conversation unread locally; it'll resync on next load
+        }
       })
     );
     set((state) => ({
       conversations: state.conversations.map((c) =>
-        unread.some((u) => u.id === c.id) ? { ...c, lastReadAt: now, markedUnread: false, hasUnreadMention: false } : c
+        succeeded.has(c.id) ? { ...c, lastReadAt: now, markedUnread: false, hasUnreadMention: false } : c
       ),
     }));
   },
