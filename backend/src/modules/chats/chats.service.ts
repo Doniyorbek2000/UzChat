@@ -598,9 +598,12 @@ export const chatsService = {
     });
 
     let systemMessage = null;
-    if (!alreadyPinned && input.notify !== false) {
-      const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
-      systemMessage = await createSystemMessage(conversationId, userId, `${actor?.displayName} xabarni qadab qo'ydi`);
+    if (!alreadyPinned) {
+      if (input.notify !== false) {
+        const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+        systemMessage = await createSystemMessage(conversationId, userId, `${actor?.displayName} xabarni qadab qo'ydi`);
+      }
+      await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MESSAGE_PINNED, message.senderId, message.type);
     }
 
     return { conversation: await chatsService.getConversation(userId, conversationId), systemMessage };
@@ -609,7 +612,11 @@ export const chatsService = {
   async unpinMessage(userId: string, conversationId: string, messageId: string) {
     await chatsService.assertCanManagePins(userId, conversationId);
 
-    await prisma.pinnedMessage.deleteMany({ where: { conversationId, messageId } });
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    const { count } = await prisma.pinnedMessage.deleteMany({ where: { conversationId, messageId } });
+    if (count > 0 && message) {
+      await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MESSAGE_UNPINNED, message.senderId, message.type);
+    }
 
     return chatsService.getConversation(userId, conversationId);
   },

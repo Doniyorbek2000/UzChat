@@ -22,6 +22,8 @@ const ACTION_ICONS: Record<GroupAuditLogEntry["action"], string> = {
   MEMBER_BANNED: "⛔",
   MEMBER_UNBANNED: "✅",
   MEMBER_ADDED: "➕",
+  MESSAGE_PINNED: "📌",
+  MESSAGE_UNPINNED: "📍",
 };
 
 const RESTRICTION_LABELS: Record<string, string> = {
@@ -67,6 +69,10 @@ function describeEntry(entry: GroupAuditLogEntry): string {
       return `${actor} ${target}ning blokini olib tashladi`;
     case "MEMBER_ADDED":
       return `${actor} ${target}ni guruhga qo'shdi`;
+    case "MESSAGE_PINNED":
+      return `${actor} ${target} yuborgan xabarni qadab qo'ydi (${MESSAGE_TYPE_LABELS[entry.details ?? ""] ?? "xabar"})`;
+    case "MESSAGE_UNPINNED":
+      return `${actor} ${target} yuborgan xabarni qadovdan oldi (${MESSAGE_TYPE_LABELS[entry.details ?? ""] ?? "xabar"})`;
     default:
       return "";
   }

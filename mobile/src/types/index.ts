@@ -263,7 +263,9 @@ export type GroupAuditAction =
   | "MESSAGE_DELETED"
   | "MEMBER_BANNED"
   | "MEMBER_UNBANNED"
-  | "MEMBER_ADDED";
+  | "MEMBER_ADDED"
+  | "MESSAGE_PINNED"
+  | "MESSAGE_UNPINNED";
 
 // An entry in a GROUP's "Recent actions" moderation log.
 export interface GroupAuditLogEntry {

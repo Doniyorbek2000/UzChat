@@ -428,6 +428,8 @@ enum GroupAuditAction {
   MEMBER_BANNED
   MEMBER_UNBANNED
   MEMBER_ADDED
+  MESSAGE_PINNED
+  MESSAGE_UNPINNED
 }
 
 // GROUP only: a user removed-and-banned from a group by an owner/admin. While
