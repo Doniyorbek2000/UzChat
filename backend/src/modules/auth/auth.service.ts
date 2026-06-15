@@ -33,6 +33,7 @@ import {
 import { env } from "../../config/env";
 import { pushService } from "../push/push.service";
 import { formatDeviceName } from "../../utils/device";
+import { disconnectSession, disconnectUser } from "../../sockets";
 
 function msFromExpiresIn(expiresIn: string): number {
   const match = /^(\d+)([smhd])$/.exec(expiresIn);
@@ -279,13 +280,19 @@ export const authService = {
       throw Errors.notFound("Seans");
     }
     await prisma.refreshToken.update({ where: { id: sessionId }, data: { revokedAt: new Date() } });
+    disconnectSession(sessionId);
   },
 
   async revokeOtherSessions(userId: string, currentSessionId: string) {
-    await prisma.refreshToken.updateMany({
+    const sessions = await prisma.refreshToken.findMany({
       where: { userId, id: { not: currentSessionId }, revokedAt: null },
+      select: { id: true },
+    });
+    await prisma.refreshToken.updateMany({
+      where: { id: { in: sessions.map((s) => s.id) } },
       data: { revokedAt: new Date() },
     });
+    sessions.forEach((s) => disconnectSession(s.id));
   },
 
   async requestPhoneChange(userId: string, { newPhone }: RequestPhoneChangeInput) {
@@ -460,6 +467,7 @@ export const authService = {
       where: { userId: user.id, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+    disconnectUser(user.id);
 
     await pushService.sendToUsers([user.id], {
       title: "Parol tiklandi",

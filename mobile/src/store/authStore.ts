@@ -4,7 +4,7 @@ import { usersApi } from "../api/users";
 import { setUnauthorizedHandler } from "../api/client";
 import { secureStorage } from "../storage/secureStorage";
 import { generateKeyPair, KeyPair } from "../crypto/e2ee";
-import { connectSocket, disconnectSocket } from "../socket/socket";
+import { connectSocket, disconnectSocket, setForceLogoutHandler } from "../socket/socket";
 import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from "../utils/pushNotifications";
 import { useAppLockStore } from "./appLockStore";
 import { AuthUser } from "../types";
@@ -53,6 +53,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   bootstrap: async () => {
     set({ isLoading: true });
     setUnauthorizedHandler(() => {
+      disconnectSocket();
+      set({ user: null, isAuthenticated: false });
+    });
+    setForceLogoutHandler(() => {
+      secureStorage.clearTokens();
       disconnectSocket();
       set({ user: null, isAuthenticated: false });
     });

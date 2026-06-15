@@ -11,6 +11,7 @@ let io: Server | undefined;
 
 export interface AuthenticatedSocket extends Socket {
   userId: string;
+  sid: string;
   typingIndicatorsEnabled: boolean;
 }
 
@@ -24,6 +25,18 @@ export function isUserOnline(userId: string): boolean {
   return io.sockets.adapter.rooms.has(`user:${userId}`);
 }
 
+/** Force-disconnects every socket belonging to the given session (refresh token), e.g. after it's revoked. */
+export function disconnectSession(sessionId: string): void {
+  if (!io) return;
+  io.in(`session:${sessionId}`).disconnectSockets(true);
+}
+
+/** Force-disconnects every socket for the given user, e.g. after all their sessions are revoked. */
+export function disconnectUser(userId: string): void {
+  if (!io) return;
+  io.in(`user:${userId}`).disconnectSockets(true);
+}
+
 export function initSocketServer(httpServer: HttpServer): Server {
   io = new Server(httpServer, {
     cors: { origin: env.corsOrigin },
@@ -35,6 +48,7 @@ export function initSocketServer(httpServer: HttpServer): Server {
     try {
       const payload = verifyAccessToken(token);
       (socket as AuthenticatedSocket).userId = payload.sub;
+      (socket as AuthenticatedSocket).sid = payload.sid;
       next();
     } catch {
       next(new Error("UNAUTHORIZED"));
@@ -70,6 +84,7 @@ export function initSocketServer(httpServer: HttpServer): Server {
       }
     }
     socket.join(`user:${authed.userId}`);
+    socket.join(`session:${authed.sid}`);
 
     const undeliveredConversationIds = participations
       .filter((p) => p.conversation.messages.length > 0 && (!p.lastDeliveredAt || p.lastDeliveredAt < p.conversation.messages[0].createdAt))

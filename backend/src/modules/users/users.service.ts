@@ -1,7 +1,7 @@
 import { ConversationType } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { isUserOnline } from "../../sockets";
+import { isUserOnline, disconnectSession } from "../../sockets";
 import { hashPassword, verifyPassword } from "../../utils/password";
 import {
   filterLastSeenSingle,
@@ -284,10 +284,15 @@ export const usersService = {
     await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
 
     // Force re-login on other devices in case the old password was compromised.
-    await prisma.refreshToken.updateMany({
+    const otherSessions = await prisma.refreshToken.findMany({
       where: { userId, id: { not: currentSessionId }, revokedAt: null },
+      select: { id: true },
+    });
+    await prisma.refreshToken.updateMany({
+      where: { id: { in: otherSessions.map((s) => s.id) } },
       data: { revokedAt: new Date() },
     });
+    otherSessions.forEach((s) => disconnectSession(s.id));
 
     await pushService.sendToUsers([userId], {
       title: "Parol o'zgartirildi",
