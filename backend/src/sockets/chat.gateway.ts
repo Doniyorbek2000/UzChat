@@ -48,11 +48,11 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
   socket.on("message:read", async (payload: { conversationId: string }) => {
     try {
       await messagesService.markRead(socket.userId, payload.conversationId);
-      socket.to(`conversation:${payload.conversationId}`).emit("message:read", {
-        conversationId: payload.conversationId,
-        userId: socket.userId,
-        at: new Date().toISOString(),
-      });
+      const viewerIds = await chatsService.getReadReceiptViewers(payload.conversationId, socket.userId);
+      const event = { conversationId: payload.conversationId, userId: socket.userId, at: new Date().toISOString() };
+      for (const viewerId of viewerIds) {
+        io.to(`user:${viewerId}`).emit("message:read", event);
+      }
     } catch {
       // ignore read receipts for conversations the user is not part of
     }

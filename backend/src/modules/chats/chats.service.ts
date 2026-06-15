@@ -1088,6 +1088,28 @@ export const chatsService = {
   },
 
   /**
+   * Returns the userIds of `conversationId`'s other participants who are
+   * allowed to see `readerId`'s real-time "read" receipt, mirroring
+   * `visibleLastReadAt`'s visibility rule for the `message:read` socket event.
+   */
+  async getReadReceiptViewers(conversationId: string, readerId: string): Promise<Set<string>> {
+    const participants = await prisma.conversationParticipant.findMany({
+      where: { conversationId },
+      select: { userId: true, readReceiptsOverride: true, user: { select: { readReceiptsEnabled: true } } },
+    });
+    const reader = participants.find((p) => p.userId === readerId);
+    if (!reader || !effectiveReadReceipts(reader.readReceiptsOverride, reader.user.readReceiptsEnabled)) {
+      return new Set();
+    }
+    const visible = new Set<string>();
+    for (const p of participants) {
+      if (p.userId === readerId) continue;
+      if (effectiveReadReceipts(p.readReceiptsOverride, p.user.readReceiptsEnabled)) visible.add(p.userId);
+    }
+    return visible;
+  },
+
+  /**
    * In a GROUP, only OWNER/ADMIN can pin/unpin messages, unless `membersCanPinMessages`
    * is enabled, in which case any MEMBER can too. In a DIRECT chat, either participant can.
    */
