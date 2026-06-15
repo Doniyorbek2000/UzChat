@@ -312,6 +312,14 @@ export const authService = {
     const user = await prisma.user.update({ where: { id: userId }, data: { phone: newPhone } });
     await prisma.otpCode.delete({ where: { id: otp.id } });
 
+    pushService
+      .sendToUsers([userId], {
+        title: "Telefon raqami o'zgartirildi",
+        body: `Hisobingizning telefon raqami ${user.phone} ga o'zgartirildi`,
+        data: { type: "security" },
+      })
+      .catch(() => {});
+
     return { phone: user.phone };
   },
 
