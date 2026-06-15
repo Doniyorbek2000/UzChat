@@ -76,6 +76,10 @@ export function initSocketServer(httpServer: HttpServer): Server {
       },
     });
 
+    // Only broadcast "online" if this is the user's first active connection -
+    // with multiple devices, the others are already aware they're online.
+    const wasOnline = isUserOnline(authed.userId);
+
     const relatedUserIds = new Set<string>();
     for (const p of participations) {
       socket.join(`conversation:${p.conversationId}`);
@@ -107,7 +111,9 @@ export function initSocketServer(httpServer: HttpServer): Server {
     const onlineUserIds = [...relatedUserIds].filter((id) => isUserOnline(id));
     socket.emit("presence:initial", { userIds: onlineUserIds });
 
-    io!.emit("presence:update", { userId: authed.userId, online: true });
+    if (!wasOnline) {
+      io!.emit("presence:update", { userId: authed.userId, online: true });
+    }
 
     const notifyRequests = await prisma.onlineNotifyRequest.findMany({
       where: { targetId: authed.userId },
@@ -132,7 +138,11 @@ export function initSocketServer(httpServer: HttpServer): Server {
 
     socket.on("disconnect", async () => {
       await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
-      io!.emit("presence:update", { userId: authed.userId, online: false });
+      // Only broadcast "offline" once the user's last device disconnects -
+      // socket.io has already removed this socket from `user:${userId}` by now.
+      if (!isUserOnline(authed.userId)) {
+        io!.emit("presence:update", { userId: authed.userId, online: false });
+      }
 
       // Clear any "typing"/"recording" indicators left behind by an abrupt
       // disconnect (app closed/crashed mid-keystroke), so peers don't see a
