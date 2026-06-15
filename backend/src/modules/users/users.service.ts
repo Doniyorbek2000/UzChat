@@ -305,6 +305,12 @@ export const usersService = {
 
     const twoFactorHash = await hashPassword(twoFactorPassword);
     await prisma.user.update({ where: { id: userId }, data: { twoFactorHash, twoFactorHint: hint ?? null } });
+
+    await pushService.sendToUsers([userId], {
+      title: "Ikki bosqichli tekshiruv yoqildi",
+      body: "Hisobingiz uchun ikki bosqichli tekshiruv (bulut paroli) yoqildi",
+      data: { type: "security" },
+    });
   },
 
   async disableTwoFactor(userId: string, { currentPassword }: DisableTwoFactorInput) {
@@ -319,6 +325,12 @@ export const usersService = {
     if (!valid) throw Errors.badRequest("Joriy parol noto'g'ri");
 
     await prisma.user.update({ where: { id: userId }, data: { twoFactorHash: null, twoFactorHint: null } });
+
+    await pushService.sendToUsers([userId], {
+      title: "Ikki bosqichli tekshiruv o'chirildi",
+      body: "Hisobingiz uchun ikki bosqichli tekshiruv o'chirildi. Agar bu siz bo'lmasangiz, darhol hisobingizni tekshiring",
+      data: { type: "security" },
+    });
   },
 
   async deleteAccount(userId: string, { currentPassword }: DeleteAccountInput) {
