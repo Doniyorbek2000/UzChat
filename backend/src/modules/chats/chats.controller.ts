@@ -2,6 +2,24 @@ import { Request, Response, NextFunction } from "express";
 import { chatsService } from "./chats.service";
 import { getIo, isUserOnline } from "../../sockets";
 
+// A participant's online-status cache may not include some other member yet
+// if they had no shared conversation before now (presence:initial is only
+// computed from conversations that existed at connect time). Tell each side
+// about the other if they're currently online. Offline members need no
+// announcement: their lastSeenAt is already included in `conversation`, and a
+// false "online: false" here would overwrite it with "last seen just now".
+function syncNewParticipantsPresence(participants: { userId: string }[], newParticipantIds: string[]) {
+  const isNew = new Set(newParticipantIds);
+  for (const participant of participants) {
+    for (const other of participants) {
+      if (other.userId === participant.userId) continue;
+      if (!isNew.has(participant.userId) && !isNew.has(other.userId)) continue;
+      if (!isUserOnline(other.userId)) continue;
+      getIo().to(`user:${participant.userId}`).emit("presence:update", { userId: other.userId, online: true });
+    }
+  }
+}
+
 export const chatsController = {
   async create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -11,19 +29,7 @@ export const chatsController = {
       }
       getIo().to(`conversation:${conversation.id}`).emit("conversation:new", conversation);
 
-      // Each participant's online-status cache may not include the others yet
-      // if they had no shared conversation before now (presence:initial is
-      // only computed from conversations that existed at connect time). Only
-      // online participants need announcing - offline ones are already
-      // reflected via the lastSeenAt included in `conversation`, and a false
-      // "online: false" here would overwrite that with "last seen just now".
-      for (const participant of conversation.participants) {
-        for (const other of conversation.participants) {
-          if (other.userId === participant.userId) continue;
-          if (!isUserOnline(other.userId)) continue;
-          getIo().to(`user:${participant.userId}`).emit("presence:update", { userId: other.userId, online: true });
-        }
-      }
+      syncNewParticipantsPresence(conversation.participants, conversation.participants.map((p) => p.userId));
 
       res.status(201).json(conversation);
     } catch (err) {
@@ -66,6 +72,8 @@ export const chatsController = {
       for (const systemMessage of systemMessages) {
         getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
       }
+
+      syncNewParticipantsPresence(conversation.participants, [newParticipantId]);
 
       res.status(201).json(conversation);
     } catch (err) {
@@ -258,6 +266,8 @@ export const chatsController = {
         for (const systemMessage of systemMessages) {
           getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
         }
+
+        syncNewParticipantsPresence(conversation.participants, [userId]);
       }
 
       res.status(alreadyMember ? 200 : 201).json(conversation);
@@ -305,6 +315,8 @@ export const chatsController = {
       for (const systemMessage of systemMessages) {
         getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
       }
+
+      syncNewParticipantsPresence(conversation.participants, [newParticipantId]);
 
       res.json(conversation);
     } catch (err) {
