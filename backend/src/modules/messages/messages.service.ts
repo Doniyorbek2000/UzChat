@@ -1086,14 +1086,20 @@ export const messagesService = {
     });
     if (due.length === 0) return [];
 
-    return Promise.all(
-      due.map((m) =>
-        prisma.message.update({
-          where: { id: m.id },
-          data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date(), expiresAt: null },
-        })
-      )
-    );
+    const deleted = [];
+    for (const m of due) {
+      try {
+        deleted.push(
+          await prisma.message.update({
+            where: { id: m.id },
+            data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date(), expiresAt: null },
+          })
+        );
+      } catch (err) {
+        console.error(`Failed to expire message ${m.id}:`, err);
+      }
+    }
+    return deleted;
   },
 
   // Auto-closes polls whose voting deadline has passed.
