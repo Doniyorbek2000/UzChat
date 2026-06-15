@@ -13,6 +13,7 @@ import {
   generateOtpCode,
   hashOtpCode,
   OTP_MAX_ATTEMPTS,
+  OTP_RESEND_COOLDOWN_MS,
   OTP_TTL_MS,
   sendOtpSms,
   verifyOtpCode,
@@ -72,6 +73,22 @@ function notifyNewLogin(userId: string, userAgent?: string | null) {
     .catch(() => {});
 }
 
+// Prevents an OTP from being resent for the same phone number too soon
+// after the previous one, regardless of which flow requested it.
+async function assertOtpCooldown(phone: string) {
+  const recent = await prisma.otpCode.findFirst({
+    where: { phone },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
+  });
+  if (recent) {
+    const remainingMs = OTP_RESEND_COOLDOWN_MS - (Date.now() - recent.createdAt.getTime());
+    if (remainingMs > 0) {
+      throw Errors.tooManyRequests(`Qaytadan urinishdan oldin ${Math.ceil(remainingMs / 1000)} soniya kuting`);
+    }
+  }
+}
+
 function toPublicUser(user: {
   id: string;
   phone: string;
@@ -104,6 +121,8 @@ export const authService = {
     if (existing) {
       throw Errors.conflict("Bu telefon raqam allaqachon ro'yxatdan o'tgan");
     }
+
+    await assertOtpCooldown(phone);
 
     const code = generateOtpCode();
     const codeHash = await hashOtpCode(code);
@@ -277,6 +296,8 @@ export const authService = {
     const existing = await prisma.user.findUnique({ where: { phone: newPhone } });
     if (existing) throw Errors.conflict("Bu telefon raqam allaqachon ro'yxatdan o'tgan");
 
+    await assertOtpCooldown(newPhone);
+
     const code = generateOtpCode();
     const codeHash = await hashOtpCode(code);
 
@@ -336,6 +357,8 @@ export const authService = {
     const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: { phone: true, twoFactorHash: true } });
     if (!user || !user.twoFactorHash) throw Errors.unauthorized();
 
+    await assertOtpCooldown(user.phone);
+
     const code = generateOtpCode();
     const codeHash = await hashOtpCode(code);
 
@@ -389,6 +412,8 @@ export const authService = {
   async requestPasswordReset({ phone }: RequestPasswordResetInput) {
     const user = await prisma.user.findUnique({ where: { phone }, select: { id: true } });
     if (!user) return;
+
+    await assertOtpCooldown(phone);
 
     const code = generateOtpCode();
     const codeHash = await hashOtpCode(code);

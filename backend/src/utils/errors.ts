@@ -18,4 +18,5 @@ export const Errors = {
   notFound: (what = "Resurs") => new AppError(404, "NOT_FOUND", `${what} topilmadi`),
   conflict: (message: string) => new AppError(409, "CONFLICT", message),
   badRequest: (message: string) => new AppError(400, "BAD_REQUEST", message),
+  tooManyRequests: (message: string) => new AppError(429, "TOO_MANY_REQUESTS", message),
 };

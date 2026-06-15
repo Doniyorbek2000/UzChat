@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 const OTP_LENGTH = 6;
 export const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 export const OTP_MAX_ATTEMPTS = 5;
+export const OTP_RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute
 
 export function generateOtpCode(): string {
   const max = 10 ** OTP_LENGTH;
