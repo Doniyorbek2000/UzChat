@@ -365,15 +365,21 @@ export const usersService = {
     for (const user of users) {
       const inactiveMs = now - user.lastSeenAt.getTime();
       const deadlineMs = user.selfDestructDays * DAY_MS;
-      if (inactiveMs >= deadlineMs) {
-        await leaveGroupsAndDeleteUser(user.id);
-        deletedCount++;
-      } else if (inactiveMs >= deadlineMs - DAY_MS) {
-        await pushService.sendToUsers([user.id], {
-          title: "Hisobingiz o'chirilishi mumkin",
-          body: "Uzoq muddat faolsizlik tufayli hisobingiz ertaga avtomatik o'chiriladi. Faol bo'lish uchun ilovaga kiring",
-          data: { type: "account_inactivity_warning" },
-        });
+      try {
+        if (inactiveMs >= deadlineMs) {
+          await leaveGroupsAndDeleteUser(user.id);
+          deletedCount++;
+        } else if (inactiveMs >= deadlineMs - DAY_MS) {
+          await pushService.sendToUsers([user.id], {
+            title: "Hisobingiz o'chirilishi mumkin",
+            body: "Uzoq muddat faolsizlik tufayli hisobingiz ertaga avtomatik o'chiriladi. Faol bo'lish uchun ilovaga kiring",
+            data: { type: "account_inactivity_warning" },
+          });
+        }
+      } catch (err) {
+        // Don't let one account's failure block self-destruct processing for
+        // the rest - this job only runs once a day.
+        console.error(`Self-destruct check failed for user ${user.id}:`, err);
       }
     }
     return { deletedCount };
