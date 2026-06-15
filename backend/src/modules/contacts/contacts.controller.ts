@@ -22,6 +22,15 @@ export const contactsController = {
     }
   },
 
+  async listOutgoing(req: Request, res: Response, next: NextFunction) {
+    try {
+      const requests = await contactsService.listOutgoingRequests(req.user!.sub);
+      res.json(requests);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async accept(req: Request, res: Response, next: NextFunction) {
     try {
       await contactsService.acceptRequest(req.user!.sub, req.params.requestId);

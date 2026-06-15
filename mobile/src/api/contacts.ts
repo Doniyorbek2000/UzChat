@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { BlockedUser, Contact, ContactRequest, ContactSuggestion, UpcomingBirthday, User } from "../types";
+import { BlockedUser, Contact, ContactRequest, ContactSuggestion, OutgoingContactRequest, UpcomingBirthday, User } from "../types";
 
 export const contactsApi = {
   list() {
@@ -12,6 +12,10 @@ export const contactsApi = {
 
   listIncomingRequests() {
     return apiClient.get<ContactRequest[]>("/contacts/requests").then((r) => r.data);
+  },
+
+  listOutgoingRequests() {
+    return apiClient.get<OutgoingContactRequest[]>("/contacts/requests/outgoing").then((r) => r.data);
   },
 
   accept(requestId: string) {

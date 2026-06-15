@@ -17,7 +17,7 @@ import { MainTabScreenProps } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
-import { Contact, ContactRequest, ContactSuggestion } from "../../types";
+import { Contact, ContactRequest, ContactSuggestion, OutgoingContactRequest } from "../../types";
 import { useContactsStore } from "../../store/contactsStore";
 import { useChatStore } from "../../store/chatStore";
 import { formatTime } from "../../utils/conversation";
@@ -27,6 +27,7 @@ type Props = MainTabScreenProps<"Contacts">;
 export function ContactsScreen({ navigation }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [requests, setRequests] = useState<ContactRequest[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<OutgoingContactRequest[]>([]);
   const [suggestions, setSuggestions] = useState<ContactSuggestion[]>([]);
   const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
   const [sentSuggestionIds, setSentSuggestionIds] = useState<Set<string>>(new Set());
@@ -92,11 +93,17 @@ export function ContactsScreen({ navigation }: Props) {
 
   const load = useCallback(() => {
     setLoading(true);
-    Promise.all([contactsApi.list(), contactsApi.listIncomingRequests(), contactsApi.listSuggestions()])
-      .then(([c, r, s]) => {
+    Promise.all([
+      contactsApi.list(),
+      contactsApi.listIncomingRequests(),
+      contactsApi.listSuggestions(),
+      contactsApi.listOutgoingRequests(),
+    ])
+      .then(([c, r, s, o]) => {
         setContacts(c);
         setRequests(r);
         setSuggestions(s);
+        setOutgoingRequests(o);
         useContactsStore.getState().setPendingRequestCount(r.length);
       })
       .catch(() => {})
@@ -117,6 +124,11 @@ export function ContactsScreen({ navigation }: Props) {
   const onDecline = async (id: string) => {
     await contactsApi.decline(id).catch(() => {});
     load();
+  };
+
+  const onCancelOutgoing = async (id: string) => {
+    setOutgoingRequests((prev) => prev.filter((r) => r.id !== id));
+    await contactsApi.remove(id).catch(() => {});
   };
 
   const onToggleFavorite = async (item: Contact) => {
@@ -266,6 +278,24 @@ export function ContactsScreen({ navigation }: Props) {
               </TouchableOpacity>
               <TouchableOpacity style={styles.declineButton} onPress={() => onDecline(req.id)}>
                 <Text style={styles.declineText}>Rad etish</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {outgoingRequests.length > 0 && (
+        <View>
+          <Text style={styles.sectionTitle}>Yuborilgan so'rovlar</Text>
+          {outgoingRequests.map((req) => (
+            <View key={req.id} style={styles.row}>
+              <Avatar uri={req.target.avatarUrl} name={req.target.displayName} />
+              <View style={styles.requestInfo}>
+                <Text style={styles.name}>{req.target.displayName}</Text>
+                <Text style={styles.requestMutual}>Javob kutilmoqda</Text>
+              </View>
+              <TouchableOpacity style={styles.declineButton} onPress={() => onCancelOutgoing(req.id)}>
+                <Text style={styles.declineText}>Bekor qilish</Text>
               </TouchableOpacity>
             </View>
           ))}

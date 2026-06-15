@@ -307,6 +307,13 @@ export interface ContactRequest {
   mutualCount: number;
 }
 
+// A pending contact request the current user sent to another user, awaiting their response.
+export interface OutgoingContactRequest {
+  id: string;
+  createdAt: string;
+  target: User;
+}
+
 export interface BlockedUser {
   id: string;
   user: User;

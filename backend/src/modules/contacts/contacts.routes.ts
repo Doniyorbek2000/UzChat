@@ -11,6 +11,7 @@ contactsRouter.use(requireAuth);
 contactsRouter.get("/", contactsController.list);
 contactsRouter.post("/", validateBody(addContactSchema), contactsController.sendRequest);
 contactsRouter.get("/requests", contactsController.listIncoming);
+contactsRouter.get("/requests/outgoing", contactsController.listOutgoing);
 contactsRouter.post("/requests/:requestId/accept", contactsController.accept);
 contactsRouter.post("/requests/:requestId/decline", contactsController.decline);
 contactsRouter.get("/suggestions", contactsController.listSuggestions);

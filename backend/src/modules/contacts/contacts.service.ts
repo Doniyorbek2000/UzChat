@@ -93,6 +93,21 @@ export const contactsService = {
     }));
   },
 
+  async listOutgoingRequests(userId: string) {
+    const requests = await prisma.contact.findMany({
+      where: { ownerId: userId, status: ContactStatus.PENDING },
+      include: { target: { select: userSummarySelect } },
+      orderBy: { createdAt: "desc" },
+    });
+    const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
+
+    return requests.map((r) => ({
+      id: r.id,
+      createdAt: r.createdAt,
+      target: filterBio(userId, filterLastSeen(userId, r.target, contactIds, exceptions), contactIds),
+    }));
+  },
+
   async acceptRequest(userId: string, requestId: string) {
     const request = await prisma.contact.findUnique({ where: { id: requestId } });
     if (!request || request.targetId !== userId || request.status !== ContactStatus.PENDING) {
