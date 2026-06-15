@@ -401,6 +401,12 @@ export const authService = {
     await prisma.user.update({ where: { id: user.id }, data: { twoFactorHash: null, twoFactorHint: null, lastSeenAt: new Date() } });
     await prisma.otpCode.delete({ where: { id: otp.id } });
 
+    await pushService.sendToUsers([user.id], {
+      title: "Ikki bosqichli tekshiruv o'chirildi",
+      body: "Hisobingiz uchun ikki bosqichli tekshiruv telefon tasdiqlash kodi orqali o'chirildi. Agar bu siz bo'lmasangiz, darhol hisobingizni tekshiring",
+      data: { type: "security" },
+    });
+
     const tokens = await issueTokens(user, userAgent);
     notifyNewLogin(user.id, userAgent);
     return { user: toPublicUser(user), ...tokens };
