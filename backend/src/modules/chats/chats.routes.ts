@@ -84,6 +84,8 @@ chatsRouter.patch(
 chatsRouter.get("/:id/join-requests", chatsController.listJoinRequests);
 chatsRouter.post("/:id/join-requests/:requestId/approve", chatsController.approveJoinRequest);
 chatsRouter.post("/:id/join-requests/:requestId/decline", chatsController.declineJoinRequest);
+chatsRouter.get("/join-requests/mine", chatsController.listMyJoinRequests);
+chatsRouter.delete("/join-requests/mine/:requestId", chatsController.cancelMyJoinRequest);
 chatsRouter.get("/:id/audit-log", chatsController.getAuditLog);
 
 chatsRouter.get("/starred/messages", messagesController.listStarred);

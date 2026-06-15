@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { useCallback, useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore } from "../../store/chatStore";
@@ -7,7 +8,7 @@ import { chatsApi } from "../../api/chats";
 import { decodeInviteLink } from "../../crypto/e2ee";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
-import { InvitePreview } from "../../types";
+import { InvitePreview, MyGroupJoinRequest } from "../../types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "JoinGroup">;
 
@@ -18,6 +19,23 @@ export function JoinGroupScreen({ navigation }: Props) {
   const [preview, setPreview] = useState<InvitePreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [myRequests, setMyRequests] = useState<MyGroupJoinRequest[]>([]);
+
+  const loadMyRequests = useCallback(() => {
+    chatsApi
+      .listMyJoinRequests()
+      .then(setMyRequests)
+      .catch(() => {});
+  }, []);
+
+  useFocusEffect(loadMyRequests);
+
+  const onCancelRequest = (requestId: string) => {
+    setMyRequests((prev) => prev.filter((r) => r.id !== requestId));
+    chatsApi.cancelMyJoinRequest(requestId).catch(() => {
+      loadMyRequests();
+    });
+  };
 
   const onCheck = async () => {
     const decoded = decodeInviteLink(invite);
@@ -43,7 +61,9 @@ export function JoinGroupScreen({ navigation }: Props) {
       const result = await joinConversationByInvite(invite);
       if ("pending" in result) {
         Alert.alert("So'rov yuborildi", "Guruhga qo'shilish so'rovingiz adminga yuborildi. Tasdiqlanganda xabar olasiz.");
-        navigation.goBack();
+        setInvite("");
+        setPreview(null);
+        loadMyRequests();
         return;
       }
       navigation.replace("ChatRoom", { conversationId: result.id, title: result.title ?? "" });
@@ -55,7 +75,7 @@ export function JoinGroupScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Taklif havolasini joylashtiring</Text>
       <TextInput
         style={styles.input}
@@ -90,12 +110,31 @@ export function JoinGroupScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
       )}
-    </View>
+
+      {myRequests.length > 0 && (
+        <View style={styles.requestsSection}>
+          <Text style={styles.requestsTitle}>Yuborilgan so'rovlar</Text>
+          {myRequests.map((req) => (
+            <View key={req.id} style={styles.requestRow}>
+              <Avatar uri={req.conversation.avatarUrl} name={req.conversation.title ?? "Guruh"} size={44} />
+              <View style={styles.requestInfo}>
+                <Text style={styles.requestName}>{req.conversation.title}</Text>
+                <Text style={styles.requestStatus}>Tasdiqlash kutilmoqda</Text>
+              </View>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => onCancelRequest(req.id)}>
+                <Text style={styles.cancelButtonText}>Bekor qilish</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
+  container: { flex: 1, backgroundColor: colors.surface },
+  content: { padding: 16 },
   label: { fontSize: 14, color: colors.textSecondary, marginBottom: 8 },
   input: {
     minHeight: 44,
@@ -128,4 +167,18 @@ const styles = StyleSheet.create({
   previewTitle: { fontSize: 18, fontWeight: "700", color: colors.text, marginTop: 8 },
   previewDescription: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
   previewMembers: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
+  requestsSection: { marginTop: 32 },
+  requestsTitle: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 12 },
+  requestRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
+  requestInfo: { flex: 1 },
+  requestName: { fontSize: 15, fontWeight: "600", color: colors.text },
+  requestStatus: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  cancelButton: {
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  cancelButtonText: { color: colors.textSecondary, fontSize: 12, fontWeight: "600" },
 });

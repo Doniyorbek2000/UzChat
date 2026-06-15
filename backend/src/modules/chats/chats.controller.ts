@@ -307,6 +307,24 @@ export const chatsController = {
     }
   },
 
+  async listMyJoinRequests(req: Request, res: Response, next: NextFunction) {
+    try {
+      const requests = await chatsService.listMyJoinRequests(req.user!.sub);
+      res.json(requests);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async cancelMyJoinRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      await chatsService.cancelMyJoinRequest(req.user!.sub, req.params.requestId);
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async removeParticipant(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;

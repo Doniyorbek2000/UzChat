@@ -350,6 +350,14 @@ export interface InvitePreview {
   memberCount: number;
 }
 
+// A pending request the current user sent to join a GROUP that requires admin
+// approval, awaiting the owner/admin's decision.
+export interface MyGroupJoinRequest {
+  id: string;
+  createdAt: string;
+  conversation: { id: string; title: string | null; avatarUrl: string | null; memberCount: number };
+}
+
 /** Encrypted alongside the message ciphertext for IMAGE/VIDEO/AUDIO/FILE messages. */
 export interface MediaMeta {
   name: string;

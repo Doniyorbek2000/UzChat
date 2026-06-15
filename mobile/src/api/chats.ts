@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import { ActivityStats, BannedGroupMember, CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageReminderInfo, MessageType, MuteDuration, ParticipantRole, PollVote, RestrictDuration } from "../types";
+import { ActivityStats, BannedGroupMember, CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageReminderInfo, MessageType, MuteDuration, MyGroupJoinRequest, ParticipantRole, PollVote, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
   type: "DIRECT" | "GROUP";
@@ -221,6 +221,14 @@ export const chatsApi = {
 
   declineJoinRequest(conversationId: string, requestId: string) {
     return apiClient.post(`/conversations/${conversationId}/join-requests/${requestId}/decline`);
+  },
+
+  listMyJoinRequests() {
+    return apiClient.get<MyGroupJoinRequest[]>("/conversations/join-requests/mine").then((r) => r.data);
+  },
+
+  cancelMyJoinRequest(requestId: string) {
+    return apiClient.delete(`/conversations/join-requests/mine/${requestId}`);
   },
 
   getAuditLog(conversationId: string, before?: string) {

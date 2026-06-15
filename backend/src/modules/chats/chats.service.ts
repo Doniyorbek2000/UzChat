@@ -974,6 +974,33 @@ export const chatsService = {
     await prisma.groupJoinRequest.delete({ where: { id: requestId } });
   },
 
+  // Pending requests the current user has sent to join groups via invite links
+  // that require admin approval, awaiting a decision.
+  async listMyJoinRequests(userId: string) {
+    const requests = await prisma.groupJoinRequest.findMany({
+      where: { userId },
+      include: { conversation: { include: { participants: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return requests.map((r) => ({
+      id: r.id,
+      createdAt: r.createdAt,
+      conversation: {
+        id: r.conversation.id,
+        title: r.conversation.title,
+        avatarUrl: r.conversation.avatarUrl,
+        memberCount: r.conversation.participants.length,
+      },
+    }));
+  },
+
+  async cancelMyJoinRequest(userId: string, requestId: string) {
+    const request = await prisma.groupJoinRequest.findUnique({ where: { id: requestId } });
+    if (!request || request.userId !== userId) throw Errors.notFound("So'rov");
+    await prisma.groupJoinRequest.delete({ where: { id: requestId } });
+  },
+
   async addParticipant(userId: string, conversationId: string, input: AddParticipantInput) {
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
