@@ -1697,6 +1697,14 @@ export const chatsService = {
         ? `${actor?.displayName} o'zini elkasidan qoqib qo'ydi 👋`
         : `${actor?.displayName} ${recipient?.displayName}ni elkasidan qoqib qo'ydi 👋`;
 
+    if (userId !== targetUserId && !isParticipantMuted(target) && !target.mutedSenderIds.includes(userId)) {
+      await pushService.sendToUsers([targetUserId], {
+        title: actor?.displayName ?? "UzChat",
+        body: "sizni elkangizdan qoqib qo'ydi 👋",
+        data: { type: "pat", conversationId },
+      });
+    }
+
     return createSystemMessage(conversationId, userId, text);
   },
 };
