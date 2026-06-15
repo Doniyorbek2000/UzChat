@@ -1161,6 +1161,11 @@ export const messagesService = {
     if (message.senderId !== userId) throw Errors.forbidden();
 
     await prisma.message.delete({ where: { id: messageId } });
+
+    if (message.mediaUrl) {
+      const filename = path.basename(message.mediaUrl);
+      await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
+    }
   },
 
   async rescheduleMessage(userId: string, conversationId: string, messageId: string, scheduledFor: string) {
