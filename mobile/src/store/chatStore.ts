@@ -1534,6 +1534,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
               inviteCodeExpiresAt: existing.inviteCodeExpiresAt,
               inviteCodeMaxUses: existing.inviteCodeMaxUses,
               inviteCodeUseCount: existing.inviteCodeUseCount,
+              isBlocked: existing.isBlocked,
+              notificationPreview: existing.notificationPreview,
+              readReceiptsOverride: existing.readReceiptsOverride,
+              mutedSenderIds: existing.mutedSenderIds,
+              autoDeleteAfterSeconds: existing.autoDeleteAfterSeconds,
             }
           : conversation;
         return { conversations: upsertConversation(state.conversations, merged) };
