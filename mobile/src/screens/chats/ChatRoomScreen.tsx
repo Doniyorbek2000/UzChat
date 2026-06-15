@@ -46,7 +46,7 @@ import { useRecentStickersStore } from "../../store/recentStickersStore";
 import { useQuickRepliesStore } from "../../store/quickRepliesStore";
 import { getCustomWallpaperUri, getWallpaperColor } from "../../theme/wallpapers";
 import { STICKER_PACKS } from "../../utils/stickerPacks";
-import { ConversationParticipant, MessageReaction, MessageType, ReportReason } from "../../types";
+import { ConversationParticipant, MessageReaction, MessageType } from "../../types";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
@@ -71,6 +71,7 @@ import { AUTO_DELETE_OPTIONS, formatAutoDeleteDuration } from "../../utils/chatA
 import { setActiveConversationId } from "../../utils/pushNotifications";
 import { exportConversation } from "../../utils/chatExport";
 import { reportsApi } from "../../api/reports";
+import { REPORT_REASONS } from "../../utils/reportReasons";
 import { getPreviewLabel } from "../../utils/messagePreview";
 import { FORMAT_PATTERN } from "../../utils/textFormat";
 import { showChatNotificationSettings } from "../../utils/chatNotificationSettings";
@@ -90,15 +91,6 @@ interface PendingMediaItem {
 }
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
-
-const REPORT_REASONS: { value: ReportReason; label: string }[] = [
-  { value: "SPAM", label: "Spam" },
-  { value: "HARASSMENT", label: "Tazyiq/bezovta qilish" },
-  { value: "VIOLENCE", label: "Zo'ravonlik" },
-  { value: "ILLEGAL_CONTENT", label: "Noqonuniy kontent" },
-  { value: "IMPERSONATION", label: "Soxta profil" },
-  { value: "OTHER", label: "Boshqa" },
-];
 
 function isMessageRead(message: { createdAt: string }, participant: ConversationParticipant) {
   return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);

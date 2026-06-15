@@ -4,6 +4,8 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
 import { contactsApi } from "../../api/contacts";
+import { reportsApi } from "../../api/reports";
+import { REPORT_REASONS } from "../../utils/reportReasons";
 import { useChatStore } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
@@ -113,6 +115,22 @@ export function UserProfileScreen({ route, navigation }: Props) {
     } finally {
       setNotifyLoading(false);
     }
+  };
+
+  const onReport = () => {
+    if (!profile) return;
+    Alert.alert("Shikoyat sababi", "Nima uchun shikoyat qilmoqchisiz?", [
+      ...REPORT_REASONS.map((option) => ({
+        text: option.label,
+        onPress: () => {
+          reportsApi
+            .create({ reportedUserId: profile.id, reason: option.value })
+            .then(() => Alert.alert("Yuborildi", "Shikoyatingiz qabul qilindi"))
+            .catch(() => Alert.alert("Xatolik", "Shikoyatni yuborib bo'lmadi"));
+        },
+      })),
+      { text: "Bekor qilish", style: "cancel" as const },
+    ]);
   };
 
   const onAddContact = async () => {
@@ -234,6 +252,12 @@ export function UserProfileScreen({ route, navigation }: Props) {
           <Text style={styles.actionIcon}>🔐</Text>
           <Text style={styles.actionText}>Shifrlash kaliti</Text>
         </TouchableOpacity>
+        {profile.id !== currentUser?.id && (
+          <TouchableOpacity style={styles.actionRow} onPress={onReport}>
+            <Text style={styles.actionIcon}>🚩</Text>
+            <Text style={[styles.actionText, styles.dangerText]}>Foydalanuvchini shikoyat qilish</Text>
+          </TouchableOpacity>
+        )}
       </View>
       <Modal visible={avatarViewerOpen} transparent animationType="fade" onRequestClose={() => setAvatarViewerOpen(false)}>
         <Pressable style={styles.viewerOverlay} onPress={() => setAvatarViewerOpen(false)}>
@@ -303,6 +327,7 @@ const styles = StyleSheet.create({
   },
   actionIcon: { fontSize: 18 },
   actionText: { fontSize: 15, color: colors.text, flex: 1 },
+  dangerText: { color: colors.danger },
   viewerOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.9)",
