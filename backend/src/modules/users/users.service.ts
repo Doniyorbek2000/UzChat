@@ -114,8 +114,14 @@ async function leaveGroupsAndDeleteUser(userId: string) {
 
   const leaveResults: { conversationId: string; deleted: boolean; newOwnerId: string | null }[] = [];
   for (const { conversationId } of groups) {
-    const result = await chatsService.leaveConversation(userId, conversationId);
-    leaveResults.push({ conversationId, ...result });
+    try {
+      const result = await chatsService.leaveConversation(userId, conversationId);
+      leaveResults.push({ conversationId, ...result });
+    } catch (err) {
+      // The user's ConversationParticipant rows cascade-delete with the user
+      // below, so a failure to "leave" cleanly here shouldn't block account deletion.
+      console.error(`Failed to leave group ${conversationId} while deleting user ${userId}:`, err);
+    }
   }
 
   await prisma.user.delete({ where: { id: userId } });
