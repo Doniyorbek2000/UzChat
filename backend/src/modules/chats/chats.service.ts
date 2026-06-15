@@ -958,6 +958,12 @@ export const chatsService = {
 
     await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_ADDED, request.userId);
 
+    await pushService.sendToUsers([request.userId], {
+      title: "So'rov qabul qilindi",
+      body: `"${conversation.title}" guruhiga qo'shilish so'rovingiz qabul qilindi`,
+      data: { type: "group_join_approved", conversationId },
+    });
+
     return {
       conversation: await chatsService.getConversation(userId, conversationId),
       systemMessages,
@@ -966,12 +972,18 @@ export const chatsService = {
   },
 
   async declineJoinRequest(userId: string, conversationId: string, requestId: string) {
-    await chatsService.assertGroupManager(userId, conversationId);
+    const conversation = await chatsService.assertGroupManager(userId, conversationId);
 
     const request = await prisma.groupJoinRequest.findUnique({ where: { id: requestId } });
     if (!request || request.conversationId !== conversationId) throw Errors.notFound("So'rov");
 
     await prisma.groupJoinRequest.delete({ where: { id: requestId } });
+
+    await pushService.sendToUsers([request.userId], {
+      title: "So'rov rad etildi",
+      body: `"${conversation.title}" guruhiga qo'shilish so'rovingiz rad etildi`,
+      data: { type: "group_join_declined", conversationId },
+    });
   },
 
   // Pending requests the current user has sent to join groups via invite links

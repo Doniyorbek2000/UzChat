@@ -83,6 +83,14 @@ function navigateFromNotification(data?: MessageNotificationData) {
     navigationRef.navigate("JoinRequests", { conversationId: data.conversationId });
     return;
   }
+  if (data?.type === "group_join_approved" && data.conversationId) {
+    navigateToConversation(data.conversationId);
+    return;
+  }
+  if (data?.type === "group_join_declined") {
+    navigationRef.navigate("JoinGroup");
+    return;
+  }
   if (data?.type === "birthday" && data.userId) {
     navigationRef.navigate("UserProfile", { userId: data.userId });
     return;
