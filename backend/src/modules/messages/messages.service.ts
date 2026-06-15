@@ -814,9 +814,16 @@ export const messagesService = {
 
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
-      select: { reactionsEnabled: true },
+      select: { type: true, reactionsEnabled: true, participants: { select: { userId: true } } },
     });
     if (!conversation?.reactionsEnabled) throw Errors.forbidden("Bu guruhda reaksiyalar o'chirilgan");
+
+    if (conversation.type === ConversationType.DIRECT) {
+      const other = conversation.participants.find((p) => p.userId !== userId);
+      if (other && (await contactsService.isBlockedEitherWay(userId, other.userId))) {
+        throw Errors.blocked();
+      }
+    }
 
     const existing = await prisma.messageReaction.findUnique({
       where: { messageId_userId: { messageId, userId } },
@@ -844,6 +851,17 @@ export const messagesService = {
     if (message.type !== MessageType.POLL) throw Errors.badRequest("Bu xabar so'rovnoma emas");
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan so'rovnomaga ovoz berib bo'lmaydi");
     if (message.pollClosedAt) throw Errors.badRequest("So'rovnoma yopilgan, ovoz berib bo'lmaydi");
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { type: true, participants: { select: { userId: true } } },
+    });
+    if (conversation?.type === ConversationType.DIRECT) {
+      const other = conversation.participants.find((p) => p.userId !== userId);
+      if (other && (await contactsService.isBlockedEitherWay(userId, other.userId))) {
+        throw Errors.blocked();
+      }
+    }
 
     if (optionIds.length === 0) {
       await prisma.pollVote.deleteMany({ where: { messageId, userId } });
