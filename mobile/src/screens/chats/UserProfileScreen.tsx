@@ -108,8 +108,8 @@ export function UserProfileScreen({ route, navigation }: Props) {
         await usersApi.notifyOnline(profile.id);
         setNotifyOnlineRequested(true);
       }
-    } catch {
-      Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Amalni bajarib bo'lmadi");
     } finally {
       setNotifyLoading(false);
     }
