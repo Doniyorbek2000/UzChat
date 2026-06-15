@@ -6,6 +6,7 @@ import { getContactIds, getLastSeenExceptions, filterLastSeen, filterAvatar } fr
 import { contactsService } from "../contacts/contacts.service";
 import { createSystemMessage } from "../messages/systemMessages";
 import { pushService } from "../push/push.service";
+import { deleteUploadedFiles } from "../media/upload";
 import { isInQuietHours, isNotificationsPaused } from "../../utils/notificationPreferences";
 import {
   AddParticipantInput,
@@ -553,7 +554,14 @@ export const chatsService = {
       throw Errors.badRequest("Bu suhbatni hammaga o'chirib bo'lmaydi");
     }
 
+    const mediaMessages = await prisma.message.findMany({
+      where: { conversationId, mediaUrl: { not: null } },
+      select: { mediaUrl: true },
+    });
+
     await prisma.conversation.delete({ where: { id: conversationId } });
+
+    await deleteUploadedFiles(mediaMessages.map((m) => m.mediaUrl));
   },
 
   /** GROUP conversations where both userId and otherUserId are participants. */
@@ -1568,7 +1576,14 @@ export const chatsService = {
     const others = conversation.participants.filter((p) => p.userId !== userId);
 
     if (others.length === 0) {
+      const mediaMessages = await prisma.message.findMany({
+        where: { conversationId, mediaUrl: { not: null } },
+        select: { mediaUrl: true },
+      });
+
       await prisma.conversation.delete({ where: { id: conversationId } });
+
+      await deleteUploadedFiles(mediaMessages.map((m) => m.mediaUrl));
       return { deleted: true as const, newOwnerId: null as string | null };
     }
 
