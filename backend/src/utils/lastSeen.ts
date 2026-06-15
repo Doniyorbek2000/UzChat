@@ -42,6 +42,68 @@ export function filterLastSeen<T extends { id: string; lastSeenAt: Date | null; 
   return { ...rest, lastSeenAt: visible ? user.lastSeenAt : null };
 }
 
+/**
+ * Returns the subset of `ownerIds` whose current online/last-seen status
+ * `viewerId` is allowed to see, per each owner's lastSeenPrivacy and any
+ * exception that owner set for `viewerId`. Mirrors filterLastSeen's
+ * visibility rule for a batch of owners viewed by a single viewer.
+ */
+export async function filterVisibleOnlineOwners(viewerId: string, ownerIds: string[]): Promise<Set<string>> {
+  if (ownerIds.length === 0) return new Set();
+  const [owners, contactIds, exceptions] = await Promise.all([
+    prisma.user.findMany({ where: { id: { in: ownerIds } }, select: { id: true, lastSeenPrivacy: true } }),
+    getContactIds(viewerId),
+    getLastSeenExceptions(viewerId),
+  ]);
+  const visible = new Set<string>();
+  for (const owner of owners) {
+    const exception = exceptions.get(owner.id);
+    let isVisible: boolean;
+    if (exception) isVisible = exception === LastSeenExceptionMode.ALLOW;
+    else if (owner.lastSeenPrivacy === LastSeenPrivacy.NOBODY) isVisible = false;
+    else if (owner.lastSeenPrivacy === LastSeenPrivacy.CONTACTS) isVisible = contactIds.has(owner.id);
+    else isVisible = true;
+    if (isVisible) visible.add(owner.id);
+  }
+  return visible;
+}
+
+/**
+ * Returns the subset of `viewerIds` who are allowed to see `ownerId`'s
+ * current online/last-seen status, per `ownerId`'s lastSeenPrivacy and any
+ * exceptions they've set for individual viewers. The broadcast-side
+ * counterpart to filterVisibleOnlineOwners.
+ */
+export async function filterViewersForLastSeen(ownerId: string, viewerIds: string[]): Promise<Set<string>> {
+  if (viewerIds.length === 0) return new Set();
+  const owner = await prisma.user.findUnique({ where: { id: ownerId }, select: { lastSeenPrivacy: true } });
+  if (!owner) return new Set();
+
+  let visible: Set<string>;
+  if (owner.lastSeenPrivacy === LastSeenPrivacy.EVERYONE) {
+    visible = new Set(viewerIds);
+  } else if (owner.lastSeenPrivacy === LastSeenPrivacy.CONTACTS) {
+    const contacts = await prisma.contact.findMany({
+      where: { ownerId, targetId: { in: viewerIds }, status: ContactStatus.ACCEPTED },
+      select: { targetId: true },
+    });
+    visible = new Set(contacts.map((c) => c.targetId));
+  } else {
+    visible = new Set();
+  }
+
+  const exceptions = await prisma.lastSeenException.findMany({
+    where: { ownerId, exceptionUserId: { in: viewerIds } },
+    select: { exceptionUserId: true, mode: true },
+  });
+  for (const e of exceptions) {
+    if (e.mode === LastSeenExceptionMode.ALLOW) visible.add(e.exceptionUserId);
+    else visible.delete(e.exceptionUserId);
+  }
+
+  return visible;
+}
+
 /** Convenience for filtering a single user without pre-fetching the contact set. */
 export async function filterLastSeenSingle<
   T extends { id: string; lastSeenAt: Date | null; lastSeenPrivacy: LastSeenPrivacy },

@@ -6,6 +6,7 @@ import { registerChatHandlers } from "./chat.gateway";
 import { prisma } from "../config/prisma";
 import { pushService } from "../modules/push/push.service";
 import { messagesService } from "../modules/messages/messages.service";
+import { filterVisibleOnlineOwners, filterViewersForLastSeen } from "../utils/lastSeen";
 
 let io: Server | undefined;
 
@@ -109,10 +110,14 @@ export function initSocketServer(httpServer: HttpServer): Server {
     }
 
     const onlineUserIds = [...relatedUserIds].filter((id) => isUserOnline(id));
-    socket.emit("presence:initial", { userIds: onlineUserIds });
+    const visibleOnlineUserIds = await filterVisibleOnlineOwners(authed.userId, onlineUserIds);
+    socket.emit("presence:initial", { userIds: [...visibleOnlineUserIds] });
 
     if (!wasOnline) {
-      io!.emit("presence:update", { userId: authed.userId, online: true });
+      const viewerIds = await filterViewersForLastSeen(authed.userId, [...relatedUserIds]);
+      for (const viewerId of viewerIds) {
+        io!.to(`user:${viewerId}`).emit("presence:update", { userId: authed.userId, online: true });
+      }
     }
 
     const notifyRequests = await prisma.onlineNotifyRequest.findMany({
@@ -156,7 +161,10 @@ export function initSocketServer(httpServer: HttpServer): Server {
       // Only broadcast "offline" once the user's last device disconnects -
       // socket.io has already removed this socket from `user:${userId}` by now.
       if (!isUserOnline(authed.userId)) {
-        io!.emit("presence:update", { userId: authed.userId, online: false });
+        const viewerIds = await filterViewersForLastSeen(authed.userId, [...relatedUserIds]);
+        for (const viewerId of viewerIds) {
+          io!.to(`user:${viewerId}`).emit("presence:update", { userId: authed.userId, online: false });
+        }
       }
     });
   });
