@@ -81,18 +81,24 @@ export function BroadcastListsScreen({ navigation }: Props) {
     setSending(true);
     try {
       let delivered = 0;
+      let failed = 0;
       for (const memberId of sendTarget.memberIds) {
         const contact = contacts.find((c) => c.user.id === memberId);
         if (!contact) continue;
-        const conversation = await createDirectConversation(contact.user);
-        await sendTextMessage(conversation.id, text);
-        delivered++;
+        try {
+          const conversation = await createDirectConversation(contact.user);
+          await sendTextMessage(conversation.id, text);
+          delivered++;
+        } catch {
+          failed++;
+        }
       }
       setSendTarget(null);
       setMessage("");
-      Alert.alert("Yuborildi", `Xabar ${delivered} kishiga yuborildi`);
-    } catch {
-      Alert.alert("Xatolik", "Xabarni yuborib bo'lmadi");
+      Alert.alert(
+        "Yuborildi",
+        failed > 0 ? `Xabar ${delivered} kishiga yuborildi, ${failed} kishiga yuborilmadi` : `Xabar ${delivered} kishiga yuborildi`
+      );
     } finally {
       setSending(false);
     }
