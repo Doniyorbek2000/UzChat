@@ -557,7 +557,8 @@ export function ChatListScreen({ navigation }: Props) {
   const visibleConversations = conversations.filter((c) => !c.isArchived);
   const archivedCount = conversations.length - visibleConversations.length;
 
-  const countUnread = (convs: Conversation[]) => convs.filter((c) => isConversationUnread(c, user!.id)).length;
+  const countUnread = (convs: Conversation[]) =>
+    convs.filter((c) => isConversationUnread(c, user!.id, !user!.includeMutedInBadge)).length;
   const allUnreadCount = countUnread(visibleConversations);
 
   const getFolderConversations = (folder: ChatFolder, convs: Conversation[]) =>

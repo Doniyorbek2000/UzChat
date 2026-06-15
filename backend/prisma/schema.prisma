@@ -143,6 +143,9 @@ model User {
   // When true, push notifications show a generic "new message" label instead
   // of the sender's name and message preview - useful for lock-screen privacy.
   hideNotificationContent Boolean @default(false)
+  // Whether muted chats still count toward the app icon's unread badge and the
+  // chat list's folder unread counters.
+  includeMutedInBadge Boolean @default(true)
   // "Do not disturb": push notifications (incl. mentions and replies) are
   // suppressed during this daily window, in the user's local time.
   quietHoursEnabled Boolean @default(false)

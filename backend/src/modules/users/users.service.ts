@@ -65,6 +65,7 @@ const profileSelect = {
   notifyReactions: true,
   notifyMentions: true,
   hideNotificationContent: true,
+  includeMutedInBadge: true,
   quietHoursEnabled: true,
   quietHoursStart: true,
   quietHoursEnd: true,

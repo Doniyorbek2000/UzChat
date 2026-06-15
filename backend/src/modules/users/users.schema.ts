@@ -27,6 +27,8 @@ export const updateProfileSchema = z
     notifyReactions: z.boolean().optional(),
     notifyMentions: z.boolean().optional(),
     hideNotificationContent: z.boolean().optional(),
+    // Whether muted chats still count toward the app icon's unread badge.
+    includeMutedInBadge: z.boolean().optional(),
     // Birthday is stored as day-of-month + month only (no year), to avoid
     // revealing the user's age. Both fields must be set or cleared together.
     birthdayDay: z.number().int().min(1).max(31).nullable().optional(),

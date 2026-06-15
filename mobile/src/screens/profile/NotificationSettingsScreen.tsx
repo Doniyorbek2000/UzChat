@@ -28,7 +28,14 @@ export function NotificationSettingsScreen({}: Props) {
   if (!user) return null;
 
   const onToggle = async (
-    key: "notifyPrivateChats" | "notifyGroupChats" | "notifyReactions" | "notifyMentions" | "hideNotificationContent" | "quietHoursEnabled",
+    key:
+      | "notifyPrivateChats"
+      | "notifyGroupChats"
+      | "notifyReactions"
+      | "notifyMentions"
+      | "hideNotificationContent"
+      | "includeMutedInBadge"
+      | "quietHoursEnabled",
     value: boolean
   ) => {
     if (saving) return;
@@ -217,6 +224,24 @@ export function NotificationSettingsScreen({}: Props) {
           <Switch
             value={user.hideNotificationContent}
             onValueChange={(v) => onToggle("hideNotificationContent", v)}
+            trackColor={{ true: colors.primary }}
+          />
+        )}
+      </View>
+
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>Ovozsiz suhbatlar hisoblagichda</Text>
+          <Text style={styles.rowDescription}>
+            Ovozsiz qilingan suhbatlar ilova belgisi va papka hisoblagichlariga qo'shiladi
+          </Text>
+        </View>
+        {saving === "includeMutedInBadge" ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Switch
+            value={user.includeMutedInBadge}
+            onValueChange={(v) => onToggle("includeMutedInBadge", v)}
             trackColor={{ true: colors.primary }}
           />
         )}

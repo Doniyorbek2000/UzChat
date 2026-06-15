@@ -29,6 +29,7 @@ export const usersApi = {
     notifyReactions?: boolean;
     notifyMentions?: boolean;
     hideNotificationContent?: boolean;
+    includeMutedInBadge?: boolean;
     quietHoursEnabled?: boolean;
     quietHoursStart?: number | null;
     quietHoursEnd?: number | null;

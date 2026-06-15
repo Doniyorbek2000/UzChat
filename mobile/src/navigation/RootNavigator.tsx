@@ -166,7 +166,7 @@ export function RootNavigator() {
       clearAppBadgeCount();
       return;
     }
-    updateAppBadgeCount(conversations, user.id);
+    updateAppBadgeCount(conversations, user.id, user.includeMutedInBadge);
   }, [isAuthenticated, user, conversations]);
 
   useEffect(() => {

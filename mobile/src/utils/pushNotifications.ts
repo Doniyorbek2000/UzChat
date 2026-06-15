@@ -76,8 +76,8 @@ export async function unregisterPushNotificationsAsync(): Promise<void> {
 }
 
 /** Sets the app icon badge to the number of unread conversations. */
-export async function updateAppBadgeCount(conversations: Conversation[], userId: string): Promise<void> {
-  const count = conversations.filter((c) => isConversationUnread(c, userId)).length;
+export async function updateAppBadgeCount(conversations: Conversation[], userId: string, includeMutedInBadge = true): Promise<void> {
+  const count = conversations.filter((c) => isConversationUnread(c, userId, !includeMutedInBadge)).length;
   await Notifications.setBadgeCountAsync(count).catch(() => {});
 }
 

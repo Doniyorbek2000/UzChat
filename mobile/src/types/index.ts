@@ -41,6 +41,9 @@ export interface AuthUser extends User {
   notifyReactions: boolean;
   notifyMentions: boolean;
   hideNotificationContent: boolean;
+  // Whether muted chats still count toward the app icon's unread badge and the
+  // chat list's folder unread counters.
+  includeMutedInBadge: boolean;
   quietHoursEnabled: boolean;
   quietHoursStart: number | null;
   quietHoursEnd: number | null;

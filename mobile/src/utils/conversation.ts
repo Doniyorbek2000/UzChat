@@ -45,7 +45,11 @@ export function messagePreviewText(message: {
   return message.text ? stripFormatting(message.text) : "";
 }
 
-export function isConversationUnread(conversation: Conversation, currentUserId: string): boolean {
+// `excludeMuted` is used for unread badge counters (app icon, folder chips)
+// when the user disabled "include muted chats in badge count" - the chat
+// itself is still shown as unread in the list either way.
+export function isConversationUnread(conversation: Conversation, currentUserId: string, excludeMuted = false): boolean {
+  if (excludeMuted && conversation.isMuted) return false;
   if (conversation.markedUnread) return true;
 
   const lastMessage = conversation.lastMessage;
