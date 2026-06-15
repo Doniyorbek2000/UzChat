@@ -950,6 +950,8 @@ export const chatsService = {
       systemMessages.push(await createSystemMessage(conversationId, request.userId, conversation.welcomeMessage));
     }
 
+    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_ADDED, request.userId);
+
     return {
       conversation: await chatsService.getConversation(userId, conversationId),
       systemMessages,
