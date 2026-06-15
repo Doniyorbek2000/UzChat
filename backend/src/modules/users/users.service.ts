@@ -18,7 +18,7 @@ import {
 } from "../../utils/lastSeen";
 import { chatsService } from "../chats/chats.service";
 import { pushService } from "../push/push.service";
-import { deleteUploadedFiles } from "../media/upload";
+import { deleteUploadedFiles, deleteOwnUploadByUrl } from "../media/upload";
 import {
   ChangePasswordInput,
   DeleteAccountInput,
@@ -201,6 +201,12 @@ export const usersService = {
         notificationsPausedUntil: new Date(Date.now() + NOTIFICATIONS_PAUSE_DURATIONS_MS[pauseNotificationsFor]),
       };
 
+    let previousAvatarUrl: string | null = null;
+    if (data.avatarUrl !== undefined) {
+      const current = await prisma.user.findUnique({ where: { id: userId }, select: { avatarUrl: true } });
+      previousAvatarUrl = current?.avatarUrl ?? null;
+    }
+
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
@@ -211,6 +217,11 @@ export const usersService = {
       },
       select: profileSelect,
     });
+
+    if (previousAvatarUrl && previousAvatarUrl !== data.avatarUrl) {
+      await deleteOwnUploadByUrl(previousAvatarUrl);
+    }
+
     return formatProfile(user);
   },
 

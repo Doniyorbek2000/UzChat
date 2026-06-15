@@ -6,7 +6,7 @@ import { getContactIds, getLastSeenExceptions, filterLastSeen, filterAvatar } fr
 import { contactsService } from "../contacts/contacts.service";
 import { createSystemMessage } from "../messages/systemMessages";
 import { pushService } from "../push/push.service";
-import { deleteUploadedFiles } from "../media/upload";
+import { deleteUploadedFiles, deleteOwnUploadByUrl } from "../media/upload";
 import { isInQuietHours, isNotificationsPaused } from "../../utils/notificationPreferences";
 import {
   AddParticipantInput,
@@ -1237,6 +1237,7 @@ export const chatsService = {
     if (input.avatarUrl !== undefined && input.avatarUrl !== conversation.avatarUrl) {
       changedSettingsFields.push("avatarUrl");
       systemMessages.push(await createSystemMessage(conversationId, userId, `${name} guruh rasmini o'zgartirdi`));
+      await deleteOwnUploadByUrl(conversation.avatarUrl);
     }
     if (input.description !== undefined && input.description !== conversation.description) {
       changedSettingsFields.push("description");
