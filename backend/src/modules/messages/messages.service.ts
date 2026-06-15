@@ -287,6 +287,69 @@ async function notifyReaction(reactorId: string, conversationId: string, message
   });
 }
 
+// Notifies users who were newly @-mentioned by editing a message (the
+// original send only notified the mentions present at that time).
+async function notifyEditMentions(senderId: string, conversationId: string, message: Message, newMentionIds: string[]) {
+  if (newMentionIds.length === 0) return;
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: {
+      type: true,
+      title: true,
+      participants: {
+        where: { userId: { in: newMentionIds } },
+        include: {
+          user: {
+            select: {
+              notifyMentions: true,
+              hideNotificationContent: true,
+              quietHoursEnabled: true,
+              quietHoursStart: true,
+              quietHoursEnd: true,
+              quietHoursTimezoneOffset: true,
+              notificationsPaused: true,
+              notificationsPausedUntil: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!conversation) return;
+
+  const recipients = conversation.participants.filter(
+    (p) =>
+      !p.mutedSenderIds.includes(senderId) &&
+      !isUserOnline(p.userId) &&
+      p.user.notifyMentions &&
+      !isInQuietHours(p.user) &&
+      !isNotificationsPaused(p.user)
+  );
+  if (recipients.length === 0) return;
+
+  const sender = await prisma.user.findUnique({ where: { id: senderId }, select: { displayName: true } });
+  if (!sender) return;
+
+  const title = conversation.type === ConversationType.GROUP ? conversation.title ?? "Guruh" : sender.displayName;
+  const body = `${sender.displayName} sizni eslatib o'tdi`;
+  const data = { conversationId, messageId: message.id, type: "mention" };
+
+  const visible = recipients
+    .filter((p) => !shouldHidePreview(p.notificationPreview, p.user.hideNotificationContent))
+    .map((p) => p.userId);
+  const hidden = recipients
+    .filter((p) => shouldHidePreview(p.notificationPreview, p.user.hideNotificationContent))
+    .map((p) => p.userId);
+
+  if (visible.length > 0) {
+    await pushService.sendToUsers(visible, { title, body, data });
+  }
+  if (hidden.length > 0) {
+    await pushService.sendToUsers(hidden, { title: HIDDEN_TITLE, body: HIDDEN_BODY, data });
+  }
+}
+
 // Delivers a scheduled message now: makes it visible to other participants,
 // computes a fresh disappearing-messages timer based on the conversation's
 // current setting, and notifies recipients.
@@ -741,6 +804,7 @@ export const messagesService = {
     }
 
     const mentions = await resolveMentions(conversationId, userId, input.mentions);
+    const newMentionIds = mentions.filter((id) => !message.mentions.includes(id));
 
     await prisma.messageEditHistory.create({
       data: {
@@ -756,6 +820,8 @@ export const messagesService = {
       data: { ciphertext: input.ciphertext, nonce: input.nonce, mentions, editedAt: new Date() },
       include: messageInclude(userId),
     });
+
+    notifyEditMentions(userId, conversationId, updated, newMentionIds).catch(() => {});
 
     return formatMessage(updated, userId);
   },
