@@ -624,7 +624,10 @@ export const chatsService = {
   async unpinAllMessages(userId: string, conversationId: string) {
     await chatsService.assertCanManagePins(userId, conversationId);
 
-    await prisma.pinnedMessage.deleteMany({ where: { conversationId } });
+    const { count } = await prisma.pinnedMessage.deleteMany({ where: { conversationId } });
+    if (count > 0) {
+      await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.ALL_MESSAGES_UNPINNED, null, String(count));
+    }
 
     return chatsService.getConversation(userId, conversationId);
   },

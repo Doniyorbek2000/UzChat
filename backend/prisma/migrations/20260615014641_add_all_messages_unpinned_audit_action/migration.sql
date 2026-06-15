@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "GroupAuditAction" ADD VALUE 'ALL_MESSAGES_UNPINNED';
