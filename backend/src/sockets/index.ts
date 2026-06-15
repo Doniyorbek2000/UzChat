@@ -172,14 +172,18 @@ async function handleConnection(socket: AuthenticatedSocket) {
   });
 
   socket.on("disconnect", async () => {
-    await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
-    // Only broadcast "offline" once the user's last device disconnects -
-    // socket.io has already removed this socket from `user:${userId}` by now.
-    if (!isUserOnline(authed.userId)) {
-      const viewerIds = await filterViewersForLastSeen(authed.userId, [...relatedUserIds]);
-      for (const viewerId of viewerIds) {
-        io!.to(`user:${viewerId}`).emit("presence:update", { userId: authed.userId, online: false });
+    try {
+      await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
+      // Only broadcast "offline" once the user's last device disconnects -
+      // socket.io has already removed this socket from `user:${userId}` by now.
+      if (!isUserOnline(authed.userId)) {
+        const viewerIds = await filterViewersForLastSeen(authed.userId, [...relatedUserIds]);
+        for (const viewerId of viewerIds) {
+          io!.to(`user:${viewerId}`).emit("presence:update", { userId: authed.userId, online: false });
+        }
       }
+    } catch (err) {
+      console.error("Socket disconnect handler failed:", err);
     }
   });
 }
