@@ -125,12 +125,17 @@ export function initSocketServer(httpServer: HttpServer): Server {
       select: { ownerId: true },
     });
     if (notifyRequests.length > 0) {
-      const target = await prisma.user.findUnique({ where: { id: authed.userId }, select: { displayName: true } });
-      await pushService.sendToUsers(notifyRequests.map((r) => r.ownerId), {
-        title: "Onlayn bo'ldi",
-        body: `${target?.displayName} hozir onlayn`,
-        data: { type: "user_online", userId: authed.userId },
-      });
+      // Privacy/block settings may have changed since the request was made -
+      // only notify owners who are still allowed to see this user's online status.
+      const allowedOwnerIds = await filterViewersForLastSeen(authed.userId, notifyRequests.map((r) => r.ownerId));
+      if (allowedOwnerIds.size > 0) {
+        const target = await prisma.user.findUnique({ where: { id: authed.userId }, select: { displayName: true } });
+        await pushService.sendToUsers([...allowedOwnerIds], {
+          title: "Onlayn bo'ldi",
+          body: `${target?.displayName} hozir onlayn`,
+          data: { type: "user_online", userId: authed.userId },
+        });
+      }
       await prisma.onlineNotifyRequest.deleteMany({ where: { targetId: authed.userId } });
     }
 

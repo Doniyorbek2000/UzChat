@@ -14,6 +14,7 @@ import {
   filterBirthday,
   filterBioSingle,
   filterBio,
+  filterVisibleOnlineOwners,
 } from "../../utils/lastSeen";
 import { chatsService } from "../chats/chats.service";
 import { pushService } from "../push/push.service";
@@ -223,6 +224,9 @@ export const usersService = {
     const target = await prisma.user.findUnique({ where: { id: targetId }, select: { id: true } });
     if (!target) throw Errors.notFound("Foydalanuvchi");
     if (isUserOnline(targetId)) throw Errors.conflict("Foydalanuvchi allaqachon onlayn");
+
+    const visible = await filterVisibleOnlineOwners(ownerId, [targetId]);
+    if (!visible.has(targetId)) throw Errors.forbidden();
 
     await prisma.onlineNotifyRequest.upsert({
       where: { ownerId_targetId: { ownerId, targetId } },
