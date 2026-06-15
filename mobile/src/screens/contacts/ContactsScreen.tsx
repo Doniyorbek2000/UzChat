@@ -116,6 +116,11 @@ export function ContactsScreen({ navigation }: Props) {
     useContactsStore.getState().setupSocketListeners();
   }, []);
 
+  const lastRequestReceivedAt = useContactsStore((s) => s.lastRequestReceivedAt);
+  useEffect(() => {
+    if (lastRequestReceivedAt !== null) load();
+  }, [lastRequestReceivedAt, load]);
+
   const onAccept = async (id: string) => {
     await contactsApi.accept(id).catch(() => {});
     load();

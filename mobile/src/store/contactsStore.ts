@@ -5,6 +5,7 @@ import { getSocket } from "../socket/socket";
 interface ContactsState {
   pendingRequestCount: number;
   listenersRegistered: boolean;
+  lastRequestReceivedAt: number | null;
   setPendingRequestCount: (count: number) => void;
   refreshPendingRequestCount: () => Promise<void>;
   setupSocketListeners: () => void;
@@ -13,6 +14,7 @@ interface ContactsState {
 export const useContactsStore = create<ContactsState>((set, get) => ({
   pendingRequestCount: 0,
   listenersRegistered: false,
+  lastRequestReceivedAt: null,
 
   setPendingRequestCount: (count) => set({ pendingRequestCount: count }),
 
@@ -32,6 +34,7 @@ export const useContactsStore = create<ContactsState>((set, get) => ({
 
     socket.on("contact:request", () => {
       get().refreshPendingRequestCount();
+      set({ lastRequestReceivedAt: Date.now() });
     });
 
     set({ listenersRegistered: true });
