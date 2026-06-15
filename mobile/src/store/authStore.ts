@@ -72,7 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       const user = await usersApi.me();
-      connectSocket(accessToken);
+      connectSocket();
       set({ user, keyPair, isAuthenticated: true, isLoading: false });
       registerForPushNotificationsAsync().catch(() => {});
     } catch {
@@ -91,7 +91,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       publicKey: keyPair.publicKey,
     });
     await secureStorage.setTokens(accessToken, refreshToken);
-    connectSocket(accessToken);
+    connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
   },
@@ -104,7 +104,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     const { user, accessToken, refreshToken } = result;
     await secureStorage.setTokens(accessToken, refreshToken);
-    connectSocket(accessToken);
+    connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
     return { requires2FA: false };
@@ -114,7 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const keyPair = await ensureKeyPair();
     const { user, accessToken, refreshToken } = await authApi.verifyTwoFactor(pendingToken, password);
     await secureStorage.setTokens(accessToken, refreshToken);
-    connectSocket(accessToken);
+    connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
   },
@@ -127,7 +127,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const keyPair = await ensureKeyPair();
     const { user, accessToken, refreshToken } = await authApi.recoverTwoFactor(pendingToken, code);
     await secureStorage.setTokens(accessToken, refreshToken);
-    connectSocket(accessToken);
+    connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
   },

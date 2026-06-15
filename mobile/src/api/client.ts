@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { API_URL } from "../config/env";
 import { secureStorage } from "../storage/secureStorage";
+import { isJwtExpired } from "../utils/jwt";
 
 export const apiClient = axios.create({ baseURL: API_URL });
 
@@ -32,6 +33,20 @@ async function refreshAccessToken(): Promise<string | null> {
     await secureStorage.clearTokens();
     return null;
   }
+}
+
+/**
+ * Returns a non-expired access token, refreshing it first if needed. Used by the
+ * socket connection's auth handshake, which (unlike apiClient) has no response
+ * interceptor to recover from an expired token after the fact.
+ */
+export async function getValidAccessToken(): Promise<string | null> {
+  const { accessToken } = await secureStorage.getTokens();
+  if (accessToken && !isJwtExpired(accessToken)) return accessToken;
+  refreshPromise ??= refreshAccessToken();
+  const token = await refreshPromise;
+  refreshPromise = null;
+  return token;
 }
 
 apiClient.interceptors.response.use(
