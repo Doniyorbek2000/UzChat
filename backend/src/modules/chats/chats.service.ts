@@ -1069,6 +1069,12 @@ export const chatsService = {
 
     await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_ADDED, input.userId);
 
+    await pushService.sendToUsers([input.userId], {
+      title: "Guruhga qo'shildingiz",
+      body: `${actor?.displayName} sizni "${conversation.title}" guruhiga qo'shdi`,
+      data: { type: "group_added", conversationId },
+    });
+
     return { conversation: await chatsService.getConversation(userId, conversationId), systemMessages };
   },
 
