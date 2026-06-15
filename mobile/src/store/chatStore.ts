@@ -1404,7 +1404,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!socket) return;
 
     set({ isConnected: socket.connected });
-    socket.on("connect", () => set({ isConnected: true }));
+    let hasConnectedBefore = socket.connected;
+    socket.on("connect", () => {
+      set({ isConnected: true });
+      // Resync after a reconnect: any conversation:updated/message:new events broadcast
+      // while we were disconnected were missed, so refetch the chat list and, if the
+      // user has a conversation open, its messages too.
+      if (hasConnectedBefore) {
+        get().loadConversations().catch(() => {});
+        const activeConversationId = getActiveConversationId();
+        if (activeConversationId) get().loadMessages(activeConversationId).catch(() => {});
+      }
+      hasConnectedBefore = true;
+    });
     socket.on("disconnect", () => set({ isConnected: false }));
 
     socket.on("message:new", (message: Message) => {
