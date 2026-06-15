@@ -739,10 +739,17 @@ export const messagesService = {
       );
     }
 
-    return prisma.message.update({
+    const updated = await prisma.message.update({
       where: { id: messageId },
       data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date() },
     });
+
+    if (message.mediaUrl) {
+      const filename = path.basename(message.mediaUrl);
+      await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
+    }
+
+    return updated;
   },
 
   async hideMessageForMe(userId: string, conversationId: string, messageId: string) {
@@ -1082,7 +1089,7 @@ export const messagesService = {
   async expireDueMessages() {
     const due = await prisma.message.findMany({
       where: { expiresAt: { lte: new Date() }, deletedAt: null },
-      select: { id: true, conversationId: true },
+      select: { id: true, conversationId: true, mediaUrl: true },
     });
     if (due.length === 0) return [];
 
@@ -1095,6 +1102,10 @@ export const messagesService = {
             data: { ciphertext: "", nonce: "", mediaUrl: null, deletedAt: new Date(), expiresAt: null },
           })
         );
+        if (m.mediaUrl) {
+          const filename = path.basename(m.mediaUrl);
+          await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
+        }
       } catch (err) {
         console.error(`Failed to expire message ${m.id}:`, err);
       }
