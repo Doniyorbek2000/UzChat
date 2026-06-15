@@ -173,3 +173,21 @@ export async function filterBirthdaySingle<
   const visible = contact?.status === ContactStatus.ACCEPTED;
   return { ...rest, birthdayDay: visible ? user.birthdayDay : null, birthdayMonth: visible ? user.birthdayMonth : null };
 }
+
+/**
+ * Returns whether `forwarderId` may reveal `originalSenderId`'s name/profile as the
+ * "Forwarded from" attribution, per `originalSenderId`'s forwardedMessagePrivacy setting.
+ */
+export async function canRevealForwardedFrom(forwarderId: string, originalSenderId: string): Promise<boolean> {
+  if (forwarderId === originalSenderId) return true;
+  const original = await prisma.user.findUnique({
+    where: { id: originalSenderId },
+    select: { forwardedMessagePrivacy: true },
+  });
+  if (!original || original.forwardedMessagePrivacy === LastSeenPrivacy.EVERYONE) return true;
+  if (original.forwardedMessagePrivacy === LastSeenPrivacy.NOBODY) return false;
+  const contact = await prisma.contact.findUnique({
+    where: { ownerId_targetId: { ownerId: forwarderId, targetId: originalSenderId } },
+  });
+  return contact?.status === ContactStatus.ACCEPTED;
+}

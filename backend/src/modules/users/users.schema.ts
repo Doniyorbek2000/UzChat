@@ -20,6 +20,8 @@ export const updateProfileSchema = z
     groupAddPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     messagePrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     phoneNumberPrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
+    // Who can see this user's name when their messages are forwarded by others.
+    forwardedMessagePrivacy: z.enum(["EVERYONE", "CONTACTS", "NOBODY"]).optional(),
     readReceiptsEnabled: z.boolean().optional(),
     typingIndicatorsEnabled: z.boolean().optional(),
     notifyPrivateChats: z.boolean().optional(),

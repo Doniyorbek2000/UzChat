@@ -22,6 +22,7 @@ export const usersApi = {
     groupAddPrivacy?: GroupAddPrivacy;
     messagePrivacy?: MessagePrivacy;
     phoneNumberPrivacy?: LastSeenPrivacy;
+    forwardedMessagePrivacy?: LastSeenPrivacy;
     readReceiptsEnabled?: boolean;
     typingIndicatorsEnabled?: boolean;
     notifyPrivateChats?: boolean;

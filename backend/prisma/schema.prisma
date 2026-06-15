@@ -126,6 +126,11 @@ model User {
   messagePrivacy MessagePrivacy @default(EVERYONE)
   // Who can find this user by their exact phone number via search.
   phoneNumberPrivacy LastSeenPrivacy @default(EVERYONE)
+  // Who can see this user's name/profile link as the original sender when
+  // someone else forwards their message ("Forwarded from <name>"). Denied
+  // viewers see the message forwarded anonymously, same as the sender
+  // manually choosing "Muallifni yashirish".
+  forwardedMessagePrivacy LastSeenPrivacy @default(EVERYONE)
   // When false, this user's read receipts ("seen" status) are hidden from
   // others in direct chats, and they likewise can't see others' read receipts.
   readReceiptsEnabled Boolean @default(true)

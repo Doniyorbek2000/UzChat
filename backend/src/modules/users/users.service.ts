@@ -58,6 +58,7 @@ const profileSelect = {
   groupAddPrivacy: true,
   messagePrivacy: true,
   phoneNumberPrivacy: true,
+  forwardedMessagePrivacy: true,
   readReceiptsEnabled: true,
   typingIndicatorsEnabled: true,
   notifyPrivateChats: true,

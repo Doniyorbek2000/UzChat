@@ -7,6 +7,7 @@ import { getIo, isUserOnline } from "../../sockets";
 import { pushService } from "../push/push.service";
 import { chatsService, isParticipantMuted } from "../chats/chats.service";
 import { contactsService } from "../contacts/contacts.service";
+import { canRevealForwardedFrom } from "../../utils/lastSeen";
 import { uploadsDir } from "../media/upload";
 import { EditMessageInput, ListMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
 
@@ -427,6 +428,13 @@ export const messagesService = {
       ? new Date(Date.now() + input.pollClosesInSeconds * 1000)
       : null;
 
+    let forwardedFromName: string | null = input.forwardedFromName ?? null;
+    let forwardedFromUserId: string | null = input.forwardedFromUserId ?? null;
+    if (forwardedFromUserId && !(await canRevealForwardedFrom(userId, forwardedFromUserId))) {
+      forwardedFromName = null;
+      forwardedFromUserId = null;
+    }
+
     const message = await prisma.$transaction(async (tx) => {
       const created = await tx.message.create({
         data: {
@@ -438,8 +446,8 @@ export const messagesService = {
           mediaUrl: input.mediaUrl,
           replyToId: input.replyToId,
           mentions,
-          forwardedFromName: input.forwardedFromName,
-          forwardedFromUserId: input.forwardedFromUserId,
+          forwardedFromName,
+          forwardedFromUserId,
           forwardCount: input.forwardCount ?? 0,
           expiresAt,
           scheduledFor: sendWhenOnline ? SEND_WHEN_ONLINE_DATE : input.scheduledFor ? new Date(input.scheduledFor) : null,

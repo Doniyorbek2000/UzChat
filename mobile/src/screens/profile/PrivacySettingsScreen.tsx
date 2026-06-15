@@ -52,6 +52,12 @@ const PHONE_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; descriptio
   { value: "NOBODY", label: "Hech kim", description: "Hech kim telefon raqamingiz orqali sizni topa olmaydi" },
 ];
 
+const FORWARDED_MESSAGE_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
+  { value: "EVERYONE", label: "Hamma", description: "Xabaringiz yo'naltirilganda ismingiz va profilingizga havola ko'rsatiladi" },
+  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz xabaringizni yo'naltirsa ismingiz ko'rsatiladi" },
+  { value: "NOBODY", label: "Hech kim", description: "Xabaringiz yo'naltirilganda ismingiz ko'rsatilmaydi" },
+];
+
 const SELF_DESTRUCT_OPTIONS: { value: 30 | 90 | 180 | 365; label: string }[] = [
   { value: 30, label: "1 oy" },
   { value: 90, label: "3 oy" },
@@ -149,6 +155,19 @@ export function PrivacySettingsScreen({ navigation }: Props) {
     setSaving(`phonePrivacy:${value}`);
     try {
       await usersApi.updateMe({ phoneNumberPrivacy: value });
+      await refreshProfile();
+    } catch {
+      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const onSelectForwardedMessagePrivacy = async (value: LastSeenPrivacy) => {
+    if (value === user.forwardedMessagePrivacy || saving) return;
+    setSaving(`forwardedMessagePrivacy:${value}`);
+    try {
+      await usersApi.updateMe({ forwardedMessagePrivacy: value });
       await refreshProfile();
     } catch {
       Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
@@ -367,6 +386,31 @@ export function PrivacySettingsScreen({ navigation }: Props) {
               <Text style={styles.rowDescription}>{option.description}</Text>
             </View>
             {saving === `phonePrivacy:${option.value}` ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Yo'naltirilgan xabarlarda ismimni kim ko'ra oladi</Text>
+      {FORWARDED_MESSAGE_PRIVACY_OPTIONS.map((option) => {
+        const selected = user.forwardedMessagePrivacy === option.value;
+        return (
+          <TouchableOpacity
+            key={option.value}
+            style={styles.row}
+            onPress={() => onSelectForwardedMessagePrivacy(option.value)}
+            disabled={!!saving}
+          >
+            <View style={styles.rowText}>
+              <Text style={styles.rowLabel}>{option.label}</Text>
+              <Text style={styles.rowDescription}>{option.description}</Text>
+            </View>
+            {saving === `forwardedMessagePrivacy:${option.value}` ? (
               <ActivityIndicator color={colors.primary} />
             ) : (
               <View style={[styles.radio, selected && styles.radioSelected]}>

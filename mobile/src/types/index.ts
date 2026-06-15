@@ -34,6 +34,8 @@ export interface AuthUser extends User {
   groupAddPrivacy: GroupAddPrivacy;
   messagePrivacy: MessagePrivacy;
   phoneNumberPrivacy: LastSeenPrivacy;
+  // Who can see this user's name as the original sender when their messages are forwarded.
+  forwardedMessagePrivacy: LastSeenPrivacy;
   readReceiptsEnabled: boolean;
   typingIndicatorsEnabled: boolean;
   notifyPrivateChats: boolean;
