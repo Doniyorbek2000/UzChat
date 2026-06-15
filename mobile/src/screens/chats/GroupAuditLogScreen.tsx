@@ -21,6 +21,7 @@ const ACTION_ICONS: Record<GroupAuditLogEntry["action"], string> = {
   MESSAGE_DELETED: "🗑️",
   MEMBER_BANNED: "⛔",
   MEMBER_UNBANNED: "✅",
+  MEMBER_ADDED: "➕",
 };
 
 const RESTRICTION_LABELS: Record<string, string> = {
@@ -64,6 +65,8 @@ function describeEntry(entry: GroupAuditLogEntry): string {
       return `${actor} ${target}ni guruhdan chiqarib, bloklab qo'ydi`;
     case "MEMBER_UNBANNED":
       return `${actor} ${target}ning blokini olib tashladi`;
+    case "MEMBER_ADDED":
+      return `${actor} ${target}ni guruhga qo'shdi`;
     default:
       return "";
   }

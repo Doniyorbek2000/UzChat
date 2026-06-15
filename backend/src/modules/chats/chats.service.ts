@@ -1006,6 +1006,8 @@ export const chatsService = {
       systemMessages.push(await createSystemMessage(conversationId, input.userId, conversation.welcomeMessage));
     }
 
+    await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.MEMBER_ADDED, input.userId);
+
     return { conversation: await chatsService.getConversation(userId, conversationId), systemMessages };
   },
 
