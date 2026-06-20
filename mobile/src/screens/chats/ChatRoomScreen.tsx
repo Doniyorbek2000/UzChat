@@ -48,6 +48,7 @@ import { getCustomWallpaperUri, getWallpaperColor } from "../../theme/wallpapers
 import { STICKER_PACKS } from "../../utils/stickerPacks";
 import { ConversationParticipant, MessageReaction, MessageType } from "../../types";
 import { translateText, LANGUAGES, LanguageCode } from "../../api/translate";
+import { searchGifs, getTrendingGifs, GifResult } from "../../api/gif";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
@@ -357,6 +358,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [translateLang, setTranslateLang] = useState<LanguageCode>("uz");
   const [showTranslateLangPicker, setShowTranslateLangPicker] = useState(false);
   const [pendingTranslateMsg, setPendingTranslateMsg] = useState<DecryptedMessage | null>(null);
+  const [gifPickerVisible, setGifPickerVisible] = useState(false);
+  const [gifSearch, setGifSearch] = useState("");
+  const [gifResults, setGifResults] = useState<GifResult[]>([]);
+  const [gifLoading, setGifLoading] = useState(false);
   const [customReactionEmoji, setCustomReactionEmoji] = useState("");
   const [editHistoryMessage, setEditHistoryMessage] = useState<DecryptedMessage | null>(null);
   const [editHistoryEntries, setEditHistoryEntries] = useState<{ text: string; editedAt: string }[]>([]);
@@ -446,6 +451,38 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         { text: "Bloklash", style: "destructive", onPress: () => blockUser(otherUser.id).catch(() => {}) },
       ]);
     }
+  };
+
+  const onOpenGifPicker = async () => {
+    setGifPickerVisible(true);
+    setGifSearch("");
+    setGifLoading(true);
+    try {
+      const results = await getTrendingGifs(30);
+      setGifResults(results);
+    } catch {
+      setGifResults([]);
+    } finally {
+      setGifLoading(false);
+    }
+  };
+
+  const onSearchGif = async (query: string) => {
+    setGifSearch(query);
+    if (!query.trim()) {
+      setGifLoading(true);
+      try { setGifResults(await getTrendingGifs(30)); } catch { setGifResults([]); }
+      setGifLoading(false);
+      return;
+    }
+    setGifLoading(true);
+    try { setGifResults(await searchGifs(query.trim(), 30)); } catch { setGifResults([]); }
+    setGifLoading(false);
+  };
+
+  const onSendGif = (gif: GifResult) => {
+    setGifPickerVisible(false);
+    sendTextMessage(conversationId, gif.url).catch(() => {});
   };
 
   const onTranslateMessage = async (msg: DecryptedMessage, targetLang: LanguageCode) => {
@@ -3137,7 +3174,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     >
       <Pressable style={styles.actionBackdrop} onPress={() => setStickerPickerVisible(false)}>
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Stiker tanlang</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+            <Text style={styles.mentionPickerTitle}>Stiker tanlang</Text>
+            <TouchableOpacity onPress={() => { setStickerPickerVisible(false); onOpenGifPicker(); }} style={{ paddingHorizontal: 12 }}>
+              <Text style={{ color: colors.primary, fontWeight: "600", fontSize: 14 }}>GIF</Text>
+            </TouchableOpacity>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stickerPackTabs}>
             {recentStickers.length > 0 && (
               <TouchableOpacity
@@ -3363,6 +3405,54 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       conversationKey={conversationKey ?? ""}
       onClose={() => setGalleryMessageId(null)}
     />
+    <Modal visible={gifPickerVisible} animationType="slide" onRequestClose={() => setGifPickerVisible(false)}>
+      <View style={styles.container}>
+        <View style={styles.searchHeader}>
+          <TouchableOpacity onPress={() => setGifPickerVisible(false)}>
+            <Text style={styles.searchClose}>Yopish</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.text }}>GIF tanlang</Text>
+          <View style={{ width: 60 }} />
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.background, borderRadius: 10, marginHorizontal: 12, marginVertical: 8, paddingHorizontal: 12, height: 40, gap: 8 }}>
+          <Text style={{ fontSize: 14 }}>🔍</Text>
+          <TextInput
+            style={{ flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 }}
+            placeholder="GIF qidirish..."
+            placeholderTextColor={colors.textSecondary}
+            value={gifSearch}
+            onChangeText={onSearchGif}
+            returnKeyType="search"
+          />
+          {gifSearch.length > 0 && (
+            <TouchableOpacity onPress={() => onSearchGif("")} hitSlop={8}>
+              <Text style={{ fontSize: 14, color: colors.textSecondary }}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        {gifLoading ? (
+          <View style={styles.centerContent}><ActivityIndicator /></View>
+        ) : (
+          <FlatList
+            data={gifResults}
+            numColumns={2}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ padding: 4 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.gifItem}
+                onPress={() => onSendGif(item)}
+              >
+                <Image source={{ uri: item.previewUrl }} style={styles.gifImage} resizeMode="cover" />
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <View style={styles.centerContent}><Text style={{ color: colors.textSecondary }}>GIF topilmadi</Text></View>
+            }
+          />
+        )}
+      </View>
+    </Modal>
     <Modal visible={showTranslateLangPicker} transparent animationType="fade" onRequestClose={() => setShowTranslateLangPicker(false)}>
       <Pressable style={styles.actionBackdrop} onPress={() => setShowTranslateLangPicker(false)}>
         <View style={styles.actionSheet}>
@@ -4038,6 +4128,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   mediaPreviewSendText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  centerContent: { flex: 1, alignItems: "center" as const, justifyContent: "center" as const, padding: 48 },
+  gifItem: {
+    flex: 1,
+    margin: 2,
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: colors.border,
+  },
+  gifImage: {
+    width: "100%",
+    aspectRatio: 1,
+  },
   translationBox: {
     flexDirection: "row",
     alignItems: "center",
