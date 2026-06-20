@@ -71,6 +71,7 @@ export type RootStackParamList = {
   QuickReplies: undefined;
   NotificationSettings: undefined;
   About: undefined;
+  ThemeSettings: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

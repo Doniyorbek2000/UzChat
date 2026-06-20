@@ -50,6 +50,7 @@ import { QuickRepliesScreen } from "../screens/profile/QuickRepliesScreen";
 import { NotificationSettingsScreen } from "../screens/profile/NotificationSettingsScreen";
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { AboutScreen } from "../screens/profile/AboutScreen";
+import { ThemeSettingsScreen } from "../screens/profile/ThemeSettingsScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -62,6 +63,7 @@ import { useContactsStore } from "../store/contactsStore";
 import { useRecentEmojiStore } from "../store/recentEmojiStore";
 import { useRecentStickersStore } from "../store/recentStickersStore";
 import { useVerifiedContactsStore } from "../store/verifiedContactsStore";
+import { useThemeStore } from "../store/themeStore";
 import { useQuickRepliesStore } from "../store/quickRepliesStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
@@ -139,6 +141,7 @@ export function RootNavigator() {
   const recentStickersBootstrap = useRecentStickersStore((s) => s.bootstrap);
   const verifiedContactsBootstrap = useVerifiedContactsStore((s) => s.bootstrap);
   const quickRepliesBootstrap = useQuickRepliesStore((s) => s.bootstrap);
+  const themeBootstrap = useThemeStore((s) => s.bootstrap);
 
   useEffect(() => {
     bootstrap();
@@ -148,6 +151,7 @@ export function RootNavigator() {
     recentStickersBootstrap();
     verifiedContactsBootstrap();
     quickRepliesBootstrap();
+    themeBootstrap();
   }, [
     bootstrap,
     wallpaperBootstrap,
@@ -156,6 +160,7 @@ export function RootNavigator() {
     recentStickersBootstrap,
     verifiedContactsBootstrap,
     quickRepliesBootstrap,
+    themeBootstrap,
   ]);
 
   useEffect(() => {
@@ -216,11 +221,27 @@ export function RootNavigator() {
     );
   }
 
+  const themeColors = useThemeStore((s) => s.colors);
+  const isDark = useThemeStore((s) => s.isDark);
+
+  const navTheme = {
+    dark: isDark,
+    colors: {
+      primary: themeColors.primary,
+      background: themeColors.background,
+      card: themeColors.surface,
+      text: themeColors.text,
+      border: themeColors.border,
+      notification: themeColors.danger,
+    },
+    fonts: { regular: { fontFamily: "System", fontWeight: "400" as const }, medium: { fontFamily: "System", fontWeight: "500" as const }, bold: { fontFamily: "System", fontWeight: "700" as const }, heavy: { fontFamily: "System", fontWeight: "900" as const } },
+  };
+
   return (
     <>
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer ref={navigationRef} theme={navTheme}>
         {isAuthenticated ? (
-          <Stack.Navigator>
+          <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: themeColors.surface }, headerTintColor: themeColors.text }}>
             <Stack.Screen name="MainTabs" component={MainNavigator} options={{ title: "UzChat" }} />
             <Stack.Screen name="ChatRoom" component={ChatRoomScreen} options={{ title: "" }} />
             <Stack.Screen name="NewChat" component={NewChatScreen} options={{ title: "Yangi suhbat" }} />
@@ -266,6 +287,7 @@ export function RootNavigator() {
             <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ title: "Bildirishnomalar" }} />
             <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />
             <Stack.Screen name="About" component={AboutScreen} options={{ title: "UzChat haqida" }} />
+            <Stack.Screen name="ThemeSettings" component={ThemeSettingsScreen} options={{ title: "Mavzu" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

@@ -1,13 +1,12 @@
-export const colors = {
-  primary: "#07C160",
-  primaryDark: "#06AD56",
-  background: "#F5F5F5",
-  surface: "#FFFFFF",
-  border: "#E5E5E5",
-  text: "#1A1A1A",
-  textSecondary: "#8C8C8C",
-  bubbleSelf: "#A0E75A",
-  bubbleOther: "#FFFFFF",
-  danger: "#FA5151",
-  online: "#07C160",
-};
+import { useThemeStore } from "../store/themeStore";
+import { lightTheme, ThemeColors } from "./themes";
+
+export type { ThemeColors };
+
+export function useColors(): ThemeColors {
+  return useThemeStore((s) => s.colors);
+}
+
+// Static fallback for non-component code (navigation options, etc.)
+// Components should use useColors() for reactivity.
+export const colors = lightTheme;
