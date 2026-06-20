@@ -16,9 +16,11 @@ export function LinkPreviewCard({ url }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    fetchLinkPreview(url).then((data) => {
-      if (!cancelled) setPreview(data);
-    });
+    fetchLinkPreview(url)
+      .then((data) => {
+        if (!cancelled) setPreview(data);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
