@@ -33,6 +33,8 @@ export interface SendMessageInput {
   pollClosesInSeconds?: number;
   // "Send without sound": recipients are notified silently (no notification sound).
   silent?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export const chatsApi = {

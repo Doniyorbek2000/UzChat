@@ -110,6 +110,7 @@ interface ChatState {
     silent?: boolean,
     sendWhenOnline?: boolean
   ) => Promise<void>;
+  sendLocationMessage: (conversationId: string, latitude: number, longitude: number, label: string, replyToId?: string) => Promise<void>;
   loadScheduledMessages: (conversationId: string) => Promise<void>;
   cancelScheduledMessage: (conversationId: string, messageId: string) => Promise<void>;
   rescheduleMessage: (conversationId: string, messageId: string, scheduledFor: string) => Promise<void>;
@@ -509,6 +510,36 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
       return;
     }
+
+    set((state) => {
+      const existing = state.messagesByConversation[conversationId] ?? [];
+      if (existing.some((m) => m.id === decrypted.id)) return state;
+      return {
+        messagesByConversation: { ...state.messagesByConversation, [conversationId]: [...existing, decrypted] },
+        conversations: upsertConversation(
+          state.conversations,
+          { ...conversation, lastMessage: message, updatedAt: message.createdAt }
+        ),
+      };
+    });
+  },
+
+  sendLocationMessage: async (conversationId, latitude, longitude, label, replyToId) => {
+    const conversation = get().conversations.find((c) => c.id === conversationId);
+    if (!conversation) throw new Error("Suhbat topilmadi");
+
+    const key = get().getConversationKey(conversation);
+    const { ciphertext, nonce } = encryptMessage(label, key);
+
+    const message = await chatsApi.sendMessage(conversationId, {
+      type: "LOCATION",
+      ciphertext,
+      nonce,
+      replyToId,
+      latitude,
+      longitude,
+    });
+    const decrypted = decryptToMessage(key, message);
 
     set((state) => {
       const existing = state.messagesByConversation[conversationId] ?? [];

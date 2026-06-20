@@ -1395,6 +1395,25 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
   };
 
+  const sendLocationMessage = useChatStore((s) => s.sendLocationMessage);
+  const onShareLocation = async () => {
+    try {
+      const Location = require("expo-location");
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Ruxsat berilmadi", "Joylashuvni aniqlash uchun ruxsat bering");
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const { latitude, longitude } = loc.coords;
+      const replyToId = replyingTo?.id;
+      setReplyingTo(null);
+      await sendLocationMessage(conversationId, latitude, longitude, `📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, replyToId);
+    } catch {
+      Alert.alert("Xatolik", "Joylashuvni aniqlash imkonsiz");
+    }
+  };
+
   const onAttach = () => {
     if (!canSendMedia) {
       Alert.alert("Cheklangan", "Bu guruhda a'zolar faqat matnli xabar yuborishi mumkin");
@@ -1422,6 +1441,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           setStickerPickerVisible(true);
         },
       },
+      { text: "📍 Joylashuv", onPress: onShareLocation },
       { text: "💬 Tezkor javob", onPress: onOpenQuickReplies },
       { text: "📋 Klipborddan rasm", onPress: pasteImage },
       { text: "Bekor qilish", style: "cancel" },
@@ -1849,6 +1869,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       content = <ContactCardBubble message={item} navigation={navigation} />;
     } else if (item.type === "POLL") {
       content = <PollBubble message={item} conversationId={conversationId} onShowVotes={() => setPollVotesMessage(item)} />;
+    } else if (item.type === "LOCATION" && item.latitude != null && item.longitude != null) {
+      content = (
+        <View style={{ padding: 4 }}>
+          <Text style={{ fontSize: 24, textAlign: "center" }}>📍</Text>
+          <Text style={{ fontSize: 13, color: isOwn ? "#fff" : colors.text, textAlign: "center", marginTop: 2 }}>
+            {item.text || "Joylashuv"}
+          </Text>
+          <Text style={{ fontSize: 11, color: isOwn ? "rgba(255,255,255,0.7)" : colors.textSecondary, textAlign: "center" }}>
+            {item.latitude.toFixed(6)}, {item.longitude.toFixed(6)}
+          </Text>
+        </View>
+      );
     } else if (isSticker) {
       content = <Text style={styles.stickerText}>{item.text}</Text>;
     } else {
