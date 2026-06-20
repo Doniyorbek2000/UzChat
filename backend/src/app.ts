@@ -18,6 +18,8 @@ import { devicesRouter } from "./modules/devices/devices.controller";
 import { paymentsRouter } from "./modules/payments/payments.controller";
 import { miniAppsRouter } from "./modules/miniapps/miniapps.controller";
 import { callsRouter } from "./modules/calls/calls.controller";
+import { feedRouter } from "./modules/feed/feed.controller";
+import { marketplaceRouter } from "./modules/marketplace/marketplace.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 
@@ -48,6 +50,8 @@ export function createApp() {
   app.use("/payments", apiRateLimiter, paymentsRouter);
   app.use("/mini-apps", apiRateLimiter, miniAppsRouter);
   app.use("/calls", apiRateLimiter, callsRouter);
+  app.use("/feed", apiRateLimiter, feedRouter);
+  app.use("/marketplace", apiRateLimiter, marketplaceRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

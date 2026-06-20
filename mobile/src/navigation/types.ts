@@ -22,6 +22,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Chats: undefined;
   Contacts: undefined;
+  Discover: undefined;
   Profile: undefined;
 };
 
@@ -84,6 +85,17 @@ export type RootStackParamList = {
   MiniAppView: { id: string; name: string; url: string };
   CallHistory: undefined;
   CreateMiniApp: undefined;
+  Feed: undefined;
+  CreatePost: undefined;
+  PostComments: { postId: string };
+  Marketplace: undefined;
+  StoreView: { storeId: string };
+  CreateStore: undefined;
+  MyStores: undefined;
+  ProductView: { productId: string; storeId: string };
+  MyOrders: undefined;
+  AddProduct: { storeId: string };
+  Discover: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

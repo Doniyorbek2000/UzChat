@@ -1,0 +1,82 @@
+import React, { useState } from "react";
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView,
+} from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../navigation/types";
+import { marketplaceApi } from "../../api/marketplace";
+import { colors } from "../../theme/colors";
+
+type Props = NativeStackScreenProps<RootStackParamList, "AddProduct">;
+
+export function AddProductScreen({ route, navigation }: Props) {
+  const { storeId } = route.params;
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!name.trim() || !price.trim()) {
+      Alert.alert("Xatolik", "Nom va narxni kiriting");
+      return;
+    }
+    const priceNum = parseFloat(price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      Alert.alert("Xatolik", "Narx noto'g'ri");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await marketplaceApi.addProduct(storeId, {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        price: priceNum,
+        stock: parseInt(stock) || 0,
+      });
+      navigation.goBack();
+    } catch {
+      Alert.alert("Xatolik", "Mahsulot qo'shib bo'lmadi");
+    }
+    setSubmitting(false);
+  };
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.label}>Mahsulot nomi *</Text>
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom" maxLength={200} />
+
+      <Text style={styles.label}>Tavsif</Text>
+      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Tavsif" multiline maxLength={2000} />
+
+      <Text style={styles.label}>Narx (UZS) *</Text>
+      <TextInput style={styles.input} value={price} onChangeText={setPrice} placeholder="0" keyboardType="numeric" />
+
+      <Text style={styles.label}>Zaxira</Text>
+      <TextInput style={styles.input} value={stock} onChangeText={setStock} placeholder="0" keyboardType="numeric" />
+
+      <TouchableOpacity
+        style={[styles.submitBtn, (!name.trim() || !price.trim() || submitting) && styles.submitBtnDisabled]}
+        onPress={handleSubmit}
+        disabled={!name.trim() || !price.trim() || submitting}
+      >
+        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Mahsulot qo'shish</Text>}
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.surface },
+  content: { padding: 16 },
+  label: { fontSize: 14, fontWeight: "600", color: colors.text, marginTop: 16, marginBottom: 6 },
+  input: {
+    backgroundColor: colors.background, borderRadius: 8, paddingHorizontal: 12,
+    paddingVertical: 10, fontSize: 15, borderWidth: 1, borderColor: colors.border, color: colors.text,
+  },
+  textArea: { minHeight: 80, textAlignVertical: "top" },
+  submitBtn: { backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 10, alignItems: "center", marginTop: 24 },
+  submitBtnDisabled: { opacity: 0.5 },
+  submitText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+});

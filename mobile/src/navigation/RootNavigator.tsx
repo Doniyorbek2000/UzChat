@@ -63,6 +63,16 @@ import { SendPaymentScreen } from "../screens/wallet/SendPaymentScreen";
 import { MiniAppsScreen } from "../screens/miniapps/MiniAppsScreen";
 import { MiniAppViewScreen } from "../screens/miniapps/MiniAppViewScreen";
 import { CreateMiniAppScreen } from "../screens/miniapps/CreateMiniAppScreen";
+import { FeedScreen } from "../screens/feed/FeedScreen";
+import { CreatePostScreen } from "../screens/feed/CreatePostScreen";
+import { PostCommentsScreen } from "../screens/feed/PostCommentsScreen";
+import { MarketplaceScreen } from "../screens/marketplace/MarketplaceScreen";
+import { StoreViewScreen } from "../screens/marketplace/StoreViewScreen";
+import { CreateStoreScreen } from "../screens/marketplace/CreateStoreScreen";
+import { MyStoresScreen } from "../screens/marketplace/MyStoresScreen";
+import { ProductViewScreen } from "../screens/marketplace/ProductViewScreen";
+import { MyOrdersScreen } from "../screens/marketplace/MyOrdersScreen";
+import { AddProductScreen } from "../screens/marketplace/AddProductScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -356,6 +366,16 @@ export function RootNavigator() {
             <Stack.Screen name="MiniApps" component={MiniAppsScreen} options={{ title: "Mini-dasturlar" }} />
             <Stack.Screen name="MiniAppView" component={MiniAppViewScreen} options={{ headerShown: false }} />
             <Stack.Screen name="CreateMiniApp" component={CreateMiniAppScreen} options={{ title: "Mini-dastur yaratish" }} />
+            <Stack.Screen name="Feed" component={FeedScreen} options={{ title: "Yangiliklar" }} />
+            <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ title: "Yangi post" }} />
+            <Stack.Screen name="PostComments" component={PostCommentsScreen} options={{ title: "Izohlar" }} />
+            <Stack.Screen name="Marketplace" component={MarketplaceScreen} options={{ title: "Bozor" }} />
+            <Stack.Screen name="StoreView" component={StoreViewScreen} options={{ title: "Do'kon" }} />
+            <Stack.Screen name="CreateStore" component={CreateStoreScreen} options={{ title: "Do'kon yaratish" }} />
+            <Stack.Screen name="MyStores" component={MyStoresScreen} options={{ title: "Mening do'konlarim" }} />
+            <Stack.Screen name="ProductView" component={ProductViewScreen} options={{ title: "Mahsulot" }} />
+            <Stack.Screen name="MyOrders" component={MyOrdersScreen} options={{ title: "Buyurtmalarim" }} />
+            <Stack.Screen name="AddProduct" component={AddProductScreen} options={{ title: "Mahsulot qo'shish" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />
