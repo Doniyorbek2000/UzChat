@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Image } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { miniAppsApi, MiniApp } from "../../api/miniapps";
 import { colors } from "../../theme/colors";
@@ -9,6 +10,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "MiniApps">;
 
 const CATEGORIES = [
   { key: "all", label: "Barchasi" },
+  { key: "mine", label: "Mening" },
   { key: "games", label: "O'yinlar" },
   { key: "tools", label: "Asboblar" },
   { key: "finance", label: "Moliya" },
@@ -26,6 +28,7 @@ export function MiniAppsScreen({ navigation }: Props) {
       ),
     });
   }, [navigation]);
+
   const [apps, setApps] = useState<MiniApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -34,15 +37,19 @@ export function MiniAppsScreen({ navigation }: Props) {
   const loadApps = useCallback(async () => {
     setLoading(true);
     try {
-      const list = await miniAppsApi.list(category === "all" ? undefined : category);
+      const list = category === "mine"
+        ? await miniAppsApi.listMine()
+        : await miniAppsApi.list(category === "all" ? undefined : category);
       setApps(list);
     } catch {}
     setLoading(false);
   }, [category]);
 
-  useEffect(() => {
-    loadApps();
-  }, [loadApps]);
+  useFocusEffect(
+    useCallback(() => {
+      loadApps();
+    }, [loadApps])
+  );
 
   const filtered = apps.filter(
     (a) =>
@@ -110,7 +117,9 @@ export function MiniAppsScreen({ navigation }: Props) {
           )}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>Mini-dasturlar topilmadi</Text>
+              <Text style={styles.emptyText}>
+                {category === "mine" ? "Siz hali mini-dastur yaratmagansiz" : "Mini-dasturlar topilmadi"}
+              </Text>
             </View>
           }
         />

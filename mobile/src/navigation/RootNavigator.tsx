@@ -76,6 +76,7 @@ import { useRecentEmojiStore } from "../store/recentEmojiStore";
 import { useRecentStickersStore } from "../store/recentStickersStore";
 import { useVerifiedContactsStore } from "../store/verifiedContactsStore";
 import { useThemeStore } from "../store/themeStore";
+import { useToastStore } from "../store/toastStore";
 import { useQuickRepliesStore } from "../store/quickRepliesStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
@@ -233,8 +234,25 @@ export function RootNavigator() {
       }
     };
 
+    const onPaymentReceived = (data: {
+      sender: { displayName: string; avatarUrl: string | null };
+      amount: number;
+      currency: string;
+    }) => {
+      useToastStore.getState().showToast({
+        conversationId: "",
+        title: "To'lov qabul qilindi",
+        body: `${data.sender.displayName} sizga ${data.amount.toLocaleString()} ${data.currency} yubordi`,
+        avatarUrl: data.sender.avatarUrl,
+      });
+    };
+
     socket.on("call:offer", onIncomingCall);
-    return () => { socket.off("call:offer", onIncomingCall); };
+    socket.on("payment:received", onPaymentReceived);
+    return () => {
+      socket.off("call:offer", onIncomingCall);
+      socket.off("payment:received", onPaymentReceived);
+    };
   }, [isAuthenticated]);
 
   useEffect(() => {

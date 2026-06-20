@@ -3,6 +3,7 @@ import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
 import { sendPaymentSchema, topUpSchema } from "./payments.schema";
 import { paymentsService } from "./payments.service";
+import { getIo } from "../../sockets";
 
 const router = Router();
 
@@ -20,6 +21,13 @@ router.post("/top-up", validateBody(topUpSchema), async (req: Request, res: Resp
 
 router.post("/send", validateBody(sendPaymentSchema), async (req: Request, res: Response) => {
   const payment = await paymentsService.sendPayment(req.user!.sub, req.body);
+  getIo().to(`user:${payment.receiverId}`).emit("payment:received", {
+    id: payment.id,
+    sender: payment.sender,
+    amount: payment.amount,
+    currency: payment.currency,
+    note: payment.note,
+  });
   res.status(201).json(payment);
 });
 

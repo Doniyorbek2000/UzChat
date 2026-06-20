@@ -117,9 +117,14 @@ export function ChatListScreen({ navigation }: Props) {
         title: "Suhbatlar",
         headerLeft: undefined,
         headerRight: () => (
-          <TouchableOpacity onPress={() => navigation.navigate("Stories")} hitSlop={8} style={{ marginRight: 8 }}>
-            <Text style={{ fontSize: 20 }}>📷</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginRight: 8 }}>
+            <TouchableOpacity onPress={() => navigation.navigate("CallHistory")} hitSlop={8}>
+              <Text style={{ fontSize: 20 }}>📞</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate("Stories")} hitSlop={8}>
+              <Text style={{ fontSize: 20 }}>📷</Text>
+            </TouchableOpacity>
+          </View>
         ),
       });
       return;
