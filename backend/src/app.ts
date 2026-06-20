@@ -20,6 +20,7 @@ import { miniAppsRouter } from "./modules/miniapps/miniapps.controller";
 import { callsRouter } from "./modules/calls/calls.controller";
 import { feedRouter } from "./modules/feed/feed.controller";
 import { marketplaceRouter } from "./modules/marketplace/marketplace.controller";
+import { redPacketsRouter } from "./modules/redpackets/redpackets.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 
@@ -52,6 +53,7 @@ export function createApp() {
   app.use("/calls", apiRateLimiter, callsRouter);
   app.use("/feed", apiRateLimiter, feedRouter);
   app.use("/marketplace", apiRateLimiter, marketplaceRouter);
+  app.use("/red-packets", apiRateLimiter, redPacketsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

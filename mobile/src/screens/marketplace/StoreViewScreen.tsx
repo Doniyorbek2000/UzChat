@@ -7,12 +7,14 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Store, Product } from "../../api/marketplace";
+import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StoreView">;
 
 export function StoreViewScreen({ route, navigation }: Props) {
   const { storeId } = route.params;
+  const userId = useAuthStore((s) => s.user?.id);
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +70,14 @@ export function StoreViewScreen({ route, navigation }: Props) {
             <Text style={styles.storeName}>{store.name}</Text>
             {store.description && <Text style={styles.storeDesc}>{store.description}</Text>}
             <Text style={styles.storeOwner}>@{store.owner?.username}</Text>
+            {store.ownerId === userId && (
+              <TouchableOpacity
+                style={styles.addProductBtn}
+                onPress={() => navigation.navigate("AddProduct", { storeId })}
+              >
+                <Text style={styles.addProductText}>+ Mahsulot qo'shish</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : null
       }
@@ -125,4 +135,6 @@ const styles = StyleSheet.create({
   productName: { fontSize: 14, fontWeight: "600", color: colors.text, padding: 10, paddingBottom: 2 },
   productPrice: { fontSize: 15, fontWeight: "700", color: colors.primary, paddingHorizontal: 10, paddingBottom: 10 },
   outOfStock: { fontSize: 12, color: colors.danger, paddingHorizontal: 10, paddingBottom: 8 },
+  addProductBtn: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 8, borderRadius: 8, marginTop: 12 },
+  addProductText: { color: "#fff", fontWeight: "600", fontSize: 14 },
 });

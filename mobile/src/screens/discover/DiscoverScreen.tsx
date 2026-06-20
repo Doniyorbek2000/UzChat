@@ -13,6 +13,7 @@ const SERVICES = [
   { key: "miniapps", icon: "📱", label: "Mini-dasturlar", screen: "MiniApps" as const },
   { key: "stories", icon: "📷", label: "Hikoyalar", screen: "Stories" as const },
   { key: "calls", icon: "📞", label: "Qo'ng'iroqlar", screen: "CallHistory" as const },
+  { key: "redpacket", icon: "🧧", label: "Qizil konvert", screen: "SendRedPacket" as const },
 ];
 
 const PLATFORM_SERVICES = [

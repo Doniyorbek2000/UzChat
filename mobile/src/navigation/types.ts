@@ -96,6 +96,8 @@ export type RootStackParamList = {
   MyOrders: undefined;
   AddProduct: { storeId: string };
   Discover: undefined;
+  SendRedPacket: undefined;
+  ClaimRedPacket: { packetId?: string };
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

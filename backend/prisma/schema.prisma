@@ -216,6 +216,8 @@ model User {
   postComments     PostComment[]
   stores           Store[]
   orders           Order[]
+  sentRedPackets   RedPacket[]  @relation("RedPacketSender")
+  claimedRedPackets RedPacket[] @relation("RedPacketClaimer")
 
   @@index([username])
   @@index([phone])
@@ -1032,4 +1034,29 @@ model OrderItem {
   price     Float
 
   @@index([orderId])
+}
+
+enum RedPacketStatus {
+  ACTIVE
+  CLAIMED
+  EXPIRED
+}
+
+model RedPacket {
+  id          String          @id @default(uuid())
+  senderId    String
+  sender      User            @relation("RedPacketSender", fields: [senderId], references: [id], onDelete: Cascade)
+  amount      Float
+  currency    String          @default("UZS")
+  message     String?
+  status      RedPacketStatus @default(ACTIVE)
+  claimedById String?
+  claimedBy   User?           @relation("RedPacketClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedAt   DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime        @default(now())
+
+  @@index([senderId])
+  @@index([claimedById])
+  @@index([status, expiresAt])
 }

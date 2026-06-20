@@ -73,6 +73,8 @@ import { MyStoresScreen } from "../screens/marketplace/MyStoresScreen";
 import { ProductViewScreen } from "../screens/marketplace/ProductViewScreen";
 import { MyOrdersScreen } from "../screens/marketplace/MyOrdersScreen";
 import { AddProductScreen } from "../screens/marketplace/AddProductScreen";
+import { SendRedPacketScreen } from "../screens/redpackets/SendRedPacketScreen";
+import { ClaimRedPacketScreen } from "../screens/redpackets/ClaimRedPacketScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -376,6 +378,8 @@ export function RootNavigator() {
             <Stack.Screen name="ProductView" component={ProductViewScreen} options={{ title: "Mahsulot" }} />
             <Stack.Screen name="MyOrders" component={MyOrdersScreen} options={{ title: "Buyurtmalarim" }} />
             <Stack.Screen name="AddProduct" component={AddProductScreen} options={{ title: "Mahsulot qo'shish" }} />
+            <Stack.Screen name="SendRedPacket" component={SendRedPacketScreen} options={{ title: "Qizil konvert", headerStyle: { backgroundColor: "#C41E3A" }, headerTintColor: "#FFD700" }} />
+            <Stack.Screen name="ClaimRedPacket" component={ClaimRedPacketScreen} options={{ title: "Konvert ochish", headerStyle: { backgroundColor: "#C41E3A" }, headerTintColor: "#FFD700" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />
