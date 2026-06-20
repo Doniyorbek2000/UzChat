@@ -891,8 +891,14 @@ export const chatsService = {
       return { pending: true as const, conversationId: conversation.id, managerIds };
     }
 
-    await prisma.$transaction([
-      prisma.conversationParticipant.create({
+    await prisma.$transaction(async (tx) => {
+      const fresh = await tx.conversation.findUniqueOrThrow({
+        where: { id: conversation.id },
+        select: { inviteCodeExpiresAt: true, inviteCodeMaxUses: true, inviteCodeUseCount: true },
+      });
+      if (!isInviteLinkUsable(fresh)) throw Errors.notFound("Taklif havolasi");
+
+      await tx.conversationParticipant.create({
         data: {
           conversationId: conversation.id,
           userId,
@@ -901,12 +907,12 @@ export const chatsService = {
           wrappedKeyNonce: input.wrappedKeyNonce,
           keySenderPublicKey: input.keySenderPublicKey,
         },
-      }),
-      prisma.conversation.update({
+      });
+      await tx.conversation.update({
         where: { id: conversation.id },
         data: { inviteCodeUseCount: { increment: 1 } },
-      }),
-    ]);
+      });
+    });
 
     await chatsService.logGroupAction(conversation.id, userId, GroupAuditAction.MEMBER_ADDED, userId);
 

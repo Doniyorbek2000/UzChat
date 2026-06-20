@@ -1200,13 +1200,21 @@ export const messagesService = {
   // Publishes (delivers) scheduled messages whose time has come.
   async publishDueScheduledMessages() {
     const due = await prisma.message.findMany({
-      where: { scheduledFor: { lte: new Date() } },
+      where: { scheduledFor: { lte: new Date() }, sendWhenOnline: false },
+      include: { conversation: { select: { type: true, participants: { select: { userId: true } } } } },
     });
     if (due.length === 0) return [];
 
     const published = [];
     for (const m of due) {
       try {
+        if (m.conversation.type === ConversationType.DIRECT) {
+          const other = m.conversation.participants.find((p) => p.userId !== m.senderId);
+          if (other && (await contactsService.isBlockedEitherWay(m.senderId, other.userId))) {
+            await prisma.message.delete({ where: { id: m.id } }).catch(() => {});
+            continue;
+          }
+        }
         published.push(await publishScheduledMessage(m));
       } catch (err) {
         console.error(`Failed to publish scheduled message ${m.id}:`, err);
@@ -1239,6 +1247,10 @@ export const messagesService = {
     const published = [];
     for (const m of pending) {
       try {
+        if (await contactsService.isBlockedEitherWay(m.senderId, recipientUserId)) {
+          await prisma.message.delete({ where: { id: m.id } }).catch(() => {});
+          continue;
+        }
         published.push(await publishScheduledMessage(m));
       } catch (err) {
         console.error(`Failed to publish "send when online" message ${m.id}:`, err);
