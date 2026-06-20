@@ -387,6 +387,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("MiniApps")}>
+        <Text style={styles.menuRowText}>🧩 Mini-dasturlar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("ChatTextSize")}>
         <Text style={styles.menuRowText}>🔤 Matn hajmi</Text>
         <Text style={styles.menuRowArrow}>›</Text>

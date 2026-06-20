@@ -59,6 +59,8 @@ import { StoriesScreen } from "../screens/stories/StoriesScreen";
 import { StoryViewerScreen } from "../screens/stories/StoryViewerScreen";
 import { WalletScreen } from "../screens/wallet/WalletScreen";
 import { SendPaymentScreen } from "../screens/wallet/SendPaymentScreen";
+import { MiniAppsScreen } from "../screens/miniapps/MiniAppsScreen";
+import { MiniAppViewScreen } from "../screens/miniapps/MiniAppViewScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -304,6 +306,8 @@ export function RootNavigator() {
             <Stack.Screen name="StoryViewer" component={StoryViewerScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Wallet" component={WalletScreen} options={{ title: "Hamyon" }} />
             <Stack.Screen name="SendPayment" component={SendPaymentScreen} options={{ title: "Pul yuborish" }} />
+            <Stack.Screen name="MiniApps" component={MiniAppsScreen} options={{ title: "Mini-dasturlar" }} />
+            <Stack.Screen name="MiniAppView" component={MiniAppViewScreen} options={{ headerShown: false }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

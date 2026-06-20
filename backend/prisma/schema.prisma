@@ -208,6 +208,7 @@ model User {
   walletBalance    Float            @default(0)
   sentPayments     Payment[]        @relation("PaymentSender")
   receivedPayments Payment[]        @relation("PaymentReceiver")
+  miniApps         MiniApp[]
 
   @@index([username])
   @@index([phone])
@@ -857,4 +858,21 @@ model Payment {
 
   @@index([senderId])
   @@index([receiverId])
+}
+
+model MiniApp {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  url         String
+  iconUrl     String?
+  category    String   @default("other")
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([creatorId])
+  @@index([category])
 }

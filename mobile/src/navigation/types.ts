@@ -80,6 +80,8 @@ export type RootStackParamList = {
   Call: { userId: string; displayName: string; avatarUrl: string | null; callType: "audio" | "video"; isIncoming: boolean };
   Wallet: undefined;
   SendPayment: undefined;
+  MiniApps: undefined;
+  MiniAppView: { id: string; name: string; url: string };
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<
