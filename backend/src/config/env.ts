@@ -18,7 +18,7 @@ export const env = {
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? "15m",
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? "30d",
   },
-  corsOrigin: process.env.CORS_ORIGIN ?? "*",
+  corsOrigin: process.env.CORS_ORIGIN ?? (process.env.NODE_ENV === "production" ? "https://uzchat.app" : "*"),
   publicUrl: process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 4000}`,
 } as const;
 

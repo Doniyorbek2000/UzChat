@@ -25,7 +25,13 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   }
 
   if (err instanceof multer.MulterError) {
-    const message = err.code === "LIMIT_FILE_SIZE" ? "Fayl hajmi juda katta (max 50 MB)" : "Faylni yuklashda xatolik";
+    const messages: Record<string, string> = {
+      LIMIT_FILE_SIZE: "Fayl hajmi juda katta (max 50 MB)",
+      LIMIT_UNEXPECTED_FILE: "Ruxsat etilmagan fayl turi",
+      LIMIT_FILE_COUNT: "Juda ko'p fayl yuklandi",
+      LIMIT_FIELD_COUNT: "Juda ko'p maydon",
+    };
+    const message = messages[err.code] ?? "Faylni yuklashda xatolik";
     return res.status(400).json({ error: { code: "FILE_UPLOAD_ERROR", message } });
   }
 

@@ -5,6 +5,7 @@ import path from "path";
 import multer from "multer";
 import { env } from "../../config/env";
 import { prisma } from "../../config/prisma";
+import { ALLOWED_MIME_TYPES } from "./media.schema";
 
 export const uploadsDir = path.join(process.cwd(), "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -73,7 +74,16 @@ const storage = multer.diskStorage({
 
 // E2EE media blobs are pre-encrypted client-side, so the server only ever
 // sees opaque ciphertext; a generous size limit covers photos/voice/video clips.
+const allowedSet = new Set<string>(ALLOWED_MIME_TYPES);
+
 export const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (allowedSet.has(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", file.fieldname));
+    }
+  },
 });
