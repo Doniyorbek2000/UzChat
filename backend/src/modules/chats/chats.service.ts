@@ -952,23 +952,29 @@ export const chatsService = {
     const request = await prisma.groupJoinRequest.findUnique({ where: { id: requestId } });
     if (!request || request.conversationId !== conversationId) throw Errors.notFound("So'rov");
 
-    await prisma.$transaction([
-      prisma.conversationParticipant.create({
-        data: {
-          conversationId,
-          userId: request.userId,
-          role: ParticipantRole.MEMBER,
-          wrappedKey: request.wrappedKey,
-          wrappedKeyNonce: request.wrappedKeyNonce,
-          keySenderPublicKey: request.keySenderPublicKey,
-        },
-      }),
-      prisma.conversation.update({
-        where: { id: conversationId },
-        data: { inviteCodeUseCount: { increment: 1 } },
-      }),
-      prisma.groupJoinRequest.delete({ where: { id: requestId } }),
-    ]);
+    try {
+      await prisma.$transaction([
+        prisma.conversationParticipant.create({
+          data: {
+            conversationId,
+            userId: request.userId,
+            role: ParticipantRole.MEMBER,
+            wrappedKey: request.wrappedKey,
+            wrappedKeyNonce: request.wrappedKeyNonce,
+            keySenderPublicKey: request.keySenderPublicKey,
+          },
+        }),
+        prisma.conversation.update({
+          where: { id: conversationId },
+          data: { inviteCodeUseCount: { increment: 1 } },
+        }),
+        prisma.groupJoinRequest.delete({ where: { id: requestId } }),
+      ]);
+    } catch (err: any) {
+      if (err.code === "P2002") throw Errors.conflict("Foydalanuvchi allaqachon guruh a'zosi");
+      if (err.code === "P2025") throw Errors.notFound("So'rov");
+      throw err;
+    }
 
     const joiner = await prisma.user.findUnique({ where: { id: request.userId }, select: { displayName: true } });
     const systemMessages = [await createSystemMessage(conversationId, request.userId, `${joiner?.displayName} guruhga qo'shildi`)];
