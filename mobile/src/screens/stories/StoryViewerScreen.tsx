@@ -16,6 +16,11 @@ export function StoryViewerScreen({ navigation, route }: Props) {
   const [loading, setLoading] = useState(true);
   const currentUser = useAuthStore((s) => s.user);
   const isOwn = userId === currentUser?.id;
+  const [paused, setPaused] = useState(false);
+
+  const onReplyToStory = () => {
+    navigation.replace("UserProfile", { userId });
+  };
 
   const loadStories = useCallback(async () => {
     try {
@@ -39,7 +44,7 @@ export function StoryViewerScreen({ navigation, route }: Props) {
   }, [story, isOwn]);
 
   useEffect(() => {
-    if (!story) return;
+    if (!story || paused) return;
     const timer = setTimeout(() => {
       if (group && index < group.stories.length - 1) {
         setIndex(index + 1);
@@ -48,7 +53,7 @@ export function StoryViewerScreen({ navigation, route }: Props) {
       }
     }, 5000);
     return () => clearTimeout(timer);
-  }, [index, story, group, navigation]);
+  }, [index, story, group, navigation, paused]);
 
   const onTap = (x: number) => {
     if (!group) return;
@@ -118,10 +123,16 @@ export function StoryViewerScreen({ navigation, route }: Props) {
             <Text style={styles.captionText}>{story.caption}</Text>
           </View>
         )}
-        {isOwn && (
+        {isOwn ? (
           <View style={styles.footer}>
             <TouchableOpacity onPress={onDelete} style={styles.deleteBtn}>
               <Text style={styles.deleteBtnText}>O'chirish</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.replyRow}>
+            <TouchableOpacity onPress={onReplyToStory} style={styles.replyBtn}>
+              <Text style={styles.replyBtnText}>Xabar yuborish</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -150,4 +161,18 @@ const styles = StyleSheet.create({
   footer: { alignItems: "center", paddingBottom: 40 },
   deleteBtn: { backgroundColor: "rgba(255,0,0,0.6)", borderRadius: 20, paddingHorizontal: 20, paddingVertical: 8 },
   deleteBtnText: { color: "#fff", fontWeight: "600" },
+  replyRow: {
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  replyBtn: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+  },
+  replyBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
 });

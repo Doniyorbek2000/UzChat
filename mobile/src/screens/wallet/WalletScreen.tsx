@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { paymentsApi, Payment, WalletBalance } from "../../api/payments";
@@ -17,6 +18,7 @@ export function WalletScreen({ navigation }: Props) {
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [history, setHistory] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState("");
   const [topUpVisible, setTopUpVisible] = useState(false);
   const currentUser = useAuthStore((s) => s.user);
@@ -28,11 +30,19 @@ export function WalletScreen({ navigation }: Props) {
       setHistory(hist);
     } catch {}
     setLoading(false);
+    setRefreshing(false);
   }, []);
 
-  useEffect(() => {
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
     loadData();
   }, [loadData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const onTopUp = async () => {
     const amount = parseFloat(topUpAmount);
@@ -46,6 +56,7 @@ export function WalletScreen({ navigation }: Props) {
       setTopUpAmount("");
       setTopUpVisible(false);
       Alert.alert("Muvaffaqiyat", `${formatAmount(amount, "UZS")} hisobga qo'shildi`);
+      loadData();
     } catch {
       Alert.alert("Xatolik", "Hisobni to'ldirib bo'lmadi");
     }
@@ -95,6 +106,7 @@ export function WalletScreen({ navigation }: Props) {
       <FlatList
         data={history}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => {
           const isSent = item.sender.id === currentUser?.id;
