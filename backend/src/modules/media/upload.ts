@@ -4,6 +4,7 @@ import fsPromises from "fs/promises";
 import path from "path";
 import multer from "multer";
 import { env } from "../../config/env";
+import { prisma } from "../../config/prisma";
 
 export const uploadsDir = path.join(process.cwd(), "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -26,6 +27,40 @@ export async function deleteUploadedFiles(mediaUrls: (string | null)[]) {
 export async function deleteOwnUploadByUrl(url: string | null | undefined) {
   if (!url || !url.startsWith(ownUploadPrefix)) return;
   await fsPromises.unlink(path.join(uploadsDir, path.basename(url))).catch(() => {});
+}
+
+// Safety net: removes files in uploadsDir that aren't referenced by any
+// message/avatar and are older than ORPHAN_AGE_MS (so files mid-upload, or
+// awaiting a not-yet-committed sendMessage, are never touched). Catches
+// uploads left behind by client send failures after a successful upload.
+const ORPHAN_AGE_MS = 24 * 60 * 60 * 1000;
+
+export async function cleanupOrphanedUploads() {
+  const [messages, users, conversations] = await Promise.all([
+    prisma.message.findMany({ where: { mediaUrl: { not: null } }, select: { mediaUrl: true } }),
+    prisma.user.findMany({ where: { avatarUrl: { not: null } }, select: { avatarUrl: true } }),
+    prisma.conversation.findMany({ where: { avatarUrl: { not: null } }, select: { avatarUrl: true } }),
+  ]);
+
+  const referenced = new Set<string>();
+  for (const { mediaUrl } of messages) if (mediaUrl) referenced.add(path.basename(mediaUrl));
+  for (const { avatarUrl } of users) if (avatarUrl) referenced.add(path.basename(avatarUrl));
+  for (const { avatarUrl } of conversations) if (avatarUrl) referenced.add(path.basename(avatarUrl));
+
+  const files = await fsPromises.readdir(uploadsDir);
+  const cutoff = Date.now() - ORPHAN_AGE_MS;
+  let removed = 0;
+
+  for (const file of files) {
+    if (referenced.has(file)) continue;
+    const filePath = path.join(uploadsDir, file);
+    const stat = await fsPromises.stat(filePath).catch(() => null);
+    if (!stat || !stat.isFile() || stat.mtimeMs > cutoff) continue;
+    await fsPromises.unlink(filePath).catch(() => {});
+    removed++;
+  }
+
+  return removed;
 }
 
 const storage = multer.diskStorage({
