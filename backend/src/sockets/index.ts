@@ -174,10 +174,18 @@ async function handleConnection(socket: AuthenticatedSocket) {
   socket.on("disconnect", async () => {
     try {
       await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
-      // Only broadcast "offline" once the user's last device disconnects -
-      // socket.io has already removed this socket from `user:${userId}` by now.
       if (!isUserOnline(authed.userId)) {
-        const viewerIds = await filterViewersForLastSeen(authed.userId, [...relatedUserIds]);
+        const currentParticipations = await prisma.conversationParticipant.findMany({
+          where: { userId: authed.userId },
+          select: { conversation: { select: { participants: { select: { userId: true } } } } },
+        });
+        const currentRelatedUserIds = new Set<string>();
+        for (const p of currentParticipations) {
+          for (const cp of p.conversation.participants) {
+            if (cp.userId !== authed.userId) currentRelatedUserIds.add(cp.userId);
+          }
+        }
+        const viewerIds = await filterViewersForLastSeen(authed.userId, [...currentRelatedUserIds]);
         for (const viewerId of viewerIds) {
           io!.to(`user:${viewerId}`).emit("presence:update", { userId: authed.userId, online: false });
         }

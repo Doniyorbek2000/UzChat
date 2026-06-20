@@ -3,7 +3,7 @@ import { API_URL } from "../config/env";
 import { secureStorage } from "../storage/secureStorage";
 import { isJwtExpired } from "../utils/jwt";
 
-export const apiClient = axios.create({ baseURL: API_URL });
+export const apiClient = axios.create({ baseURL: API_URL, timeout: 30_000 });
 
 let onUnauthorized: (() => void) | null = null;
 export function setUnauthorizedHandler(handler: () => void) {
