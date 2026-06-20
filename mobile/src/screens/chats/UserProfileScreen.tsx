@@ -212,6 +212,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
           <Text style={styles.actionText}>Xabar yozish</Text>
           {opening && <ActivityIndicator color={colors.primary} size="small" />}
         </TouchableOpacity>
+        <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("UserPosts", { userId: profile.id })}>
+          <Text style={styles.actionIcon}>📰</Text>
+          <Text style={styles.actionText}>Postlari</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("CommonGroups", { userId: profile.id })}>
           <Text style={styles.actionIcon}>👥</Text>
           <Text style={styles.actionText}>Umumiy guruhlar</Text>

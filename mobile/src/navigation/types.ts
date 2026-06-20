@@ -98,6 +98,7 @@ export type RootStackParamList = {
   Discover: undefined;
   SendRedPacket: undefined;
   ClaimRedPacket: { packetId?: string };
+  UserPosts: { userId: string };
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

@@ -66,6 +66,7 @@ import { CreateMiniAppScreen } from "../screens/miniapps/CreateMiniAppScreen";
 import { FeedScreen } from "../screens/feed/FeedScreen";
 import { CreatePostScreen } from "../screens/feed/CreatePostScreen";
 import { PostCommentsScreen } from "../screens/feed/PostCommentsScreen";
+import { UserPostsScreen } from "../screens/feed/UserPostsScreen";
 import { MarketplaceScreen } from "../screens/marketplace/MarketplaceScreen";
 import { StoreViewScreen } from "../screens/marketplace/StoreViewScreen";
 import { CreateStoreScreen } from "../screens/marketplace/CreateStoreScreen";
@@ -371,6 +372,7 @@ export function RootNavigator() {
             <Stack.Screen name="Feed" component={FeedScreen} options={{ title: "Yangiliklar" }} />
             <Stack.Screen name="CreatePost" component={CreatePostScreen} options={{ title: "Yangi post" }} />
             <Stack.Screen name="PostComments" component={PostCommentsScreen} options={{ title: "Izohlar" }} />
+            <Stack.Screen name="UserPosts" component={UserPostsScreen} options={{ title: "Postlar" }} />
             <Stack.Screen name="Marketplace" component={MarketplaceScreen} options={{ title: "Bozor" }} />
             <Stack.Screen name="StoreView" component={StoreViewScreen} options={{ title: "Do'kon" }} />
             <Stack.Screen name="CreateStore" component={CreateStoreScreen} options={{ title: "Do'kon yaratish" }} />

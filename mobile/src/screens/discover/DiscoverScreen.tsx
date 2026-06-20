@@ -72,6 +72,10 @@ export function DiscoverScreen({ navigation }: Props) {
           <Text style={styles.menuIcon}>⭐</Text>
           <Text style={styles.menuLabel}>Saqlangan xabarlar</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("ClaimRedPacket", {})}>
+          <Text style={styles.menuIcon}>🧧</Text>
+          <Text style={styles.menuLabel}>Konvert ochish</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
