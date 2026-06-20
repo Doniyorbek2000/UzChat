@@ -113,7 +113,15 @@ export function ChatListScreen({ navigation }: Props) {
 
   useEffect(() => {
     if (!selectionMode) {
-      navigation.setOptions({ title: "Suhbatlar", headerLeft: undefined, headerRight: undefined });
+      navigation.setOptions({
+        title: "Suhbatlar",
+        headerLeft: undefined,
+        headerRight: () => (
+          <TouchableOpacity onPress={() => navigation.navigate("Stories")} hitSlop={8} style={{ marginRight: 8 }}>
+            <Text style={{ fontSize: 20 }}>📷</Text>
+          </TouchableOpacity>
+        ),
+      });
       return;
     }
     navigation.setOptions({

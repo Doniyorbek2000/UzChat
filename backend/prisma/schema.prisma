@@ -202,6 +202,8 @@ model User {
   broadcastLists   BroadcastList[]
   usernameHistory  UsernameHistory[]
   dismissedSuggestions DismissedSuggestion[] @relation("DismissedSuggestionOwner")
+  stories          Story[]
+  storyViews       StoryView[]
 
   @@index([username])
   @@index([phone])
@@ -787,4 +789,31 @@ model BroadcastList {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+model Story {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl  String
+  caption   String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  views StoryView[]
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model StoryView {
+  id       String   @id @default(uuid())
+  storyId  String
+  story    Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  viewedAt DateTime @default(now())
+
+  @@unique([storyId, userId])
+  @@index([storyId])
 }

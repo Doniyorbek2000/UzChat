@@ -73,6 +73,8 @@ export type RootStackParamList = {
   NotificationSettings: undefined;
   About: undefined;
   ThemeSettings: undefined;
+  Stories: undefined;
+  StoryViewer: { userId: string };
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

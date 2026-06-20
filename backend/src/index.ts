@@ -14,6 +14,7 @@ import { startChatAutoDeleteJob } from "./jobs/chatAutoDelete";
 import { startAccountSelfDestructJob } from "./jobs/accountSelfDestruct";
 import { startMediaGarbageCollectionJob } from "./jobs/mediaGarbageCollection";
 import { startSessionCleanupJob } from "./jobs/sessionCleanup";
+import { startStoryExpiryJob } from "./jobs/storyExpiry";
 
 const app = createApp();
 const httpServer = createServer(app);
@@ -30,6 +31,7 @@ startChatAutoDeleteJob();
 startAccountSelfDestructJob();
 startMediaGarbageCollectionJob();
 startSessionCleanupJob();
+startStoryExpiryJob();
 
 function gracefulShutdown(signal: string) {
   console.log(`${signal} received — shutting down`);

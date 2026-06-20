@@ -52,6 +52,8 @@ import { NotificationSettingsScreen } from "../screens/profile/NotificationSetti
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { AboutScreen } from "../screens/profile/AboutScreen";
 import { ThemeSettingsScreen } from "../screens/profile/ThemeSettingsScreen";
+import { StoriesScreen } from "../screens/stories/StoriesScreen";
+import { StoryViewerScreen } from "../screens/stories/StoryViewerScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -290,6 +292,8 @@ export function RootNavigator() {
             <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />
             <Stack.Screen name="About" component={AboutScreen} options={{ title: "UzChat haqida" }} />
             <Stack.Screen name="ThemeSettings" component={ThemeSettingsScreen} options={{ title: "Mavzu" }} />
+            <Stack.Screen name="Stories" component={StoriesScreen} options={{ title: "Hikoyalar" }} />
+            <Stack.Screen name="StoryViewer" component={StoryViewerScreen} options={{ headerShown: false }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />
