@@ -13,8 +13,10 @@ export function AddProductScreen({ route, navigation }: Props) {
   const { storeId } = route.params;
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
+  const [category, setCategory] = useState("general");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -32,8 +34,10 @@ export function AddProductScreen({ route, navigation }: Props) {
       await marketplaceApi.addProduct(storeId, {
         name: name.trim(),
         description: description.trim() || undefined,
+        sku: sku.trim() || undefined,
         price: priceNum,
         stock: parseInt(stock) || 0,
+        category: category || "general",
       });
       navigation.goBack();
     } catch {
@@ -49,6 +53,12 @@ export function AddProductScreen({ route, navigation }: Props) {
 
       <Text style={styles.label}>Tavsif</Text>
       <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Tavsif" multiline maxLength={2000} />
+
+      <Text style={styles.label}>SKU (ixtiyoriy)</Text>
+      <TextInput style={styles.input} value={sku} onChangeText={setSku} placeholder="Mahsulot kodi" maxLength={50} />
+
+      <Text style={styles.label}>Kategoriya</Text>
+      <TextInput style={styles.input} value={category} onChangeText={setCategory} placeholder="general" maxLength={50} />
 
       <Text style={styles.label}>Narx (UZS) *</Text>
       <TextInput style={styles.input} value={price} onChangeText={setPrice} placeholder="0" keyboardType="numeric" />

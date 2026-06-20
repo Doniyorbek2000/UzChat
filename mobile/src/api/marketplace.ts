@@ -89,7 +89,7 @@ export const marketplaceApi = {
     return res.data;
   },
 
-  async addProduct(storeId: string, data: { name: string; description?: string; price: number; currency?: string; imageUrls?: string[]; stock?: number; category?: string }): Promise<Product> {
+  async addProduct(storeId: string, data: { name: string; description?: string; sku?: string; price: number; currency?: string; imageUrls?: string[]; stock?: number; category?: string }): Promise<Product> {
     const res = await api.post(`/marketplace/stores/${storeId}/products`, data);
     return res.data;
   },

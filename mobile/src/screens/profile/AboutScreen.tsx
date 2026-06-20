@@ -10,6 +10,15 @@ const FEATURES = [
   "📊 So'rovnomalar",
   "⏳ G'oyib bo'ladigan xabarlar",
   "🛡️ Ikki bosqichli tekshiruv va ilova qulfi",
+  "📰 Yangiliklar va postlar",
+  "🛒 Bozor va do'konlar",
+  "💰 Hamyon va to'lovlar",
+  "📱 Mini-dasturlar",
+  "📷 Hikoyalar",
+  "📞 Audio va video qo'ng'iroqlar",
+  "🧧 Qizil konvertlar",
+  "📍 Joylashuv ulashish",
+  "✅ Tasdiqlangan hisoblar",
 ];
 
 export function AboutScreen() {
