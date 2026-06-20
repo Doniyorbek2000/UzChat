@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
-import { createStoreSchema, updateStoreSchema, createProductSchema, updateProductSchema, createOrderSchema } from "./marketplace.schema";
+import { createStoreSchema, updateStoreSchema, createProductSchema, updateProductSchema, createOrderSchema, updateOrderStatusSchema } from "./marketplace.schema";
 import { marketplaceService } from "./marketplace.service";
 
 const router = Router();
@@ -82,9 +82,8 @@ router.get("/orders/store/:storeId", async (req: Request, res: Response) => {
   res.json(orders);
 });
 
-router.patch("/orders/:orderId/status", async (req: Request, res: Response) => {
-  const { status } = req.body;
-  const order = await marketplaceService.updateOrderStatus(req.user!.sub, req.params.orderId, status);
+router.patch("/orders/:orderId/status", validateBody(updateOrderStatusSchema), async (req: Request, res: Response) => {
+  const order = await marketplaceService.updateOrderStatus(req.user!.sub, req.params.orderId, req.body.status);
   res.json(order);
 });
 

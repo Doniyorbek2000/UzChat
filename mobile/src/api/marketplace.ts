@@ -14,6 +14,7 @@ export interface Store {
   description: string | null;
   avatarUrl: string | null;
   category: string;
+  rating: number;
   isActive: boolean;
   createdAt: string;
   owner?: StoreOwner;
@@ -25,6 +26,7 @@ export interface Product {
   storeId: string;
   name: string;
   description: string | null;
+  sku: string | null;
   price: number;
   currency: string;
   imageUrls: string[];
@@ -50,6 +52,7 @@ export interface Order {
   status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "REFUNDED";
   totalAmount: number;
   currency: string;
+  shippingAddress: string | null;
   note: string | null;
   createdAt: string;
   items: OrderItem[];
@@ -115,7 +118,7 @@ export const marketplaceApi = {
     await api.delete(`/marketplace/products/${productId}`);
   },
 
-  async createOrder(data: { storeId: string; items: { productId: string; quantity: number }[]; note?: string }): Promise<Order> {
+  async createOrder(data: { storeId: string; items: { productId: string; quantity: number }[]; shippingAddress?: string; note?: string }): Promise<Order> {
     const res = await api.post("/marketplace/orders", data);
     return res.data;
   },

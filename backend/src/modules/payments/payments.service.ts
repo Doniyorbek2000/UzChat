@@ -1,4 +1,4 @@
-import { PaymentStatus } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { SendPaymentInput, TopUpInput } from "./payments.schema";
@@ -37,7 +37,7 @@ export const paymentsService = {
       where: { id: senderId },
       select: { walletBalance: true },
     });
-    if (!sender || sender.walletBalance < input.amount) {
+    if (!sender || sender.walletBalance.lt(new Prisma.Decimal(input.amount))) {
       throw Errors.badRequest("Hisobingizda yetarli mablag' yo'q");
     }
 

@@ -1,6 +1,6 @@
+import { Prisma, Product } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { Product } from "@prisma/client";
 
 const userSelect = { id: true, username: true, displayName: true, avatarUrl: true };
 
@@ -15,7 +15,7 @@ export const marketplaceService = {
   async updateStore(userId: string, storeId: string, data: { name?: string; description?: string; avatarUrl?: string; category?: string }) {
     const store = await prisma.store.findUnique({ where: { id: storeId } });
     if (!store) throw Errors.notFound("Do'kon");
-    if (store.ownerId !== userId) throw Errors.forbidden("Not your store");
+    if (store.ownerId !== userId) throw Errors.forbidden("Bu sizning do'koningiz emas");
     return prisma.store.update({
       where: { id: storeId },
       data,
@@ -59,21 +59,21 @@ export const marketplaceService = {
   async addProduct(userId: string, storeId: string, data: { name: string; description?: string; price: number; currency?: string; imageUrls?: string[]; stock?: number; category?: string }) {
     const store = await prisma.store.findUnique({ where: { id: storeId } });
     if (!store) throw Errors.notFound("Do'kon");
-    if (store.ownerId !== userId) throw Errors.forbidden("Not your store");
+    if (store.ownerId !== userId) throw Errors.forbidden("Bu sizning do'koningiz emas");
     return prisma.product.create({ data: { ...data, storeId } });
   },
 
   async updateProduct(userId: string, productId: string, data: { name?: string; description?: string; price?: number; imageUrls?: string[]; stock?: number; category?: string; isActive?: boolean }) {
     const product = await prisma.product.findUnique({ where: { id: productId }, include: { store: true } });
     if (!product) throw Errors.notFound("Mahsulot");
-    if (product.store.ownerId !== userId) throw Errors.forbidden("Not your product");
+    if (product.store.ownerId !== userId) throw Errors.forbidden("Bu sizning mahsulotingiz emas");
     return prisma.product.update({ where: { id: productId }, data });
   },
 
   async deleteProduct(userId: string, productId: string) {
     const product = await prisma.product.findUnique({ where: { id: productId }, include: { store: true } });
     if (!product) throw Errors.notFound("Mahsulot");
-    if (product.store.ownerId !== userId) throw Errors.forbidden("Not your product");
+    if (product.store.ownerId !== userId) throw Errors.forbidden("Bu sizning mahsulotingiz emas");
     await prisma.product.delete({ where: { id: productId } });
   },
 
@@ -110,7 +110,7 @@ export const marketplaceService = {
     return { products, nextCursor: hasMore ? products[products.length - 1]?.id : null };
   },
 
-  async createOrder(userId: string, data: { storeId: string; items: { productId: string; quantity: number }[]; note?: string }) {
+  async createOrder(userId: string, data: { storeId: string; items: { productId: string; quantity: number }[]; shippingAddress?: string; note?: string }) {
     const store = await prisma.store.findUnique({ where: { id: data.storeId } });
     if (!store) throw Errors.notFound("Do'kon");
 
@@ -118,8 +118,8 @@ export const marketplaceService = {
     const products = await prisma.product.findMany({ where: { id: { in: productIds }, storeId: data.storeId } });
     const productMap = new Map<string, Product>(products.map((p) => [p.id, p]));
 
-    let totalAmount = 0;
-    const orderItems: { productId: string; quantity: number; price: number }[] = [];
+    let totalAmount = new Prisma.Decimal(0);
+    const orderItems: { productId: string; quantity: number; price: Prisma.Decimal }[] = [];
 
     for (const item of data.items) {
       const product = productMap.get(item.productId);
@@ -127,7 +127,7 @@ export const marketplaceService = {
       if (!product.isActive) throw Errors.badRequest(`${product.name} mavjud emas`);
       if (product.stock < item.quantity) throw Errors.badRequest(`${product.name} uchun yetarli zaxira yo'q`);
       orderItems.push({ productId: product.id, quantity: item.quantity, price: product.price });
-      totalAmount += product.price * item.quantity;
+      totalAmount = totalAmount.add(product.price.mul(item.quantity));
     }
 
     return prisma.$transaction(async (tx) => {
@@ -144,6 +144,7 @@ export const marketplaceService = {
           storeId: data.storeId,
           totalAmount,
           currency: products[0]?.currency ?? "UZS",
+          shippingAddress: data.shippingAddress,
           note: data.note,
           items: { create: orderItems },
         },
@@ -163,7 +164,7 @@ export const marketplaceService = {
   async getStoreOrders(userId: string, storeId: string) {
     const store = await prisma.store.findUnique({ where: { id: storeId } });
     if (!store) throw Errors.notFound("Do'kon");
-    if (store.ownerId !== userId) throw Errors.forbidden("Not your store");
+    if (store.ownerId !== userId) throw Errors.forbidden("Bu sizning do'koningiz emas");
     return prisma.order.findMany({
       where: { storeId },
       orderBy: { createdAt: "desc" },
@@ -172,14 +173,32 @@ export const marketplaceService = {
   },
 
   async updateOrderStatus(userId: string, orderId: string, status: string) {
+    const validStatuses = ["PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
+    if (!validStatuses.includes(status)) throw Errors.badRequest("Noto'g'ri buyurtma holati");
+
+    const validTransitions: Record<string, string[]> = {
+      PENDING: ["CONFIRMED", "CANCELLED"],
+      CONFIRMED: ["SHIPPED", "CANCELLED", "REFUNDED"],
+      SHIPPED: ["DELIVERED", "REFUNDED"],
+      DELIVERED: ["REFUNDED"],
+      CANCELLED: [],
+      REFUNDED: [],
+    };
+
     const order = await prisma.order.findUnique({ where: { id: orderId }, include: { store: true } });
     if (!order) throw Errors.notFound("Buyurtma");
     if (order.store.ownerId !== userId && order.buyerId !== userId) {
-      throw Errors.forbidden("Access denied");
+      throw Errors.forbidden("Ruxsat berilmagan");
     }
     if (order.buyerId === userId && status !== "CANCELLED") {
-      throw Errors.forbidden("Buyers can only cancel orders");
+      throw Errors.forbidden("Xaridor faqat buyurtmani bekor qilishi mumkin");
     }
+
+    const allowed = validTransitions[order.status] ?? [];
+    if (!allowed.includes(status)) {
+      throw Errors.badRequest(`Buyurtma holatini ${order.status} dan ${status} ga o'zgartirib bo'lmaydi`);
+    }
+
     return prisma.order.update({
       where: { id: orderId },
       data: { status: status as any },

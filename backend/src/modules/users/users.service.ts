@@ -79,8 +79,10 @@ const profileSelect = {
   defaultDisappearingSeconds: true,
   twoFactorHash: true,
   twoFactorHint: true,
+  isAdmin: true,
   isVerified: true,
   verifiedType: true,
+  selfDestructDays: true,
   createdAt: true,
 } as const;
 

@@ -27,6 +27,7 @@ export interface User {
 
 export interface AuthUser extends User {
   phone: string;
+  isAdmin: boolean;
   // Set when the username was last changed; used to show the change cooldown.
   usernameChangedAt?: string | null;
   lastSeenPrivacy: LastSeenPrivacy;

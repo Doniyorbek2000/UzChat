@@ -99,6 +99,9 @@ export type RootStackParamList = {
   SendRedPacket: undefined;
   ClaimRedPacket: { packetId?: string };
   UserPosts: { userId: string };
+  AdminDashboard: undefined;
+  AdminUsers: undefined;
+  AdminReports: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

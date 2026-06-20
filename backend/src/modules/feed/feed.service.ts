@@ -6,7 +6,7 @@ const userSelect = { id: true, username: true, displayName: true, avatarUrl: tru
 export const feedService = {
   async createPost(userId: string, data: { content?: string; mediaUrls?: string[]; visibility?: string }) {
     if (!data.content && (!data.mediaUrls || data.mediaUrls.length === 0)) {
-      throw Errors.badRequest("Post must have content or media");
+      throw Errors.badRequest("Post matn yoki media bo'lishi kerak");
     }
     return prisma.post.create({
       data: {
@@ -99,7 +99,7 @@ export const feedService = {
 
   async likePost(userId: string, postId: string) {
     const post = await prisma.post.findUnique({ where: { id: postId } });
-    if (!post) throw Errors.notFound("Post");
+    if (!post) throw Errors.notFound("Post topilmadi");
 
     await prisma.postLike.upsert({
       where: { postId_userId: { postId, userId } },
@@ -131,7 +131,7 @@ export const feedService = {
 
   async addComment(userId: string, postId: string, content: string) {
     const post = await prisma.post.findUnique({ where: { id: postId } });
-    if (!post) throw Errors.notFound("Post");
+    if (!post) throw Errors.notFound("Post topilmadi");
 
     return prisma.postComment.create({
       data: { postId, userId, content },
@@ -141,16 +141,16 @@ export const feedService = {
 
   async deletePost(userId: string, postId: string) {
     const post = await prisma.post.findUnique({ where: { id: postId } });
-    if (!post) throw Errors.notFound("Post");
-    if (post.userId !== userId) throw Errors.forbidden("Not your post");
+    if (!post) throw Errors.notFound("Post topilmadi");
+    if (post.userId !== userId) throw Errors.forbidden("Bu sizning postingiz emas");
     await prisma.post.delete({ where: { id: postId } });
   },
 
   async deleteComment(userId: string, commentId: string) {
     const comment = await prisma.postComment.findUnique({ where: { id: commentId }, include: { post: true } });
-    if (!comment) throw Errors.notFound("Comment");
+    if (!comment) throw Errors.notFound("Izoh topilmadi");
     if (comment.userId !== userId && comment.post.userId !== userId) {
-      throw Errors.forbidden("Cannot delete this comment");
+      throw Errors.forbidden("Bu izohni o'chira olmaysiz");
     }
     await prisma.postComment.delete({ where: { id: commentId } });
   },

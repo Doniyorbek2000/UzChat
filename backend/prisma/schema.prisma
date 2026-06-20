@@ -206,9 +206,10 @@ model User {
   stories          Story[]
   storyViews       StoryView[]
   deviceKeys       DeviceKey[]
+  isAdmin          Boolean          @default(false)
   isVerified       Boolean          @default(false)
   verifiedType     String?
-  walletBalance    Float            @default(0)
+  walletBalance    Decimal          @default(0) @db.Decimal(18, 2)
   sentPayments     Payment[]        @relation("PaymentSender")
   receivedPayments Payment[]        @relation("PaymentReceiver")
   miniApps         MiniApp[]
@@ -230,6 +231,12 @@ model User {
 
 // A user-submitted report about another user (optionally about a specific
 // message), kept for manual moderation review. Never shown back to users.
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
 model Report {
   id             String       @id @default(uuid())
   reporterId     String
@@ -240,10 +247,12 @@ model Report {
   messageId      String?
   reason         ReportReason
   description    String?
+  status         ReportStatus @default(PENDING)
   createdAt      DateTime     @default(now())
 
   @@index([reportedUserId])
   @@index([reporterId])
+  @@index([status])
 }
 
 model RefreshToken {
@@ -866,7 +875,7 @@ model Payment {
   sender      User          @relation("PaymentSender", fields: [senderId], references: [id], onDelete: Cascade)
   receiverId  String
   receiver    User          @relation("PaymentReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  amount      Float
+  amount      Decimal       @db.Decimal(18, 2)
   currency    String        @default("UZS")
   note        String?
   status      PaymentStatus @default(PENDING)
@@ -875,6 +884,7 @@ model Payment {
 
   @@index([senderId])
   @@index([receiverId])
+  @@index([status])
 }
 
 model MiniApp {
@@ -938,6 +948,7 @@ model Post {
 
   @@index([userId])
   @@index([createdAt])
+  @@index([visibility])
 }
 
 model PostLike {
@@ -950,6 +961,7 @@ model PostLike {
 
   @@unique([postId, userId])
   @@index([postId])
+  @@index([userId])
 }
 
 model PostComment {
@@ -962,6 +974,7 @@ model PostComment {
   createdAt DateTime @default(now())
 
   @@index([postId, createdAt])
+  @@index([userId])
 }
 
 model Store {
@@ -972,6 +985,7 @@ model Store {
   description String?
   avatarUrl   String?
   category    String    @default("general")
+  rating      Float     @default(0)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -981,6 +995,7 @@ model Store {
 
   @@index([ownerId])
   @@index([category])
+  @@index([isActive])
 }
 
 model Product {
@@ -989,7 +1004,8 @@ model Product {
   store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   name        String
   description String?
-  price       Float
+  sku         String?
+  price       Decimal  @db.Decimal(18, 2)
   currency    String   @default("UZS")
   imageUrls   String[] @default([])
   stock       Int      @default(0)
@@ -1002,6 +1018,8 @@ model Product {
 
   @@index([storeId])
   @@index([category])
+  @@index([isActive])
+  @@index([storeId, isActive])
 }
 
 enum OrderStatus {
@@ -1020,8 +1038,9 @@ model Order {
   storeId     String
   store       Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
   status      OrderStatus @default(PENDING)
-  totalAmount Float
+  totalAmount Decimal     @db.Decimal(18, 2)
   currency    String      @default("UZS")
+  shippingAddress String?
   note        String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -1030,6 +1049,7 @@ model Order {
 
   @@index([buyerId])
   @@index([storeId])
+  @@index([status])
 }
 
 model OrderItem {
@@ -1039,9 +1059,10 @@ model OrderItem {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity  Int
-  price     Float
+  price     Decimal @db.Decimal(18, 2)
 
   @@index([orderId])
+  @@index([productId])
 }
 
 enum RedPacketStatus {
@@ -1054,7 +1075,7 @@ model RedPacket {
   id          String          @id @default(uuid())
   senderId    String
   sender      User            @relation("RedPacketSender", fields: [senderId], references: [id], onDelete: Cascade)
-  amount      Float
+  amount      Decimal         @db.Decimal(18, 2)
   currency    String          @default("UZS")
   message     String?
   status      RedPacketStatus @default(ACTIVE)
@@ -1063,6 +1084,7 @@ model RedPacket {
   claimedAt   DateTime?
   expiresAt   DateTime
   createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @default(now()) @updatedAt
 
   @@index([senderId])
   @@index([claimedById])

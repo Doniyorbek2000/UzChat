@@ -442,6 +442,13 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      {user?.isAdmin && (
+        <TouchableOpacity style={[styles.menuRow, { borderLeftWidth: 3, borderLeftColor: "#FF3B30" }]} onPress={() => navigation.navigate("AdminDashboard")}>
+          <Text style={styles.menuRowText}>🛡️ Admin panel</Text>
+          <Text style={styles.menuRowArrow}>›</Text>
+        </TouchableOpacity>
+      )}
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("About")}>
         <Text style={styles.menuRowText}>ℹ️ UzChat haqida</Text>
         <Text style={styles.menuRowArrow}>›</Text>

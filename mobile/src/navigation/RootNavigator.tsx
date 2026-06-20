@@ -76,6 +76,9 @@ import { MyOrdersScreen } from "../screens/marketplace/MyOrdersScreen";
 import { AddProductScreen } from "../screens/marketplace/AddProductScreen";
 import { SendRedPacketScreen } from "../screens/redpackets/SendRedPacketScreen";
 import { ClaimRedPacketScreen } from "../screens/redpackets/ClaimRedPacketScreen";
+import AdminDashboardScreen from "../screens/admin/AdminDashboardScreen";
+import AdminUsersScreen from "../screens/admin/AdminUsersScreen";
+import AdminReportsScreen from "../screens/admin/AdminReportsScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -382,6 +385,9 @@ export function RootNavigator() {
             <Stack.Screen name="AddProduct" component={AddProductScreen} options={{ title: "Mahsulot qo'shish" }} />
             <Stack.Screen name="SendRedPacket" component={SendRedPacketScreen} options={{ title: "Qizil konvert", headerStyle: { backgroundColor: "#C41E3A" }, headerTintColor: "#FFD700" }} />
             <Stack.Screen name="ClaimRedPacket" component={ClaimRedPacketScreen} options={{ title: "Konvert ochish", headerStyle: { backgroundColor: "#C41E3A" }, headerTintColor: "#FFD700" }} />
+            <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: "Admin panel" }} />
+            <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ title: "Foydalanuvchilar boshqaruvi" }} />
+            <Stack.Screen name="AdminReports" component={AdminReportsScreen} options={{ title: "Shikoyatlar" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />
