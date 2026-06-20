@@ -548,6 +548,7 @@ model ConversationParticipant {
 
   @@unique([conversationId, userId])
   @@index([userId])
+  @@index([userId, pinnedAt, pinnedOrder])
 }
 
 model Message {
@@ -639,6 +640,8 @@ model Message {
   @@index([expiresAt])
   @@index([scheduledFor])
   @@index([pollClosesAt])
+  @@index([expiresAt, deletedAt])
+  @@index([scheduledFor, sendWhenOnline])
 }
 
 model MessageReaction {
@@ -695,6 +698,7 @@ model MessageReminder {
   @@unique([messageId, userId])
   @@index([userId])
   @@index([remindAt])
+  @@index([userId, remindAt])
 }
 
 // A user's vote(s) on a POLL message. The poll question and option text are
