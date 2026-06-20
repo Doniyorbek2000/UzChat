@@ -94,7 +94,7 @@ export function SharedMediaScreen({ route, navigation }: Props) {
   if (!conversation) return null;
 
   const conversationKey = getConversationKey(conversation);
-  const isGroup = conversation.type === "GROUP";
+  const isGroup = conversation.type === "GROUP" || conversation.type === "CHANNEL";
 
   const onJumpToMessage = (item: DecryptedMessage) => {
     const { title } = getConversationDisplay(conversation, currentUser?.id ?? "", contactAliases);

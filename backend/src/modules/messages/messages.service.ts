@@ -103,7 +103,7 @@ async function resolveMentions(conversationId: string, userId: string, mentions:
   const senderRole = conversation.participants.find((p) => p.userId === userId)?.role;
   const mentionsEveryone =
     conversation.participants.length > 2 && resolved.length >= conversation.participants.length - 1 && !mentionsOnlyAdmins;
-  if (conversation.type === ConversationType.GROUP && senderRole === "MEMBER" && mentionsEveryone) {
+  if ((conversation.type === ConversationType.GROUP || conversation.type === ConversationType.CHANNEL) && senderRole === "MEMBER" && mentionsEveryone) {
     throw Errors.forbidden("Faqat guruh egasi va adminlar hammani eslatishi mumkin");
   }
 
@@ -168,8 +168,8 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   if (recipients.length === 0) return;
 
   const contentLabel = MEDIA_LABELS[message.type] ?? "Yangi xabar";
-  const isGroup = conversation.type === "GROUP";
-  const title = isGroup ? conversation.title ?? "Guruh" : sender.displayName;
+  const isGroupOrChannel = conversation.type === "GROUP" || conversation.type === "CHANNEL";
+  const title = isGroupOrChannel ? conversation.title ?? "Guruh" : sender.displayName;
 
   let repliedToSenderId: string | null = null;
   if (message.replyToId) {
@@ -189,7 +189,7 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
       !mentioned.includes(p) &&
       p.userId !== repliedToSenderId &&
       !isParticipantMuted(p) &&
-      (isGroup ? p.user.notifyGroupChats : p.user.notifyPrivateChats)
+      (isGroupOrChannel ? p.user.notifyGroupChats : p.user.notifyPrivateChats)
   );
 
   const send = async (participants: typeof recipients, body: string, type: string) => {
@@ -217,7 +217,7 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
   }
 
   if (regular.length > 0) {
-    await send(regular, isGroup ? `${sender.displayName}: ${contentLabel}` : contentLabel, "message");
+    await send(regular, isGroupOrChannel ? `${sender.displayName}: ${contentLabel}` : contentLabel, "message");
   }
 }
 
@@ -331,7 +331,7 @@ async function notifyEditMentions(senderId: string, conversationId: string, mess
   const sender = await prisma.user.findUnique({ where: { id: senderId }, select: { displayName: true } });
   if (!sender) return;
 
-  const title = conversation.type === ConversationType.GROUP ? conversation.title ?? "Guruh" : sender.displayName;
+  const title = (conversation.type === ConversationType.GROUP || conversation.type === ConversationType.CHANNEL) ? conversation.title ?? "Guruh" : sender.displayName;
   const body = `${sender.displayName} sizni eslatib o'tdi`;
   const data = { conversationId, messageId: message.id, type: "mention" };
 
@@ -386,7 +386,7 @@ export const messagesService = {
     }
 
     if (
-      conversation?.type === ConversationType.GROUP &&
+      (conversation?.type === ConversationType.GROUP || conversation?.type === ConversationType.CHANNEL) &&
       conversation.onlyAdminsCanSend &&
       participant.role === "MEMBER"
     ) {
@@ -394,7 +394,7 @@ export const messagesService = {
     }
 
     if (
-      conversation?.type === ConversationType.GROUP &&
+      (conversation?.type === ConversationType.GROUP || conversation?.type === ConversationType.CHANNEL) &&
       !conversation.membersCanSendMedia &&
       participant.role === "MEMBER" &&
       input.type !== MessageType.TEXT
@@ -403,7 +403,7 @@ export const messagesService = {
     }
 
     if (
-      conversation?.type === ConversationType.GROUP &&
+      (conversation?.type === ConversationType.GROUP || conversation?.type === ConversationType.CHANNEL) &&
       !conversation.membersCanSendPolls &&
       participant.role === "MEMBER" &&
       input.type === MessageType.POLL
@@ -412,7 +412,7 @@ export const messagesService = {
     }
 
     if (
-      conversation?.type === ConversationType.GROUP &&
+      (conversation?.type === ConversationType.GROUP || conversation?.type === ConversationType.CHANNEL) &&
       participant.role === "MEMBER" &&
       participant.restrictedUntil !== null &&
       participant.restrictedUntil.getTime() > Date.now()
@@ -429,7 +429,7 @@ export const messagesService = {
 
     if (
       !isScheduled &&
-      conversation?.type === ConversationType.GROUP &&
+      (conversation?.type === ConversationType.GROUP || conversation?.type === ConversationType.CHANNEL) &&
       conversation.slowModeSeconds > 0 &&
       participant.role === "MEMBER"
     ) {
@@ -524,7 +524,7 @@ export const messagesService = {
       where: { id: conversationId },
       select: { type: true, hideHistoryForNewMembers: true },
     });
-    if (conversation?.type === ConversationType.GROUP && conversation.hideHistoryForNewMembers) {
+    if ((conversation?.type === ConversationType.GROUP || conversation?.type === ConversationType.CHANNEL) && conversation.hideHistoryForNewMembers) {
       gtCandidates.push(participant.joinedAt);
     }
     if (gtCandidates.length > 0) {
@@ -613,7 +613,7 @@ export const messagesService = {
 
     // Group-only breakdown: most active members, weekday activity histogram, and
     // most-reacted messages, based on the most recent 1000 non-system messages.
-    if (conversation?.type === ConversationType.GROUP) {
+    if (conversation?.type === ConversationType.GROUP || conversation?.type === ConversationType.CHANNEL) {
       const senderCounts = await prisma.message.groupBy({
         by: ["senderId"],
         where: { ...baseWhere, type: { not: MessageType.SYSTEM } },

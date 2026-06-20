@@ -30,6 +30,7 @@ export type RootStackParamList = {
   ChatRoom: { conversationId: string; title: string; highlightMessageId?: string };
   NewChat: undefined;
   NewGroup: undefined;
+  NewChannel: undefined;
   AddContact: undefined;
   GroupInfo: { conversationId: string };
   AddGroupMember: { conversationId: string };

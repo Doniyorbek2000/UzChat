@@ -138,7 +138,7 @@ export const chatsService = {
       throw Errors.badRequest("Ishtirokchilardan biri topilmadi");
     }
 
-    if (input.type === "GROUP") {
+    if (input.type === "GROUP" || input.type === "CHANNEL") {
       await chatsService.assertCanAddToGroup(
         userId,
         users.filter((u) => u.id !== userId)
@@ -172,15 +172,16 @@ export const chatsService = {
 
     const conversation = await prisma.conversation.create({
       data: {
-        type: input.type === "GROUP" ? ConversationType.GROUP : ConversationType.DIRECT,
+        type: input.type === "CHANNEL" ? ConversationType.CHANNEL : input.type === "GROUP" ? ConversationType.GROUP : ConversationType.DIRECT,
         title: input.title,
         isSelf: input.type === "DIRECT" && input.participants.length === 1,
+        onlyAdminsCanSend: input.type === "CHANNEL" ? true : undefined,
         disappearingSeconds: creator.defaultDisappearingSeconds,
         participants: {
           create: input.participants.map((p) => ({
             userId: p.userId,
             role:
-              input.type === "GROUP" && p.userId === userId
+              (input.type === "GROUP" || input.type === "CHANNEL") && p.userId === userId
                 ? ParticipantRole.OWNER
                 : ParticipantRole.MEMBER,
             wrappedKey: p.wrappedKey,
@@ -565,11 +566,11 @@ export const chatsService = {
     await deleteOwnUploadByUrl(conversation.avatarUrl);
   },
 
-  /** GROUP conversations where both userId and otherUserId are participants. */
+  /** GROUP/CHANNEL conversations where both userId and otherUserId are participants. */
   async listCommonGroups(userId: string, otherUserId: string) {
     const groups = await prisma.conversation.findMany({
       where: {
-        type: ConversationType.GROUP,
+        type: { in: [ConversationType.GROUP, ConversationType.CHANNEL] },
         AND: [{ participants: { some: { userId } } }, { participants: { some: { userId: otherUserId } } }],
       },
       select: {
@@ -665,7 +666,7 @@ export const chatsService = {
     const requester = conversation.participants.find((p) => p.userId === userId);
     if (!requester) throw Errors.forbidden();
     if (
-      conversation.type === ConversationType.GROUP &&
+      (conversation.type === ConversationType.GROUP || conversation.type === ConversationType.CHANNEL) &&
       requester.role !== ParticipantRole.OWNER &&
       requester.role !== ParticipantRole.ADMIN
     ) {
@@ -683,7 +684,7 @@ export const chatsService = {
           ? `${actor?.displayName} o'chiriladigan xabarlar taymerini ${formatDisappearingDuration(disappearingSeconds)}ga o'rnatdi`
           : `${actor?.displayName} o'chiriladigan xabarlar taymerini o'chirdi`
       );
-      if (conversation.type === ConversationType.GROUP) {
+      if (conversation.type === ConversationType.GROUP || conversation.type === ConversationType.CHANNEL) {
         await chatsService.logGroupAction(conversationId, userId, GroupAuditAction.GROUP_SETTINGS_CHANGED, null, "disappearingSeconds");
       }
     }
@@ -730,7 +731,7 @@ export const chatsService = {
       include: { participants: true },
     });
     if (!conversation) throw Errors.notFound("Suhbat");
-    if (conversation.type !== ConversationType.GROUP) {
+    if (conversation.type !== ConversationType.GROUP && conversation.type !== ConversationType.CHANNEL) {
       throw Errors.badRequest("Bu amal faqat guruhlar uchun mavjud");
     }
 
@@ -1056,7 +1057,7 @@ export const chatsService = {
       include: { participants: true },
     });
     if (!conversation) throw Errors.notFound("Suhbat");
-    if (conversation.type !== ConversationType.GROUP) {
+    if (conversation.type !== ConversationType.GROUP && conversation.type !== ConversationType.CHANNEL) {
       throw Errors.badRequest("Faqat guruhlarga a'zo qo'shish mumkin");
     }
 
@@ -1161,7 +1162,7 @@ export const chatsService = {
     const requester = conversation.participants.find((p) => p.userId === userId);
     if (!requester) throw Errors.forbidden();
     if (
-      conversation.type === ConversationType.GROUP &&
+      (conversation.type === ConversationType.GROUP || conversation.type === ConversationType.CHANNEL) &&
       requester.role !== ParticipantRole.OWNER &&
       requester.role !== ParticipantRole.ADMIN &&
       !conversation.membersCanPinMessages
@@ -1207,7 +1208,7 @@ export const chatsService = {
       include: { participants: true },
     });
     if (!conversation) throw Errors.notFound("Suhbat");
-    if (conversation.type !== ConversationType.GROUP) {
+    if (conversation.type !== ConversationType.GROUP && conversation.type !== ConversationType.CHANNEL) {
       throw Errors.badRequest("Faqat guruh ma'lumotlarini tahrirlash mumkin");
     }
 
@@ -1453,7 +1454,7 @@ export const chatsService = {
       include: { participants: true },
     });
     if (!conversation) throw Errors.notFound("Suhbat");
-    if (conversation.type !== ConversationType.GROUP) {
+    if (conversation.type !== ConversationType.GROUP && conversation.type !== ConversationType.CHANNEL) {
       throw Errors.badRequest("Faqat guruhdan a'zo chiqarish mumkin");
     }
 
@@ -1586,7 +1587,7 @@ export const chatsService = {
       include: { participants: { orderBy: { joinedAt: "asc" } } },
     });
     if (!conversation) throw Errors.notFound("Suhbat");
-    if (conversation.type !== ConversationType.GROUP) {
+    if (conversation.type !== ConversationType.GROUP && conversation.type !== ConversationType.CHANNEL) {
       throw Errors.badRequest("Faqat guruhdan chiqish mumkin");
     }
 
@@ -1644,7 +1645,7 @@ export const chatsService = {
       include: { participants: true },
     });
     if (!conversation) throw Errors.notFound("Suhbat");
-    if (conversation.type !== ConversationType.GROUP) {
+    if (conversation.type !== ConversationType.GROUP && conversation.type !== ConversationType.CHANNEL) {
       throw Errors.badRequest("Faqat guruhda rol o'zgartirish mumkin");
     }
 
@@ -1733,7 +1734,7 @@ export const chatsService = {
       include: { participants: true },
     });
     if (!conversation) throw Errors.notFound("Suhbat");
-    if (conversation.type !== ConversationType.GROUP) {
+    if (conversation.type !== ConversationType.GROUP && conversation.type !== ConversationType.CHANNEL) {
       throw Errors.badRequest("Faqat guruhda unvon belgilash mumkin");
     }
 

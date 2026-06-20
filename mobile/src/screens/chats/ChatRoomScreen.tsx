@@ -418,11 +418,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       : otherUser.lastSeenAt
         ? `Oxirgi marta: ${formatTime(otherUser.lastSeenAt)}`
         : ""
-    : conversation?.type === "GROUP"
+    : (conversation?.type === "GROUP" || conversation?.type === "CHANNEL")
       ? (() => {
           const total = conversation.participants.length;
           const onlineCount = conversation.participants.filter((p) => onlineUsers.has(p.userId)).length;
-          return onlineCount > 0 ? `${total} a'zo, ${onlineCount} onlayn` : `${total} a'zo`;
+          const memberLabel = conversation.type === "CHANNEL" ? "obunachi" : "a'zo";
+          return onlineCount > 0 ? `${total} ${memberLabel}, ${onlineCount} onlayn` : `${total} ${memberLabel}`;
         })()
       : "";
 
@@ -600,13 +601,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     }
 
     const onPressHeaderTitle = () => {
-      if (conversation?.type === "GROUP") {
+      if (conversation?.type === "GROUP" || conversation?.type === "CHANNEL") {
         navigation.navigate("GroupInfo", { conversationId });
       } else if (conversation?.type === "DIRECT" && !conversation.isSelf && otherUser) {
         navigation.navigate("UserProfile", { userId: otherUser.id });
       }
     };
-    const headerTitleTappable = conversation?.type === "GROUP" || (conversation?.type === "DIRECT" && !conversation.isSelf);
+    const headerTitleTappable = conversation?.type === "GROUP" || conversation?.type === "CHANNEL" || (conversation?.type === "DIRECT" && !conversation.isSelf);
 
     navigation.setOptions({
       title,
@@ -619,7 +620,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           activeOpacity={0.6}
         >
           <Avatar
-            uri={conversation?.type === "GROUP" ? conversation.avatarUrl : otherUser?.avatarUrl}
+            uri={(conversation?.type === "GROUP" || conversation?.type === "CHANNEL") ? conversation.avatarUrl : otherUser?.avatarUrl}
             name={title}
             size={32}
             icon={conversation?.isSelf ? "📝" : undefined}
@@ -654,7 +655,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <TouchableOpacity onPress={() => navigation.navigate("ChatWallpaper", { conversationId })} hitSlop={8}>
             <Text style={styles.headerInfoIcon}>🖼</Text>
           </TouchableOpacity>
-          {conversation?.type === "GROUP" ? (
+          {(conversation?.type === "GROUP" || conversation?.type === "CHANNEL") ? (
             <TouchableOpacity onPress={() => navigation.navigate("GroupInfo", { conversationId })} hitSlop={8}>
               <Text style={styles.headerInfoIcon}>ℹ️</Text>
             </TouchableOpacity>
@@ -828,18 +829,19 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const myRole = conversation?.participants.find((p) => p.userId === user?.id)?.role;
-  const canMentionEveryone = !conversation || conversation.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
+  const isGroupLike = conversation?.type === "GROUP" || conversation?.type === "CHANNEL";
+  const canMentionEveryone = !conversation || !isGroupLike || myRole === "OWNER" || myRole === "ADMIN";
   const adminIds = (conversation?.participants ?? [])
     .filter((p) => p.role !== "MEMBER" && p.userId !== user?.id)
     .map((p) => p.userId);
-  const canMentionAdmins = conversation?.type === "GROUP" && adminIds.length > 0;
+  const canMentionAdmins = isGroupLike && adminIds.length > 0;
   const canForwardOrCopy =
     !conversation ||
     !conversation.noForwards ||
-    (conversation.type === "GROUP" && (myRole === "OWNER" || myRole === "ADMIN"));
+    (isGroupLike && (myRole === "OWNER" || myRole === "ADMIN"));
   const canManagePins =
     !conversation ||
-    conversation.type !== "GROUP" ||
+    !isGroupLike ||
     myRole === "OWNER" ||
     myRole === "ADMIN" ||
     conversation.membersCanPinMessages;
@@ -1155,7 +1157,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onChangeText = (value: string) => {
     setText(value);
     setTyping(conversationId, value.length > 0);
-    if (isGroup) {
+    if (isGroupLike) {
       const match = value.match(/(?:^|\s)@(\w*)$/);
       setMentionQuery(match ? match[1] : null);
     }
@@ -1659,14 +1661,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setLoadingMore(false);
   };
 
-  const isGroup = conversation?.type === "GROUP";
-  const canSend = !isGroup || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
+  const canSend = !isGroupLike || !conversation?.onlyAdminsCanSend || myRole === "OWNER" || myRole === "ADMIN";
   const canSendMedia =
-    !isGroup || conversation?.membersCanSendMedia !== false || myRole === "OWNER" || myRole === "ADMIN";
+    !isGroupLike || conversation?.membersCanSendMedia !== false || myRole === "OWNER" || myRole === "ADMIN";
   const canSendPolls =
-    !isGroup || conversation?.membersCanSendPolls !== false || myRole === "OWNER" || myRole === "ADMIN";
+    !isGroupLike || conversation?.membersCanSendPolls !== false || myRole === "OWNER" || myRole === "ADMIN";
 
-  const slowModeSeconds = isGroup && myRole === "MEMBER" ? conversation?.slowModeSeconds ?? 0 : 0;
+  const slowModeSeconds = isGroupLike && myRole === "MEMBER" ? conversation?.slowModeSeconds ?? 0 : 0;
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     if (!slowModeSeconds) return;
@@ -1681,7 +1682,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     : 0;
 
   const unreadMentions =
-    isGroup && initialLastReadAtCapturedRef.current
+    isGroupLike && initialLastReadAtCapturedRef.current
       ? messages.filter(
           (m) =>
             m.mentions.includes(user?.id ?? "") &&
@@ -1816,7 +1817,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             isSticker && styles.bubbleSticker,
           ]}
         >
-          {isGroup && !isOwn && sender && (
+          {isGroupLike && !isOwn && sender && (
             <TouchableOpacity onPress={() => navigation.navigate("UserProfile", { userId: sender.id })}>
               <Text style={styles.senderName}>
                 {contactAliases[sender.id] ?? sender.displayName}
@@ -1954,7 +1955,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         </TouchableOpacity>
       )}
-      {isGroup && conversation?.description && !descriptionBannerDismissed && (
+      {isGroupLike && conversation?.description && !descriptionBannerDismissed && (
         <TouchableOpacity
           style={styles.descriptionBanner}
           onPress={() => navigation.navigate("GroupInfo", { conversationId })}
@@ -2123,7 +2124,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage}>
               {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
             </TouchableOpacity>
-            {isGroup && (
+            {isGroupLike && (
               <TouchableOpacity style={styles.attachButton} onPress={() => setMentionPickerVisible(true)} disabled={sending}>
                 <Text style={styles.attachIcon}>@</Text>
               </TouchableOpacity>
@@ -2208,7 +2209,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <Text style={styles.actionButtonText}>↩️ Javob berish</Text>
           </TouchableOpacity>
           {actionMessage &&
-            isGroup &&
+            isGroupLike &&
             actionMessage.senderId !== user?.id &&
             actionMessage.type !== "SYSTEM" &&
             canForwardOrCopy &&
@@ -2380,7 +2381,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                       onPress: () => {
                         const doPin = (notify: boolean) =>
                           pinMessage(conversationId, message.id, option.value, notify).catch(() => {});
-                        if (!isGroup) {
+                        if (!isGroupLike) {
                           doPin(true);
                           return;
                         }
@@ -2420,7 +2421,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               <Text style={styles.actionButtonText}>⏰ Yodga solish</Text>
             </TouchableOpacity>
           )}
-          {actionMessage && isGroup && actionMessage.senderId === user?.id && !actionMessage.deletedAt && (
+          {actionMessage && isGroupLike && actionMessage.senderId === user?.id && !actionMessage.deletedAt && (
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => {
@@ -2433,7 +2434,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           )}
           {actionMessage &&
-            !isGroup &&
+            !isGroupLike &&
             !conversation?.isSelf &&
             actionMessage.senderId === user?.id &&
             !actionMessage.deletedAt && (
@@ -2480,7 +2481,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           {actionMessage &&
             ((actionMessage.senderId === user?.id &&
               Date.now() - new Date(actionMessage.createdAt).getTime() <= RECALL_WINDOW_MS) ||
-              (conversation?.type === "GROUP" &&
+              ((conversation?.type === "GROUP" || conversation?.type === "CHANNEL") &&
                 actionMessage.senderId !== user?.id &&
                 actionMessage.type !== "SYSTEM" &&
                 (myRole === "OWNER" || myRole === "ADMIN"))) && (
@@ -2964,7 +2965,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           ))}
         </ScrollView>
-        {isGroup && searchableSenders.length > 1 && (
+        {isGroupLike && searchableSenders.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.searchSenderFilterBar}>
             <TouchableOpacity
               style={[styles.senderChip, !searchSenderId && styles.senderChipActive]}
@@ -2994,7 +2995,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.searchResult} onPress={() => onSelectSearchResult(item)}>
-              {isGroup && (
+              {isGroupLike && (
                 <Text style={styles.searchResultAuthor} numberOfLines={1}>
                   {getAuthorName(item.senderId)}
                 </Text>

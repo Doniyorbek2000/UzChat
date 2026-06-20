@@ -9,23 +9,21 @@ const participantKeySchema = z.object({
 
 export const createConversationSchema = z
   .object({
-    type: z.enum(["DIRECT", "GROUP"]),
+    type: z.enum(["DIRECT", "GROUP", "CHANNEL"]),
     title: z.string().min(1).max(64).optional(),
     // public key of the creator's device, used to wrap the symmetric key for everyone
     keySenderPublicKey: z.string().min(1),
     participants: z.array(participantKeySchema).min(1),
   })
-  .refine((data) => data.type !== "GROUP" || data.participants.length >= 2, {
-    message: "Guruhda kamida 2 ta ishtirokchi bo'lishi kerak",
+  .refine((data) => (data.type !== "GROUP" && data.type !== "CHANNEL") || data.participants.length >= 2, {
+    message: "Guruh/kanalda kamida 2 ta ishtirokchi bo'lishi kerak",
     path: ["participants"],
   })
-  // DIRECT conversations have exactly 2 participants, except a "Saved Messages"
-  // self-conversation which has only the owner as its sole participant.
-  .refine((data) => data.type === "GROUP" || data.participants.length === 1 || data.participants.length === 2, {
+  .refine((data) => data.type === "GROUP" || data.type === "CHANNEL" || data.participants.length === 1 || data.participants.length === 2, {
     message: "DIRECT suhbatda aniq 2 ta ishtirokchi bo'lishi kerak",
     path: ["participants"],
   })
-  .refine((data) => data.type === "GROUP" || data.participants.length !== 1 || data.title === undefined, {
+  .refine((data) => data.type === "GROUP" || data.type === "CHANNEL" || data.participants.length !== 1 || data.title === undefined, {
     message: "Saqlangan xabarlar uchun nom kerak emas",
     path: ["title"],
   })

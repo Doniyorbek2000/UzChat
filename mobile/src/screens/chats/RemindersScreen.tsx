@@ -103,7 +103,7 @@ export function RemindersScreen({ navigation }: Props) {
             </Text>
             <Text style={styles.time}>{formatTime(item.message.createdAt)}</Text>
           </View>
-          {conversation.type === "GROUP" && senderName ? (
+          {(conversation.type === "GROUP" || conversation.type === "CHANNEL") && senderName ? (
             <Text style={styles.sender} numberOfLines={1}>
               {senderName}
             </Text>

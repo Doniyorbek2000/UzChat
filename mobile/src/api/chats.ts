@@ -2,7 +2,7 @@ import { apiClient } from "./client";
 import { ActivityStats, BannedGroupMember, CommonGroup, Conversation, GroupAuditLogEntry, GroupJoinRequest, InvitePreview, Message, MessageReaction, MessageReminderInfo, MessageType, MuteDuration, MyGroupJoinRequest, ParticipantRole, PollVote, RestrictDuration } from "../types";
 
 export interface CreateConversationInput {
-  type: "DIRECT" | "GROUP";
+  type: "DIRECT" | "GROUP" | "CHANNEL";
   title?: string;
   keySenderPublicKey: string;
   participants: { userId: string; wrappedKey: string; wrappedKeyNonce: string }[];

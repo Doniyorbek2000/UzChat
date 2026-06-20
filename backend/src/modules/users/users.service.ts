@@ -109,7 +109,7 @@ const publicSelect = {
 /** Leaves all of the user's groups (transferring ownership / cleaning up empty groups as needed), then deletes the account. */
 async function leaveGroupsAndDeleteUser(userId: string) {
   const groups = await prisma.conversationParticipant.findMany({
-    where: { userId, conversation: { type: ConversationType.GROUP } },
+    where: { userId, conversation: { type: { in: [ConversationType.GROUP, ConversationType.CHANNEL] } } },
     select: { conversationId: true },
   });
 

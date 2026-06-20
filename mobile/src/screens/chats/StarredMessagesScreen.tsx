@@ -116,7 +116,7 @@ export function StarredMessagesScreen({ navigation }: Props) {
             </Text>
             <Text style={styles.time}>{formatTime(item.createdAt)}</Text>
           </View>
-          {conversation.type === "GROUP" && senderName ? (
+          {(conversation.type === "GROUP" || conversation.type === "CHANNEL") && senderName ? (
             <Text style={styles.sender} numberOfLines={1}>
               {senderName}
             </Text>

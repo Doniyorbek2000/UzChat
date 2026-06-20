@@ -9,6 +9,7 @@ import { MainNavigator } from "./MainNavigator";
 import { ChatRoomScreen } from "../screens/chats/ChatRoomScreen";
 import { NewChatScreen } from "../screens/chats/NewChatScreen";
 import { NewGroupScreen } from "../screens/chats/NewGroupScreen";
+import { NewChannelScreen } from "../screens/chats/NewChannelScreen";
 import { GroupInfoScreen } from "../screens/chats/GroupInfoScreen";
 import { AddGroupMemberScreen } from "../screens/chats/AddGroupMemberScreen";
 import { JoinGroupScreen } from "../screens/chats/JoinGroupScreen";
@@ -246,6 +247,7 @@ export function RootNavigator() {
             <Stack.Screen name="ChatRoom" component={ChatRoomScreen} options={{ title: "" }} />
             <Stack.Screen name="NewChat" component={NewChatScreen} options={{ title: "Yangi suhbat" }} />
             <Stack.Screen name="NewGroup" component={NewGroupScreen} options={{ title: "Yangi guruh" }} />
+            <Stack.Screen name="NewChannel" component={NewChannelScreen} options={{ title: "Yangi kanal" }} />
             <Stack.Screen name="GroupInfo" component={GroupInfoScreen} options={{ title: "Guruh ma'lumoti" }} />
             <Stack.Screen name="AddGroupMember" component={AddGroupMemberScreen} options={{ title: "A'zo qo'shish" }} />
             <Stack.Screen name="JoinGroup" component={JoinGroupScreen} options={{ title: "Havola orqali qo'shilish" }} />

@@ -10,8 +10,8 @@ export function getConversationDisplay(
     return { title: "Shaxsiy yozuvlar", avatarUrl: null as string | null, otherUser: null as User | null };
   }
 
-  if (conversation.type === "GROUP") {
-    return { title: conversation.title ?? "Guruh", avatarUrl: conversation.avatarUrl, otherUser: null as User | null };
+  if (conversation.type === "GROUP" || conversation.type === "CHANNEL") {
+    return { title: conversation.title ?? (conversation.type === "CHANNEL" ? "Kanal" : "Guruh"), avatarUrl: conversation.avatarUrl, otherUser: null as User | null };
   }
 
   const other = conversation.participants.find((p) => p.userId !== currentUserId)?.user ?? null;

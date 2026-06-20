@@ -334,7 +334,7 @@ export function ChatListScreen({ navigation }: Props) {
       },
       { text: "🗑 Suhbatni tozalash", onPress: () => onClearHistoryPress(item) },
       { text: "❌ Suhbatni o'chirish", onPress: () => onDeleteConversationPress(item) },
-      ...(item.type === "GROUP" ? [{ text: "🚪 Guruhdan chiqish", onPress: () => onLeaveGroupPress(item) }] : []),
+      ...((item.type === "GROUP" || item.type === "CHANNEL") ? [{ text: item.type === "CHANNEL" ? "🚪 Kanaldan chiqish" : "🚪 Guruhdan chiqish", onPress: () => onLeaveGroupPress(item) }] : []),
       { text: "Bekor qilish", style: "cancel" },
     ]);
   };
@@ -546,7 +546,7 @@ export function ChatListScreen({ navigation }: Props) {
             <Text style={styles.time}>{formatTime(item.message.createdAt)}</Text>
           </View>
           <Text style={styles.preview} numberOfLines={1}>
-            {conversation.type === "GROUP" && senderName ? `${senderName}: ` : ""}
+            {(conversation.type === "GROUP" || conversation.type === "CHANNEL") && senderName ? `${senderName}: ` : ""}
             {item.message.text ? stripFormatting(item.message.text) : ""}
           </Text>
         </View>
@@ -566,7 +566,7 @@ export function ChatListScreen({ navigation }: Props) {
       const manuallyIncluded = folder.conversationIds.includes(c.id);
       const matchesSmartFilter =
         (folder.includeUnread && isConversationUnread(c, user!.id)) ||
-        (folder.includeGroups && c.type === "GROUP") ||
+        (folder.includeGroups && (c.type === "GROUP" || c.type === "CHANNEL")) ||
         (folder.includeDirect && c.type === "DIRECT");
       if (!manuallyIncluded && !matchesSmartFilter) return false;
       if (folder.excludeMuted && c.isMuted) return false;

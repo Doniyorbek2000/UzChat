@@ -68,7 +68,7 @@ export interface AuthTokens {
 
 export type LoginResult = ({ requires2FA?: false } & { user: AuthUser } & AuthTokens) | { requires2FA: true; pendingToken: string; hint: string | null };
 
-export type ConversationType = "DIRECT" | "GROUP";
+export type ConversationType = "DIRECT" | "GROUP" | "CHANNEL";
 export type ParticipantRole = "OWNER" | "ADMIN" | "MEMBER";
 export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "CONTACT" | "POLL" | "SYSTEM";
 

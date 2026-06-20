@@ -152,6 +152,7 @@ interface ChatState {
   createDirectConversation: (target: User) => Promise<Conversation>;
   getOrCreateSavedMessages: () => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
+  createChannelConversation: (title: string, members: User[]) => Promise<Conversation>;
   markRead: (conversationId: string, upToMessageId?: string, upToCreatedAt?: string) => Promise<void>;
   // When conversationIds is given, only those conversations are marked as read
   // (used for per-folder "mark all as read"); otherwise all unread conversations are.
@@ -938,6 +939,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return conversation;
   },
 
+  createChannelConversation: async (title, members) => {
+    const { user, keyPair } = useAuthStore.getState();
+    if (!user || !keyPair) throw new Error("Avtorizatsiyadan o'tilmagan");
+
+    const conversationKey = generateConversationKey();
+    const participants = [user, ...members].map((u) => ({
+      userId: u.id,
+      ...wrapConversationKey(conversationKey, u.publicKey, keyPair.privateKey),
+    }));
+
+    const conversation = await chatsApi.create({
+      type: "CHANNEL",
+      title,
+      keySenderPublicKey: keyPair.publicKey,
+      participants,
+    });
+
+    conversationKeyCache[conversation.id] = conversationKey;
+    set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
+    return conversation;
+  },
+
   markRead: async (conversationId, upToMessageId, upToCreatedAt) => {
     await chatsApi.markRead(conversationId, upToMessageId);
     getSocket()?.emit("message:read", { conversationId });
@@ -1439,7 +1462,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ) {
         const display = getConversationDisplay(conversation, currentUser!.id, get().contactAliases);
         const senderName =
-          conversation.type === "GROUP"
+          (conversation.type === "GROUP" || conversation.type === "CHANNEL")
             ? conversation.participants.find((p) => p.userId === message.senderId)?.user.displayName
             : undefined;
         const preview = messagePreviewText(decrypted);

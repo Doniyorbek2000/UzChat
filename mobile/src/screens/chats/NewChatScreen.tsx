@@ -70,6 +70,12 @@ export function NewChatScreen({ navigation }: Props) {
         </View>
         <Text style={styles.actionText}>Yangi guruh</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("NewChannel")}>
+        <View style={styles.groupIcon}>
+          <Text style={styles.groupIconText}>📣</Text>
+        </View>
+        <Text style={styles.actionText}>Yangi kanal</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("AddContact")}>
         <View style={styles.groupIcon}>
           <Text style={styles.groupIconText}>➕</Text>
