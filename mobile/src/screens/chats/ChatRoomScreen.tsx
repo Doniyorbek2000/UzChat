@@ -47,6 +47,7 @@ import { useQuickRepliesStore } from "../../store/quickRepliesStore";
 import { getCustomWallpaperUri, getWallpaperColor } from "../../theme/wallpapers";
 import { STICKER_PACKS } from "../../utils/stickerPacks";
 import { ConversationParticipant, MessageReaction, MessageType } from "../../types";
+import { translateText, LANGUAGES, LanguageCode } from "../../api/translate";
 import { colors } from "../../theme/colors";
 import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
@@ -351,6 +352,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [reactionDetailsMessage, setReactionDetailsMessage] = useState<DecryptedMessage | null>(null);
   const [pollVotesMessage, setPollVotesMessage] = useState<DecryptedMessage | null>(null);
   const [moreReactionsMessage, setMoreReactionsMessage] = useState<DecryptedMessage | null>(null);
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translatingId, setTranslatingId] = useState<string | null>(null);
+  const [translateLang, setTranslateLang] = useState<LanguageCode>("uz");
+  const [showTranslateLangPicker, setShowTranslateLangPicker] = useState(false);
+  const [pendingTranslateMsg, setPendingTranslateMsg] = useState<DecryptedMessage | null>(null);
   const [customReactionEmoji, setCustomReactionEmoji] = useState("");
   const [editHistoryMessage, setEditHistoryMessage] = useState<DecryptedMessage | null>(null);
   const [editHistoryEntries, setEditHistoryEntries] = useState<{ text: string; editedAt: string }[]>([]);
@@ -439,6 +445,20 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         { text: "Bekor qilish", style: "cancel" },
         { text: "Bloklash", style: "destructive", onPress: () => blockUser(otherUser.id).catch(() => {}) },
       ]);
+    }
+  };
+
+  const onTranslateMessage = async (msg: DecryptedMessage, targetLang: LanguageCode) => {
+    if (!msg.text || translations[msg.id]) return;
+    setTranslatingId(msg.id);
+    try {
+      const translated = await translateText(msg.text, "auto", targetLang);
+      setTranslations((prev) => ({ ...prev, [msg.id]: translated }));
+    } catch {
+      Alert.alert("Xatolik", "Tarjima qilib bo'lmadi");
+    } finally {
+      setTranslatingId(null);
+      setActionMessage(null);
     }
   };
 
@@ -1851,6 +1871,21 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           )}
           {content}
+          {translations[item.id] && (
+            <View style={styles.translationBox}>
+              <Text style={styles.translationLabel}>Tarjima:</Text>
+              <Text style={styles.translationText}>{translations[item.id]}</Text>
+              <TouchableOpacity onPress={() => setTranslations((prev) => { const next = { ...prev }; delete next[item.id]; return next; })} hitSlop={8}>
+                <Text style={styles.translationDismiss}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {translatingId === item.id && (
+            <View style={styles.translationBox}>
+              <ActivityIndicator size="small" />
+              <Text style={styles.translationLabel}> Tarjima qilinmoqda...</Text>
+            </View>
+          )}
           {!item.deletedAt &&
             !item.decryptFailed &&
             !!item.text &&
@@ -2524,6 +2559,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.actionButtonText}>👋 Chimchilash</Text>
               </TouchableOpacity>
             )}
+          {actionMessage && !actionMessage.deletedAt && !actionMessage.decryptFailed && !!actionMessage.text && actionMessage.type !== "SYSTEM" && !translations[actionMessage.id] && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {
+                setPendingTranslateMsg(actionMessage);
+                setShowTranslateLangPicker(true);
+              }}
+            >
+              <Text style={styles.actionButtonText}>🌐 Tarjima qilish</Text>
+            </TouchableOpacity>
+          )}
           {actionMessage && actionMessage.senderId !== user?.id && actionMessage.type !== "SYSTEM" && (
             <TouchableOpacity
               style={styles.actionButton}
@@ -3317,6 +3363,31 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       conversationKey={conversationKey ?? ""}
       onClose={() => setGalleryMessageId(null)}
     />
+    <Modal visible={showTranslateLangPicker} transparent animationType="fade" onRequestClose={() => setShowTranslateLangPicker(false)}>
+      <Pressable style={styles.actionBackdrop} onPress={() => setShowTranslateLangPicker(false)}>
+        <View style={styles.actionSheet}>
+          <Text style={styles.translationLabel}>Tarjima tili</Text>
+          <ScrollView style={{ maxHeight: 350 }}>
+            {LANGUAGES.map((lang) => (
+              <TouchableOpacity
+                key={lang.code}
+                style={[styles.actionButton, translateLang === lang.code && { backgroundColor: colors.primary + "22" }]}
+                onPress={() => {
+                  setTranslateLang(lang.code);
+                  setShowTranslateLangPicker(false);
+                  if (pendingTranslateMsg) {
+                    onTranslateMessage(pendingTranslateMsg, lang.code);
+                    setPendingTranslateMsg(null);
+                  }
+                }}
+              >
+                <Text style={styles.actionButtonText}>{lang.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Pressable>
+    </Modal>
     </>
   );
 }
@@ -3967,4 +4038,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   mediaPreviewSendText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  translationBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    paddingTop: 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    gap: 4,
+  },
+  translationLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: "600" },
+  translationText: { fontSize: 14, color: colors.text, flex: 1 },
+  translationDismiss: { fontSize: 12, color: colors.textSecondary, paddingHorizontal: 4 },
 });
