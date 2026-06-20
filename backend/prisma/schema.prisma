@@ -204,6 +204,7 @@ model User {
   dismissedSuggestions DismissedSuggestion[] @relation("DismissedSuggestionOwner")
   stories          Story[]
   storyViews       StoryView[]
+  deviceKeys       DeviceKey[]
 
   @@index([username])
   @@index([phone])
@@ -816,4 +817,17 @@ model StoryView {
 
   @@unique([storyId, userId])
   @@index([storyId])
+}
+
+model DeviceKey {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId  String
+  publicKey String
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, deviceId])
+  @@index([userId])
 }

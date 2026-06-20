@@ -14,6 +14,7 @@ import { foldersRouter } from "./modules/folders/folders.routes";
 import { reportsRouter } from "./modules/reports/reports.routes";
 import { broadcastsRouter } from "./modules/broadcasts/broadcasts.routes";
 import { storiesRouter } from "./modules/stories/stories.controller";
+import { devicesRouter } from "./modules/devices/devices.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 
@@ -40,6 +41,7 @@ export function createApp() {
   app.use("/reports", apiRateLimiter, reportsRouter);
   app.use("/broadcast-lists", apiRateLimiter, broadcastsRouter);
   app.use("/stories", apiRateLimiter, storiesRouter);
+  app.use("/devices", apiRateLimiter, devicesRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
