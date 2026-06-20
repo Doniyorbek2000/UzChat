@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
+import multer from "multer";
 import { AppError } from "../utils/errors";
 
 export function notFoundHandler(_req: Request, res: Response) {
@@ -15,6 +16,17 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     return res.status(400).json({
       error: { code: "VALIDATION_ERROR", message: err.issues[0]?.message ?? "Noto'g'ri ma'lumot" },
     });
+  }
+
+  if (err instanceof SyntaxError && "body" in err) {
+    return res.status(400).json({
+      error: { code: "INVALID_JSON", message: "Noto'g'ri JSON formati" },
+    });
+  }
+
+  if (err instanceof multer.MulterError) {
+    const message = err.code === "LIMIT_FILE_SIZE" ? "Fayl hajmi juda katta (max 50 MB)" : "Faylni yuklashda xatolik";
+    return res.status(400).json({ error: { code: "FILE_UPLOAD_ERROR", message } });
   }
 
   console.error(err);
