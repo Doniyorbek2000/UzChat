@@ -13,6 +13,7 @@ import { startMessageRemindersJob } from "./jobs/messageReminders";
 import { startChatAutoDeleteJob } from "./jobs/chatAutoDelete";
 import { startAccountSelfDestructJob } from "./jobs/accountSelfDestruct";
 import { startMediaGarbageCollectionJob } from "./jobs/mediaGarbageCollection";
+import { startSessionCleanupJob } from "./jobs/sessionCleanup";
 
 const app = createApp();
 const httpServer = createServer(app);
@@ -28,6 +29,7 @@ startMessageRemindersJob();
 startChatAutoDeleteJob();
 startAccountSelfDestructJob();
 startMediaGarbageCollectionJob();
+startSessionCleanupJob();
 
 function gracefulShutdown(signal: string) {
   console.log(`${signal} received — shutting down`);
