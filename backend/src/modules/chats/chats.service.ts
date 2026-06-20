@@ -547,7 +547,7 @@ export const chatsService = {
 
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
-      select: { type: true, isSelf: true },
+      select: { type: true, isSelf: true, avatarUrl: true },
     });
     if (!conversation) throw Errors.notFound("Suhbat");
     if (conversation.type !== ConversationType.DIRECT || conversation.isSelf) {
@@ -562,6 +562,7 @@ export const chatsService = {
     await prisma.conversation.delete({ where: { id: conversationId } });
 
     await deleteUploadedFiles(mediaMessages.map((m) => m.mediaUrl));
+    await deleteOwnUploadByUrl(conversation.avatarUrl);
   },
 
   /** GROUP conversations where both userId and otherUserId are participants. */
@@ -1591,6 +1592,7 @@ export const chatsService = {
       await prisma.conversation.delete({ where: { id: conversationId } });
 
       await deleteUploadedFiles(mediaMessages.map((m) => m.mediaUrl));
+      await deleteOwnUploadByUrl(conversation.avatarUrl);
       return { deleted: true as const, newOwnerId: null as string | null };
     }
 

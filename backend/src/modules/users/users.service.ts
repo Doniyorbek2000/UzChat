@@ -128,14 +128,18 @@ async function leaveGroupsAndDeleteUser(userId: string) {
   // Message.sender cascades on user deletion, so every message this user ever
   // sent (across all conversations) is about to be removed - collect their
   // media files now so they can be unlinked after the delete.
-  const mediaMessages = await prisma.message.findMany({
-    where: { senderId: userId, mediaUrl: { not: null } },
-    select: { mediaUrl: true },
-  });
+  const [mediaMessages, user] = await Promise.all([
+    prisma.message.findMany({
+      where: { senderId: userId, mediaUrl: { not: null } },
+      select: { mediaUrl: true },
+    }),
+    prisma.user.findUnique({ where: { id: userId }, select: { avatarUrl: true } }),
+  ]);
 
   await prisma.user.delete({ where: { id: userId } });
 
   await deleteUploadedFiles(mediaMessages.map((m) => m.mediaUrl));
+  await deleteOwnUploadByUrl(user?.avatarUrl);
 
   return { leaveResults };
 }
