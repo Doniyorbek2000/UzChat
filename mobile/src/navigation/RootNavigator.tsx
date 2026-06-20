@@ -54,6 +54,7 @@ import { AboutScreen } from "../screens/profile/AboutScreen";
 import { ThemeSettingsScreen } from "../screens/profile/ThemeSettingsScreen";
 import { QRCodeScreen } from "../screens/profile/QRCodeScreen";
 import { DeviceKeysScreen } from "../screens/profile/DeviceKeysScreen";
+import { CallScreen } from "../screens/calls/CallScreen";
 import { StoriesScreen } from "../screens/stories/StoriesScreen";
 import { StoryViewerScreen } from "../screens/stories/StoryViewerScreen";
 import { LockScreen } from "../screens/LockScreen";
@@ -297,6 +298,7 @@ export function RootNavigator() {
             <Stack.Screen name="Stories" component={StoriesScreen} options={{ title: "Hikoyalar" }} />
             <Stack.Screen name="QRCode" component={QRCodeScreen} options={{ title: "QR kod" }} />
             <Stack.Screen name="DeviceKeys" component={DeviceKeysScreen} options={{ title: "Qurilma kalitlari" }} />
+            <Stack.Screen name="Call" component={CallScreen} options={{ headerShown: false }} />
             <Stack.Screen name="StoryViewer" component={StoryViewerScreen} options={{ headerShown: false }} />
           </Stack.Navigator>
         ) : (

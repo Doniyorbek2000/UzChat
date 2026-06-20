@@ -3,6 +3,7 @@ import { Server, Socket } from "socket.io";
 import { verifyAccessToken } from "../utils/jwt";
 import { env } from "../config/env";
 import { registerChatHandlers } from "./chat.gateway";
+import { registerCallHandlers } from "./call.gateway";
 import { prisma } from "../config/prisma";
 import { pushService } from "../modules/push/push.service";
 import { messagesService } from "../modules/messages/messages.service";
@@ -155,6 +156,7 @@ async function handleConnection(socket: AuthenticatedSocket) {
   }
 
   registerChatHandlers(io!, authed);
+  registerCallHandlers(io!, authed);
 
   // Clear any "typing"/"recording" indicators left behind by an abrupt
   // disconnect (app closed/crashed mid-keystroke), so peers don't see a

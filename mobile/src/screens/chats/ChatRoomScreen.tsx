@@ -706,6 +706,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </View>
             </TouchableOpacity>
           )}
+          {conversation?.type === "DIRECT" && !conversation.isSelf && otherUser && (
+            <>
+              <TouchableOpacity onPress={() => navigation.navigate("Call", { userId: otherUser.id, displayName: otherUserDisplayName, avatarUrl: otherUser.avatarUrl, callType: "audio", isIncoming: false })} hitSlop={8}>
+                <Text style={styles.headerInfoIcon}>📞</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate("Call", { userId: otherUser.id, displayName: otherUserDisplayName, avatarUrl: otherUser.avatarUrl, callType: "video", isIncoming: false })} hitSlop={8}>
+                <Text style={styles.headerInfoIcon}>📹</Text>
+              </TouchableOpacity>
+            </>
+          )}
           <TouchableOpacity onPress={() => setSearchVisible(true)} hitSlop={8}>
             <Text style={styles.headerInfoIcon}>🔍</Text>
           </TouchableOpacity>
