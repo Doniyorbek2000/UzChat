@@ -392,6 +392,21 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Feed")}>
+        <Text style={styles.menuRowText}>📰 Yangiliklar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Marketplace")}>
+        <Text style={styles.menuRowText}>🛒 Bozor</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("SendRedPacket")}>
+        <Text style={styles.menuRowText}>🧧 Qizil konvert</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("CallHistory")}>
         <Text style={styles.menuRowText}>📞 Qo'ng'iroqlar tarixi</Text>
         <Text style={styles.menuRowArrow}>›</Text>

@@ -11,10 +11,15 @@ type Props = NativeStackScreenProps<RootStackParamList, "MiniApps">;
 const CATEGORIES = [
   { key: "all", label: "Barchasi" },
   { key: "mine", label: "Mening" },
-  { key: "games", label: "O'yinlar" },
-  { key: "tools", label: "Asboblar" },
+  { key: "transport", label: "Transport" },
+  { key: "food", label: "Ovqat" },
+  { key: "health", label: "Sog'liq" },
+  { key: "shopping", label: "Xaridlar" },
   { key: "finance", label: "Moliya" },
-  { key: "social", label: "Ijtimoiy" },
+  { key: "games", label: "O'yinlar" },
+  { key: "news", label: "Yangiliklar" },
+  { key: "entertainment", label: "Ko'ngilochar" },
+  { key: "travel", label: "Sayohat" },
   { key: "other", label: "Boshqa" },
 ];
 

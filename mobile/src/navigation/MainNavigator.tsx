@@ -33,7 +33,7 @@ export function MainNavigator() {
         component={ContactsScreen}
         options={{ title: "Kontaktlar", tabBarBadge: pendingRequestCount > 0 ? pendingRequestCount : undefined }}
       />
-      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: "Kashfiyot", headerShown: false }} />
+      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: "Kashfiyot" }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: "Profil" }} />
     </Tab.Navigator>
   );
