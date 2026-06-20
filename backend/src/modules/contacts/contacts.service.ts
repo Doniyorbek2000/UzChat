@@ -52,10 +52,16 @@ export const contactsService = {
     });
     if (existing) throw Errors.conflict("So'rov allaqachon yuborilgan yoki u sizning kontaktingiz");
 
-    const contact = await prisma.contact.create({
-      data: { ownerId, targetId: target.id, status: ContactStatus.PENDING },
-      include: { target: { select: userSummarySelect } },
-    });
+    let contact;
+    try {
+      contact = await prisma.contact.create({
+        data: { ownerId, targetId: target.id, status: ContactStatus.PENDING },
+        include: { target: { select: userSummarySelect } },
+      });
+    } catch (err: any) {
+      if (err.code === "P2002") throw Errors.conflict("So'rov allaqachon yuborilgan yoki u sizning kontaktingiz");
+      throw err;
+    }
 
     const sender = await prisma.user.findUnique({ where: { id: ownerId }, select: { displayName: true } });
     await pushService.sendToUsers([target.id], {
