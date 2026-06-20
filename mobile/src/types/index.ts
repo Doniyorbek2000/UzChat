@@ -72,7 +72,7 @@ export type LoginResult = ({ requires2FA?: false } & { user: AuthUser } & AuthTo
 
 export type ConversationType = "DIRECT" | "GROUP" | "CHANNEL";
 export type ParticipantRole = "OWNER" | "ADMIN" | "MEMBER";
-export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "CONTACT" | "POLL" | "SYSTEM";
+export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "CONTACT" | "POLL" | "SYSTEM" | "LOCATION";
 
 export interface ConversationParticipant {
   userId: string;
@@ -158,6 +158,8 @@ export interface Message {
   pollClosedAt: string | null;
   // POLL only: when set, the poll auto-closes at this time.
   pollClosesAt: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface Conversation {

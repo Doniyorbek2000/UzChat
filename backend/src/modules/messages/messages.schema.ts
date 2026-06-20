@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const sendMessageSchema = z
   .object({
-    type: z.enum(["TEXT", "IMAGE", "VIDEO", "AUDIO", "FILE", "CONTACT", "POLL"]).default("TEXT"),
+    type: z.enum(["TEXT", "IMAGE", "VIDEO", "AUDIO", "FILE", "CONTACT", "POLL", "LOCATION"]).default("TEXT"),
     // base64 NaCl secretbox ciphertext, encrypted client-side with the conversation key
     ciphertext: z.string().min(1),
     nonce: z.string().min(1),
@@ -29,6 +29,9 @@ export const sendMessageSchema = z
     pollClosesInSeconds: z.number().int().positive().optional(),
     // "Send without sound": recipients are notified silently (no notification sound).
     silent: z.boolean().optional(),
+    // LOCATION only: coordinates sent as plaintext metadata.
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
   })
   .refine((data) => !data.scheduledFor || new Date(data.scheduledFor).getTime() > Date.now(), {
     message: "Yuborish vaqti kelajakda bo'lishi kerak",

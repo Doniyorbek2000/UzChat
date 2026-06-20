@@ -28,6 +28,7 @@ enum MessageType {
   CONTACT
   POLL
   SYSTEM
+  LOCATION
 }
 
 enum ContactStatus {
@@ -585,6 +586,11 @@ model Message {
 
   // for IMAGE/VIDEO/AUDIO/FILE: URL to the (also encrypted) media blob
   mediaUrl String?
+
+  // LOCATION only: coordinates sent as plaintext metadata so the server
+  // can render static map previews; actual address text is in ciphertext.
+  latitude  Float?
+  longitude Float?
 
   // user IDs of @-mentioned participants (sent in cleartext alongside the
   // ciphertext so the server can route mention notifications)

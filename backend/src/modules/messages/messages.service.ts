@@ -494,6 +494,8 @@ export const messagesService = {
           isSpoiler: input.isSpoiler ?? false,
           pollAnonymous: input.pollAnonymous ?? false,
           pollClosesAt,
+          latitude: input.latitude,
+          longitude: input.longitude,
         },
         include: messageInclude(userId),
       });
