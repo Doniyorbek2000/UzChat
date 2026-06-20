@@ -75,6 +75,7 @@ export type RootStackParamList = {
   ThemeSettings: undefined;
   Stories: undefined;
   StoryViewer: { userId: string };
+  QRCode: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

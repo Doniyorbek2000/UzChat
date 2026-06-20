@@ -52,6 +52,7 @@ import { NotificationSettingsScreen } from "../screens/profile/NotificationSetti
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { AboutScreen } from "../screens/profile/AboutScreen";
 import { ThemeSettingsScreen } from "../screens/profile/ThemeSettingsScreen";
+import { QRCodeScreen } from "../screens/profile/QRCodeScreen";
 import { StoriesScreen } from "../screens/stories/StoriesScreen";
 import { StoryViewerScreen } from "../screens/stories/StoryViewerScreen";
 import { LockScreen } from "../screens/LockScreen";
@@ -293,6 +294,7 @@ export function RootNavigator() {
             <Stack.Screen name="About" component={AboutScreen} options={{ title: "UzChat haqida" }} />
             <Stack.Screen name="ThemeSettings" component={ThemeSettingsScreen} options={{ title: "Mavzu" }} />
             <Stack.Screen name="Stories" component={StoriesScreen} options={{ title: "Hikoyalar" }} />
+            <Stack.Screen name="QRCode" component={QRCodeScreen} options={{ title: "QR kod" }} />
             <Stack.Screen name="StoryViewer" component={StoryViewerScreen} options={{ headerShown: false }} />
           </Stack.Navigator>
         ) : (
