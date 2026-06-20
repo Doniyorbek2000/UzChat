@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image, Share, Alert } from "react-native";
+import { CameraView, useCameraPermissions, BarcodeScanningResult } from "expo-camera";
 import * as Clipboard from "expo-clipboard";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
+import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
@@ -16,6 +18,39 @@ function getQRImageUrl(data: string, size = 300): string {
 export function QRCodeScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<"my" | "scan">("my");
+  const [permission, requestPermission] = useCameraPermissions();
+  const [scanned, setScanned] = useState(false);
+
+  const onBarcodeScanned = useCallback(
+    async (result: BarcodeScanningResult) => {
+      if (scanned) return;
+      setScanned(true);
+
+      const data = result.data;
+      const usernameMatch = data.match(/uzchat:\/\/profile\/([a-zA-Z0-9_]+)/);
+      if (usernameMatch) {
+        const scannedUsername = usernameMatch[1];
+        try {
+          const results = await usersApi.search(scannedUsername);
+          const found = results.find(
+            (u: { username: string }) => u.username.toLowerCase() === scannedUsername.toLowerCase()
+          );
+          if (found) {
+            navigation.replace("UserProfile", { userId: found.id });
+            return;
+          }
+        } catch {}
+        Alert.alert("Topilmadi", `@${scannedUsername} foydalanuvchi topilmadi`, [
+          { text: "OK", onPress: () => setScanned(false) },
+        ]);
+      } else {
+        Alert.alert("Noto'g'ri QR kod", "Bu QR kod UzChat profili emas", [
+          { text: "OK", onPress: () => setScanned(false) },
+        ]);
+      }
+    },
+    [scanned, navigation]
+  );
 
   if (!user) return null;
 
@@ -33,6 +68,53 @@ export function QRCodeScreen({ navigation }: Props) {
   const onCopy = async () => {
     await Clipboard.setStringAsync(profileLink);
     Alert.alert("Nusxalandi", "Profil havolasi nusxalandi");
+  };
+
+  const renderScanTab = () => {
+    if (!permission) {
+      return (
+        <View style={styles.scanContainer}>
+          <Text style={styles.scanHint}>Kamera ruxsatini tekshirmoqda...</Text>
+        </View>
+      );
+    }
+
+    if (!permission.granted) {
+      return (
+        <View style={styles.scanContainer}>
+          <Text style={styles.scanIcon}>📷</Text>
+          <Text style={styles.scanTitle}>Kamera ruxsati kerak</Text>
+          <Text style={styles.scanHint}>
+            QR kodni skanerlash uchun kameraga ruxsat bering
+          </Text>
+          <TouchableOpacity style={styles.scanButton} onPress={requestPermission}>
+            <Text style={styles.scanButtonText}>Ruxsat berish</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.cameraContainer}>
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+          onBarcodeScanned={scanned ? undefined : onBarcodeScanned}
+        />
+        <View style={styles.cameraOverlay}>
+          <View style={styles.scanFrame} />
+          <Text style={styles.scanInstructions}>
+            QR kodni ramka ichiga joylashtiring
+          </Text>
+        </View>
+        {scanned && (
+          <TouchableOpacity style={styles.rescanBtn} onPress={() => setScanned(false)}>
+            <Text style={styles.rescanBtnText}>Qayta skanerlash</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
   };
 
   return (
@@ -68,19 +150,7 @@ export function QRCodeScreen({ navigation }: Props) {
           </View>
         </View>
       ) : (
-        <View style={styles.scanContainer}>
-          <Text style={styles.scanIcon}>📷</Text>
-          <Text style={styles.scanTitle}>QR kodni skanerlang</Text>
-          <Text style={styles.scanHint}>
-            Boshqa foydalanuvchining QR kodini kamera bilan skanerlang
-          </Text>
-          <TouchableOpacity
-            style={styles.scanButton}
-            onPress={() => Alert.alert("Ma'lumot", "Kamera orqali skanerlash funksiyasi tez orada qo'shiladi")}
-          >
-            <Text style={styles.scanButtonText}>Kamerani ochish</Text>
-          </TouchableOpacity>
-        </View>
+        renderScanTab()
       )}
     </View>
   );
@@ -128,4 +198,42 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   scanButtonText: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  cameraContainer: { flex: 1, position: "relative" },
+  camera: { flex: 1 },
+  cameraOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scanFrame: {
+    width: 240,
+    height: 240,
+    borderWidth: 3,
+    borderColor: colors.primary,
+    borderRadius: 16,
+    backgroundColor: "transparent",
+  },
+  scanInstructions: {
+    color: "#fff",
+    fontSize: 14,
+    marginTop: 20,
+    textAlign: "center",
+    textShadowColor: "#000",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  rescanBtn: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  rescanBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
 });

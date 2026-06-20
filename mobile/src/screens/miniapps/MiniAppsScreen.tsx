@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Image } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -17,6 +17,15 @@ const CATEGORIES = [
 ];
 
 export function MiniAppsScreen({ navigation }: Props) {
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => navigation.navigate("CreateMiniApp")} style={{ marginRight: 8 }}>
+          <Text style={{ color: colors.primary, fontSize: 28, fontWeight: "300" }}>+</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
   const [apps, setApps] = useState<MiniApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

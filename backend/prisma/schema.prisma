@@ -209,6 +209,8 @@ model User {
   sentPayments     Payment[]        @relation("PaymentSender")
   receivedPayments Payment[]        @relation("PaymentReceiver")
   miniApps         MiniApp[]
+  outgoingCalls    CallLog[]        @relation("CallCaller")
+  incomingCalls    CallLog[]        @relation("CallReceiver")
 
   @@index([username])
   @@index([phone])
@@ -875,4 +877,27 @@ model MiniApp {
 
   @@index([creatorId])
   @@index([category])
+}
+
+enum CallStatus {
+  MISSED
+  ANSWERED
+  REJECTED
+  BUSY
+}
+
+model CallLog {
+  id         String     @id @default(uuid())
+  callerId   String
+  caller     User       @relation("CallCaller", fields: [callerId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User       @relation("CallReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  callType   String     @default("audio")
+  status     CallStatus @default(MISSED)
+  duration   Int        @default(0)
+  startedAt  DateTime   @default(now())
+  endedAt    DateTime?
+
+  @@index([callerId])
+  @@index([receiverId])
 }

@@ -55,12 +55,14 @@ import { ThemeSettingsScreen } from "../screens/profile/ThemeSettingsScreen";
 import { QRCodeScreen } from "../screens/profile/QRCodeScreen";
 import { DeviceKeysScreen } from "../screens/profile/DeviceKeysScreen";
 import { CallScreen } from "../screens/calls/CallScreen";
+import { CallHistoryScreen } from "../screens/calls/CallHistoryScreen";
 import { StoriesScreen } from "../screens/stories/StoriesScreen";
 import { StoryViewerScreen } from "../screens/stories/StoryViewerScreen";
 import { WalletScreen } from "../screens/wallet/WalletScreen";
 import { SendPaymentScreen } from "../screens/wallet/SendPaymentScreen";
 import { MiniAppsScreen } from "../screens/miniapps/MiniAppsScreen";
 import { MiniAppViewScreen } from "../screens/miniapps/MiniAppViewScreen";
+import { CreateMiniAppScreen } from "../screens/miniapps/CreateMiniAppScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -211,6 +213,32 @@ export function RootNavigator() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
+    const socket = getSocket();
+    if (!socket) return;
+
+    const onIncomingCall = (data: {
+      callerId: string;
+      callerDisplayName: string;
+      callerAvatarUrl: string | null;
+      callType: "audio" | "video";
+    }) => {
+      if (navigationRef.isReady()) {
+        navigationRef.navigate("Call", {
+          userId: data.callerId,
+          displayName: data.callerDisplayName,
+          avatarUrl: data.callerAvatarUrl,
+          callType: data.callType,
+          isIncoming: true,
+        });
+      }
+    };
+
+    socket.on("call:offer", onIncomingCall);
+    return () => { socket.off("call:offer", onIncomingCall); };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
     const lastResponse = Notifications.getLastNotificationResponse();
     const lastData = lastResponse?.notification.request.content.data as MessageNotificationData | undefined;
@@ -303,11 +331,13 @@ export function RootNavigator() {
             <Stack.Screen name="QRCode" component={QRCodeScreen} options={{ title: "QR kod" }} />
             <Stack.Screen name="DeviceKeys" component={DeviceKeysScreen} options={{ title: "Qurilma kalitlari" }} />
             <Stack.Screen name="Call" component={CallScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="CallHistory" component={CallHistoryScreen} options={{ title: "Qo'ng'iroqlar tarixi" }} />
             <Stack.Screen name="StoryViewer" component={StoryViewerScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Wallet" component={WalletScreen} options={{ title: "Hamyon" }} />
             <Stack.Screen name="SendPayment" component={SendPaymentScreen} options={{ title: "Pul yuborish" }} />
             <Stack.Screen name="MiniApps" component={MiniAppsScreen} options={{ title: "Mini-dasturlar" }} />
             <Stack.Screen name="MiniAppView" component={MiniAppViewScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="CreateMiniApp" component={CreateMiniAppScreen} options={{ title: "Mini-dastur yaratish" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

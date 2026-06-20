@@ -82,6 +82,8 @@ export type RootStackParamList = {
   SendPayment: undefined;
   MiniApps: undefined;
   MiniAppView: { id: string; name: string; url: string };
+  CallHistory: undefined;
+  CreateMiniApp: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<
