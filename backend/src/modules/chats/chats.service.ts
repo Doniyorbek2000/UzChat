@@ -1058,26 +1058,32 @@ export const chatsService = {
       throw Errors.conflict("Foydalanuvchi allaqachon guruh a'zosi");
     }
 
-    const ban = await prisma.groupBan.findUnique({
-      where: { conversationId_bannedUserId: { conversationId, bannedUserId: input.userId } },
-    });
+    const [ban, target] = await Promise.all([
+      prisma.groupBan.findUnique({
+        where: { conversationId_bannedUserId: { conversationId, bannedUserId: input.userId } },
+      }),
+      prisma.user.findUnique({ where: { id: input.userId } }),
+    ]);
     if (ban) throw Errors.forbidden("Foydalanuvchi ushbu guruhdan bloklangan");
-
-    const target = await prisma.user.findUnique({ where: { id: input.userId } });
     if (!target) throw Errors.notFound("Foydalanuvchi");
 
     await chatsService.assertCanAddToGroup(userId, [target]);
 
-    await prisma.conversationParticipant.create({
-      data: {
-        conversationId,
-        userId: input.userId,
-        role: ParticipantRole.MEMBER,
-        wrappedKey: input.wrappedKey,
-        wrappedKeyNonce: input.wrappedKeyNonce,
-        keySenderPublicKey: input.keySenderPublicKey,
-      },
-    });
+    try {
+      await prisma.conversationParticipant.create({
+        data: {
+          conversationId,
+          userId: input.userId,
+          role: ParticipantRole.MEMBER,
+          wrappedKey: input.wrappedKey,
+          wrappedKeyNonce: input.wrappedKeyNonce,
+          keySenderPublicKey: input.keySenderPublicKey,
+        },
+      });
+    } catch (err: any) {
+      if (err.code === "P2002") throw Errors.conflict("Foydalanuvchi allaqachon guruh a'zosi");
+      throw err;
+    }
 
     const actor = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
     const systemMessages = [
@@ -1591,14 +1597,17 @@ export const chatsService = {
     let newOwnerId: string | null = null;
     if (self.role === ParticipantRole.OWNER) {
       const successor = others.find((p) => p.role === ParticipantRole.ADMIN) ?? others[0];
-      await prisma.conversationParticipant.update({
-        where: { id: successor.id },
-        data: { role: ParticipantRole.OWNER },
-      });
+      await prisma.$transaction([
+        prisma.conversationParticipant.update({
+          where: { id: successor.id },
+          data: { role: ParticipantRole.OWNER },
+        }),
+        prisma.conversationParticipant.delete({ where: { id: self.id } }),
+      ]);
       newOwnerId = successor.userId;
+    } else {
+      await prisma.conversationParticipant.delete({ where: { id: self.id } });
     }
-
-    await prisma.conversationParticipant.delete({ where: { id: self.id } });
 
     const leaver = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
     const systemMessage = await createSystemMessage(conversationId, userId, `${leaver?.displayName} guruhdan chiqdi`);
