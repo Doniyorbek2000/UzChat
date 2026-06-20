@@ -1,7 +1,8 @@
 import { createServer } from "http";
 import { createApp } from "./app";
 import { env } from "./config/env";
-import { initSocketServer } from "./sockets";
+import { prisma } from "./config/prisma";
+import { initSocketServer, getIo } from "./sockets";
 import { startMessageExpiryJob } from "./jobs/messageExpiry";
 import { startScheduledMessagesJob } from "./jobs/scheduledMessages";
 import { startBirthdayReminderJob } from "./jobs/birthdayReminders";
@@ -27,6 +28,17 @@ startMessageRemindersJob();
 startChatAutoDeleteJob();
 startAccountSelfDestructJob();
 startMediaGarbageCollectionJob();
+
+function gracefulShutdown(signal: string) {
+  console.log(`${signal} received — shutting down`);
+  httpServer.close(() => {
+    try { getIo().close(); } catch {}
+    prisma.$disconnect().finally(() => process.exit(0));
+  });
+  setTimeout(() => process.exit(1), 10_000);
+}
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 httpServer.listen(env.port, () => {
   console.log(`UzChat backend listening on port ${env.port}`);
