@@ -205,6 +205,8 @@ model User {
   stories          Story[]
   storyViews       StoryView[]
   deviceKeys       DeviceKey[]
+  isVerified       Boolean          @default(false)
+  verifiedType     String?
   walletBalance    Float            @default(0)
   sentPayments     Payment[]        @relation("PaymentSender")
   receivedPayments Payment[]        @relation("PaymentReceiver")

@@ -170,8 +170,18 @@ export function UserProfileScreen({ route, navigation }: Props) {
         <TouchableOpacity disabled={!profile.avatarUrl} onPress={() => setAvatarViewerOpen(true)}>
           <Avatar uri={profile.avatarUrl} name={profile.displayName} size={88} online={isOnline} />
         </TouchableOpacity>
-        <Text style={styles.name}>{contactAliases[profile.id] ?? profile.displayName}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          <Text style={styles.name}>{contactAliases[profile.id] ?? profile.displayName}</Text>
+          {profile.isVerified && <Text style={{ fontSize: 18 }}>✅</Text>}
+        </View>
         <Text style={styles.username}>@{profile.username}</Text>
+        {profile.isVerified && profile.verifiedType && (
+          <Text style={{ fontSize: 12, color: colors.primary, marginTop: 2 }}>
+            {profile.verifiedType === "business" ? "Rasmiy biznes akkaunti" :
+             profile.verifiedType === "official" ? "Rasmiy akkount" :
+             profile.verifiedType === "creator" ? "Kontent yaratuvchi" : "Tasdiqlangan"}
+          </Text>
+        )}
         {(isOnline || profile.lastSeenAt) && (
           <Text style={styles.presence}>{isOnline ? "Onlayn" : `Oxirgi marta: ${formatTime(profile.lastSeenAt!)}`}</Text>
         )}

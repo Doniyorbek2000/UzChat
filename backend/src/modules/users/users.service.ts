@@ -79,6 +79,8 @@ const profileSelect = {
   defaultDisappearingSeconds: true,
   twoFactorHash: true,
   twoFactorHint: true,
+  isVerified: true,
+  verifiedType: true,
   createdAt: true,
 } as const;
 
@@ -104,6 +106,8 @@ const publicSelect = {
   birthdayMonth: true,
   birthdayPrivacy: true,
   selfDestructDays: true,
+  isVerified: true,
+  verifiedType: true,
 } as const;
 
 /** Leaves all of the user's groups (transferring ownership / cleaning up empty groups as needed), then deletes the account. */

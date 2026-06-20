@@ -21,6 +21,8 @@ export interface User {
   birthdayDay?: number | null;
   birthdayMonth?: number | null;
   notifyOnlineRequested?: boolean;
+  isVerified?: boolean;
+  verifiedType?: string | null;
 }
 
 export interface AuthUser extends User {
