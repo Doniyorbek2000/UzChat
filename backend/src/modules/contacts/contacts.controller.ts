@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { contactsService } from "./contacts.service";
 import { getIo } from "../../sockets";
+import { addContactSchema, updateContactSchema } from "./contacts.schema";
 
 export const contactsController = {
   async sendRequest(req: Request, res: Response, next: NextFunction) {
     try {
-      const contact = await contactsService.sendRequest(req.user!.sub, req.body.username);
+      const { username } = addContactSchema.parse(req.body);
+      const contact = await contactsService.sendRequest(req.user!.sub, username);
       getIo().to(`user:${contact.targetId}`).emit("contact:request");
       res.status(201).json(contact);
     } catch (err) {
@@ -73,7 +75,8 @@ export const contactsController = {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await contactsService.updateContact(req.user!.sub, req.params.contactId, req.body);
+      const input = updateContactSchema.parse(req.body);
+      const result = await contactsService.updateContact(req.user!.sub, req.params.contactId, input);
       res.json(result);
     } catch (err) {
       next(err);

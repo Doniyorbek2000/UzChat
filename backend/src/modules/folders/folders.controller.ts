@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { foldersService } from "./folders.service";
+import { createFolderSchema, updateFolderSchema } from "./folders.schema";
 
 export const foldersController = {
   async list(req: Request, res: Response, next: NextFunction) {
@@ -13,7 +14,8 @@ export const foldersController = {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const folder = await foldersService.create(req.user!.sub, req.body);
+      const input = createFolderSchema.parse(req.body);
+      const folder = await foldersService.create(req.user!.sub, input);
       res.status(201).json(folder);
     } catch (err) {
       next(err);
@@ -22,7 +24,8 @@ export const foldersController = {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const folder = await foldersService.update(req.user!.sub, req.params.id, req.body);
+      const input = updateFolderSchema.parse(req.body);
+      const folder = await foldersService.update(req.user!.sub, req.params.id, input);
       res.json(folder);
     } catch (err) {
       next(err);

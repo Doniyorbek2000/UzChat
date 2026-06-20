@@ -1,12 +1,22 @@
 import { Request, Response, NextFunction } from "express";
 import { messagesService } from "./messages.service";
-import { listMessagesQuerySchema } from "./messages.schema";
+import {
+  sendMessageSchema,
+  listMessagesQuerySchema,
+  editMessageSchema,
+  setReactionSchema,
+  votePollSchema,
+  setReminderSchema,
+  rescheduleMessageSchema,
+} from "./messages.schema";
+import { markReadSchema } from "../chats/chats.schema";
 import { getIo } from "../../sockets";
 
 export const messagesController = {
   async send(req: Request, res: Response, next: NextFunction) {
     try {
-      const message = await messagesService.sendMessage(req.user!.sub, req.params.id, req.body);
+      const input = sendMessageSchema.parse(req.body);
+      const message = await messagesService.sendMessage(req.user!.sub, req.params.id, input);
       if (!message.scheduledFor) {
         getIo().to(`conversation:${req.params.id}`).emit("message:new", message);
       }
@@ -56,7 +66,8 @@ export const messagesController = {
 
   async markRead(req: Request, res: Response, next: NextFunction) {
     try {
-      await messagesService.markRead(req.user!.sub, req.params.id, req.body.upToMessageId);
+      const { upToMessageId } = markReadSchema.parse(req.body);
+      await messagesService.markRead(req.user!.sub, req.params.id, upToMessageId);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -100,7 +111,8 @@ export const messagesController = {
   async edit(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;
-      const message = await messagesService.editMessage(req.user!.sub, conversationId, messageId, req.body);
+      const input = editMessageSchema.parse(req.body);
+      const message = await messagesService.editMessage(req.user!.sub, conversationId, messageId, input);
       getIo().to(`conversation:${conversationId}`).emit("message:edited", message);
       res.json(message);
     } catch (err) {
@@ -121,7 +133,8 @@ export const messagesController = {
   async setReaction(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;
-      const reactions = await messagesService.setReaction(req.user!.sub, conversationId, messageId, req.body.emoji);
+      const { emoji } = setReactionSchema.parse(req.body);
+      const reactions = await messagesService.setReaction(req.user!.sub, conversationId, messageId, emoji);
       getIo().to(`conversation:${conversationId}`).emit("message:reaction", { conversationId, messageId, reactions });
       res.json({ messageId, reactions });
     } catch (err) {
@@ -132,11 +145,12 @@ export const messagesController = {
   async votePoll(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;
+      const { optionIds } = votePollSchema.parse(req.body);
       const { responseVotes, broadcastVotes } = await messagesService.votePoll(
         req.user!.sub,
         conversationId,
         messageId,
-        req.body.optionIds
+        optionIds
       );
       getIo()
         .to(`conversation:${conversationId}`)
@@ -182,7 +196,8 @@ export const messagesController = {
   async setReminder(req: Request, res: Response, next: NextFunction) {
     try {
       const { id: conversationId, messageId } = req.params;
-      const result = await messagesService.setReminder(req.user!.sub, conversationId, messageId, req.body);
+      const input = setReminderSchema.parse(req.body);
+      const result = await messagesService.setReminder(req.user!.sub, conversationId, messageId, input);
       res.json(result);
     } catch (err) {
       next(err);
@@ -237,11 +252,12 @@ export const messagesController = {
 
   async rescheduleScheduled(req: Request, res: Response, next: NextFunction) {
     try {
+      const { scheduledFor } = rescheduleMessageSchema.parse(req.body);
       const message = await messagesService.rescheduleMessage(
         req.user!.sub,
         req.params.id,
         req.params.messageId,
-        req.body.scheduledFor
+        scheduledFor
       );
       res.json(message);
     } catch (err) {

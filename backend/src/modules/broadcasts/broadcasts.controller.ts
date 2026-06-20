@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { broadcastsService } from "./broadcasts.service";
+import { createBroadcastListSchema, updateBroadcastListSchema } from "./broadcasts.schema";
 
 export const broadcastsController = {
   async list(req: Request, res: Response, next: NextFunction) {
@@ -13,7 +14,8 @@ export const broadcastsController = {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const list = await broadcastsService.create(req.user!.sub, req.body);
+      const input = createBroadcastListSchema.parse(req.body);
+      const list = await broadcastsService.create(req.user!.sub, input);
       res.status(201).json(list);
     } catch (err) {
       next(err);
@@ -22,7 +24,8 @@ export const broadcastsController = {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const list = await broadcastsService.update(req.user!.sub, req.params.id, req.body);
+      const input = updateBroadcastListSchema.parse(req.body);
+      const list = await broadcastsService.update(req.user!.sub, req.params.id, input);
       res.json(list);
     } catch (err) {
       next(err);

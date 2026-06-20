@@ -1,5 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { authService } from "./auth.service";
+import {
+  requestOtpSchema,
+  verifyOtpSchema,
+  loginSchema,
+  refreshSchema,
+  verifyTwoFactorSchema,
+  requestPhoneChangeSchema,
+  verifyPhoneChangeSchema,
+  requestTwoFactorRecoverySchema,
+  verifyTwoFactorRecoverySchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
+} from "./auth.schema";
 
 export const authController = {
   async checkUsername(req: Request, res: Response, next: NextFunction) {
@@ -14,7 +27,8 @@ export const authController = {
 
   async requestOtp(req: Request, res: Response, next: NextFunction) {
     try {
-      await authService.requestRegistrationOtp(req.body);
+      const input = requestOtpSchema.parse(req.body);
+      await authService.requestRegistrationOtp(input);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -23,7 +37,8 @@ export const authController = {
 
   async verifyOtp(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await authService.verifyOtpAndRegister(req.body, req.headers["user-agent"]);
+      const input = verifyOtpSchema.parse(req.body);
+      const result = await authService.verifyOtpAndRegister(input, req.headers["user-agent"]);
       res.status(201).json(result);
     } catch (err) {
       next(err);
@@ -32,7 +47,8 @@ export const authController = {
 
   async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await authService.login(req.body, req.headers["user-agent"]);
+      const input = loginSchema.parse(req.body);
+      const result = await authService.login(input, req.headers["user-agent"]);
       res.json(result);
     } catch (err) {
       next(err);
@@ -41,7 +57,8 @@ export const authController = {
 
   async verifyTwoFactor(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await authService.verifyTwoFactor(req.body, req.headers["user-agent"]);
+      const input = verifyTwoFactorSchema.parse(req.body);
+      const result = await authService.verifyTwoFactor(input, req.headers["user-agent"]);
       res.json(result);
     } catch (err) {
       next(err);
@@ -50,7 +67,8 @@ export const authController = {
 
   async refresh(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await authService.refresh(req.body.refreshToken, req.headers["user-agent"]);
+      const { refreshToken } = refreshSchema.parse(req.body);
+      const result = await authService.refresh(refreshToken, req.headers["user-agent"]);
       res.json(result);
     } catch (err) {
       next(err);
@@ -59,7 +77,8 @@ export const authController = {
 
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      await authService.logout(req.body.refreshToken);
+      const { refreshToken } = refreshSchema.parse(req.body);
+      await authService.logout(refreshToken);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -95,7 +114,8 @@ export const authController = {
 
   async requestPhoneChange(req: Request, res: Response, next: NextFunction) {
     try {
-      await authService.requestPhoneChange(req.user!.sub, req.body);
+      const input = requestPhoneChangeSchema.parse(req.body);
+      await authService.requestPhoneChange(req.user!.sub, input);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -104,7 +124,8 @@ export const authController = {
 
   async verifyPhoneChange(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await authService.verifyPhoneChange(req.user!.sub, req.body);
+      const input = verifyPhoneChangeSchema.parse(req.body);
+      const result = await authService.verifyPhoneChange(req.user!.sub, input);
       res.json(result);
     } catch (err) {
       next(err);
@@ -113,7 +134,8 @@ export const authController = {
 
   async requestTwoFactorRecovery(req: Request, res: Response, next: NextFunction) {
     try {
-      await authService.requestTwoFactorRecovery(req.body.pendingToken);
+      const { pendingToken } = requestTwoFactorRecoverySchema.parse(req.body);
+      await authService.requestTwoFactorRecovery(pendingToken);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -122,7 +144,8 @@ export const authController = {
 
   async recoverTwoFactor(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await authService.recoverTwoFactor(req.body, req.headers["user-agent"]);
+      const input = verifyTwoFactorRecoverySchema.parse(req.body);
+      const result = await authService.recoverTwoFactor(input, req.headers["user-agent"]);
       res.json(result);
     } catch (err) {
       next(err);
@@ -131,7 +154,8 @@ export const authController = {
 
   async requestPasswordReset(req: Request, res: Response, next: NextFunction) {
     try {
-      await authService.requestPasswordReset(req.body);
+      const input = requestPasswordResetSchema.parse(req.body);
+      await authService.requestPasswordReset(input);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -140,7 +164,8 @@ export const authController = {
 
   async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
-      await authService.resetPassword(req.body);
+      const input = resetPasswordSchema.parse(req.body);
+      await authService.resetPassword(input);
       res.status(204).send();
     } catch (err) {
       next(err);

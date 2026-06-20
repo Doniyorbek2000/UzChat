@@ -2,6 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import { usersService } from "./users.service";
 import { chatsService } from "../chats/chats.service";
 import { getIo } from "../../sockets";
+import {
+  updateProfileSchema,
+  changePasswordSchema,
+  setTwoFactorSchema,
+  disableTwoFactorSchema,
+  deleteAccountSchema,
+  setLastSeenExceptionSchema,
+} from "./users.schema";
 
 export const usersController = {
   async me(req: Request, res: Response, next: NextFunction) {
@@ -15,7 +23,8 @@ export const usersController = {
 
   async updateMe(req: Request, res: Response, next: NextFunction) {
     try {
-      const profile = await usersService.updateProfile(req.user!.sub, req.body);
+      const input = updateProfileSchema.parse(req.body);
+      const profile = await usersService.updateProfile(req.user!.sub, input);
       res.json(profile);
     } catch (err) {
       next(err);
@@ -33,7 +42,8 @@ export const usersController = {
 
   async changePassword(req: Request, res: Response, next: NextFunction) {
     try {
-      await usersService.changePassword(req.user!.sub, req.user!.sid, req.body);
+      const input = changePasswordSchema.parse(req.body);
+      await usersService.changePassword(req.user!.sub, req.user!.sid, input);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -42,7 +52,8 @@ export const usersController = {
 
   async setTwoFactor(req: Request, res: Response, next: NextFunction) {
     try {
-      await usersService.setTwoFactor(req.user!.sub, req.body);
+      const input = setTwoFactorSchema.parse(req.body);
+      await usersService.setTwoFactor(req.user!.sub, input);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -51,7 +62,8 @@ export const usersController = {
 
   async disableTwoFactor(req: Request, res: Response, next: NextFunction) {
     try {
-      await usersService.disableTwoFactor(req.user!.sub, req.body);
+      const input = disableTwoFactorSchema.parse(req.body);
+      await usersService.disableTwoFactor(req.user!.sub, input);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -61,7 +73,8 @@ export const usersController = {
   async deleteAccount(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.sub;
-      const { leaveResults } = await usersService.deleteAccount(userId, req.body);
+      const input = deleteAccountSchema.parse(req.body);
+      const { leaveResults } = await usersService.deleteAccount(userId, input);
 
       for (const result of leaveResults) {
         if (result.deleted) {
@@ -136,7 +149,8 @@ export const usersController = {
 
   async setLastSeenException(req: Request, res: Response, next: NextFunction) {
     try {
-      await usersService.setLastSeenException(req.user!.sub, req.params.id, req.body);
+      const input = setLastSeenExceptionSchema.parse(req.body);
+      await usersService.setLastSeenException(req.user!.sub, req.params.id, input);
       res.status(204).send();
     } catch (err) {
       next(err);

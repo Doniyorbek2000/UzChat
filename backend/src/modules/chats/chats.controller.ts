@@ -2,7 +2,26 @@ import { Request, Response, NextFunction } from "express";
 import { chatsService } from "./chats.service";
 import { getIo, isUserOnline } from "../../sockets";
 import { filterViewersForLastSeen } from "../../utils/lastSeen";
-import { getAuditLogQuerySchema } from "./chats.schema";
+import {
+  createConversationSchema,
+  addParticipantSchema,
+  updateConversationSchema,
+  updatePreferencesSchema,
+  reorderPinnedSchema,
+  clearHistorySchema,
+  pinMessageSchema,
+  banUserByIdSchema,
+  joinByInviteSchema,
+  createInviteLinkSchema,
+  updateDisappearingMessagesSchema,
+  setNoForwardsSchema,
+  updateParticipantRoleSchema,
+  updateParticipantRestrictionSchema,
+  updateParticipantCustomTitleSchema,
+  patSchema,
+  markReadSchema,
+  getAuditLogQuerySchema,
+} from "./chats.schema";
 
 // A participant's online-status cache may not include some other member yet
 // if they had no shared conversation before now (presence:initial is only
@@ -29,7 +48,8 @@ async function syncNewParticipantsPresence(participants: { userId: string }[], n
 export const chatsController = {
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const conversation = await chatsService.createConversation(req.user!.sub, req.body);
+      const input = createConversationSchema.parse(req.body);
+      const conversation = await chatsService.createConversation(req.user!.sub, input);
       for (const participant of conversation.participants) {
         getIo().to(`user:${participant.userId}`).socketsJoin(`conversation:${conversation.id}`);
       }
@@ -63,8 +83,9 @@ export const chatsController = {
 
   async addParticipant(req: Request, res: Response, next: NextFunction) {
     try {
-      const { conversation, systemMessages } = await chatsService.addParticipant(req.user!.sub, req.params.id, req.body);
-      const newParticipantId: string = req.body.userId;
+      const input = addParticipantSchema.parse(req.body);
+      const { conversation, systemMessages } = await chatsService.addParticipant(req.user!.sub, req.params.id, input);
+      const newParticipantId: string = input.userId;
 
       getIo().to(`user:${newParticipantId}`).socketsJoin(`conversation:${conversation.id}`);
 
@@ -89,7 +110,8 @@ export const chatsController = {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const { conversation, systemMessages } = await chatsService.updateConversation(req.user!.sub, req.params.id, req.body);
+      const input = updateConversationSchema.parse(req.body);
+      const { conversation, systemMessages } = await chatsService.updateConversation(req.user!.sub, req.params.id, input);
       getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
       for (const systemMessage of systemMessages) {
         getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
@@ -102,7 +124,8 @@ export const chatsController = {
 
   async updatePreferences(req: Request, res: Response, next: NextFunction) {
     try {
-      const conversation = await chatsService.updatePreferences(req.user!.sub, req.params.id, req.body);
+      const input = updatePreferencesSchema.parse(req.body);
+      const conversation = await chatsService.updatePreferences(req.user!.sub, req.params.id, input);
       res.json(conversation);
     } catch (err) {
       next(err);
@@ -111,7 +134,8 @@ export const chatsController = {
 
   async reorderPinned(req: Request, res: Response, next: NextFunction) {
     try {
-      const conversations = await chatsService.reorderPinned(req.user!.sub, req.params.id, req.body.direction);
+      const { direction } = reorderPinnedSchema.parse(req.body);
+      const conversations = await chatsService.reorderPinned(req.user!.sub, req.params.id, direction);
       res.json(conversations);
     } catch (err) {
       next(err);
@@ -120,7 +144,8 @@ export const chatsController = {
 
   async clearHistory(req: Request, res: Response, next: NextFunction) {
     try {
-      await chatsService.clearHistory(req.user!.sub, req.params.id, req.body.olderThanDays);
+      const { olderThanDays } = clearHistorySchema.parse(req.body);
+      await chatsService.clearHistory(req.user!.sub, req.params.id, olderThanDays);
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -158,11 +183,12 @@ export const chatsController = {
 
   async pinMessage(req: Request, res: Response, next: NextFunction) {
     try {
+      const input = pinMessageSchema.parse(req.body);
       const { conversation, systemMessage } = await chatsService.pinMessage(
         req.user!.sub,
         req.params.id,
         req.params.messageId,
-        req.body
+        input
       );
       getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
       if (systemMessage) getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
@@ -194,10 +220,11 @@ export const chatsController = {
 
   async setDisappearingMessages(req: Request, res: Response, next: NextFunction) {
     try {
+      const { disappearingSeconds } = updateDisappearingMessagesSchema.parse(req.body);
       const { conversation, systemMessage } = await chatsService.setDisappearingMessages(
         req.user!.sub,
         req.params.id,
-        req.body.disappearingSeconds
+        disappearingSeconds
       );
       getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
       if (systemMessage) getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
@@ -209,10 +236,11 @@ export const chatsController = {
 
   async setNoForwards(req: Request, res: Response, next: NextFunction) {
     try {
+      const { noForwards } = setNoForwardsSchema.parse(req.body);
       const { conversation, systemMessage } = await chatsService.setNoForwards(
         req.user!.sub,
         req.params.id,
-        req.body.noForwards
+        noForwards
       );
       getIo().to(`conversation:${conversation.id}`).emit("conversation:updated", conversation);
       if (systemMessage) getIo().to(`conversation:${conversation.id}`).emit("message:new", systemMessage);
@@ -224,7 +252,8 @@ export const chatsController = {
 
   async createInviteLink(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await chatsService.createInviteLink(req.user!.sub, req.params.id, req.body);
+      const input = createInviteLinkSchema.parse(req.body);
+      const result = await chatsService.createInviteLink(req.user!.sub, req.params.id, input);
       res.json(result);
     } catch (err) {
       next(err);
@@ -252,7 +281,8 @@ export const chatsController = {
   async joinByInvite(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.sub;
-      const result = await chatsService.joinByInvite(userId, req.params.code, req.body);
+      const input = joinByInviteSchema.parse(req.body);
+      const result = await chatsService.joinByInvite(userId, req.params.code, input);
 
       if (result.pending) {
         getIo()
@@ -411,7 +441,8 @@ export const chatsController = {
 
   async banUserById(req: Request, res: Response, next: NextFunction) {
     try {
-      const ban = await chatsService.banUserById(req.user!.sub, req.params.id, req.body);
+      const input = banUserByIdSchema.parse(req.body);
+      const ban = await chatsService.banUserById(req.user!.sub, req.params.id, input);
       res.status(201).json(ban);
     } catch (err) {
       next(err);
@@ -458,7 +489,8 @@ export const chatsController = {
   async updateParticipantRole(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;
-      const { conversation, systemMessage } = await chatsService.updateParticipantRole(req.user!.sub, id, userId, req.body.role);
+      const { role } = updateParticipantRoleSchema.parse(req.body);
+      const { conversation, systemMessage } = await chatsService.updateParticipantRole(req.user!.sub, id, userId, role);
       getIo().to(`conversation:${id}`).emit("conversation:updated", conversation);
       getIo().to(`conversation:${id}`).emit("message:new", systemMessage);
       res.json(conversation);
@@ -470,7 +502,8 @@ export const chatsController = {
   async updateParticipantRestriction(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;
-      const conversation = await chatsService.updateParticipantRestriction(req.user!.sub, id, userId, req.body.restrictFor);
+      const { restrictFor } = updateParticipantRestrictionSchema.parse(req.body);
+      const conversation = await chatsService.updateParticipantRestriction(req.user!.sub, id, userId, restrictFor);
       getIo().to(`conversation:${id}`).emit("conversation:updated", conversation);
       res.json(conversation);
     } catch (err) {
@@ -481,7 +514,8 @@ export const chatsController = {
   async updateParticipantCustomTitle(req: Request, res: Response, next: NextFunction) {
     try {
       const { id, userId } = req.params;
-      const conversation = await chatsService.updateParticipantCustomTitle(req.user!.sub, id, userId, req.body.customTitle);
+      const { customTitle } = updateParticipantCustomTitleSchema.parse(req.body);
+      const conversation = await chatsService.updateParticipantCustomTitle(req.user!.sub, id, userId, customTitle);
       getIo().to(`conversation:${id}`).emit("conversation:updated", conversation);
       res.json(conversation);
     } catch (err) {
@@ -491,7 +525,8 @@ export const chatsController = {
 
   async pat(req: Request, res: Response, next: NextFunction) {
     try {
-      const systemMessage = await chatsService.pat(req.user!.sub, req.params.id, req.body.targetUserId);
+      const { targetUserId } = patSchema.parse(req.body);
+      const systemMessage = await chatsService.pat(req.user!.sub, req.params.id, targetUserId);
       getIo().to(`conversation:${req.params.id}`).emit("message:new", systemMessage);
       res.status(201).json(systemMessage);
     } catch (err) {
