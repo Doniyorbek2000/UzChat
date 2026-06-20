@@ -1,7 +1,14 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, validateQuery } from "../../utils/validate";
 import { createStoreSchema, updateStoreSchema, createProductSchema, updateProductSchema, createOrderSchema, updateOrderStatusSchema } from "./marketplace.schema";
+import { z } from "zod";
+
+const cursorQuery = z.object({
+  cursor: z.string().uuid().optional(),
+  category: z.string().max(50).optional(),
+  q: z.string().max(200).optional(),
+}).passthrough();
 import { marketplaceService } from "./marketplace.service";
 
 const router = Router();
@@ -14,7 +21,7 @@ router.post("/stores", validateBody(createStoreSchema), async (req: Request, res
   res.status(201).json(store);
 });
 
-router.get("/stores", async (req: Request, res: Response) => {
+router.get("/stores", validateQuery(cursorQuery), async (req: Request, res: Response) => {
   const category = req.query.category as string | undefined;
   const cursor = req.query.cursor as string | undefined;
   const result = await marketplaceService.listStores(category, cursor);
@@ -42,7 +49,7 @@ router.post("/stores/:storeId/products", validateBody(createProductSchema), asyn
   res.status(201).json(product);
 });
 
-router.get("/stores/:storeId/products", async (req: Request, res: Response) => {
+router.get("/stores/:storeId/products", validateQuery(cursorQuery), async (req: Request, res: Response) => {
   const cursor = req.query.cursor as string | undefined;
   const result = await marketplaceService.listProducts(req.params.storeId, cursor);
   res.json(result);
@@ -58,7 +65,7 @@ router.delete("/products/:productId", async (req: Request, res: Response) => {
   res.status(204).send();
 });
 
-router.get("/products/search", async (req: Request, res: Response) => {
+router.get("/products/search", validateQuery(cursorQuery), async (req: Request, res: Response) => {
   const query = (req.query.q as string) || "";
   const category = req.query.category as string | undefined;
   const cursor = req.query.cursor as string | undefined;

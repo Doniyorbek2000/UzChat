@@ -13,3 +13,16 @@ export function validateBody(schema: ZodSchema) {
     next();
   };
 }
+
+export function validateQuery(schema: ZodSchema) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.query);
+    if (!result.success) {
+      return res.status(400).json({
+        error: { code: "VALIDATION_ERROR", message: result.error.issues[0]?.message ?? "Noto'g'ri parametr" },
+      });
+    }
+    req.query = result.data;
+    next();
+  };
+}

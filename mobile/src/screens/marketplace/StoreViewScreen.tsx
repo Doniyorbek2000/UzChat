@@ -70,6 +70,9 @@ export function StoreViewScreen({ route, navigation }: Props) {
             <Text style={styles.storeName}>{store.name}</Text>
             {store.description && <Text style={styles.storeDesc}>{store.description}</Text>}
             <Text style={styles.storeOwner}>@{store.owner?.username}</Text>
+            {store.rating > 0 && (
+              <Text style={styles.storeRating}>{"★".repeat(Math.round(store.rating))} {store.rating.toFixed(1)}</Text>
+            )}
             {store.ownerId === userId && (
               <TouchableOpacity
                 style={styles.addProductBtn}
@@ -118,6 +121,7 @@ const styles = StyleSheet.create({
   storeName: { fontSize: 20, fontWeight: "700", color: colors.text },
   storeDesc: { fontSize: 14, color: colors.textSecondary, marginTop: 4, textAlign: "center" },
   storeOwner: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  storeRating: { fontSize: 14, color: "#FFB800", fontWeight: "600", marginTop: 4 },
   grid: { padding: 12 },
   gridRow: { gap: 12 },
   productCard: {

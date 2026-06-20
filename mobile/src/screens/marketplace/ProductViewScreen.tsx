@@ -88,6 +88,9 @@ export function ProductViewScreen({ route, navigation }: Props) {
 
           <View style={styles.meta}>
             <Text style={styles.metaText}>Zaxira: {product.stock > 0 ? product.stock : "Tugagan"}</Text>
+            <Text style={styles.metaText}>Kategoriya: {product.category}</Text>
+            {product.sku && <Text style={styles.metaText}>SKU: {product.sku}</Text>}
+            {product.store && <Text style={styles.metaText}>Do'kon: {product.store.name}</Text>}
           </View>
         </View>
       </ScrollView>

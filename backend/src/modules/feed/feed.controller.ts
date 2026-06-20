@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
-import { createPostSchema, createCommentSchema } from "./feed.schema";
+import { validateBody, validateQuery } from "../../utils/validate";
+import { createPostSchema, createCommentSchema, paginationQuery } from "./feed.schema";
 import { feedService } from "./feed.service";
 
 const router = Router();
@@ -13,15 +13,17 @@ router.post("/", validateBody(createPostSchema), async (req: Request, res: Respo
   res.status(201).json(post);
 });
 
-router.get("/", async (req: Request, res: Response) => {
+router.get("/", validateQuery(paginationQuery), async (req: Request, res: Response) => {
   const cursor = req.query.cursor as string | undefined;
-  const result = await feedService.getFeed(req.user!.sub, cursor);
+  const limit = parseInt(req.query.limit as string) || 20;
+  const result = await feedService.getFeed(req.user!.sub, cursor, limit);
   res.json(result);
 });
 
-router.get("/user/:userId", async (req: Request, res: Response) => {
+router.get("/user/:userId", validateQuery(paginationQuery), async (req: Request, res: Response) => {
   const cursor = req.query.cursor as string | undefined;
-  const result = await feedService.getUserPosts(req.params.userId, req.user!.sub, cursor);
+  const limit = parseInt(req.query.limit as string) || 20;
+  const result = await feedService.getUserPosts(req.params.userId, req.user!.sub, cursor, limit);
   res.json(result);
 });
 
@@ -35,9 +37,10 @@ router.delete("/:postId/like", async (req: Request, res: Response) => {
   res.json(result);
 });
 
-router.get("/:postId/comments", async (req: Request, res: Response) => {
+router.get("/:postId/comments", validateQuery(paginationQuery), async (req: Request, res: Response) => {
   const cursor = req.query.cursor as string | undefined;
-  const result = await feedService.getComments(req.params.postId, cursor);
+  const limit = parseInt(req.query.limit as string) || 30;
+  const result = await feedService.getComments(req.params.postId, cursor, limit);
   res.json(result);
 });
 
