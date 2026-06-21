@@ -8,6 +8,7 @@ import { prisma } from "../config/prisma";
 import { pushService } from "../modules/push/push.service";
 import { messagesService } from "../modules/messages/messages.service";
 import { filterVisibleOnlineOwners, filterViewersForLastSeen } from "../utils/lastSeen";
+import { logger } from "../utils/logger";
 
 let io: Server | undefined;
 
@@ -59,7 +60,7 @@ export function initSocketServer(httpServer: HttpServer): Server {
 
   io.on("connection", (socket) => {
     handleConnection(socket as AuthenticatedSocket).catch((err) => {
-      console.error("Socket connection setup failed:", err);
+      logger.error("Socket connection setup failed", { error: String(err) });
       socket.disconnect(true);
     });
   });
@@ -193,7 +194,7 @@ async function handleConnection(socket: AuthenticatedSocket) {
         }
       }
     } catch (err) {
-      console.error("Socket disconnect handler failed:", err);
+      logger.error("Socket disconnect handler failed", { error: String(err) });
     }
   });
 }

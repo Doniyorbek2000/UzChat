@@ -1,9 +1,8 @@
 import { contactsService } from "../modules/contacts/contacts.service";
+import { logger } from "../utils/logger";
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 
-// Runs once per UTC calendar day (tracked in-memory) and notifies users
-// about contacts whose birthday falls on that day.
 let lastRunDate: string | null = null;
 
 export function startBirthdayReminderJob() {
@@ -14,7 +13,7 @@ export function startBirthdayReminderJob() {
       await contactsService.sendBirthdayReminders();
       lastRunDate = today;
     } catch (err) {
-      console.error("Birthday reminder job failed:", err);
+      logger.error("Birthday reminder job failed", { error: String(err) });
     }
   };
   run();

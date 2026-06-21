@@ -3,6 +3,7 @@ import { createApp } from "./app";
 import { env } from "./config/env";
 import { prisma } from "./config/prisma";
 import { initSocketServer, getIo } from "./sockets";
+import { logger } from "./utils/logger";
 import { startMessageExpiryJob } from "./jobs/messageExpiry";
 import { startScheduledMessagesJob } from "./jobs/scheduledMessages";
 import { startBirthdayReminderJob } from "./jobs/birthdayReminders";
@@ -34,7 +35,7 @@ startSessionCleanupJob();
 startStoryExpiryJob();
 
 function gracefulShutdown(signal: string) {
-  console.log(`${signal} received — shutting down`);
+  logger.info("Shutting down", { signal });
   httpServer.close(() => {
     try { getIo().close(); } catch {}
     prisma.$disconnect().finally(() => process.exit(0));
@@ -45,5 +46,5 @@ process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 httpServer.listen(env.port, () => {
-  console.log(`UzChat backend listening on port ${env.port}`);
+  logger.info("UzChat backend started", { port: env.port });
 });

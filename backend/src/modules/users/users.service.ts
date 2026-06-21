@@ -27,6 +27,7 @@ import {
   SetTwoFactorInput,
   UpdateProfileInput,
 } from "./users.schema";
+import { logger } from "../../utils/logger";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 // How often a user may change their username.
@@ -127,7 +128,7 @@ async function leaveGroupsAndDeleteUser(userId: string) {
     } catch (err) {
       // The user's ConversationParticipant rows cascade-delete with the user
       // below, so a failure to "leave" cleanly here shouldn't block account deletion.
-      console.error(`Failed to leave group ${conversationId} while deleting user ${userId}:`, err);
+      logger.error("Failed to leave group during account deletion", { conversationId, userId, error: String(err) });
     }
   }
 
@@ -417,7 +418,7 @@ export const usersService = {
       } catch (err) {
         // Don't let one account's failure block self-destruct processing for
         // the rest - this job only runs once a day.
-        console.error(`Self-destruct check failed for user ${user.id}:`, err);
+        logger.error("Self-destruct check failed", { userId: user.id, error: String(err) });
       }
     }
     return { deletedCount };

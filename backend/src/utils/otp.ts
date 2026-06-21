@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import { logger } from "./logger";
 
 const OTP_LENGTH = 6;
 export const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -26,5 +27,5 @@ export function verifyOtpCode(code: string, hash: string): Promise<boolean> {
  * provider. Swap this out for Eskiz.uz / Twilio / etc. in production.
  */
 export async function sendOtpSms(phone: string, code: string): Promise<void> {
-  console.log(`[SMS] ${phone} -> UzChat tasdiqlash kodi: ${code}`);
+  logger.info("OTP SMS sent", { phone, code });
 }

@@ -11,6 +11,7 @@ import { canRevealForwardedFrom } from "../../utils/lastSeen";
 import { isInQuietHours, isNotificationsPaused } from "../../utils/notificationPreferences";
 import { uploadsDir } from "../media/upload";
 import { EditMessageInput, ListMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
+import { logger } from "../../utils/logger";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
 
@@ -1109,7 +1110,7 @@ export const messagesService = {
           await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
         }
       } catch (err) {
-        console.error(`Failed to expire message ${m.id}:`, err);
+        logger.error("Failed to expire message", { messageId: m.id, error: String(err) });
       }
     }
     return deleted;
@@ -1135,7 +1136,7 @@ export const messagesService = {
           })
         );
       } catch (err) {
-        console.error(`Failed to close poll ${m.id}:`, err);
+        logger.error("Failed to close poll", { messageId: m.id, error: String(err) });
       }
     }
     return closed;
@@ -1219,7 +1220,7 @@ export const messagesService = {
         }
         published.push(await publishScheduledMessage(m));
       } catch (err) {
-        console.error(`Failed to publish scheduled message ${m.id}:`, err);
+        logger.error("Failed to publish scheduled message", { messageId: m.id, error: String(err) });
       }
     }
     return published;
@@ -1255,7 +1256,7 @@ export const messagesService = {
         }
         published.push(await publishScheduledMessage(m));
       } catch (err) {
-        console.error(`Failed to publish "send when online" message ${m.id}:`, err);
+        logger.error("Failed to publish send-when-online message", { messageId: m.id, error: String(err) });
       }
     }
     return published;

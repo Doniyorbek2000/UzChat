@@ -1,5 +1,6 @@
 import { chatsService } from "../modules/chats/chats.service";
 import { getIo } from "../sockets";
+import { logger } from "../utils/logger";
 
 const CHECK_INTERVAL_MS = 60 * 1000;
 
@@ -11,7 +12,7 @@ export function startPinExpiryJob() {
         getIo().to(`conversation:${conversationId}`).emit("pinnedMessage:expired", { conversationId, messageId });
       }
     } catch (err) {
-      console.error("Pin expiry job failed:", err);
+      logger.error("Pin expiry job failed", { error: String(err) });
     }
   }, CHECK_INTERVAL_MS);
 }

@@ -13,6 +13,7 @@ import {
   getLastSeenExceptions,
 } from "../../utils/lastSeen";
 import { pushService } from "../push/push.service";
+import { logger } from "../../utils/logger";
 import { UpdateContactInput } from "./contacts.schema";
 
 // Returns the number of days from `from` until the next occurrence of the given
@@ -244,7 +245,7 @@ export const contactsService = {
           data: { type: "birthday", userId: contact.target.id },
         });
       } catch (err) {
-        console.error(`Failed to send birthday reminder to ${contact.ownerId}:`, err);
+        logger.error("Failed to send birthday reminder", { userId: contact.ownerId, error: String(err) });
       }
     }
   },

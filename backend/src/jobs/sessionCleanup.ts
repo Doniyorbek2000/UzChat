@@ -1,7 +1,8 @@
 import { prisma } from "../config/prisma";
 import { OTP_TTL_MS } from "../utils/otp";
+import { logger } from "../utils/logger";
 
-const INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 export function startSessionCleanupJob() {
   const run = async () => {
@@ -20,9 +21,9 @@ export function startSessionCleanupJob() {
         }),
       ]);
       const total = sessions.count + otps.count;
-      if (total > 0) console.log(`Session cleanup: removed ${sessions.count} token(s), ${otps.count} OTP(s)`);
+      if (total > 0) logger.info("Session cleanup completed", { tokens: sessions.count, otps: otps.count });
     } catch (err) {
-      console.error("Session cleanup job failed:", err);
+      logger.error("Session cleanup job failed", { error: String(err) });
     }
   };
   run();

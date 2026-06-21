@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { CreateStoryInput } from "./stories.schema";
+import { logger } from "../../utils/logger";
 
 const STORY_DURATION_MS = 24 * 60 * 60 * 1000;
 
@@ -102,7 +103,7 @@ export const storiesService = {
       where: { expiresAt: { lte: new Date() } },
     });
     if (result.count > 0) {
-      console.log(`Story cleanup: removed ${result.count} expired story/stories`);
+      logger.info("Story cleanup completed", { removed: result.count });
     }
     return result.count;
   },
