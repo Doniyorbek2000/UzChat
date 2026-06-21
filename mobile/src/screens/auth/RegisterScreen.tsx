@@ -44,6 +44,10 @@ export function RegisterScreen({ navigation }: Props) {
       Alert.alert("Xatolik", "Barcha maydonlarni to'ldiring");
       return;
     }
+    if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak");
+      return;
+    }
     if (usernameStatus === "taken") {
       Alert.alert("Xatolik", "Bu username band");
       return;
@@ -93,7 +97,7 @@ export function RegisterScreen({ navigation }: Props) {
       />
       <TextInput
         style={styles.input}
-        placeholder="Parol (kamida 8 ta belgi)"
+        placeholder="Parol (kamida 10 ta belgi, AaBb1)"
         secureTextEntry
         value={password}
         onChangeText={setPassword}

@@ -14,8 +14,8 @@ export function ChangePasswordScreen({ navigation }: Props) {
   const [saving, setSaving] = useState(false);
 
   const onSubmit = async () => {
-    if (newPassword.length < 8) {
-      Alert.alert("Xatolik", "Yangi parol kamida 8 ta belgidan iborat bo'lishi kerak");
+    if (newPassword.length < 10 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak");
       return;
     }
     if (newPassword !== confirmPassword) {

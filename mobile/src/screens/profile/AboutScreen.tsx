@@ -1,4 +1,5 @@
-import { Image, ScrollView, Text, View, StyleSheet } from "react-native";
+import { Image, Linking, Pressable, ScrollView, Text, View, StyleSheet } from "react-native";
+import { API_URL } from "../../config/env";
 import { colors } from "../../theme/colors";
 
 const APP_VERSION = "1.0.0";
@@ -42,6 +43,15 @@ export function AboutScreen() {
         ))}
       </View>
 
+      <View style={styles.links}>
+        <Pressable onPress={() => Linking.openURL(`${API_URL}/privacy-policy`)}>
+          <Text style={styles.link}>Maxfiylik siyosati</Text>
+        </Pressable>
+        <Pressable onPress={() => Linking.openURL(`${API_URL}/terms`)}>
+          <Text style={styles.link}>Foydalanish shartlari</Text>
+        </Pressable>
+      </View>
+
       <Text style={styles.footer}>© {new Date().getFullYear()} UzChat</Text>
     </ScrollView>
   );
@@ -57,5 +67,7 @@ const styles = StyleSheet.create({
   section: { alignSelf: "stretch", backgroundColor: colors.background, borderRadius: 8, padding: 16, marginTop: 24 },
   sectionTitle: { fontSize: 14, fontWeight: "600", color: colors.text, marginBottom: 10 },
   feature: { fontSize: 14, color: colors.text, lineHeight: 24 },
+  links: { marginTop: 24, gap: 12, alignItems: "center" },
+  link: { fontSize: 14, color: colors.primary },
   footer: { fontSize: 12, color: colors.textSecondary, marginTop: 32 },
 });
