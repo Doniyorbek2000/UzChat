@@ -67,8 +67,18 @@ export function createApp() {
   const app = express();
 
   app.use(requestIdMiddleware);
-  app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-  app.use(cors({ origin: env.corsOrigin, credentials: true }));
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: env.nodeEnv === "production" ? undefined : false,
+    hsts: env.nodeEnv === "production" ? { maxAge: 31536000, includeSubDomains: true } : false,
+  }));
+  app.use(cors({
+    origin: env.corsOrigin === "*" ? true : env.corsOrigin.includes(",") ? env.corsOrigin.split(",").map((o) => o.trim()) : env.corsOrigin,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
+    maxAge: 86400,
+  }));
   app.use(compression());
   app.use(express.json({ limit: "5mb" }));
   if (env.nodeEnv !== "test") {

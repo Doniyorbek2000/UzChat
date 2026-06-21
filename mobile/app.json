@@ -1,22 +1,52 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "UzChat",
+    "slug": "uzchat",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#007AFF"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.uzchat.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "UzChat rasm va video olish uchun kameradan foydalanadi",
+        "NSMicrophoneUsageDescription": "UzChat ovozli xabar va qo'ng'iroqlar uchun mikrofondan foydalanadi",
+        "NSPhotoLibraryUsageDescription": "UzChat rasm va video yuborish uchun galereyadan foydalanadi",
+        "NSLocationWhenInUseUsageDescription": "UzChat joylashuvni ulashish uchun manzildan foydalanadi",
+        "NSContactsUsageDescription": "UzChat kontaktlaringizni topish uchun telefon daftaridan foydalanadi"
+      }
     },
     "android": {
+      "package": "com.uzchat.app",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#007AFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_CONTACTS",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "blockedPermissions": [
+        "READ_PHONE_STATE",
+        "READ_CALL_LOG"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -27,7 +57,50 @@
         {
           "microphonePermission": "UzChat ovozli xabar yuborish uchun mikrofondan foydalanadi"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "UzChat rasm olish uchun kameradan foydalanadi",
+          "microphonePermission": "UzChat video yozish uchun mikrofondan foydalanadi"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "UzChat joylashuvni ulashish uchun manzildan foydalanadi",
+          "locationAlwaysPermission": "UzChat jonli joylashuvni ulashish uchun manzildan foydalanadi",
+          "locationWhenInUsePermission": "UzChat joylashuvni ulashish uchun manzildan foydalanadi"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-foreground.png",
+          "color": "#007AFF"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "UzChat rasm va video yuborish uchun galereyadan foydalanadi",
+          "cameraPermission": "UzChat rasm olish uchun kameradan foydalanadi"
+        }
+      ],
+      [
+        "expo-secure-store"
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/your-eas-project-id"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

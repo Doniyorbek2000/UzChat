@@ -27,5 +27,7 @@ export function verifyOtpCode(code: string, hash: string): Promise<boolean> {
  * provider. Swap this out for Eskiz.uz / Twilio / etc. in production.
  */
 export async function sendOtpSms(phone: string, code: string): Promise<void> {
-  logger.info("OTP SMS sent", { phone, code });
+  logger.info("OTP SMS sent", { phone: phone.slice(0, -4).replace(/./g, "*") + phone.slice(-4) });
+  // TODO: integrate Eskiz.uz or Twilio for production SMS delivery
+  void code;
 }

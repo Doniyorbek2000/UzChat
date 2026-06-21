@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import multer from "multer";
 import { AppError } from "../utils/errors";
 import { logger } from "../utils/logger";
+import { isProduction } from "../config/env";
 
 export function notFoundHandler(_req: Request, res: Response) {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "Endpoint topilmadi" } });
@@ -43,7 +44,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     method: req.method,
     url: req.originalUrl,
     error: err instanceof Error ? err.message : String(err),
-    stack: err instanceof Error ? err.stack : undefined,
+    ...(isProduction ? {} : { stack: err instanceof Error ? err.stack : undefined }),
   });
 
   res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Server xatosi yuz berdi", requestId } });

@@ -371,6 +371,7 @@ model Contact {
   updatedAt DateTime      @updatedAt
 
   @@unique([ownerId, targetId])
+  @@index([ownerId, status])
   @@index([targetId])
 }
 
@@ -384,6 +385,7 @@ model BlockedUser {
   createdAt DateTime @default(now())
 
   @@unique([ownerId, blockedId])
+  @@index([ownerId])
   @@index([blockedId])
 }
 

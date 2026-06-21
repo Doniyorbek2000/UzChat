@@ -12,18 +12,22 @@ export function setForceLogoutHandler(handler: () => void) {
 export function connectSocket(): Socket {
   socket?.disconnect();
   socket = io(SOCKET_URL, {
-    // A function (not a static object) so reconnection attempts always send a
-    // fresh access token, refreshing it first if it has expired since connecting.
     auth: (cb) => {
       getValidAccessToken().then((token) => cb({ token }));
     },
     transports: ["websocket"],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 10000,
+    reconnectionAttempts: Infinity,
+    timeout: 15000,
   });
   socket.on("disconnect", (reason) => {
     if (reason === "io server disconnect") {
       onForceLogout?.();
     }
   });
+  socket.on("connect_error", () => {});
   return socket;
 }
 

@@ -26,8 +26,8 @@ describe("requestIdMiddleware", () => {
     expect(next).toHaveBeenCalled();
   });
 
-  it("reuses X-Request-Id from incoming header", () => {
-    const existingId = "test-request-id-123";
+  it("reuses X-Request-Id from incoming header when valid UUID", () => {
+    const existingId = "550e8400-e29b-41d4-a716-446655440000";
     const req = createMockReq({ "x-request-id": existingId });
     const res = createMockRes();
     const next = vi.fn();
@@ -36,5 +36,16 @@ describe("requestIdMiddleware", () => {
 
     expect(req.requestId).toBe(existingId);
     expect(res.setHeader).toHaveBeenCalledWith("X-Request-Id", existingId);
+  });
+
+  it("generates a new UUID when X-Request-Id is not a valid UUID", () => {
+    const req = createMockReq({ "x-request-id": "malicious-input-<script>" });
+    const res = createMockRes();
+    const next = vi.fn();
+
+    requestIdMiddleware(req, res, next);
+
+    expect(req.requestId).not.toBe("malicious-input-<script>");
+    expect(req.requestId).toMatch(/^[0-9a-f]{8}-/);
   });
 });
