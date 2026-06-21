@@ -103,6 +103,48 @@ export function createApp() {
     }
   });
 
+  app.get("/privacy-policy", (_req, res) => {
+    res.type("html").send(`<!DOCTYPE html>
+<html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UzChat — Maxfiylik siyosati</title>
+<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}h1{color:#007AFF}h2{margin-top:32px}</style></head><body>
+<h1>UzChat — Maxfiylik siyosati</h1>
+<p><strong>Oxirgi yangilanish:</strong> 2026-yil 21-iyun</p>
+<h2>1. Qanday ma'lumotlar yig'iladi</h2>
+<p>Telefon raqami, foydalanuvchi nomi, profil rasmi va boshqa siz kiritgan profil ma'lumotlari. Xabarlar end-to-end shifrlangan bo'lib, server faqat shifrlangan matnni saqlaydi.</p>
+<h2>2. Ma'lumotlardan foydalanish</h2>
+<p>Ma'lumotlaringiz faqat UzChat xizmatini ko'rsatish, hisobingizni himoya qilish va ilovani yaxshilash uchun ishlatiladi.</p>
+<h2>3. Ma'lumotlarni ulashish</h2>
+<p>Biz sizning shaxsiy ma'lumotlaringizni uchinchi tomonlarga sotmaymiz yoki ulashmaymiz, qonun talab qilgan holatlar bundan mustasno.</p>
+<h2>4. Xavfsizlik</h2>
+<p>Barcha xabarlar end-to-end shifrlangan. Parollar hash qilingan holda saqlanadi. Ikki bosqichli tekshiruv mavjud.</p>
+<h2>5. Ma'lumotlarni o'chirish</h2>
+<p>Hisobingizni istalgan vaqtda o'chirishingiz mumkin. Hisobni o'chirish barcha ma'lumotlaringizni doimiy ravishda o'chiradi.</p>
+<h2>6. Aloqa</h2>
+<p>Savollar uchun: <a href="mailto:support@uzchat.app">support@uzchat.app</a></p>
+</body></html>`);
+  });
+
+  app.get("/terms", (_req, res) => {
+    res.type("html").send(`<!DOCTYPE html>
+<html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UzChat — Foydalanish shartlari</title>
+<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}h1{color:#007AFF}h2{margin-top:32px}</style></head><body>
+<h1>UzChat — Foydalanish shartlari</h1>
+<p><strong>Oxirgi yangilanish:</strong> 2026-yil 21-iyun</p>
+<h2>1. Xizmatdan foydalanish</h2>
+<p>UzChat'dan faqat qonuniy maqsadlarda foydalanishingiz mumkin. Spam, zo'ravonlik yoki noqonuniy kontent tarqatish taqiqlanadi.</p>
+<h2>2. Hisob xavfsizligi</h2>
+<p>Hisobingiz xavfsizligi uchun siz javobgarsiz. Parolingizni hech kim bilan bo'lishmang.</p>
+<h2>3. Kontent</h2>
+<p>Siz yuborgan barcha kontent uchun javobgarsiz. Boshqa foydalanuvchilarning huquqlarini hurmat qiling.</p>
+<h2>4. Xizmatni to'xtatish</h2>
+<p>Biz shartlarni buzgan hisoblarni ogohlantirmasdan to'xtatish huquqini saqlab qolamiz.</p>
+<h2>5. O'zgarishlar</h2>
+<p>Ushbu shartlar vaqti-vaqti bilan yangilanishi mumkin. Muhim o'zgarishlar haqida xabar beriladi.</p>
+</body></html>`);
+  });
+
   app.use("/auth", authRouter);
   app.use("/users", apiRateLimiter, usersRouter);
   app.use("/contacts", apiRateLimiter, contactsRouter);
