@@ -13,6 +13,10 @@ const SERVICES = [
   { key: "stories", icon: "📷", label: "Hikoyalar", screen: "Stories" as const },
   { key: "calls", icon: "📞", label: "Qo'ng'iroqlar", screen: "CallHistory" as const },
   { key: "redpacket", icon: "🧧", label: "Qizil konvert", screen: "SendRedPacket" as const },
+  { key: "stickers", icon: "🎨", label: "Stikerlar", screen: "StickerStore" as const },
+  { key: "nearby", icon: "📍", label: "Yaqin odamlar", screen: "NearbyPeople" as const },
+  { key: "bots", icon: "🤖", label: "Botlar", screen: "BotStore" as const },
+  { key: "reels", icon: "🎬", label: "Reels", screen: "ReelsFeed" as const },
 ];
 
 const PLATFORM_SERVICES = [
@@ -28,6 +32,7 @@ const PLATFORM_SERVICES = [
 
 const QUICK_ACTIONS = [
   { key: "qr", icon: "📱", label: "QR kod skaneri", screen: "QRCode" as const },
+  { key: "qrpay", icon: "💳", label: "QR to'lov", screen: "QRPayment" as const },
   { key: "broadcast", icon: "📢", label: "Tarqatish ro'yxatlari", screen: "BroadcastLists" as const },
   { key: "starred", icon: "⭐", label: "Saqlangan xabarlar", screen: "StarredMessages" as const },
   { key: "mentions", icon: "📌", label: "Eslatishlar", screen: "Mentions" as const },

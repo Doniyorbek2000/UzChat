@@ -102,6 +102,18 @@ export type RootStackParamList = {
   AdminDashboard: undefined;
   AdminUsers: undefined;
   AdminReports: undefined;
+  StickerStore: undefined;
+  StickerPackView: { packId: string };
+  ChannelStats: { conversationId: string };
+  StoryHighlights: { userId: string };
+  QRPayment: undefined;
+  QRPaymentScan: undefined;
+  NearbyPeople: undefined;
+  BotStore: undefined;
+  BotDetail: { botId: string };
+  CreateBot: undefined;
+  ReelsFeed: undefined;
+  CreateReel: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

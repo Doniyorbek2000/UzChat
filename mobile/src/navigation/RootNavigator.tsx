@@ -79,6 +79,18 @@ import { ClaimRedPacketScreen } from "../screens/redpackets/ClaimRedPacketScreen
 import AdminDashboardScreen from "../screens/admin/AdminDashboardScreen";
 import AdminUsersScreen from "../screens/admin/AdminUsersScreen";
 import AdminReportsScreen from "../screens/admin/AdminReportsScreen";
+import { StickerStoreScreen } from "../screens/stickers/StickerStoreScreen";
+import { StickerPackViewScreen } from "../screens/stickers/StickerPackViewScreen";
+import { ChannelStatsScreen } from "../screens/stickers/ChannelStatsScreen";
+import { StoryHighlightsScreen } from "../screens/stories/StoryHighlightsScreen";
+import { QRPaymentScreen } from "../screens/wallet/QRPaymentScreen";
+import { QRPaymentScanScreen } from "../screens/wallet/QRPaymentScanScreen";
+import { NearbyPeopleScreen } from "../screens/nearby/NearbyPeopleScreen";
+import { BotStoreScreen } from "../screens/bots/BotStoreScreen";
+import { BotDetailScreen } from "../screens/bots/BotDetailScreen";
+import { CreateBotScreen } from "../screens/bots/CreateBotScreen";
+import { ReelsFeedScreen } from "../screens/reels/ReelsFeedScreen";
+import { CreateReelScreen } from "../screens/reels/CreateReelScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -388,6 +400,18 @@ export function RootNavigator() {
             <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: "Admin panel" }} />
             <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ title: "Foydalanuvchilar boshqaruvi" }} />
             <Stack.Screen name="AdminReports" component={AdminReportsScreen} options={{ title: "Shikoyatlar" }} />
+            <Stack.Screen name="StickerStore" component={StickerStoreScreen} options={{ title: "Stiker do'koni" }} />
+            <Stack.Screen name="StickerPackView" component={StickerPackViewScreen} options={{ title: "Stiker to'plami" }} />
+            <Stack.Screen name="ChannelStats" component={ChannelStatsScreen} options={{ title: "Kanal statistikasi" }} />
+            <Stack.Screen name="StoryHighlights" component={StoryHighlightsScreen} options={{ title: "Highlights" }} />
+            <Stack.Screen name="QRPayment" component={QRPaymentScreen} options={{ title: "QR to'lov" }} />
+            <Stack.Screen name="QRPaymentScan" component={QRPaymentScanScreen} options={{ title: "QR skanerlash" }} />
+            <Stack.Screen name="NearbyPeople" component={NearbyPeopleScreen} options={{ title: "Yaqin odamlar" }} />
+            <Stack.Screen name="BotStore" component={BotStoreScreen} options={{ title: "Botlar" }} />
+            <Stack.Screen name="BotDetail" component={BotDetailScreen} options={{ title: "Bot" }} />
+            <Stack.Screen name="CreateBot" component={CreateBotScreen} options={{ title: "Bot yaratish" }} />
+            <Stack.Screen name="ReelsFeed" component={ReelsFeedScreen} options={{ title: "Reels", headerStyle: { backgroundColor: "#111" }, headerTintColor: "#fff" }} />
+            <Stack.Screen name="CreateReel" component={CreateReelScreen} options={{ title: "Reel yaratish" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />
