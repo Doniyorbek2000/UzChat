@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { chatsController } from "./chats.controller";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import {
   addParticipantSchema,
   banUserByIdSchema,
@@ -34,6 +34,10 @@ import {
 export const chatsRouter = Router();
 
 chatsRouter.use(requireAuth);
+chatsRouter.param("id", uuidParamHandler);
+chatsRouter.param("messageId", uuidParamHandler);
+chatsRouter.param("userId", uuidParamHandler);
+chatsRouter.param("requestId", uuidParamHandler);
 
 chatsRouter.get("/", chatsController.list);
 chatsRouter.post("/", validateBody(createConversationSchema), chatsController.create);

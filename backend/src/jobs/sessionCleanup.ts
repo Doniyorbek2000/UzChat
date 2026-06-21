@@ -7,7 +7,8 @@ const INTERVAL_MS = 6 * 60 * 60 * 1000;
 export function startSessionCleanupJob() {
   const run = async () => {
     try {
-      const [sessions, otps] = await Promise.all([
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const [sessions, otps, loginAttempts, lockedUsers] = await Promise.all([
         prisma.refreshToken.deleteMany({
           where: {
             OR: [
@@ -19,9 +20,23 @@ export function startSessionCleanupJob() {
         prisma.otpCode.deleteMany({
           where: { createdAt: { lt: new Date(Date.now() - OTP_TTL_MS) } },
         }),
+        prisma.loginAttempt.deleteMany({
+          where: { createdAt: { lt: thirtyDaysAgo } },
+        }),
+        prisma.user.updateMany({
+          where: { lockedUntil: { lt: new Date() } },
+          data: { failedLoginAttempts: 0, lockedUntil: null },
+        }),
       ]);
-      const total = sessions.count + otps.count;
-      if (total > 0) logger.info("Session cleanup completed", { tokens: sessions.count, otps: otps.count });
+      const total = sessions.count + otps.count + loginAttempts.count;
+      if (total > 0 || lockedUsers.count > 0) {
+        logger.info("Session cleanup completed", {
+          tokens: sessions.count,
+          otps: otps.count,
+          loginAttempts: loginAttempts.count,
+          unlockedUsers: lockedUsers.count,
+        });
+      }
     } catch (err) {
       logger.error("Session cleanup job failed", { error: String(err) });
     }

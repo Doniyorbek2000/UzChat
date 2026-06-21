@@ -14,7 +14,7 @@ import {
   verifyTwoFactorRecoverySchema,
   verifyTwoFactorSchema,
 } from "./auth.schema";
-import { authRateLimiter, apiRateLimiter } from "../../middleware/rateLimit.middleware";
+import { authRateLimiter, loginRateLimiter, apiRateLimiter } from "../../middleware/rateLimit.middleware";
 import { requireAuth } from "../../middleware/auth.middleware";
 
 export const authRouter = Router();
@@ -33,7 +33,7 @@ authRouter.post(
   validateBody(verifyOtpSchema),
   authController.verifyOtp
 );
-authRouter.post("/login", authRateLimiter, validateBody(loginSchema), authController.login);
+authRouter.post("/login", loginRateLimiter, validateBody(loginSchema), authController.login);
 authRouter.post(
   "/login/2fa",
   authRateLimiter,
