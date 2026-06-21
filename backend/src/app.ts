@@ -24,6 +24,8 @@ import { feedRouter } from "./modules/feed/feed.controller";
 import { marketplaceRouter } from "./modules/marketplace/marketplace.controller";
 import { redPacketsRouter } from "./modules/redpackets/redpackets.controller";
 import { adminRouter } from "./modules/admin/admin.controller";
+import { stickersRouter } from "./modules/stickers/stickers.controller";
+import { highlightsRouter } from "./modules/stories/highlights.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 import { requestIdMiddleware } from "./middleware/requestId.middleware";
@@ -73,6 +75,8 @@ export function createApp() {
   app.use("/marketplace", apiRateLimiter, marketplaceRouter);
   app.use("/red-packets", apiRateLimiter, redPacketsRouter);
   app.use("/admin", apiRateLimiter, adminRouter);
+  app.use("/stickers", apiRateLimiter, stickersRouter);
+  app.use("/highlights", apiRateLimiter, highlightsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

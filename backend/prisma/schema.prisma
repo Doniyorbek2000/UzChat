@@ -29,6 +29,7 @@ enum MessageType {
   POLL
   SYSTEM
   LOCATION
+  STICKER
 }
 
 enum ContactStatus {
@@ -222,6 +223,9 @@ model User {
   orders           Order[]
   sentRedPackets   RedPacket[]  @relation("RedPacketSender")
   claimedRedPackets RedPacket[] @relation("RedPacketClaimer")
+  stickerPacks     StickerPack[] @relation("StickerPackCreator")
+  installedPacks   StickerPackInstall[]
+  storyHighlights  StoryHighlight[]
 
   @@index([username])
   @@index([phone])
@@ -446,6 +450,7 @@ model Conversation {
   joinRequests    GroupJoinRequest[]
   auditLogEntries GroupAuditLogEntry[]
   bans            GroupBan[]
+  channelStats    ChannelStats[]
 }
 
 enum GroupAuditAction {
@@ -1089,4 +1094,95 @@ model RedPacket {
   @@index([senderId])
   @@index([claimedById])
   @@index([status, expiresAt])
+}
+
+// ─── STICKERS ───────────────────────────────────────────────
+
+model StickerPack {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  coverUrl    String?
+  creatorId   String
+  creator     User      @relation("StickerPackCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  isOfficial  Boolean   @default(false)
+  isAnimated  Boolean   @default(false)
+  installCount Int      @default(0)
+  stickers    Sticker[]
+  installedBy StickerPackInstall[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@index([creatorId])
+  @@index([isOfficial])
+  @@index([installCount])
+}
+
+model Sticker {
+  id        String      @id @default(uuid())
+  packId    String
+  pack      StickerPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  emoji     String?
+  order     Int         @default(0)
+  createdAt DateTime    @default(now())
+
+  @@index([packId])
+}
+
+model StickerPackInstall {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  packId    String
+  pack      StickerPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, packId])
+  @@index([userId])
+}
+
+// ─── CHANNEL STATISTICS ─────────────────────────────────────
+
+model ChannelStats {
+  id              String   @id @default(uuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  date            DateTime @db.Date
+  memberCount     Int      @default(0)
+  messageCount    Int      @default(0)
+  viewCount       Int      @default(0)
+  shareCount      Int      @default(0)
+
+  @@unique([conversationId, date])
+  @@index([conversationId])
+}
+
+// ─── STORY HIGHLIGHTS ───────────────────────────────────────
+
+model StoryHighlight {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  coverUrl  String?
+  order     Int      @default(0)
+  items     StoryHighlightItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+}
+
+model StoryHighlightItem {
+  id          String         @id @default(uuid())
+  highlightId String
+  highlight   StoryHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+  mediaUrl    String
+  mediaType   String         @default("IMAGE")
+  caption     String?
+  order       Int            @default(0)
+  createdAt   DateTime       @default(now())
+
+  @@index([highlightId])
 }

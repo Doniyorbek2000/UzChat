@@ -18,3 +18,6 @@ export { broadcastsApi } from "./broadcasts";
 export { chatFoldersApi } from "./chatFolders";
 export { translateText, LANGUAGES } from "./translate";
 export { searchGifs, getTrendingGifs } from "./gif";
+export { stickersApi } from "./stickers";
+export { highlightsApi } from "./highlights";
+export { channelStatsApi } from "./channelStats";

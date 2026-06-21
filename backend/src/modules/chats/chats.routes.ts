@@ -103,6 +103,13 @@ chatsRouter.patch(
 );
 chatsRouter.post("/:id/scheduled-messages/:messageId/send-now", messagesController.sendScheduledNow);
 
+// Channel statistics
+import { channelStatsService } from "./channelStats.service";
+chatsRouter.get("/:id/stats/channel", async (req, res) => {
+  const stats = await channelStatsService.getStats(req.user!.sub, req.params.id);
+  res.json(stats);
+});
+
 chatsRouter.get("/:id/messages", messagesController.list);
 chatsRouter.get("/:id/media", messagesController.listMedia);
 chatsRouter.get("/:id/stats", messagesController.getStats);

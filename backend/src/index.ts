@@ -16,6 +16,7 @@ import { startAccountSelfDestructJob } from "./jobs/accountSelfDestruct";
 import { startMediaGarbageCollectionJob } from "./jobs/mediaGarbageCollection";
 import { startSessionCleanupJob } from "./jobs/sessionCleanup";
 import { startStoryExpiryJob } from "./jobs/storyExpiry";
+import { startChannelStatsJob } from "./jobs/channelStats";
 
 const app = createApp();
 const httpServer = createServer(app);
@@ -33,6 +34,7 @@ startAccountSelfDestructJob();
 startMediaGarbageCollectionJob();
 startSessionCleanupJob();
 startStoryExpiryJob();
+startChannelStatsJob();
 
 function gracefulShutdown(signal: string) {
   logger.info("Shutting down", { signal });
