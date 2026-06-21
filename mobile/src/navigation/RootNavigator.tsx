@@ -116,6 +116,10 @@ import { CloudStorageScreen } from "../screens/cloud/CloudStorageScreen";
 import { ReferralsScreen } from "../screens/referrals/ReferralsScreen";
 import { BusinessProfileScreen } from "../screens/business/BusinessProfileScreen";
 import { AutoReplyScreen } from "../screens/profile/AutoReplyScreen";
+import { BadgesScreen } from "../screens/badges/BadgesScreen";
+import { GiftsScreen } from "../screens/gifts/GiftsScreen";
+import { GreetingCardsScreen } from "../screens/greetings/GreetingCardsScreen";
+import { HashtagPostsScreen } from "../screens/hashtags/HashtagPostsScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -477,6 +481,10 @@ export function RootNavigator() {
             <Stack.Screen name="Referrals" component={ReferralsScreen} options={{ title: "Taklifnoma" }} />
             <Stack.Screen name="BusinessProfile" component={BusinessProfileScreen} options={{ title: "Biznes profil" }} />
             <Stack.Screen name="AutoReplySettings" component={AutoReplyScreen} options={{ title: "Avtomatik javob" }} />
+            <Stack.Screen name="Badges" component={BadgesScreen} options={{ title: "Belgilar" }} />
+            <Stack.Screen name="Gifts" component={GiftsScreen} options={{ title: "Sovg'alar" }} />
+            <Stack.Screen name="GreetingCards" component={GreetingCardsScreen} options={{ title: "Tabrik kartochkalari" }} />
+            <Stack.Screen name="HashtagPosts" component={HashtagPostsScreen} options={{ title: "Hashtag" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

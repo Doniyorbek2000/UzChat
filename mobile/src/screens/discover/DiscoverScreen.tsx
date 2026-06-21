@@ -29,6 +29,9 @@ const SERVICES = [
   { key: "cloud", icon: "☁️", label: "Bulut xotira", screen: "CloudStorage" as const },
   { key: "referrals", icon: "🎁", label: "Taklifnoma", screen: "Referrals" as const },
   { key: "business", icon: "💼", label: "Biznes profil", screen: "BusinessProfile" as const },
+  { key: "gifts", icon: "🎁", label: "Sovg'alar", screen: "Gifts" as const },
+  { key: "greetings", icon: "💌", label: "Tabrik kartochkalari", screen: "GreetingCards" as const },
+  { key: "badges", icon: "🏅", label: "Belgilar", screen: "Badges" as const },
 ];
 
 const PLATFORM_SERVICES = [

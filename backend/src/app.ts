@@ -49,6 +49,11 @@ import { gamesRouter } from "./modules/games/games.controller";
 import { referralsRouter } from "./modules/referrals/referrals.controller";
 import { cloudRouter } from "./modules/cloud/cloud.controller";
 import { businessRouter } from "./modules/business/business.controller";
+import { hashtagsRouter } from "./modules/hashtags/hashtags.controller";
+import { badgesRouter } from "./modules/badges/badges.controller";
+import { giftsRouter } from "./modules/gifts/gifts.controller";
+import { greetingsRouter } from "./modules/greetings/greetings.controller";
+import { preferencesRouter } from "./modules/preferences/preferences.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 import { requestIdMiddleware } from "./middleware/requestId.middleware";
@@ -123,6 +128,11 @@ export function createApp() {
   app.use("/referrals", apiRateLimiter, referralsRouter);
   app.use("/cloud", apiRateLimiter, cloudRouter);
   app.use("/business", apiRateLimiter, businessRouter);
+  app.use("/hashtags", apiRateLimiter, hashtagsRouter);
+  app.use("/badges", apiRateLimiter, badgesRouter);
+  app.use("/gifts", apiRateLimiter, giftsRouter);
+  app.use("/greetings", apiRateLimiter, greetingsRouter);
+  app.use("/preferences", apiRateLimiter, preferencesRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

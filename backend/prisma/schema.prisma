@@ -259,6 +259,12 @@ model User {
   cloudFiles       CloudFile[]
   cloudFolders     CloudFolder[]
   businessProfile  BusinessProfile?
+  badges           UserBadge[]
+  sentGifts        SentGift[]    @relation("SentGifts")
+  receivedGifts    SentGift[]    @relation("ReceivedGifts")
+  sentCards        SentGreetingCard[] @relation("SentCards")
+  receivedCards    SentGreetingCard[] @relation("ReceivedCards")
+  appPreferences   AppPreference[]
   // File/media receiving security settings
   blockExecutableFiles Boolean @default(true)
   blockAllFiles        Boolean @default(false)
@@ -1002,6 +1008,7 @@ model Post {
 
   likes    PostLike[]
   comments PostComment[]
+  hashtags HashtagPost[]
 
   @@index([userId])
   @@index([createdAt])
@@ -1867,4 +1874,104 @@ model BusinessProfile {
   catalogEnabled Boolean @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now()) @updatedAt
+}
+
+model Hashtag {
+  id        String   @id @default(uuid())
+  tag       String   @unique
+  postCount Int      @default(0)
+  createdAt DateTime @default(now())
+
+  posts     HashtagPost[]
+}
+
+model HashtagPost {
+  id        String   @id @default(uuid())
+  hashtagId String
+  hashtag   Hashtag  @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([hashtagId, postId])
+  @@index([hashtagId])
+  @@index([postId])
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     String
+  label     String
+  icon      String
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badge])
+  @@index([userId])
+}
+
+model VirtualGift {
+  id          String   @id @default(uuid())
+  name        String
+  icon        String
+  price       Int
+  category    String   @default("general")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  sentGifts   SentGift[]
+}
+
+model SentGift {
+  id         String      @id @default(uuid())
+  giftId     String
+  gift       VirtualGift @relation(fields: [giftId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User        @relation("SentGifts", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User        @relation("ReceivedGifts", fields: [receiverId], references: [id], onDelete: Cascade)
+  message    String?
+  createdAt  DateTime    @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model GreetingCard {
+  id           String   @id @default(uuid())
+  templateName String
+  category     String
+  imageUrl     String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  sentCards    SentGreetingCard[]
+}
+
+model SentGreetingCard {
+  id         String       @id @default(uuid())
+  cardId     String
+  card       GreetingCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  senderId   String
+  sender     User         @relation("SentCards", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User         @relation("ReceivedCards", fields: [receiverId], references: [id], onDelete: Cascade)
+  message    String?
+  createdAt  DateTime     @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model AppPreference {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId])
 }

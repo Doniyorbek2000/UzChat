@@ -474,6 +474,16 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Badges")}>
+        <Text style={styles.menuRowText}>🏅 Belgilar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Gifts")}>
+        <Text style={styles.menuRowText}>🎀 Sovg'alar</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("About")}>
         <Text style={styles.menuRowText}>ℹ️ UzChat haqida</Text>
         <Text style={styles.menuRowArrow}>›</Text>

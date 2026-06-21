@@ -46,3 +46,8 @@ export { gamesApi } from "./games";
 export { referralsApi } from "./referrals";
 export { cloudApi } from "./cloud";
 export { businessApi } from "./business";
+export { hashtagsApi } from "./hashtags";
+export { badgesApi } from "./badges";
+export { giftsApi } from "./gifts";
+export { greetingsApi } from "./greetings";
+export { preferencesApi } from "./preferences";
