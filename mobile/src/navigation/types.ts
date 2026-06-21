@@ -125,6 +125,11 @@ export type RootStackParamList = {
   Communities: undefined;
   CommunityView: { communityId: string };
   CreateCommunity: undefined;
+  Events: undefined;
+  ConversationEvents: { conversationId: string };
+  GlobalSearch: undefined;
+  ChannelSubscriptions: { conversationId: string };
+  MySubscriptions: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

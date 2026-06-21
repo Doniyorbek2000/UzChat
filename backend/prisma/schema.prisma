@@ -239,6 +239,10 @@ model User {
   liveStreams       LiveStream[]
   sharedThemes     SharedTheme[]
   communities      Community[]
+  events           Event[]
+  eventRsvps       EventRsvp[]
+  channelSubscriptions ChannelSubscription[]
+  searchHistory    SearchHistory[]
   // File/media receiving security settings
   blockExecutableFiles Boolean @default(true)
   blockAllFiles        Boolean @default(false)
@@ -476,6 +480,8 @@ model Conversation {
   channelStats    ChannelStats[]
   forumTopics     ForumTopic[]
   isForumEnabled  Boolean @default(false)
+  events          Event[]
+  channelSubscriptions ChannelSubscription[]
 }
 
 enum GroupAuditAction {
@@ -655,6 +661,7 @@ model Message {
   pins        PinnedMessage[]
   editHistory MessageEditHistory[]
   reminders   MessageReminder[]
+  translations TranslationCache[]
 
   createdAt DateTime  @default(now())
   editedAt  DateTime?
@@ -1502,4 +1509,85 @@ model CommunityGroup {
 
   @@unique([communityId, conversationId])
   @@index([communityId])
+}
+
+model Event {
+  id              String   @id @default(uuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  creatorId       String
+  creator         User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  location        String?
+  startAt         DateTime
+  endAt           DateTime?
+  isAllDay        Boolean  @default(false)
+  color           String   @default("#007AFF")
+  reminderMinutes Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  rsvps EventRsvp[]
+
+  @@index([conversationId])
+  @@index([creatorId])
+  @@index([startAt])
+}
+
+model EventRsvp {
+  id       String @id @default(uuid())
+  eventId  String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status   String @default("going")
+  respondedAt DateTime @default(now())
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+}
+
+model TranslationCache {
+  id         String @id @default(uuid())
+  messageId  String
+  message    Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  fromLang   String
+  toLang     String
+  original   String
+  translated String
+  createdAt  DateTime @default(now())
+
+  @@unique([messageId, toLang])
+  @@index([messageId])
+}
+
+model ChannelSubscription {
+  id              String   @id @default(uuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier            String   @default("basic")
+  price           Decimal  @default(0) @db.Decimal(18, 2)
+  currency        String   @default("UZS")
+  isActive        Boolean  @default(true)
+  startedAt       DateTime @default(now())
+  expiresAt       DateTime?
+  cancelledAt     DateTime?
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+}
+
+model SearchHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query     String
+  type      String   @default("message")
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

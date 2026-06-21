@@ -21,6 +21,9 @@ const SERVICES = [
   { key: "livestreams", icon: "📡", label: "Jonli efirlar", screen: "LiveStreams" as const },
   { key: "themes", icon: "🎨", label: "Mavzular", screen: "ThemeStore" as const },
   { key: "communities", icon: "🏘️", label: "Jamiyatlar", screen: "Communities" as const },
+  { key: "events", icon: "📅", label: "Tadbirlar", screen: "Events" as const },
+  { key: "search", icon: "🔍", label: "Qidiruv", screen: "GlobalSearch" as const },
+  { key: "subscriptions", icon: "📢", label: "Obunalar", screen: "MySubscriptions" as const },
 ];
 
 const PLATFORM_SERVICES = [

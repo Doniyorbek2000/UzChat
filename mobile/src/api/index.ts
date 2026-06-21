@@ -31,3 +31,7 @@ export { voiceRoomsApi } from "./voiceRooms";
 export { liveStreamApi } from "./livestream";
 export { themesApi } from "./themes";
 export { communitiesApi } from "./communities";
+export { eventsApi } from "./events";
+export { translateApi } from "./translate";
+export { searchApi } from "./search";
+export { subscriptionsApi } from "./subscriptions";

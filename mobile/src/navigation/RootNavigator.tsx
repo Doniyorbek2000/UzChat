@@ -102,6 +102,10 @@ import { CreateThemeScreen } from "../screens/themes/CreateThemeScreen";
 import { CommunitiesScreen } from "../screens/communities/CommunitiesScreen";
 import { CommunityViewScreen } from "../screens/communities/CommunityViewScreen";
 import { CreateCommunityScreen } from "../screens/communities/CreateCommunityScreen";
+import { EventsScreen } from "../screens/events/EventsScreen";
+import { ConversationEventsScreen } from "../screens/events/ConversationEventsScreen";
+import { GlobalSearchScreen } from "../screens/search/GlobalSearchScreen";
+import { MySubscriptionsScreen } from "../screens/subscriptions/MySubscriptionsScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -449,6 +453,10 @@ export function RootNavigator() {
             <Stack.Screen name="Communities" component={CommunitiesScreen} options={{ title: "Jamiyatlar" }} />
             <Stack.Screen name="CommunityView" component={CommunityViewScreen} options={{ title: "Jamiyat" }} />
             <Stack.Screen name="CreateCommunity" component={CreateCommunityScreen} options={{ title: "Jamiyat yaratish" }} />
+            <Stack.Screen name="Events" component={EventsScreen} options={{ title: "Tadbirlar" }} />
+            <Stack.Screen name="ConversationEvents" component={ConversationEventsScreen} options={{ title: "Tadbirlar" }} />
+            <Stack.Screen name="GlobalSearch" component={GlobalSearchScreen} options={{ title: "Qidiruv" }} />
+            <Stack.Screen name="MySubscriptions" component={MySubscriptionsScreen} options={{ title: "Obunalarim" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />
