@@ -1,0 +1,98 @@
+import React, { useEffect, useState, useCallback } from "react";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../navigation/types";
+import { voiceRoomsApi, VoiceRoom } from "../../api/voiceRooms";
+import { colors } from "../../theme/colors";
+
+type Props = NativeStackScreenProps<RootStackParamList, "VoiceRooms">;
+
+export function VoiceRoomsScreen({ navigation }: Props) {
+  const [tab, setTab] = useState<"live" | "scheduled">("live");
+  const [rooms, setRooms] = useState<VoiceRoom[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = tab === "live" ? await voiceRoomsApi.listLive() : await voiceRoomsApi.listScheduled();
+      setRooms(data);
+    } catch {}
+    setLoading(false);
+  }, [tab]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const renderRoom = ({ item }: { item: VoiceRoom }) => {
+    const speakerCount = item.participants?.filter((p) => p.role === "speaker").length ?? 0;
+    return (
+      <TouchableOpacity
+        style={styles.roomCard}
+        onPress={() => navigation.navigate("VoiceRoomView", { roomId: item.id })}
+      >
+        <View style={styles.roomHeader}>
+          <View style={[styles.statusDot, { backgroundColor: item.status === "LIVE" ? "#FF3B30" : "#FF9500" }]} />
+          <Text style={styles.roomStatus}>{item.status === "LIVE" ? "JONLI" : "REJALASHTIRILGAN"}</Text>
+        </View>
+        <Text style={styles.roomTitle}>{item.title}</Text>
+        <Text style={styles.roomHost}>{item.host?.displayName}</Text>
+        <View style={styles.roomStats}>
+          <Text style={styles.roomStat}>🎤 {speakerCount} so'zlovchi</Text>
+          <Text style={styles.roomStat}>👂 {item.listenerCount} tinglovchi</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.tabs}>
+        <TouchableOpacity style={[styles.tab, tab === "live" && styles.tabActive]} onPress={() => setTab("live")}>
+          <Text style={[styles.tabText, tab === "live" && styles.tabTextActive]}>Jonli</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, tab === "scheduled" && styles.tabActive]} onPress={() => setTab("scheduled")}>
+          <Text style={[styles.tabText, tab === "scheduled" && styles.tabTextActive]}>Rejalashtirilgan</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : (
+        <FlatList
+          data={rooms}
+          keyExtractor={(item) => item.id}
+          renderItem={renderRoom}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>🎙️</Text>
+              <Text style={styles.emptyText}>Hozircha ovozli xonalar yo'q</Text>
+            </View>
+          }
+        />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  tabs: { flexDirection: "row", padding: 12, gap: 8 },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: "#E5E5EA", alignItems: "center" },
+  tabActive: { backgroundColor: colors.primary },
+  tabText: { fontSize: 13, fontWeight: "600", color: "#666" },
+  tabTextActive: { color: "#fff" },
+  loader: { marginTop: 40 },
+  list: { paddingHorizontal: 12, paddingBottom: 20 },
+  roomCard: { backgroundColor: "#fff", borderRadius: 14, padding: 16, marginBottom: 10 },
+  roomHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  roomStatus: { fontSize: 11, fontWeight: "700", color: "#888", letterSpacing: 0.5 },
+  roomTitle: { fontSize: 18, fontWeight: "700", color: "#333", marginBottom: 4 },
+  roomHost: { fontSize: 13, color: "#666", marginBottom: 8 },
+  roomStats: { flexDirection: "row", gap: 16 },
+  roomStat: { fontSize: 12, color: "#888" },
+  emptyContainer: { alignItems: "center", paddingTop: 60 },
+  emptyIcon: { fontSize: 48 },
+  emptyText: { fontSize: 16, fontWeight: "600", color: "#333", marginTop: 12 },
+});

@@ -233,6 +233,12 @@ model User {
   reels            Reel[]
   reelLikes        ReelLike[]
   reelComments     ReelComment[]
+  forumTopics      ForumTopic[]
+  hostedVoiceRooms VoiceRoom[] @relation("VoiceRoomHost")
+  voiceRoomParticipations VoiceRoomParticipant[]
+  liveStreams       LiveStream[]
+  sharedThemes     SharedTheme[]
+  communities      Community[]
   // File/media receiving security settings
   blockExecutableFiles Boolean @default(true)
   blockAllFiles        Boolean @default(false)
@@ -468,6 +474,8 @@ model Conversation {
   auditLogEntries GroupAuditLogEntry[]
   bans            GroupBan[]
   channelStats    ChannelStats[]
+  forumTopics     ForumTopic[]
+  isForumEnabled  Boolean @default(false)
 }
 
 enum GroupAuditAction {
@@ -1340,4 +1348,158 @@ model ReelComment {
   @@index([reelId])
   @@index([authorId])
   @@index([parentId])
+}
+
+// ─── FORUM TOPICS (Telegram-style) ─────────────────────────
+
+model ForumTopic {
+  id              String       @id @default(uuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  title           String
+  iconEmoji       String?
+  iconColor       String?
+  creatorId       String
+  creator         User         @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  isPinned        Boolean      @default(false)
+  isClosed        Boolean      @default(false)
+  messageCount    Int          @default(0)
+  lastMessageAt   DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @default(now()) @updatedAt
+
+  @@index([conversationId])
+  @@index([conversationId, isPinned])
+  @@index([conversationId, lastMessageAt])
+}
+
+// ─── VOICE ROOMS (Twitter Spaces / Telegram Voice Chat) ────
+
+enum VoiceRoomStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+}
+
+model VoiceRoom {
+  id              String          @id @default(uuid())
+  title           String
+  hostId          String
+  host            User            @relation("VoiceRoomHost", fields: [hostId], references: [id], onDelete: Cascade)
+  conversationId  String?
+  status          VoiceRoomStatus @default(SCHEDULED)
+  scheduledFor    DateTime?
+  startedAt       DateTime?
+  endedAt         DateTime?
+  maxSpeakers     Int             @default(10)
+  isRecording     Boolean         @default(false)
+  recordingUrl    String?
+  listenerCount   Int             @default(0)
+  participants    VoiceRoomParticipant[]
+  createdAt       DateTime        @default(now())
+
+  @@index([hostId])
+  @@index([status])
+  @@index([conversationId])
+}
+
+model VoiceRoomParticipant {
+  id          String    @id @default(uuid())
+  roomId      String
+  room        VoiceRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String    @default("listener")
+  isMuted     Boolean   @default(true)
+  joinedAt    DateTime  @default(now())
+  leftAt      DateTime?
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+}
+
+// ─── LIVE STREAMING (Instagram Live) ───────────────────────
+
+enum LiveStreamStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+}
+
+model LiveStream {
+  id            String           @id @default(uuid())
+  hostId        String
+  host          User             @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  thumbnailUrl  String?
+  streamUrl     String?
+  status        LiveStreamStatus @default(SCHEDULED)
+  scheduledFor  DateTime?
+  startedAt     DateTime?
+  endedAt       DateTime?
+  viewerCount   Int              @default(0)
+  peakViewers   Int              @default(0)
+  likeCount     Int              @default(0)
+  replayUrl     String?
+  createdAt     DateTime         @default(now())
+
+  @@index([hostId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// ─── SHAREABLE THEMES (Telegram-style) ─────────────────────
+
+model SharedTheme {
+  id             String   @id @default(uuid())
+  creatorId      String
+  creator        User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  primaryColor   String
+  backgroundColor String
+  surfaceColor   String
+  textColor      String
+  accentColor    String?
+  isDark         Boolean  @default(false)
+  wallpaperUrl   String?
+  installCount   Int      @default(0)
+  isPublic       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  @@index([creatorId])
+  @@index([isPublic, installCount])
+}
+
+// ─── COMMUNITIES (WhatsApp-style) ──────────────────────────
+
+model Community {
+  id              String   @id @default(uuid())
+  name            String
+  description     String?
+  avatarUrl       String?
+  ownerId         String
+  owner           User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  announcementGroupId String?
+  memberCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  groups CommunityGroup[]
+
+  @@index([ownerId])
+}
+
+model CommunityGroup {
+  id              String    @id @default(uuid())
+  communityId     String
+  community       Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  conversationId  String
+  addedAt         DateTime  @default(now())
+
+  @@unique([communityId, conversationId])
+  @@index([communityId])
 }

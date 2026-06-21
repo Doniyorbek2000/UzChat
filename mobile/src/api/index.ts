@@ -26,3 +26,8 @@ export { nearbyApi } from "./nearby";
 export { botsApi } from "./bots";
 export { reelsApi } from "./reels";
 export { fileSecurityApi } from "./fileSecurity";
+export { forumsApi } from "./forums";
+export { voiceRoomsApi } from "./voiceRooms";
+export { liveStreamApi } from "./livestream";
+export { themesApi } from "./themes";
+export { communitiesApi } from "./communities";

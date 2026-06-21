@@ -92,6 +92,16 @@ import { CreateBotScreen } from "../screens/bots/CreateBotScreen";
 import { ReelsFeedScreen } from "../screens/reels/ReelsFeedScreen";
 import { CreateReelScreen } from "../screens/reels/CreateReelScreen";
 import { FileSecurityScreen } from "../screens/profile/FileSecurityScreen";
+import { ForumTopicsScreen } from "../screens/forums/ForumTopicsScreen";
+import { VoiceRoomsScreen } from "../screens/voicerooms/VoiceRoomsScreen";
+import { VoiceRoomViewScreen } from "../screens/voicerooms/VoiceRoomViewScreen";
+import { LiveStreamsScreen } from "../screens/livestream/LiveStreamsScreen";
+import { LiveStreamViewScreen } from "../screens/livestream/LiveStreamViewScreen";
+import { ThemeStoreScreen } from "../screens/themes/ThemeStoreScreen";
+import { CreateThemeScreen } from "../screens/themes/CreateThemeScreen";
+import { CommunitiesScreen } from "../screens/communities/CommunitiesScreen";
+import { CommunityViewScreen } from "../screens/communities/CommunityViewScreen";
+import { CreateCommunityScreen } from "../screens/communities/CreateCommunityScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -429,6 +439,16 @@ export function RootNavigator() {
             <Stack.Screen name="ReelsFeed" component={ReelsFeedScreen} options={{ title: "Reels", headerStyle: { backgroundColor: "#111" }, headerTintColor: "#fff" }} />
             <Stack.Screen name="CreateReel" component={CreateReelScreen} options={{ title: "Reel yaratish" }} />
             <Stack.Screen name="FileSecurity" component={FileSecurityScreen} options={{ title: "Fayl xavfsizligi" }} />
+            <Stack.Screen name="ForumTopics" component={ForumTopicsScreen} options={{ title: "Forum mavzulari" }} />
+            <Stack.Screen name="VoiceRooms" component={VoiceRoomsScreen} options={{ title: "Ovozli xonalar" }} />
+            <Stack.Screen name="VoiceRoomView" component={VoiceRoomViewScreen} options={{ title: "Ovozli xona" }} />
+            <Stack.Screen name="LiveStreams" component={LiveStreamsScreen} options={{ title: "Jonli efirlar" }} />
+            <Stack.Screen name="LiveStreamView" component={LiveStreamViewScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="ThemeStore" component={ThemeStoreScreen} options={{ title: "Mavzular do'koni" }} />
+            <Stack.Screen name="CreateTheme" component={CreateThemeScreen} options={{ title: "Mavzu yaratish" }} />
+            <Stack.Screen name="Communities" component={CommunitiesScreen} options={{ title: "Jamiyatlar" }} />
+            <Stack.Screen name="CommunityView" component={CommunityViewScreen} options={{ title: "Jamiyat" }} />
+            <Stack.Screen name="CreateCommunity" component={CreateCommunityScreen} options={{ title: "Jamiyat yaratish" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

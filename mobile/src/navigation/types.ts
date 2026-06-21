@@ -115,6 +115,16 @@ export type RootStackParamList = {
   ReelsFeed: undefined;
   CreateReel: undefined;
   FileSecurity: undefined;
+  ForumTopics: { conversationId: string };
+  VoiceRooms: undefined;
+  VoiceRoomView: { roomId: string };
+  LiveStreams: undefined;
+  LiveStreamView: { streamId: string };
+  ThemeStore: undefined;
+  CreateTheme: undefined;
+  Communities: undefined;
+  CommunityView: { communityId: string };
+  CreateCommunity: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

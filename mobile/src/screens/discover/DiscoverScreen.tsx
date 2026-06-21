@@ -17,6 +17,10 @@ const SERVICES = [
   { key: "nearby", icon: "📍", label: "Yaqin odamlar", screen: "NearbyPeople" as const },
   { key: "bots", icon: "🤖", label: "Botlar", screen: "BotStore" as const },
   { key: "reels", icon: "🎬", label: "Reels", screen: "ReelsFeed" as const },
+  { key: "voicerooms", icon: "🎙️", label: "Ovozli xonalar", screen: "VoiceRooms" as const },
+  { key: "livestreams", icon: "📡", label: "Jonli efirlar", screen: "LiveStreams" as const },
+  { key: "themes", icon: "🎨", label: "Mavzular", screen: "ThemeStore" as const },
+  { key: "communities", icon: "🏘️", label: "Jamiyatlar", screen: "Communities" as const },
 ];
 
 const PLATFORM_SERVICES = [
