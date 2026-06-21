@@ -454,6 +454,26 @@ export function ProfileScreen({ navigation }: Props) {
         </TouchableOpacity>
       )}
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AutoReplySettings")}>
+        <Text style={styles.menuRowText}>💬 Avtomatik javob</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("BusinessProfile")}>
+        <Text style={styles.menuRowText}>💼 Biznes profil</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("CloudStorage")}>
+        <Text style={styles.menuRowText}>☁️ Bulut xotira</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Referrals")}>
+        <Text style={styles.menuRowText}>🎁 Taklifnoma</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("About")}>
         <Text style={styles.menuRowText}>ℹ️ UzChat haqida</Text>
         <Text style={styles.menuRowArrow}>›</Text>

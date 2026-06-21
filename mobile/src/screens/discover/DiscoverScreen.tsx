@@ -24,6 +24,11 @@ const SERVICES = [
   { key: "events", icon: "📅", label: "Tadbirlar", screen: "Events" as const },
   { key: "search", icon: "🔍", label: "Qidiruv", screen: "GlobalSearch" as const },
   { key: "subscriptions", icon: "📢", label: "Obunalar", screen: "MySubscriptions" as const },
+  { key: "music", icon: "🎵", label: "Musiqa", screen: "MusicPlayer" as const },
+  { key: "games", icon: "🎮", label: "O'yinlar", screen: "GameCenter" as const },
+  { key: "cloud", icon: "☁️", label: "Bulut xotira", screen: "CloudStorage" as const },
+  { key: "referrals", icon: "🎁", label: "Taklifnoma", screen: "Referrals" as const },
+  { key: "business", icon: "💼", label: "Biznes profil", screen: "BusinessProfile" as const },
 ];
 
 const PLATFORM_SERVICES = [
@@ -33,7 +38,6 @@ const PLATFORM_SERVICES = [
   { key: "doctors", icon: "👨‍⚕️", label: "Shifokor" },
   { key: "pharmacy", icon: "💊", label: "Dorixona" },
   { key: "shopping", icon: "🛍️", label: "Xaridlar" },
-  { key: "games", icon: "🎮", label: "O'yinlar" },
   { key: "news", icon: "📡", label: "Yangiliklar" },
 ];
 

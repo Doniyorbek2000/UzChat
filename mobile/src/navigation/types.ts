@@ -133,6 +133,13 @@ export type RootStackParamList = {
   Bookmarks: undefined;
   Notes: undefined;
   ChatExports: undefined;
+  MusicPlayer: undefined;
+  GameCenter: undefined;
+  GameView: { gameId: string; url: string; title: string };
+  CloudStorage: undefined;
+  Referrals: undefined;
+  BusinessProfile: undefined;
+  AutoReplySettings: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

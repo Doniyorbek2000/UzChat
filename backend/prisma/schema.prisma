@@ -247,6 +247,18 @@ model User {
   notes            Note[]
   locationShares   LocationShare[]
   chatExports      ChatExport[]
+  drafts           Draft[]
+  autoReply        AutoReply?
+  uploadedTracks   MusicTrack[] @relation("MusicUploader")
+  musicLikes       MusicLike[]
+  playlists        Playlist[]
+  developedGames   Game[] @relation("GameDeveloper")
+  gameScores       GameScore[]
+  referralsMade    Referral[] @relation("Referrer")
+  referralsReceived Referral[] @relation("Referred")
+  cloudFiles       CloudFile[]
+  cloudFolders     CloudFolder[]
+  businessProfile  BusinessProfile?
   // File/media receiving security settings
   blockExecutableFiles Boolean @default(true)
   blockAllFiles        Boolean @default(false)
@@ -488,6 +500,7 @@ model Conversation {
   channelSubscriptions ChannelSubscription[]
   locationShares  LocationShare[]
   chatExports     ChatExport[]
+  drafts          Draft[]
 }
 
 enum GroupAuditAction {
@@ -1660,4 +1673,198 @@ model ChatExport {
 
   @@index([userId])
   @@index([conversationId])
+}
+
+model Draft {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  content         String
+  replyToId       String?
+  attachments     String[] @default([])
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  @@unique([userId, conversationId])
+  @@index([userId])
+}
+
+model AutoReply {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isEnabled Boolean  @default(false)
+  message   String
+  startAt   DateTime?
+  endAt     DateTime?
+  onlyForStrangers Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId])
+}
+
+model MusicTrack {
+  id          String   @id @default(uuid())
+  title       String
+  artist      String
+  albumTitle  String?
+  coverUrl    String?
+  audioUrl    String
+  duration    Int
+  genre       String?
+  uploaderId  String
+  uploader    User     @relation("MusicUploader", fields: [uploaderId], references: [id], onDelete: Cascade)
+  playCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  likes       MusicLike[]
+  playlists   PlaylistTrack[]
+
+  @@index([uploaderId])
+  @@index([playCount])
+}
+
+model MusicLike {
+  id       String     @id @default(uuid())
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trackId  String
+  track    MusicTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, trackId])
+}
+
+model Playlist {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  coverUrl    String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  tracks PlaylistTrack[]
+
+  @@index([userId])
+}
+
+model PlaylistTrack {
+  id         String     @id @default(uuid())
+  playlistId String
+  playlist   Playlist   @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  trackId    String
+  track      MusicTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  position   Int        @default(0)
+  addedAt    DateTime   @default(now())
+
+  @@unique([playlistId, trackId])
+  @@index([playlistId])
+}
+
+model Game {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  iconUrl     String?
+  url         String
+  category    String   @default("casual")
+  developerId String
+  developer   User     @relation("GameDeveloper", fields: [developerId], references: [id], onDelete: Cascade)
+  playCount   Int      @default(0)
+  rating      Float    @default(0)
+  ratingCount Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  scores GameScore[]
+
+  @@index([developerId])
+  @@index([playCount])
+  @@index([category])
+}
+
+model GameScore {
+  id       String   @id @default(uuid())
+  gameId   String
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score    Int
+  playedAt DateTime @default(now())
+
+  @@index([gameId, score])
+  @@index([userId])
+}
+
+model Referral {
+  id            String   @id @default(uuid())
+  referrerId    String
+  referrer      User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredId    String
+  referred      User     @relation("Referred", fields: [referredId], references: [id], onDelete: Cascade)
+  code          String
+  rewardAmount  Decimal  @default(0) @db.Decimal(18, 2)
+  rewardClaimed Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@unique([referrerId, referredId])
+  @@index([referrerId])
+  @@index([code])
+}
+
+model CloudFile {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  path      String
+  mimeType  String
+  size      Int
+  url       String
+  folderId  String?
+  folder    CloudFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([userId, folderId])
+}
+
+model CloudFolder {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  parentId  String?
+  parent    CloudFolder? @relation("FolderTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  CloudFolder[] @relation("FolderTree")
+  files     CloudFile[]
+  createdAt DateTime @default(now())
+
+  @@index([userId, parentId])
+}
+
+model BusinessProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName  String
+  category      String
+  description   String?
+  address       String?
+  phone         String?
+  email         String?
+  website       String?
+  workingHours  String?
+  coverUrl      String?
+  isVerified    Boolean  @default(false)
+  autoReplyMsg  String?
+  greetingMsg   String?
+  catalogEnabled Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
 }

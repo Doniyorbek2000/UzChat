@@ -109,6 +109,13 @@ import { EventsScreen } from "../screens/events/EventsScreen";
 import { ConversationEventsScreen } from "../screens/events/ConversationEventsScreen";
 import { GlobalSearchScreen } from "../screens/search/GlobalSearchScreen";
 import { MySubscriptionsScreen } from "../screens/subscriptions/MySubscriptionsScreen";
+import { MusicPlayerScreen } from "../screens/music/MusicPlayerScreen";
+import { GameCenterScreen } from "../screens/games/GameCenterScreen";
+import { GameViewScreen } from "../screens/games/GameViewScreen";
+import { CloudStorageScreen } from "../screens/cloud/CloudStorageScreen";
+import { ReferralsScreen } from "../screens/referrals/ReferralsScreen";
+import { BusinessProfileScreen } from "../screens/business/BusinessProfileScreen";
+import { AutoReplyScreen } from "../screens/profile/AutoReplyScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -463,6 +470,13 @@ export function RootNavigator() {
             <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ title: "Xatcho'plar" }} />
             <Stack.Screen name="Notes" component={NotesScreen} options={{ title: "Eslatmalar" }} />
             <Stack.Screen name="ChatExports" component={ChatExportsScreen} options={{ title: "Eksportlar" }} />
+            <Stack.Screen name="MusicPlayer" component={MusicPlayerScreen} options={{ title: "Musiqa", headerStyle: { backgroundColor: "#111" }, headerTintColor: "#fff" }} />
+            <Stack.Screen name="GameCenter" component={GameCenterScreen} options={{ title: "O'yinlar" }} />
+            <Stack.Screen name="GameView" component={GameViewScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="CloudStorage" component={CloudStorageScreen} options={{ title: "Bulut xotira" }} />
+            <Stack.Screen name="Referrals" component={ReferralsScreen} options={{ title: "Taklifnoma" }} />
+            <Stack.Screen name="BusinessProfile" component={BusinessProfileScreen} options={{ title: "Biznes profil" }} />
+            <Stack.Screen name="AutoReplySettings" component={AutoReplyScreen} options={{ title: "Avtomatik javob" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

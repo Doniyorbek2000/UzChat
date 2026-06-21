@@ -42,6 +42,13 @@ import { bookmarksRouter } from "./modules/bookmarks/bookmarks.controller";
 import { notesRouter } from "./modules/notes/notes.controller";
 import { locationRouter } from "./modules/location/location.controller";
 import { exportRouter } from "./modules/export/export.controller";
+import { draftsRouter } from "./modules/drafts/drafts.controller";
+import { autoReplyRouter } from "./modules/autoreply/autoreply.controller";
+import { musicRouter } from "./modules/music/music.controller";
+import { gamesRouter } from "./modules/games/games.controller";
+import { referralsRouter } from "./modules/referrals/referrals.controller";
+import { cloudRouter } from "./modules/cloud/cloud.controller";
+import { businessRouter } from "./modules/business/business.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 import { requestIdMiddleware } from "./middleware/requestId.middleware";
@@ -109,6 +116,13 @@ export function createApp() {
   app.use("/notes", apiRateLimiter, notesRouter);
   app.use("/location", apiRateLimiter, locationRouter);
   app.use("/chat-export", apiRateLimiter, exportRouter);
+  app.use("/drafts", apiRateLimiter, draftsRouter);
+  app.use("/auto-reply", apiRateLimiter, autoReplyRouter);
+  app.use("/music", apiRateLimiter, musicRouter);
+  app.use("/games", apiRateLimiter, gamesRouter);
+  app.use("/referrals", apiRateLimiter, referralsRouter);
+  app.use("/cloud", apiRateLimiter, cloudRouter);
+  app.use("/business", apiRateLimiter, businessRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
