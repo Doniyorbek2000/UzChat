@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { usersController } from "./users.controller";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import {
   changePasswordSchema,
   deleteAccountSchema,
@@ -14,6 +14,7 @@ import {
 export const usersRouter = Router();
 
 usersRouter.use(requireAuth);
+usersRouter.param("id", uuidParamHandler);
 
 usersRouter.get("/me", usersController.me);
 usersRouter.patch("/me", validateBody(updateProfileSchema), usersController.updateMe);

@@ -1,12 +1,15 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody, validateQuery } from "../../utils/validate";
+import { validateBody, validateQuery, uuidParamHandler } from "../../utils/validate";
 import { createPostSchema, createCommentSchema, paginationQuery } from "./feed.schema";
 import { feedService } from "./feed.service";
 
 const router = Router();
 
 router.use(requireAuth);
+router.param("postId", uuidParamHandler);
+router.param("userId", uuidParamHandler);
+router.param("commentId", uuidParamHandler);
 
 router.post("/", validateBody(createPostSchema), async (req: Request, res: Response) => {
   const post = await feedService.createPost(req.user!.sub, req.body);

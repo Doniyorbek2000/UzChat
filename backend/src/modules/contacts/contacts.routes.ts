@@ -1,12 +1,15 @@
 import { Router } from "express";
 import { contactsController } from "./contacts.controller";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { addContactSchema, updateContactSchema } from "./contacts.schema";
 
 export const contactsRouter = Router();
 
 contactsRouter.use(requireAuth);
+contactsRouter.param("requestId", uuidParamHandler);
+contactsRouter.param("userId", uuidParamHandler);
+contactsRouter.param("contactId", uuidParamHandler);
 
 contactsRouter.get("/", contactsController.list);
 contactsRouter.post("/", validateBody(addContactSchema), contactsController.sendRequest);
