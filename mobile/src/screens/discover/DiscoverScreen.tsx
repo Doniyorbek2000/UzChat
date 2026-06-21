@@ -45,6 +45,9 @@ const QUICK_ACTIONS = [
   { key: "mentions", icon: "📌", label: "Eslatishlar", screen: "Mentions" as const },
   { key: "redpacket", icon: "🧧", label: "Konvert ochish", screen: "ClaimRedPacket" as const },
   { key: "reminders", icon: "⏰", label: "Yodga solinganlar", screen: "Reminders" as const },
+  { key: "bookmarks", icon: "🔖", label: "Xatcho'plar", screen: "Bookmarks" as const },
+  { key: "notes", icon: "📝", label: "Eslatmalar", screen: "Notes" as const },
+  { key: "exports", icon: "📤", label: "Eksportlar", screen: "ChatExports" as const },
 ];
 
 export function DiscoverScreen({ navigation }: Props) {

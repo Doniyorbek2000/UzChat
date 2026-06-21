@@ -102,6 +102,9 @@ import { CreateThemeScreen } from "../screens/themes/CreateThemeScreen";
 import { CommunitiesScreen } from "../screens/communities/CommunitiesScreen";
 import { CommunityViewScreen } from "../screens/communities/CommunityViewScreen";
 import { CreateCommunityScreen } from "../screens/communities/CreateCommunityScreen";
+import { BookmarksScreen } from "../screens/bookmarks/BookmarksScreen";
+import { NotesScreen } from "../screens/notes/NotesScreen";
+import { ChatExportsScreen } from "../screens/export/ChatExportsScreen";
 import { EventsScreen } from "../screens/events/EventsScreen";
 import { ConversationEventsScreen } from "../screens/events/ConversationEventsScreen";
 import { GlobalSearchScreen } from "../screens/search/GlobalSearchScreen";
@@ -457,6 +460,9 @@ export function RootNavigator() {
             <Stack.Screen name="ConversationEvents" component={ConversationEventsScreen} options={{ title: "Tadbirlar" }} />
             <Stack.Screen name="GlobalSearch" component={GlobalSearchScreen} options={{ title: "Qidiruv" }} />
             <Stack.Screen name="MySubscriptions" component={MySubscriptionsScreen} options={{ title: "Obunalarim" }} />
+            <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ title: "Xatcho'plar" }} />
+            <Stack.Screen name="Notes" component={NotesScreen} options={{ title: "Eslatmalar" }} />
+            <Stack.Screen name="ChatExports" component={ChatExportsScreen} options={{ title: "Eksportlar" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

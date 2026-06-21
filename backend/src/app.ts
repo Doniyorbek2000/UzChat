@@ -38,6 +38,10 @@ import { eventsRouter } from "./modules/events/events.controller";
 import { translateRouter } from "./modules/translate/translate.controller";
 import { searchRouter } from "./modules/search/search.controller";
 import { subscriptionsRouter } from "./modules/subscriptions/subscriptions.controller";
+import { bookmarksRouter } from "./modules/bookmarks/bookmarks.controller";
+import { notesRouter } from "./modules/notes/notes.controller";
+import { locationRouter } from "./modules/location/location.controller";
+import { exportRouter } from "./modules/export/export.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 import { requestIdMiddleware } from "./middleware/requestId.middleware";
@@ -101,6 +105,10 @@ export function createApp() {
   app.use("/translate", apiRateLimiter, translateRouter);
   app.use("/search", apiRateLimiter, searchRouter);
   app.use("/subscriptions", apiRateLimiter, subscriptionsRouter);
+  app.use("/bookmarks", apiRateLimiter, bookmarksRouter);
+  app.use("/notes", apiRateLimiter, notesRouter);
+  app.use("/location", apiRateLimiter, locationRouter);
+  app.use("/chat-export", apiRateLimiter, exportRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

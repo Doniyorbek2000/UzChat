@@ -35,3 +35,7 @@ export { eventsApi } from "./events";
 export { translateApi } from "./translate";
 export { searchApi } from "./search";
 export { subscriptionsApi } from "./subscriptions";
+export { bookmarksApi } from "./bookmarks";
+export { notesApi } from "./notes";
+export { locationSharingApi } from "./locationSharing";
+export { chatExportApi } from "./chatExport";

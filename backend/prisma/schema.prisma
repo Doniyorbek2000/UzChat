@@ -243,6 +243,10 @@ model User {
   eventRsvps       EventRsvp[]
   channelSubscriptions ChannelSubscription[]
   searchHistory    SearchHistory[]
+  bookmarks        Bookmark[]
+  notes            Note[]
+  locationShares   LocationShare[]
+  chatExports      ChatExport[]
   // File/media receiving security settings
   blockExecutableFiles Boolean @default(true)
   blockAllFiles        Boolean @default(false)
@@ -482,6 +486,8 @@ model Conversation {
   isForumEnabled  Boolean @default(false)
   events          Event[]
   channelSubscriptions ChannelSubscription[]
+  locationShares  LocationShare[]
+  chatExports     ChatExport[]
 }
 
 enum GroupAuditAction {
@@ -662,6 +668,7 @@ model Message {
   editHistory MessageEditHistory[]
   reminders   MessageReminder[]
   translations TranslationCache[]
+  bookmarks    Bookmark[]
 
   createdAt DateTime  @default(now())
   editedAt  DateTime?
@@ -1590,4 +1597,67 @@ model SearchHistory {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, messageId])
+  @@index([userId, createdAt])
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String
+  color     String   @default("#FFF9C4")
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+model LocationShare {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  latitude        Float
+  longitude       Float
+  isLive          Boolean  @default(false)
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  @@index([conversationId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ChatExport {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  format          String   @default("txt")
+  includeMedia    Boolean  @default(false)
+  status          String   @default("pending")
+  fileUrl         String?
+  messageCount    Int      @default(0)
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  @@index([userId])
+  @@index([conversationId])
 }

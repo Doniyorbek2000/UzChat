@@ -130,6 +130,9 @@ export type RootStackParamList = {
   GlobalSearch: undefined;
   ChannelSubscriptions: { conversationId: string };
   MySubscriptions: undefined;
+  Bookmarks: undefined;
+  Notes: undefined;
+  ChatExports: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<
