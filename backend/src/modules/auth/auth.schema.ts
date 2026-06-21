@@ -12,8 +12,11 @@ export const usernameSchema = z
 
 export const passwordSchema = z
   .string()
-  .min(8, "Parol kamida 8 ta belgidan iborat bo'lishi kerak")
-  .max(128, "Parol juda uzun");
+  .min(10, "Parol kamida 10 ta belgidan iborat bo'lishi kerak")
+  .max(128, "Parol juda uzun")
+  .regex(/[a-z]/, "Parolda kamida bitta kichik harf bo'lishi kerak")
+  .regex(/[A-Z]/, "Parolda kamida bitta katta harf bo'lishi kerak")
+  .regex(/\d/, "Parolda kamida bitta raqam bo'lishi kerak");
 
 export const requestOtpSchema = z.object({
   phone: phoneSchema,

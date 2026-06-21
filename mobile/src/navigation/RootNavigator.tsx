@@ -146,6 +146,21 @@ import { colors } from "../theme/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const linking = {
+  prefixes: ["uzchat://", "https://uzchat.app"],
+  config: {
+    screens: {
+      MainTabs: { screens: { Chats: "chats", Contacts: "contacts", Calls: "calls", Profile: "profile" } },
+      ChatRoom: "chat/:conversationId",
+      UserProfile: "user/:userId",
+      JoinGroup: "join/:inviteCode",
+      Feed: "feed",
+      Marketplace: "marketplace",
+      Wallet: "wallet",
+    },
+  },
+};
+
 function navigateFromNotification(data?: MessageNotificationData) {
   if (!navigationRef.isReady()) return;
   if (data?.type === "security") {
@@ -371,7 +386,7 @@ export function RootNavigator() {
 
   return (
     <>
-      <NavigationContainer ref={navigationRef} theme={navTheme}>
+      <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
         {isAuthenticated ? (
           <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: themeColors.surface }, headerTintColor: themeColors.text }}>
             <Stack.Screen name="MainTabs" component={MainNavigator} options={{ title: "UzChat" }} />

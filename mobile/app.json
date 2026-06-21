@@ -2,6 +2,7 @@
   "expo": {
     "name": "UzChat",
     "slug": "uzchat",
+    "scheme": "uzchat",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -46,6 +47,20 @@
       "blockedPermissions": [
         "READ_PHONE_STATE",
         "READ_CALL_LOG"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "uzchat.app",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {

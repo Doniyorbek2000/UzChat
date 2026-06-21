@@ -43,6 +43,9 @@ export function disconnectUser(userId: string): void {
 export function initSocketServer(httpServer: HttpServer): Server {
   io = new Server(httpServer, {
     cors: { origin: env.corsOrigin },
+    pingInterval: 25000,
+    pingTimeout: 20000,
+    maxHttpBufferSize: 1e6,
   });
 
   io.use((socket, next) => {
