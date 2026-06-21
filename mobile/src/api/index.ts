@@ -51,3 +51,8 @@ export { badgesApi } from "./badges";
 export { giftsApi } from "./gifts";
 export { greetingsApi } from "./greetings";
 export { preferencesApi } from "./preferences";
+export { contactImportApi } from "./contactImport";
+export { wishlistApi } from "./wishlist";
+export { loyaltyApi } from "./loyalty";
+export { faqApi } from "./faq";
+export { notifLogApi } from "./notifLog";

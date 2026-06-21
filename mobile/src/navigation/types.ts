@@ -144,6 +144,10 @@ export type RootStackParamList = {
   Gifts: undefined;
   GreetingCards: undefined;
   HashtagPosts: { tag: string };
+  Loyalty: undefined;
+  Faq: undefined;
+  NotificationLog: undefined;
+  Wishlist: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

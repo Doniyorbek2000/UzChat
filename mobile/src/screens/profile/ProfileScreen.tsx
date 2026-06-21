@@ -484,6 +484,21 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Loyalty")}>
+        <Text style={styles.menuRowText}>💎 Sodiqlik ballari</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("NotificationLog")}>
+        <Text style={styles.menuRowText}>🔔 Bildirishnomalar tarixi</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Faq")}>
+        <Text style={styles.menuRowText}>❓ Yordam markazi</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("About")}>
         <Text style={styles.menuRowText}>ℹ️ UzChat haqida</Text>
         <Text style={styles.menuRowArrow}>›</Text>

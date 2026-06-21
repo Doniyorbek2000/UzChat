@@ -32,6 +32,9 @@ const SERVICES = [
   { key: "gifts", icon: "🎁", label: "Sovg'alar", screen: "Gifts" as const },
   { key: "greetings", icon: "💌", label: "Tabrik kartochkalari", screen: "GreetingCards" as const },
   { key: "badges", icon: "🏅", label: "Belgilar", screen: "Badges" as const },
+  { key: "loyalty", icon: "💎", label: "Sodiqlik ballari", screen: "Loyalty" as const },
+  { key: "faq", icon: "❓", label: "Yordam", screen: "Faq" as const },
+  { key: "wishlist", icon: "❤️", label: "Istaklar", screen: "Wishlist" as const },
 ];
 
 const PLATFORM_SERVICES = [
@@ -55,6 +58,7 @@ const QUICK_ACTIONS = [
   { key: "bookmarks", icon: "🔖", label: "Xatcho'plar", screen: "Bookmarks" as const },
   { key: "notes", icon: "📝", label: "Eslatmalar", screen: "Notes" as const },
   { key: "exports", icon: "📤", label: "Eksportlar", screen: "ChatExports" as const },
+  { key: "notiflog", icon: "🔔", label: "Bildirishnomalar tarixi", screen: "NotificationLog" as const },
 ];
 
 export function DiscoverScreen({ navigation }: Props) {

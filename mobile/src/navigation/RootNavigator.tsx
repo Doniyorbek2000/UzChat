@@ -120,6 +120,10 @@ import { BadgesScreen } from "../screens/badges/BadgesScreen";
 import { GiftsScreen } from "../screens/gifts/GiftsScreen";
 import { GreetingCardsScreen } from "../screens/greetings/GreetingCardsScreen";
 import { HashtagPostsScreen } from "../screens/hashtags/HashtagPostsScreen";
+import { LoyaltyScreen } from "../screens/loyalty/LoyaltyScreen";
+import { FaqScreen } from "../screens/faq/FaqScreen";
+import { NotificationLogScreen } from "../screens/notiflog/NotificationLogScreen";
+import { WishlistScreen } from "../screens/wishlist/WishlistScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -485,6 +489,10 @@ export function RootNavigator() {
             <Stack.Screen name="Gifts" component={GiftsScreen} options={{ title: "Sovg'alar" }} />
             <Stack.Screen name="GreetingCards" component={GreetingCardsScreen} options={{ title: "Tabrik kartochkalari" }} />
             <Stack.Screen name="HashtagPosts" component={HashtagPostsScreen} options={{ title: "Hashtag" }} />
+            <Stack.Screen name="Loyalty" component={LoyaltyScreen} options={{ title: "Sodiqlik ballari" }} />
+            <Stack.Screen name="Faq" component={FaqScreen} options={{ title: "Yordam markazi" }} />
+            <Stack.Screen name="NotificationLog" component={NotificationLogScreen} options={{ title: "Bildirishnomalar tarixi" }} />
+            <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ title: "Istaklar ro'yxati" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

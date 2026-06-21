@@ -265,6 +265,11 @@ model User {
   sentCards        SentGreetingCard[] @relation("SentCards")
   receivedCards    SentGreetingCard[] @relation("ReceivedCards")
   appPreferences   AppPreference[]
+  contactImports   ContactImport[]
+  wishlists        Wishlist[]
+  loyaltyPoints    LoyaltyPoints?
+  loyaltyTxns      LoyaltyTransaction[]
+  notificationLogs NotificationLog[]
   // File/media receiving security settings
   blockExecutableFiles Boolean @default(true)
   blockAllFiles        Boolean @default(false)
@@ -1079,6 +1084,7 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   orderItems OrderItem[]
+  wishlists  Wishlist[]
 
   @@index([storeId])
   @@index([category])
@@ -1974,4 +1980,79 @@ model AppPreference {
 
   @@unique([userId, key])
   @@index([userId])
+}
+
+model ContactImport {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneHash   String
+  matchedUserId String?
+  displayName String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, phoneHash])
+  @@index([userId])
+  @@index([phoneHash])
+}
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model LoyaltyPoints {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  points    Int      @default(0)
+  level     String   @default("bronze")
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model LoyaltyTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  type      String
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model FaqArticle {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  category  String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([category])
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  data      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, isRead])
 }

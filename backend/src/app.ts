@@ -54,6 +54,11 @@ import { badgesRouter } from "./modules/badges/badges.controller";
 import { giftsRouter } from "./modules/gifts/gifts.controller";
 import { greetingsRouter } from "./modules/greetings/greetings.controller";
 import { preferencesRouter } from "./modules/preferences/preferences.controller";
+import { contactImportRouter } from "./modules/contactimport/contactimport.controller";
+import { wishlistRouter } from "./modules/wishlist/wishlist.controller";
+import { loyaltyRouter } from "./modules/loyalty/loyalty.controller";
+import { faqRouter } from "./modules/faq/faq.controller";
+import { notifLogRouter } from "./modules/notiflog/notiflog.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 import { requestIdMiddleware } from "./middleware/requestId.middleware";
@@ -133,6 +138,11 @@ export function createApp() {
   app.use("/gifts", apiRateLimiter, giftsRouter);
   app.use("/greetings", apiRateLimiter, greetingsRouter);
   app.use("/preferences", apiRateLimiter, preferencesRouter);
+  app.use("/contact-import", apiRateLimiter, contactImportRouter);
+  app.use("/wishlist", apiRateLimiter, wishlistRouter);
+  app.use("/loyalty", apiRateLimiter, loyaltyRouter);
+  app.use("/faq", apiRateLimiter, faqRouter);
+  app.use("/notification-log", apiRateLimiter, notifLogRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
