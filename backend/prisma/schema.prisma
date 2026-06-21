@@ -226,6 +226,13 @@ model User {
   stickerPacks     StickerPack[] @relation("StickerPackCreator")
   installedPacks   StickerPackInstall[]
   storyHighlights  StoryHighlight[]
+  qrPaymentsCreated QrPayment[] @relation("QrPaymentCreator")
+  qrPaymentsPaid    QrPayment[] @relation("QrPaymentPayer")
+  nearbyLocation   NearbyLocation?
+  bots             Bot[]
+  reels            Reel[]
+  reelLikes        ReelLike[]
+  reelComments     ReelComment[]
 
   @@index([username])
   @@index([phone])
@@ -1185,4 +1192,142 @@ model StoryHighlightItem {
   createdAt   DateTime       @default(now())
 
   @@index([highlightId])
+}
+
+// ─── QR PAYMENTS ────────────────────────────────────────────
+
+enum QrPaymentStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+model QrPayment {
+  id          String          @id @default(uuid())
+  creatorId   String
+  creator     User            @relation("QrPaymentCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  amount      Decimal?        @db.Decimal(18, 2)
+  currency    String          @default("UZS")
+  note        String?
+  qrCode      String          @unique
+  status      QrPaymentStatus @default(PENDING)
+  payerId     String?
+  payer       User?           @relation("QrPaymentPayer", fields: [payerId], references: [id], onDelete: SetNull)
+  paidAt      DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime        @default(now())
+
+  @@index([creatorId])
+  @@index([payerId])
+  @@index([qrCode])
+  @@index([status, expiresAt])
+}
+
+// ─── NEARBY PEOPLE ──────────────────────────────────────────
+
+model NearbyLocation {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  latitude  Float
+  longitude Float
+  accuracy  Float    @default(0)
+  isVisible Boolean  @default(true)
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([isVisible])
+  @@index([latitude, longitude])
+}
+
+// ─── BOT PLATFORM ───────────────────────────────────────────
+
+model Bot {
+  id          String   @id @default(uuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  username    String   @unique
+  displayName String
+  avatarUrl   String?
+  description String?
+  token       String   @unique
+  webhookUrl  String?
+  isInline    Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  commands    BotCommand[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([ownerId])
+  @@index([isActive])
+}
+
+model BotCommand {
+  id          String @id @default(uuid())
+  botId       String
+  bot         Bot    @relation(fields: [botId], references: [id], onDelete: Cascade)
+  command     String
+  description String
+
+  @@unique([botId, command])
+  @@index([botId])
+}
+
+// ─── REELS / SHORT VIDEOS ───────────────────────────────────
+
+model Reel {
+  id          String   @id @default(uuid())
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  videoUrl    String
+  thumbnailUrl String?
+  caption     String?
+  duration    Int      @default(0)
+  viewCount   Int      @default(0)
+  likeCount   Int      @default(0)
+  commentCount Int     @default(0)
+  shareCount  Int      @default(0)
+  musicTitle  String?
+  musicArtist String?
+  hashtags    String[] @default([])
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  likes    ReelLike[]
+  comments ReelComment[]
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([isPublic, createdAt])
+}
+
+model ReelLike {
+  id      String   @id @default(uuid())
+  reelId  String
+  reel    Reel     @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([reelId, userId])
+  @@index([userId])
+}
+
+model ReelComment {
+  id        String   @id @default(uuid())
+  reelId    String
+  reel      Reel     @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  text      String
+  parentId  String?
+  parent    ReelComment? @relation("ReelCommentThread", fields: [parentId], references: [id], onDelete: SetNull)
+  replies   ReelComment[] @relation("ReelCommentThread")
+  likeCount Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([reelId])
+  @@index([authorId])
+  @@index([parentId])
 }

@@ -21,3 +21,7 @@ export { searchGifs, getTrendingGifs } from "./gif";
 export { stickersApi } from "./stickers";
 export { highlightsApi } from "./highlights";
 export { channelStatsApi } from "./channelStats";
+export { qrPaymentsApi } from "./qrPayments";
+export { nearbyApi } from "./nearby";
+export { botsApi } from "./bots";
+export { reelsApi } from "./reels";

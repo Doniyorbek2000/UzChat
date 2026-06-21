@@ -17,6 +17,7 @@ import { startMediaGarbageCollectionJob } from "./jobs/mediaGarbageCollection";
 import { startSessionCleanupJob } from "./jobs/sessionCleanup";
 import { startStoryExpiryJob } from "./jobs/storyExpiry";
 import { startChannelStatsJob } from "./jobs/channelStats";
+import { startQrPaymentExpiryJob } from "./jobs/qrPaymentExpiry";
 
 const app = createApp();
 const httpServer = createServer(app);
@@ -35,6 +36,7 @@ startMediaGarbageCollectionJob();
 startSessionCleanupJob();
 startStoryExpiryJob();
 startChannelStatsJob();
+startQrPaymentExpiryJob();
 
 function gracefulShutdown(signal: string) {
   logger.info("Shutting down", { signal });

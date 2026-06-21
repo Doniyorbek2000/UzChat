@@ -26,6 +26,9 @@ import { redPacketsRouter } from "./modules/redpackets/redpackets.controller";
 import { adminRouter } from "./modules/admin/admin.controller";
 import { stickersRouter } from "./modules/stickers/stickers.controller";
 import { highlightsRouter } from "./modules/stories/highlights.controller";
+import { nearbyRouter } from "./modules/nearby/nearby.controller";
+import { botsRouter } from "./modules/bots/bots.controller";
+import { reelsRouter } from "./modules/reels/reels.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 import { requestIdMiddleware } from "./middleware/requestId.middleware";
@@ -77,6 +80,9 @@ export function createApp() {
   app.use("/admin", apiRateLimiter, adminRouter);
   app.use("/stickers", apiRateLimiter, stickersRouter);
   app.use("/highlights", apiRateLimiter, highlightsRouter);
+  app.use("/nearby", apiRateLimiter, nearbyRouter);
+  app.use("/bots", apiRateLimiter, botsRouter);
+  app.use("/reels", apiRateLimiter, reelsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
