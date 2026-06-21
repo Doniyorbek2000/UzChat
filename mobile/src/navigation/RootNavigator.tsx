@@ -91,6 +91,7 @@ import { BotDetailScreen } from "../screens/bots/BotDetailScreen";
 import { CreateBotScreen } from "../screens/bots/CreateBotScreen";
 import { ReelsFeedScreen } from "../screens/reels/ReelsFeedScreen";
 import { CreateReelScreen } from "../screens/reels/CreateReelScreen";
+import { FileSecurityScreen } from "../screens/profile/FileSecurityScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { navigationRef } from "./navigationRef";
@@ -427,6 +428,7 @@ export function RootNavigator() {
             <Stack.Screen name="CreateBot" component={CreateBotScreen} options={{ title: "Bot yaratish" }} />
             <Stack.Screen name="ReelsFeed" component={ReelsFeedScreen} options={{ title: "Reels", headerStyle: { backgroundColor: "#111" }, headerTintColor: "#fff" }} />
             <Stack.Screen name="CreateReel" component={CreateReelScreen} options={{ title: "Reel yaratish" }} />
+            <Stack.Screen name="FileSecurity" component={FileSecurityScreen} options={{ title: "Fayl xavfsizligi" }} />
           </Stack.Navigator>
         ) : (
           <AuthNavigator />

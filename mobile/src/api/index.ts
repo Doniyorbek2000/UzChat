@@ -25,3 +25,4 @@ export { qrPaymentsApi } from "./qrPayments";
 export { nearbyApi } from "./nearby";
 export { botsApi } from "./bots";
 export { reelsApi } from "./reels";
+export { fileSecurityApi } from "./fileSecurity";

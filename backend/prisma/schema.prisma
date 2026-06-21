@@ -233,6 +233,16 @@ model User {
   reels            Reel[]
   reelLikes        ReelLike[]
   reelComments     ReelComment[]
+  // File/media receiving security settings
+  blockExecutableFiles Boolean @default(true)
+  blockAllFiles        Boolean @default(false)
+  blockMediaFromStrangers Boolean @default(false)
+  maxFileSize          Int     @default(52428800)
+  allowedFileTypes     String[] @default([])
+  blockedFileTypes     String[] @default(["apk", "aab", "exe", "msi", "bat", "cmd", "ps1", "sh", "dll", "scr", "com", "vbs", "wsf", "jar", "deb", "rpm", "dmg", "pkg", "app", "ipa", "xapk"])
+  autoDownloadMedia    Boolean @default(true)
+  autoDownloadOnWifi   Boolean @default(true)
+  autoDownloadOnMobile Boolean @default(false)
 
   @@index([username])
   @@index([phone])

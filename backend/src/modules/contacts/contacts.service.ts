@@ -399,4 +399,16 @@ export const contactsService = {
 
     return contactsService.isBlockedEitherWay(userId, other.userId);
   },
+
+  async areContacts(userId1: string, userId2: string): Promise<boolean> {
+    const contact = await prisma.contact.findFirst({
+      where: {
+        OR: [
+          { ownerId: userId1, targetId: userId2, status: "ACCEPTED" },
+          { ownerId: userId2, targetId: userId1, status: "ACCEPTED" },
+        ],
+      },
+    });
+    return !!contact;
+  },
 };

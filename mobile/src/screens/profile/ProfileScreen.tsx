@@ -427,6 +427,11 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("FileSecurity")}>
+        <Text style={styles.menuRowText}>🛡️ Fayl xavfsizligi</Text>
+        <Text style={styles.menuRowArrow}>›</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AccountDataExport")}>
         <Text style={styles.menuRowText}>📥 Mening ma'lumotlarim</Text>
         <Text style={styles.menuRowArrow}>›</Text>

@@ -114,6 +114,7 @@ export type RootStackParamList = {
   CreateBot: undefined;
   ReelsFeed: undefined;
   CreateReel: undefined;
+  FileSecurity: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<
