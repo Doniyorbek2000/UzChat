@@ -25,10 +25,12 @@ import { redPacketsRouter } from "./modules/redpackets/redpackets.controller";
 import { adminRouter } from "./modules/admin/admin.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
+import { requestIdMiddleware } from "./middleware/requestId.middleware";
 
 export function createApp() {
   const app = express();
 
+  app.use(requestIdMiddleware);
   app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   app.use(cors({ origin: env.corsOrigin, credentials: true }));
   app.use(compression());

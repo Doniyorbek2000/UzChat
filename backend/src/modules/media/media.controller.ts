@@ -5,16 +5,12 @@ import { Errors } from "../../utils/errors";
 import { uploadsDir } from "./upload";
 
 export const mediaController = {
-  async upload(req: Request, res: Response, next: NextFunction) {
-    try {
-      if (!req.file) throw Errors.badRequest("Fayl yuborilmadi");
-      res.status(201).json({
-        url: `${env.publicUrl}/media/${req.file.filename}`,
-        size: req.file.size,
-      });
-    } catch (err) {
-      next(err);
-    }
+  async upload(req: Request, res: Response) {
+    if (!req.file) throw Errors.badRequest("Fayl yuborilmadi");
+    res.status(201).json({
+      url: `${env.publicUrl}/media/${req.file.filename}`,
+      size: req.file.size,
+    });
   },
 
   async get(req: Request, res: Response, next: NextFunction) {
