@@ -1,11 +1,14 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { createReelSchema, reelCommentSchema } from "./reels.schema";
 import { reelsService } from "./reels.service";
 
 const router = Router();
 router.use(requireAuth);
+router.param("reelId", uuidParamHandler);
+router.param("userId", uuidParamHandler);
+router.param("commentId", uuidParamHandler);
 
 router.get("/feed", async (req: Request, res: Response) => {
   const reels = await reelsService.getFeed(req.user!.sub, req.query.cursor as string | undefined);

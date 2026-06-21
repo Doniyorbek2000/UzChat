@@ -1,11 +1,13 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { createVoiceRoomSchema } from "./voicerooms.schema";
 import { voiceRoomsService } from "./voicerooms.service";
 
 const router = Router();
 router.use(requireAuth);
+router.param("roomId", uuidParamHandler);
+router.param("userId", uuidParamHandler);
 
 router.get("/live", async (_req: Request, res: Response) => {
   const rooms = await voiceRoomsService.listLive();

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody, validateQuery } from "../../utils/validate";
 import { updateLocationSchema, nearbyQuerySchema } from "./nearby.schema";
@@ -12,9 +13,10 @@ router.put("/location", validateBody(updateLocationSchema), async (req: Request,
   res.json(location);
 });
 
-router.put("/visibility", async (req: Request, res: Response) => {
-  const { isVisible } = req.body;
-  const location = await nearbyService.setVisibility(req.user!.sub, isVisible === true);
+const visibilitySchema = z.object({ isVisible: z.boolean() });
+
+router.put("/visibility", validateBody(visibilitySchema), async (req: Request, res: Response) => {
+  const location = await nearbyService.setVisibility(req.user!.sub, req.body.isVisible);
   res.json(location);
 });
 

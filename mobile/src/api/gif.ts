@@ -1,4 +1,4 @@
-const TENOR_API_KEY = "AIzaSyDDAMwpS7NxG0HC62GwS2M1CrfjT7S0GVk";
+const TENOR_API_KEY = process.env.EXPO_PUBLIC_TENOR_API_KEY ?? "";
 const TENOR_BASE = "https://tenor.googleapis.com/v2";
 
 export interface GifResult {

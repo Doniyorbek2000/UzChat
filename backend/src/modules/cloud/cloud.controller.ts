@@ -1,6 +1,22 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
+import { validateBody } from "../../utils/validate";
 import { cloudService } from "./cloud.service";
+
+const createFolderSchema = z.object({
+  name: z.string().min(1).max(255),
+  parentId: z.string().uuid().optional(),
+});
+
+const uploadFileSchema = z.object({
+  name: z.string().min(1).max(255),
+  path: z.string().min(1),
+  mimeType: z.string().min(1).max(127),
+  size: z.number().int().min(0),
+  url: z.string().url(),
+  folderId: z.string().uuid().optional(),
+});
 
 const router = Router();
 router.use(requireAuth);
@@ -15,12 +31,12 @@ router.get("/folders", async (req: Request, res: Response) => {
   res.json(folders);
 });
 
-router.post("/folders", async (req: Request, res: Response) => {
+router.post("/folders", validateBody(createFolderSchema), async (req: Request, res: Response) => {
   const folder = await cloudService.createFolder(req.user!.sub, req.body.name, req.body.parentId);
   res.status(201).json(folder);
 });
 
-router.post("/files", async (req: Request, res: Response) => {
+router.post("/files", validateBody(uploadFileSchema), async (req: Request, res: Response) => {
   const file = await cloudService.uploadFile(req.user!.sub, req.body);
   res.status(201).json(file);
 });

@@ -1,6 +1,10 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
+import { validateBody } from "../../utils/validate";
 import { referralsService } from "./referrals.service";
+
+const claimSchema = z.object({ code: z.string().min(1).max(64) });
 
 const router = Router();
 router.use(requireAuth);
@@ -10,7 +14,7 @@ router.get("/code", async (req: Request, res: Response) => {
   res.json(code);
 });
 
-router.post("/claim", async (req: Request, res: Response) => {
+router.post("/claim", validateBody(claimSchema), async (req: Request, res: Response) => {
   const referral = await referralsService.claimReferral(req.user!.sub, req.body.code);
   res.status(201).json(referral);
 });
