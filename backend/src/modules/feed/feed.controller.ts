@@ -14,15 +14,13 @@ router.post("/", validateBody(createPostSchema), async (req: Request, res: Respo
 });
 
 router.get("/", validateQuery(paginationQuery), async (req: Request, res: Response) => {
-  const cursor = req.query.cursor as string | undefined;
-  const limit = parseInt(req.query.limit as string) || 20;
+  const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
   const result = await feedService.getFeed(req.user!.sub, cursor, limit);
   res.json(result);
 });
 
 router.get("/user/:userId", validateQuery(paginationQuery), async (req: Request, res: Response) => {
-  const cursor = req.query.cursor as string | undefined;
-  const limit = parseInt(req.query.limit as string) || 20;
+  const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
   const result = await feedService.getUserPosts(req.params.userId, req.user!.sub, cursor, limit);
   res.json(result);
 });
@@ -38,8 +36,7 @@ router.delete("/:postId/like", async (req: Request, res: Response) => {
 });
 
 router.get("/:postId/comments", validateQuery(paginationQuery), async (req: Request, res: Response) => {
-  const cursor = req.query.cursor as string | undefined;
-  const limit = parseInt(req.query.limit as string) || 30;
+  const { cursor, limit } = req.query as unknown as { cursor?: string; limit: number };
   const result = await feedService.getComments(req.params.postId, cursor, limit);
   res.json(result);
 });

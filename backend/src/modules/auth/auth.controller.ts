@@ -19,7 +19,8 @@ export const authController = {
   },
 
   async login(req: Request, res: Response) {
-    const result = await authService.login(req.body, req.headers["user-agent"]);
+    const ip = req.ip ?? req.socket.remoteAddress ?? null;
+    const result = await authService.login(req.body, req.headers["user-agent"], ip);
     res.json(result);
   },
 

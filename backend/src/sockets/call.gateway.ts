@@ -4,7 +4,13 @@ import { prisma } from "../config/prisma";
 import { callsService } from "../modules/calls/calls.service";
 import { AuthenticatedSocket } from "./index";
 
-const activeCalls = new Map<string, { logId: string; startTime: number }>();
+const CALL_TIMEOUT_MS = 60_000;
+const activeCalls = new Map<string, { logId: string; startTime: number; timeout: ReturnType<typeof setTimeout> }>();
+
+function clearCallTimeout(callKey: string) {
+  const active = activeCalls.get(callKey);
+  if (active?.timeout) clearTimeout(active.timeout);
+}
 
 export function registerCallHandlers(io: Server, socket: AuthenticatedSocket) {
   socket.on("call:offer", async (data: { targetUserId: string; conversationId: string; offer: any; callType: "audio" | "video" }) => {
@@ -15,7 +21,18 @@ export function registerCallHandlers(io: Server, socket: AuthenticatedSocket) {
 
     const log = await callsService.createLog(socket.userId, data.targetUserId, data.callType);
     const callKey = [socket.userId, data.targetUserId].sort().join(":");
-    activeCalls.set(callKey, { logId: log.id, startTime: Date.now() });
+
+    const timeout = setTimeout(async () => {
+      const active = activeCalls.get(callKey);
+      if (active) {
+        await callsService.updateStatus(active.logId, CallStatus.MISSED).catch(() => {});
+        activeCalls.delete(callKey);
+        io.to(`user:${socket.userId}`).emit("call:timeout", { targetUserId: data.targetUserId, conversationId: data.conversationId });
+        io.to(`user:${data.targetUserId}`).emit("call:timeout", { callerId: socket.userId, conversationId: data.conversationId });
+      }
+    }, CALL_TIMEOUT_MS);
+
+    activeCalls.set(callKey, { logId: log.id, startTime: Date.now(), timeout });
 
     io.to(`user:${data.targetUserId}`).emit("call:offer", {
       callerId: socket.userId,
@@ -30,6 +47,7 @@ export function registerCallHandlers(io: Server, socket: AuthenticatedSocket) {
 
   socket.on("call:answer", async (data: { targetUserId: string; answer: any }) => {
     const callKey = [socket.userId, data.targetUserId].sort().join(":");
+    clearCallTimeout(callKey);
     const active = activeCalls.get(callKey);
     if (active) {
       await callsService.updateStatus(active.logId, CallStatus.ANSWERED);
@@ -50,6 +68,7 @@ export function registerCallHandlers(io: Server, socket: AuthenticatedSocket) {
 
   socket.on("call:end", async (data: { targetUserId: string; conversationId: string }) => {
     const callKey = [socket.userId, data.targetUserId].sort().join(":");
+    clearCallTimeout(callKey);
     const active = activeCalls.get(callKey);
     if (active) {
       const duration = Math.floor((Date.now() - active.startTime) / 1000);
@@ -65,6 +84,7 @@ export function registerCallHandlers(io: Server, socket: AuthenticatedSocket) {
 
   socket.on("call:reject", async (data: { targetUserId: string; conversationId: string }) => {
     const callKey = [socket.userId, data.targetUserId].sort().join(":");
+    clearCallTimeout(callKey);
     const active = activeCalls.get(callKey);
     if (active) {
       await callsService.updateStatus(active.logId, CallStatus.REJECTED);
@@ -79,6 +99,7 @@ export function registerCallHandlers(io: Server, socket: AuthenticatedSocket) {
 
   socket.on("call:busy", async (data: { targetUserId: string }) => {
     const callKey = [socket.userId, data.targetUserId].sort().join(":");
+    clearCallTimeout(callKey);
     const active = activeCalls.get(callKey);
     if (active) {
       await callsService.updateStatus(active.logId, CallStatus.BUSY);

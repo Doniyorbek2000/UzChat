@@ -280,6 +280,10 @@ model User {
   autoDownloadMedia    Boolean @default(true)
   autoDownloadOnWifi   Boolean @default(true)
   autoDownloadOnMobile Boolean @default(false)
+  failedLoginAttempts  Int     @default(0)
+  lockedUntil          DateTime?
+
+  adminAuditLogs AdminAuditLog[] @relation("AdminAuditLogs")
 
   @@index([username])
   @@index([phone])
@@ -2057,4 +2061,37 @@ model NotificationLog {
 
   @@index([userId, createdAt])
   @@index([userId, isRead])
+}
+
+// ─── SECURITY: LOGIN ATTEMPTS ───────────────────────────────
+
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  phone     String
+  ip        String?
+  userAgent String?
+  success   Boolean
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+  @@index([ip, createdAt])
+}
+
+// ─── ADMIN AUDIT LOG ────────────────────────────────────────
+
+model AdminAuditLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  admin       User     @relation("AdminAuditLogs", fields: [adminId], references: [id], onDelete: Cascade)
+  action      String
+  targetType  String?
+  targetId    String?
+  details     String?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([action])
+  @@index([targetId])
 }

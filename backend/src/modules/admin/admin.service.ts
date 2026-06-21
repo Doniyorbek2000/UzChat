@@ -170,4 +170,33 @@ export const adminService = {
       timestamp: new Date().toISOString(),
     };
   },
+
+  async getAuditLog(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const [logs, total] = await Promise.all([
+      prisma.adminAuditLog.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          admin: { select: { id: true, username: true, displayName: true } },
+        },
+      }),
+      prisma.adminAuditLog.count(),
+    ]);
+    return { logs, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async getLoginAttempts(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const [attempts, total] = await Promise.all([
+      prisma.loginAttempt.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.loginAttempt.count(),
+    ]);
+    return { attempts, total, page, totalPages: Math.ceil(total / limit) };
+  },
 };

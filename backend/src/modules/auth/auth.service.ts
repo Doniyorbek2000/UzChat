@@ -34,6 +34,10 @@ import { env } from "../../config/env";
 import { pushService } from "../push/push.service";
 import { formatDeviceName } from "../../utils/device";
 import { disconnectSession, disconnectUser } from "../../sockets";
+import { logger } from "../../utils/logger";
+
+const MAX_FAILED_LOGINS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
 function msFromExpiresIn(expiresIn: string): number {
   const match = /^(\d+)([smhd])$/.exec(expiresIn);
@@ -179,12 +183,37 @@ export const authService = {
     return { user: toPublicUser(user), ...tokens };
   },
 
-  async login({ phone, password }: LoginInput, userAgent?: string | null) {
+  async login({ phone, password }: LoginInput, userAgent?: string | null, ip?: string | null) {
     const user = await prisma.user.findUnique({ where: { phone } });
-    if (!user) throw Errors.invalidCredentials();
+    if (!user) {
+      await prisma.loginAttempt.create({ data: { phone, ip, userAgent, success: false, reason: "USER_NOT_FOUND" } });
+      throw Errors.invalidCredentials();
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const remainingSec = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 1000);
+      await prisma.loginAttempt.create({ data: { phone, ip, userAgent, success: false, reason: "ACCOUNT_LOCKED" } });
+      throw Errors.tooManyRequests(`Hisob vaqtincha bloklangan. ${Math.ceil(remainingSec / 60)} daqiqadan keyin qayta urinib ko'ring`);
+    }
 
     const valid = await verifyPassword(password, user.passwordHash);
-    if (!valid) throw Errors.invalidCredentials();
+    if (!valid) {
+      const attempts = user.failedLoginAttempts + 1;
+      const updateData: { failedLoginAttempts: number; lockedUntil?: Date } = { failedLoginAttempts: attempts };
+      if (attempts >= MAX_FAILED_LOGINS) {
+        updateData.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+        logger.warn("Account locked due to failed login attempts", { phone: phone.slice(0, -4).replace(/./g, "*") + phone.slice(-4), attempts });
+      }
+      await prisma.user.update({ where: { id: user.id }, data: updateData });
+      await prisma.loginAttempt.create({ data: { phone, ip, userAgent, success: false, reason: "INVALID_PASSWORD" } });
+      throw Errors.invalidCredentials();
+    }
+
+    if (user.failedLoginAttempts > 0) {
+      await prisma.user.update({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null } });
+    }
+
+    await prisma.loginAttempt.create({ data: { phone, ip, userAgent, success: true } });
 
     if (user.twoFactorHash) {
       const pendingToken = signTwoFactorPendingToken(user.id);
@@ -230,7 +259,18 @@ export const authService = {
     if (!payload.sid) throw Errors.unauthorized();
 
     const stored = await prisma.refreshToken.findUnique({ where: { id: payload.sid } });
-    if (!stored || stored.token !== refreshToken || stored.revokedAt || stored.expiresAt < new Date()) {
+
+    if (!stored || stored.expiresAt < new Date()) {
+      throw Errors.unauthorized();
+    }
+
+    if (stored.revokedAt || stored.token !== refreshToken) {
+      logger.warn("Refresh token replay detected — revoking all sessions", { userId: payload.sub, sessionId: payload.sid });
+      await prisma.refreshToken.updateMany({
+        where: { userId: payload.sub, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      disconnectUser(payload.sub);
       throw Errors.unauthorized();
     }
 
