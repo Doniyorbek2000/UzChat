@@ -275,11 +275,26 @@ export function RootNavigator() {
       });
     };
 
+    const onQrPaymentCompleted = (data: {
+      payer: { displayName: string; avatarUrl: string | null };
+      amount: number;
+      currency: string;
+    }) => {
+      useToastStore.getState().showToast({
+        conversationId: "",
+        title: "QR to'lov qabul qilindi",
+        body: `${data.payer.displayName} ${Number(data.amount).toLocaleString()} ${data.currency} to'ladi`,
+        avatarUrl: data.payer.avatarUrl,
+      });
+    };
+
     socket.on("call:offer", onIncomingCall);
     socket.on("payment:received", onPaymentReceived);
+    socket.on("qr-payment:completed", onQrPaymentCompleted);
     return () => {
       socket.off("call:offer", onIncomingCall);
       socket.off("payment:received", onPaymentReceived);
+      socket.off("qr-payment:completed", onQrPaymentCompleted);
     };
   }, [isAuthenticated]);
 

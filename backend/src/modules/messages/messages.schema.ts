@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const sendMessageSchema = z
   .object({
-    type: z.enum(["TEXT", "IMAGE", "VIDEO", "AUDIO", "FILE", "CONTACT", "POLL", "LOCATION"]).default("TEXT"),
+    type: z.enum(["TEXT", "IMAGE", "VIDEO", "AUDIO", "FILE", "CONTACT", "POLL", "LOCATION", "STICKER"]).default("TEXT"),
     // base64 NaCl secretbox ciphertext, encrypted client-side with the conversation key
     ciphertext: z.string().min(1),
     nonce: z.string().min(1),
