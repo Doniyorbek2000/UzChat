@@ -5,6 +5,7 @@ import cors from "cors";
 import compression from "compression";
 import morgan from "morgan";
 import { env } from "./config/env";
+import { prisma } from "./config/prisma";
 import { authRouter } from "./modules/auth/auth.routes";
 import { usersRouter } from "./modules/users/users.routes";
 import { contactsRouter } from "./modules/contacts/contacts.routes";
@@ -39,7 +40,20 @@ export function createApp() {
     app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
   }
 
-  app.get("/health", (_req, res) => res.json({ status: "ok" }));
+  app.get("/health", async (_req, res) => {
+    const start = Date.now();
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({
+        status: "ok",
+        uptime: Math.floor(process.uptime()),
+        dbLatency: Date.now() - start,
+        memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
+      });
+    } catch {
+      res.status(503).json({ status: "degraded", db: "unreachable" });
+    }
+  });
 
   app.use("/auth", authRouter);
   app.use("/users", apiRateLimiter, usersRouter);
