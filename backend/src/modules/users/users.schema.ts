@@ -7,9 +7,9 @@ const MAX_DISAPPEARING_SECONDS = 90 * 24 * 60 * 60;
 export const updateProfileSchema = z
   .object({
     username: usernameSchema.optional(),
-    displayName: z.string().min(1).max(64).optional(),
-    bio: z.string().max(256).optional(),
-    customStatus: z.string().max(70).optional(),
+    displayName: z.string().trim().min(1).max(64).optional(),
+    bio: z.string().trim().max(256).optional(),
+    customStatus: z.string().trim().max(70).optional(),
     // If set alongside customStatus, the status auto-clears this many seconds
     // after saving. Pass null to keep the status without an expiry.
     customStatusClearAfterSeconds: z.number().int().positive().nullable().optional(),

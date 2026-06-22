@@ -26,7 +26,7 @@ export const verifyOtpSchema = z.object({
   phone: phoneSchema,
   code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
   username: usernameSchema,
-  displayName: z.string().min(1, "Ism kiritilishi shart").max(64),
+  displayName: z.string().trim().min(1, "Ism kiritilishi shart").max(64),
   password: passwordSchema,
   // base64-encoded X25519 public key generated on-device for E2E encryption
   publicKey: z.string().min(32, "publicKey noto'g'ri"),

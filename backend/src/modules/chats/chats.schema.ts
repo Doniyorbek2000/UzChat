@@ -10,8 +10,7 @@ const participantKeySchema = z.object({
 export const createConversationSchema = z
   .object({
     type: z.enum(["DIRECT", "GROUP", "CHANNEL"]),
-    title: z.string().min(1).max(64).optional(),
-    // public key of the creator's device, used to wrap the symmetric key for everyone
+    title: z.string().trim().min(1).max(64).optional(),
     keySenderPublicKey: z.string().min(1),
     participants: z.array(participantKeySchema).min(1),
   })
@@ -44,9 +43,9 @@ const MAX_SLOW_MODE_SECONDS = 60 * 60;
 
 export const updateConversationSchema = z
   .object({
-    title: z.string().min(1).max(64).optional(),
+    title: z.string().trim().min(1).max(64).optional(),
     avatarUrl: z.string().url().optional(),
-    description: z.string().max(500).nullable().optional(),
+    description: z.string().trim().max(500).nullable().optional(),
     // Sent as a SYSTEM message to new members when they join the group; null disables it.
     welcomeMessage: z.string().trim().min(1).max(500).nullable().optional(),
     onlyAdminsCanSend: z.boolean().optional(),
