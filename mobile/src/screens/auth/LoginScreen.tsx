@@ -43,6 +43,8 @@ export function LoginScreen({ navigation }: Props) {
           autoCapitalize="none"
           returnKeyType="next"
           onSubmitEditing={() => passwordRef.current?.focus()}
+          accessibilityLabel="Telefon raqam"
+          accessibilityHint="Telefon raqamingizni kiriting"
         />
         <TextInput
           ref={passwordRef}
@@ -53,17 +55,19 @@ export function LoginScreen({ navigation }: Props) {
           onChangeText={setPassword}
           returnKeyType="go"
           onSubmitEditing={onSubmit}
+          accessibilityLabel="Parol"
+          accessibilityHint="Parolingizni kiriting"
         />
 
-        <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
+        <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading} accessibilityRole="button" accessibilityLabel="Kirish">
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kirish</Text>}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")} accessibilityRole="link">
           <Text style={styles.link}>Parolni unutdingizmi?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+        <TouchableOpacity onPress={() => navigation.navigate("Register")} accessibilityRole="link">
           <Text style={styles.link}>Hisobingiz yo'qmi? Ro'yxatdan o'ting</Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>

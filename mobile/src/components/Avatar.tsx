@@ -22,9 +22,11 @@ export function Avatar({ uri, name, size = 48, online, icon }: Props) {
     />
   ) : null;
 
+  const a11yLabel = online ? `${name}, onlayn` : name;
+
   if (uri) {
     return (
-      <View>
+      <View accessibilityLabel={a11yLabel} accessibilityRole="image">
         <Image source={{ uri }} style={[styles.image, dimension]} />
         {badge}
       </View>
@@ -33,7 +35,7 @@ export function Avatar({ uri, name, size = 48, online, icon }: Props) {
 
   const initial = name.trim().charAt(0).toUpperCase() || "?";
   return (
-    <View>
+    <View accessibilityLabel={a11yLabel} accessibilityRole="image">
       <View style={[styles.placeholder, dimension]}>
         {icon ? (
           <Text style={{ fontSize: size / 2 }}>{icon}</Text>
