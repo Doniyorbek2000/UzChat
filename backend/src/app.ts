@@ -90,7 +90,11 @@ export function createApp() {
   app.use(compression());
   app.use(express.json({ limit: "5mb" }));
   if (env.nodeEnv !== "test") {
-    app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
+    if (env.nodeEnv === "production") {
+      app.use(morgan(":remote-addr :method :url :status :response-time ms"));
+    } else {
+      app.use(morgan("dev"));
+    }
   }
 
   app.get("/health", async (_req, res) => {
