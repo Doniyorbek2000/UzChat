@@ -1,8 +1,9 @@
 import { Image, Linking, Pressable, ScrollView, Text, View, StyleSheet } from "react-native";
 import { API_URL } from "../../config/env";
 import { colors } from "../../theme/colors";
+import appJson from "../../../app.json";
 
-const APP_VERSION = "1.0.0";
+const APP_VERSION = appJson.expo.version;
 
 const FEATURES = [
   "🔒 End-to-end shifrlash",

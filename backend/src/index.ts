@@ -23,6 +23,9 @@ import { startNearbyCleanupJob } from "./jobs/nearbyCleanup";
 const app = createApp();
 const httpServer = createServer(app);
 
+httpServer.keepAliveTimeout = 65_000;
+httpServer.headersTimeout = 66_000;
+
 initSocketServer(httpServer);
 startMessageExpiryJob();
 startScheduledMessagesJob();
@@ -39,6 +42,14 @@ startStoryExpiryJob();
 startChannelStatsJob();
 startQrPaymentExpiryJob();
 startNearbyCleanupJob();
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled promise rejection", { reason: String(reason) });
+});
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught exception — shutting down", { error: err.message, stack: err.stack });
+  gracefulShutdown("uncaughtException");
+});
 
 function gracefulShutdown(signal: string) {
   logger.info("Shutting down", { signal });

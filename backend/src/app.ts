@@ -82,6 +82,11 @@ export function createApp() {
     allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
     maxAge: 86400,
   }));
+  app.use((_req, res, next) => {
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    res.setHeader("Cache-Control", "no-store");
+    next();
+  });
   app.use(compression());
   app.use(express.json({ limit: "5mb" }));
   if (env.nodeEnv !== "test") {
