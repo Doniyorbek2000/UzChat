@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -19,6 +19,9 @@ export function RegisterScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const usernameRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (checkTimer.current) clearTimeout(checkTimer.current);
@@ -69,53 +72,74 @@ export function RegisterScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Ro'yxatdan o'tish</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Ro'yxatdan o'tish</Text>
 
-      <TextInput style={styles.input} placeholder="Ismingiz" value={displayName} onChangeText={setDisplayName} />
-      <View style={styles.usernameWrapper}>
-        <TextInput
-          style={[styles.input, styles.usernameInput]}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-        />
-        {usernameStatus === "checking" && <ActivityIndicator style={styles.usernameStatusIcon} size="small" color={colors.textSecondary} />}
-        {usernameStatus === "available" && <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>}
-        {usernameStatus === "taken" && <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>}
-      </View>
-      {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
-      {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
-      <TextInput
-        style={styles.input}
-        placeholder="+998901234567"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Parol (kamida 10 ta belgi, AaBb1)"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Ismingiz"
+            value={displayName}
+            onChangeText={setDisplayName}
+            returnKeyType="next"
+            onSubmitEditing={() => usernameRef.current?.focus()}
+          />
+          <View style={styles.usernameWrapper}>
+            <TextInput
+              ref={usernameRef}
+              style={[styles.input, styles.usernameInput]}
+              placeholder="Username"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              returnKeyType="next"
+              onSubmitEditing={() => phoneRef.current?.focus()}
+            />
+            {usernameStatus === "checking" && <ActivityIndicator style={styles.usernameStatusIcon} size="small" color={colors.textSecondary} />}
+            {usernameStatus === "available" && <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>}
+            {usernameStatus === "taken" && <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>}
+          </View>
+          {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
+          {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
+          <TextInput
+            ref={phoneRef}
+            style={styles.input}
+            placeholder="+998901234567"
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={setPhone}
+            autoCapitalize="none"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
+          />
+          <TextInput
+            ref={passwordRef}
+            style={styles.input}
+            placeholder="Parol (kamida 10 ta belgi, AaBb1)"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+            returnKeyType="go"
+            onSubmitEditing={onSubmit}
+          />
 
-      <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Davom etish</Text>}
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Davom etish</Text>}
+          </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-        <Text style={styles.link}>Hisobingiz bormi? Kirish</Text>
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+            <Text style={styles.link}>Hisobingiz bormi? Kirish</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.background },
+  scrollContent: { flexGrow: 1, justifyContent: "center", padding: 24 },
   title: { fontSize: 24, fontWeight: "700", color: colors.text, textAlign: "center", marginBottom: 32 },
   input: {
     backgroundColor: colors.surface,

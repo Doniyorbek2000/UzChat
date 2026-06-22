@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { useRef, useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -12,6 +12,7 @@ export function LoginScreen({ navigation }: Props) {
   const [phone, setPhone] = useState("+998");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
 
   const onSubmit = async () => {
     setLoading(true);
@@ -28,38 +29,45 @@ export function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>UzChat</Text>
-      <Text style={styles.subtitle}>Hisobingizga kiring</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <Text style={styles.title}>UzChat</Text>
+        <Text style={styles.subtitle}>Hisobingizga kiring</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="+998901234567"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Parol"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="+998901234567"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+          autoCapitalize="none"
+          returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
+        />
+        <TextInput
+          ref={passwordRef}
+          style={styles.input}
+          placeholder="Parol"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          returnKeyType="go"
+          onSubmitEditing={onSubmit}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kirish</Text>}
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kirish</Text>}
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-        <Text style={styles.link}>Parolni unutdingizmi?</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+          <Text style={styles.link}>Parolni unutdingizmi?</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={styles.link}>Hisobingiz yo'qmi? Ro'yxatdan o'ting</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <Text style={styles.link}>Hisobingiz yo'qmi? Ro'yxatdan o'ting</Text>
+        </TouchableOpacity>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 

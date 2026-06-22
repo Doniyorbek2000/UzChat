@@ -99,6 +99,7 @@ export function createApp() {
       await prisma.$queryRaw`SELECT 1`;
       res.json({
         status: "ok",
+        version: "1.0.0",
         uptime: Math.floor(process.uptime()),
         dbLatency: Date.now() - start,
         memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
