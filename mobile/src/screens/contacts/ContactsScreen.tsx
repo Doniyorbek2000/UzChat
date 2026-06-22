@@ -11,6 +11,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { MainTabScreenProps } from "../../navigation/types";
@@ -32,6 +33,7 @@ export function ContactsScreen({ navigation }: Props) {
   const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
   const [sentSuggestionIds, setSentSuggestionIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [aliasContact, setAliasContact] = useState<Contact | null>(null);
   const [aliasInput, setAliasInput] = useState("");
   const [savingAlias, setSavingAlias] = useState(false);
@@ -111,6 +113,25 @@ export function ContactsScreen({ navigation }: Props) {
   }, []);
 
   useFocusEffect(load);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    Promise.all([
+      contactsApi.list(),
+      contactsApi.listIncomingRequests(),
+      contactsApi.listSuggestions(),
+      contactsApi.listOutgoingRequests(),
+    ])
+      .then(([c, r, s, o]) => {
+        setContacts(c);
+        setRequests(r);
+        setSuggestions(s);
+        setOutgoingRequests(o);
+        useContactsStore.getState().setPendingRequestCount(r.length);
+      })
+      .catch(() => {})
+      .finally(() => setRefreshing(false));
+  }, []);
 
   useEffect(() => {
     useContactsStore.getState().setupSocketListeners();
@@ -378,6 +399,7 @@ export function ContactsScreen({ navigation }: Props) {
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           stickySectionHeadersEnabled
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           renderSectionHeader={({ section }) =>
             section.title ? <Text style={styles.sectionHeader}>{section.title}</Text> : null
           }

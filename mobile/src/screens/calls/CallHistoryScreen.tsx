@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { callsApi, CallLog } from "../../api/calls";
@@ -28,6 +28,7 @@ function getStatusLabel(status: CallLog["status"], isOutgoing: boolean): string 
 export function CallHistoryScreen({ navigation }: Props) {
   const [logs, setLogs] = useState<CallLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const currentUser = useAuthStore((s) => s.user);
 
   const loadHistory = useCallback(async () => {
@@ -40,6 +41,12 @@ export function CallHistoryScreen({ navigation }: Props) {
 
   useEffect(() => {
     loadHistory();
+  }, [loadHistory]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadHistory();
+    setRefreshing(false);
   }, [loadHistory]);
 
   if (loading) {
@@ -56,6 +63,7 @@ export function CallHistoryScreen({ navigation }: Props) {
         data={logs}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         renderItem={({ item }) => {
           const isOutgoing = item.caller.id === currentUser?.id;
           const otherUser = isOutgoing ? item.receiver : item.caller;
