@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 
 services:
   postgres:
@@ -6,12 +6,63 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: uzchat
-      POSTGRES_PASSWORD: uzchat
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-uzchat}
       POSTGRES_DB: uzchat
-    ports:
-      - "5432:5432"
     volumes:
-      - uzchat_postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uzchat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://uzchat:${POSTGRES_PASSWORD:-uzchat}@postgres:5432/uzchat?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 30d
+      SMS_PROVIDER: ${SMS_PROVIDER:-log}
+      ESKIZ_EMAIL: ${ESKIZ_EMAIL:-}
+      ESKIZ_PASSWORD: ${ESKIZ_PASSWORD:-}
+      ESKIZ_FROM: ${ESKIZ_FROM:-4546}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://uzchat.app}
+      PUBLIC_URL: ${PUBLIC_URL:-https://uzchat.app}
+    volumes:
+      - uploads:/app/uploads
+    expose:
+      - "4000"
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - uploads:/app/uploads:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
-  uzchat_postgres_data:
+  pgdata:
+  uploads:

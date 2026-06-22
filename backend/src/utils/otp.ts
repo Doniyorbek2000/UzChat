@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { logger } from "./logger";
+import { getSmsProvider } from "./smsProviders";
 
 const OTP_LENGTH = 6;
 export const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -21,13 +22,12 @@ export function verifyOtpCode(code: string, hash: string): Promise<boolean> {
   return bcrypt.compare(code, hash);
 }
 
-/**
- * Sends an SMS with the verification code. In development this just logs
- * the code so the flow can be tested end-to-end without a real SMS
- * provider. Swap this out for Eskiz.uz / Twilio / etc. in production.
- */
 export async function sendOtpSms(phone: string, code: string): Promise<void> {
-  logger.info("OTP SMS sent", { phone: phone.slice(0, -4).replace(/./g, "*") + phone.slice(-4) });
-  // TODO: integrate Eskiz.uz or Twilio for production SMS delivery
-  void code;
+  const provider = getSmsProvider();
+  try {
+    await provider.send(phone, `UzChat tasdiqlash kodi: ${code}`);
+  } catch (err) {
+    logger.error("Failed to send OTP SMS", { phone: phone.slice(0, -4).replace(/./g, "*") + phone.slice(-4), error: String(err) });
+    throw err;
+  }
 }

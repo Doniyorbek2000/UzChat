@@ -18,6 +18,12 @@ export const env = {
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? "15m",
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? "30d",
   },
+  sms: {
+    provider: process.env.SMS_PROVIDER ?? "log",
+    eskizEmail: process.env.ESKIZ_EMAIL ?? "",
+    eskizPassword: process.env.ESKIZ_PASSWORD ?? "",
+    eskizFrom: process.env.ESKIZ_FROM ?? "4546",
+  },
   corsOrigin: process.env.CORS_ORIGIN ?? (process.env.NODE_ENV === "production" ? "https://uzchat.app" : "*"),
   publicUrl: process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 4000}`,
 } as const;
