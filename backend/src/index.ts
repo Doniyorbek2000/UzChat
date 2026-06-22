@@ -62,6 +62,18 @@ function gracefulShutdown(signal: string) {
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-httpServer.listen(env.port, () => {
-  logger.info("UzChat backend started", { port: env.port });
-});
+async function start() {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    logger.info("Database connected");
+  } catch (err) {
+    logger.error("Database connection failed", { error: String(err) });
+    process.exit(1);
+  }
+
+  httpServer.listen(env.port, () => {
+    logger.info("UzChat backend started", { port: env.port, env: env.nodeEnv });
+  });
+}
+
+start();
