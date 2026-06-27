@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, validateUuidParam } from "../../utils/validate";
 import { createLiveStreamSchema } from "./livestream.schema";
 import { liveStreamService } from "./livestream.service";
 
@@ -22,27 +22,27 @@ router.post("/", validateBody(createLiveStreamSchema), async (req: Request, res:
   res.status(201).json(stream);
 });
 
-router.get("/:streamId", async (req: Request, res: Response) => {
+router.get("/:streamId", validateUuidParam("streamId"), async (req: Request, res: Response) => {
   const stream = await liveStreamService.getStream(req.params.streamId);
   res.json(stream);
 });
 
-router.post("/:streamId/start", async (req: Request, res: Response) => {
+router.post("/:streamId/start", validateUuidParam("streamId"), async (req: Request, res: Response) => {
   const stream = await liveStreamService.startStream(req.user!.sub, req.params.streamId);
   res.json(stream);
 });
 
-router.post("/:streamId/end", async (req: Request, res: Response) => {
+router.post("/:streamId/end", validateUuidParam("streamId"), async (req: Request, res: Response) => {
   const stream = await liveStreamService.endStream(req.user!.sub, req.params.streamId);
   res.json(stream);
 });
 
-router.post("/:streamId/view", async (req: Request, res: Response) => {
+router.post("/:streamId/view", validateUuidParam("streamId"), async (req: Request, res: Response) => {
   await liveStreamService.recordView(req.params.streamId);
   res.status(204).send();
 });
 
-router.put("/:streamId/like", async (req: Request, res: Response) => {
+router.put("/:streamId/like", validateUuidParam("streamId"), async (req: Request, res: Response) => {
   await liveStreamService.toggleLike(req.params.streamId);
   res.status(204).send();
 });

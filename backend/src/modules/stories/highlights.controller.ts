@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, validateUuidParam } from "../../utils/validate";
 import { z } from "zod";
 import { highlightsService } from "./highlights.service";
 
@@ -23,12 +23,12 @@ const addItemSchema = z.object({
 const router = Router();
 router.use(requireAuth);
 
-router.get("/user/:userId", async (req: Request, res: Response) => {
+router.get("/user/:userId", validateUuidParam("userId"), async (req: Request, res: Response) => {
   const highlights = await highlightsService.listByUser(req.params.userId);
   res.json(highlights);
 });
 
-router.get("/:highlightId", async (req: Request, res: Response) => {
+router.get("/:highlightId", validateUuidParam("highlightId"), async (req: Request, res: Response) => {
   const highlight = await highlightsService.getHighlight(req.params.highlightId);
   res.json(highlight);
 });
@@ -38,22 +38,22 @@ router.post("/", validateBody(createHighlightSchema), async (req: Request, res: 
   res.status(201).json(highlight);
 });
 
-router.patch("/:highlightId", validateBody(updateHighlightSchema), async (req: Request, res: Response) => {
+router.patch("/:highlightId", validateUuidParam("highlightId"), validateBody(updateHighlightSchema), async (req: Request, res: Response) => {
   const highlight = await highlightsService.update(req.user!.sub, req.params.highlightId, req.body);
   res.json(highlight);
 });
 
-router.delete("/:highlightId", async (req: Request, res: Response) => {
+router.delete("/:highlightId", validateUuidParam("highlightId"), async (req: Request, res: Response) => {
   await highlightsService.delete(req.user!.sub, req.params.highlightId);
   res.status(204).send();
 });
 
-router.post("/:highlightId/items", validateBody(addItemSchema), async (req: Request, res: Response) => {
+router.post("/:highlightId/items", validateUuidParam("highlightId"), validateBody(addItemSchema), async (req: Request, res: Response) => {
   const item = await highlightsService.addItem(req.user!.sub, req.params.highlightId, req.body);
   res.status(201).json(item);
 });
 
-router.delete("/items/:itemId", async (req: Request, res: Response) => {
+router.delete("/items/:itemId", validateUuidParam("itemId"), async (req: Request, res: Response) => {
   await highlightsService.removeItem(req.user!.sub, req.params.itemId);
   res.status(204).send();
 });

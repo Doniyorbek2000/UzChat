@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, validateUuidParam } from "../../utils/validate";
 import { createNoteSchema, updateNoteSchema } from "./notes.schema";
 import { notesService } from "./notes.service";
 
@@ -12,7 +12,7 @@ router.get("/", async (req: Request, res: Response) => {
   res.json(notes);
 });
 
-router.get("/:noteId", async (req: Request, res: Response) => {
+router.get("/:noteId", validateUuidParam("noteId"), async (req: Request, res: Response) => {
   const note = await notesService.get(req.user!.sub, req.params.noteId);
   res.json(note);
 });
@@ -22,12 +22,12 @@ router.post("/", validateBody(createNoteSchema), async (req: Request, res: Respo
   res.status(201).json(note);
 });
 
-router.patch("/:noteId", validateBody(updateNoteSchema), async (req: Request, res: Response) => {
+router.patch("/:noteId", validateUuidParam("noteId"), validateBody(updateNoteSchema), async (req: Request, res: Response) => {
   const note = await notesService.update(req.user!.sub, req.params.noteId, req.body);
   res.json(note);
 });
 
-router.delete("/:noteId", async (req: Request, res: Response) => {
+router.delete("/:noteId", validateUuidParam("noteId"), async (req: Request, res: Response) => {
   await notesService.delete(req.user!.sub, req.params.noteId);
   res.status(204).send();
 });

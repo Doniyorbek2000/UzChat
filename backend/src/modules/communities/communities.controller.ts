@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, validateUuidParam } from "../../utils/validate";
 import { createCommunitySchema, updateCommunitySchema, addGroupSchema } from "./communities.schema";
 import { communitiesService } from "./communities.service";
 
@@ -12,7 +12,7 @@ router.get("/mine", async (req: Request, res: Response) => {
   res.json(communities);
 });
 
-router.get("/:communityId", async (req: Request, res: Response) => {
+router.get("/:communityId", validateUuidParam("communityId"), async (req: Request, res: Response) => {
   const community = await communitiesService.getCommunity(req.params.communityId);
   res.json(community);
 });
@@ -22,22 +22,22 @@ router.post("/", validateBody(createCommunitySchema), async (req: Request, res: 
   res.status(201).json(community);
 });
 
-router.patch("/:communityId", validateBody(updateCommunitySchema), async (req: Request, res: Response) => {
+router.patch("/:communityId", validateUuidParam("communityId"), validateBody(updateCommunitySchema), async (req: Request, res: Response) => {
   const community = await communitiesService.updateCommunity(req.user!.sub, req.params.communityId, req.body);
   res.json(community);
 });
 
-router.delete("/:communityId", async (req: Request, res: Response) => {
+router.delete("/:communityId", validateUuidParam("communityId"), async (req: Request, res: Response) => {
   await communitiesService.deleteCommunity(req.user!.sub, req.params.communityId);
   res.status(204).send();
 });
 
-router.post("/:communityId/groups", validateBody(addGroupSchema), async (req: Request, res: Response) => {
+router.post("/:communityId/groups", validateUuidParam("communityId"), validateBody(addGroupSchema), async (req: Request, res: Response) => {
   const group = await communitiesService.addGroup(req.user!.sub, req.params.communityId, req.body.conversationId);
   res.status(201).json(group);
 });
 
-router.delete("/:communityId/groups/:conversationId", async (req: Request, res: Response) => {
+router.delete("/:communityId/groups/:conversationId", validateUuidParam("communityId"), validateUuidParam("conversationId"), async (req: Request, res: Response) => {
   await communitiesService.removeGroup(req.user!.sub, req.params.communityId, req.params.conversationId);
   res.status(204).send();
 });
