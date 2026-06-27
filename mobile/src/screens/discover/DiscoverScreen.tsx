@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, RefreshControl } from "react-native";
 import { MainTabScreenProps } from "../../navigation/types";
 import { colors } from "../../theme/colors";
 
@@ -61,8 +61,20 @@ const QUICK_ACTIONS = [
   { key: "notiflog", icon: "🔔", label: "Bildirishnomalar tarixi", screen: "NotificationLog" as const },
 ];
 
+const FEATURED = [
+  { key: "wallet", icon: "💰", title: "UzChat Hamyon", desc: "Pul yuborish va qabul qilish", color: "#007AFF", screen: "Wallet" as const },
+  { key: "marketplace", icon: "🛒", title: "Bozor", desc: "Mahsulotlarni sotib oling", color: "#34C759", screen: "Marketplace" as const },
+  { key: "games", icon: "🎮", title: "O'yinlar", desc: "Do'stlar bilan o'ynang", color: "#FF9500", screen: "GameCenter" as const },
+];
+
 export function DiscoverScreen({ navigation }: Props) {
   const [search, setSearch] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 500);
+  };
 
   const allItems = [...SERVICES, ...PLATFORM_SERVICES, ...QUICK_ACTIONS];
   const filtered = search.trim()
@@ -82,7 +94,11 @@ export function DiscoverScreen({ navigation }: Props) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -112,6 +128,20 @@ export function DiscoverScreen({ navigation }: Props) {
         </View>
       ) : (
         <>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuredScroll} contentContainerStyle={styles.featuredContainer}>
+            {FEATURED.map((f) => (
+              <TouchableOpacity
+                key={f.key}
+                style={[styles.featuredCard, { backgroundColor: f.color }]}
+                onPress={() => navigation.navigate(f.screen as any)}
+              >
+                <Text style={styles.featuredIcon}>{f.icon}</Text>
+                <Text style={styles.featuredTitle}>{f.title}</Text>
+                <Text style={styles.featuredDesc}>{f.desc}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
           <Text style={styles.sectionTitle}>Xizmatlar</Text>
           <View style={styles.grid}>
             {SERVICES.map((s) => (
@@ -177,6 +207,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  featuredScroll: { marginBottom: 8 },
+  featuredContainer: { gap: 10, paddingRight: 4 },
+  featuredCard: { width: 160, borderRadius: 16, padding: 16, justifyContent: "flex-end", height: 120 },
+  featuredIcon: { fontSize: 28, marginBottom: 8 },
+  featuredTitle: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  featuredDesc: { fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 2 },
   sectionTitle: { fontSize: 18, fontWeight: "700", color: "#333", marginTop: 12, marginBottom: 12 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 8 },
   serviceCard: {
