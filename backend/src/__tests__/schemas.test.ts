@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import { createPostSchema, createCommentSchema, paginationQuery } from "../modules/feed/feed.schema";
 import { createStoreSchema, createProductSchema, createOrderSchema, updateOrderStatusSchema } from "../modules/marketplace/marketplace.schema";
 import { createRedPacketSchema } from "../modules/redpackets/redpackets.schema";
+import { sendPaymentSchema, topUpSchema } from "../modules/payments/payments.schema";
+import { translateSchema } from "../modules/translate/translate.schema";
 
 describe("Feed schemas", () => {
   describe("createPostSchema", () => {
@@ -165,5 +167,81 @@ describe("RedPacket schemas", () => {
       const result = createRedPacketSchema.safeParse({ amount: -100 });
       expect(result.success).toBe(false);
     });
+  });
+});
+
+describe("Payment schemas", () => {
+  describe("sendPaymentSchema", () => {
+    it("accepts valid payment", () => {
+      const result = sendPaymentSchema.safeParse({
+        receiverId: "550e8400-e29b-41d4-a716-446655440000",
+        amount: 100000,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects non-UUID receiverId", () => {
+      const result = sendPaymentSchema.safeParse({ receiverId: "invalid", amount: 100 });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects zero amount", () => {
+      const result = sendPaymentSchema.safeParse({
+        receiverId: "550e8400-e29b-41d4-a716-446655440000",
+        amount: 0,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects amount over 50M", () => {
+      const result = sendPaymentSchema.safeParse({
+        receiverId: "550e8400-e29b-41d4-a716-446655440000",
+        amount: 50_000_001,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("defaults currency to UZS", () => {
+      const result = sendPaymentSchema.safeParse({
+        receiverId: "550e8400-e29b-41d4-a716-446655440000",
+        amount: 1000,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.currency).toBe("UZS");
+    });
+
+    it("accepts optional note", () => {
+      const result = sendPaymentSchema.safeParse({
+        receiverId: "550e8400-e29b-41d4-a716-446655440000",
+        amount: 5000,
+        note: "Tushlik uchun",
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("topUpSchema", () => {
+    it("accepts valid top-up", () => {
+      expect(topUpSchema.safeParse({ amount: 50000 }).success).toBe(true);
+    });
+
+    it("rejects negative amount", () => {
+      expect(topUpSchema.safeParse({ amount: -1 }).success).toBe(false);
+    });
+  });
+});
+
+describe("Translate schema", () => {
+  it("accepts valid translate request", () => {
+    const result = translateSchema.safeParse({
+      messageId: "550e8400-e29b-41d4-a716-446655440000",
+      toLang: "uz",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing messageId", () => {
+    const result = translateSchema.safeParse({ toLang: "uz" });
+    expect(result.success).toBe(false);
   });
 });
