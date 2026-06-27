@@ -117,15 +117,15 @@ export function QRPaymentScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
-  createSection: { backgroundColor: "#fff", borderRadius: 14, padding: 16, marginBottom: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#333", marginBottom: 12 },
+  createSection: { backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 12 },
   input: {
     backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    color: "#333",
+    color: colors.text,
     marginBottom: 8,
   },
   createBtn: {
@@ -143,17 +143,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
-  scanBtnText: { color: "#333", fontWeight: "600", fontSize: 15 },
+  scanBtnText: { color: colors.text, fontWeight: "600", fontSize: 15 },
   historyCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 10,
     padding: 14,
     marginBottom: 6,
   },
   historyRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  historyAmount: { fontSize: 15, fontWeight: "600", color: "#333" },
+  historyAmount: { fontSize: 15, fontWeight: "600", color: colors.text },
   historyStatus: { fontSize: 12, fontWeight: "600" },
-  historyNote: { fontSize: 13, color: "#666", marginTop: 4 },
-  historyDate: { fontSize: 11, color: "#999", marginTop: 4 },
-  emptyText: { textAlign: "center", color: "#999", fontSize: 15, padding: 20 },
+  historyNote: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  historyDate: { fontSize: 11, color: colors.textSecondary, marginTop: 4 },
+  emptyText: { textAlign: "center", color: colors.textSecondary, fontSize: 15, padding: 20 },
 });

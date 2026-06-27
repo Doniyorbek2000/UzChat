@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   trackInfo: { flex: 1 },
   trackTitle: { fontSize: 15, fontWeight: "600", color: "#fff" },
   trackArtist: { fontSize: 12, color: "#aaa", marginTop: 2 },
-  trackMeta: { fontSize: 10, color: "#666", marginTop: 2 },
+  trackMeta: { fontSize: 10, color: colors.textSecondary, marginTop: 2 },
   progressBar: { height: 3, backgroundColor: "#333", borderRadius: 2, marginTop: 6 },
   progressFill: { height: 3, backgroundColor: colors.primary, borderRadius: 2 },
   likeBtn: { paddingHorizontal: 10 },

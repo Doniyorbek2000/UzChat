@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   qrBox: {
     marginTop: 24,
     padding: 16,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     shadowColor: "#000",
     shadowOpacity: 0.1,

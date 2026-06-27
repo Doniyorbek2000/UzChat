@@ -85,17 +85,17 @@ export function CreateBotScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, paddingBottom: 40 },
-  label: { fontSize: 14, fontWeight: "600", color: "#333", marginTop: 16, marginBottom: 6 },
+  label: { fontSize: 14, fontWeight: "600", color: colors.text, marginTop: 16, marginBottom: 6 },
   input: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    color: "#333",
+    color: colors.text,
   },
   multiline: { minHeight: 80, textAlignVertical: "top" },
-  hint: { fontSize: 12, color: "#888", marginTop: 4 },
+  hint: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
   createBtn: {
     backgroundColor: colors.primary,
     borderRadius: 10,

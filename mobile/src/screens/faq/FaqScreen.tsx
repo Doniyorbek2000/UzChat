@@ -63,16 +63,16 @@ export function FaqScreen(_props: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
-  searchInput: { margin: 12, backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: "#333" },
+  searchInput: { margin: 12, backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: colors.text },
   loader: { marginTop: 40 },
   list: { paddingHorizontal: 12, paddingBottom: 20 },
-  faqCard: { backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 6 },
+  faqCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 6 },
   faqHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   faqCategory: { fontSize: 11, fontWeight: "600", color: colors.primary, backgroundColor: `${colors.primary}15`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  faqArrow: { fontSize: 10, color: "#888" },
-  faqQuestion: { fontSize: 15, fontWeight: "600", color: "#333" },
-  faqAnswer: { fontSize: 14, color: "#666", lineHeight: 22, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#F0F0F0" },
+  faqArrow: { fontSize: 10, color: colors.textSecondary },
+  faqQuestion: { fontSize: 15, fontWeight: "600", color: colors.text },
+  faqAnswer: { fontSize: 14, color: colors.textSecondary, lineHeight: 22, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#F0F0F0" },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: "#333", marginTop: 12 },
+  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
 });

@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   tabs: { flex: 1, flexDirection: "row", gap: 4 },
   tab: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16 },
   tabActive: { backgroundColor: "#333" },
-  tabText: { fontSize: 14, fontWeight: "600", color: "#888" },
+  tabText: { fontSize: 14, fontWeight: "600", color: colors.textSecondary },
   tabTextActive: { color: "#fff" },
   createFab: {
     width: 36,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   emptyContainer: { alignItems: "center", paddingTop: 80 },
   emptyIcon: { fontSize: 56 },
   emptyTitle: { fontSize: 18, fontWeight: "700", color: "#fff", marginTop: 16 },
-  emptyHint: { fontSize: 14, color: "#888", marginTop: 8 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, marginTop: 8 },
   emptyButton: {
     marginTop: 20,
     backgroundColor: colors.primary,
@@ -444,5 +444,5 @@ const styles = StyleSheet.create({
   playerInfo: { padding: 16, paddingRight: 60 },
   playerAuthor: { fontSize: 16, fontWeight: "700", color: "#fff", marginLeft: 8 },
   playerCaption: { fontSize: 14, color: "#eee", marginTop: 6 },
-  playerMusic: { fontSize: 12, color: "#ccc", marginTop: 4 },
+  playerMusic: { fontSize: 12, color: colors.border, marginTop: 4 },
 });

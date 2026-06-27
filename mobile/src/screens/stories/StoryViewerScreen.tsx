@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   overlay: { position: "absolute" as const, top: 0, left: 0, right: 0, bottom: 0, justifyContent: "space-between" as const },
   progressRow: { flexDirection: "row", paddingHorizontal: 8, paddingTop: 50, gap: 4 },
   progressBar: { flex: 1, height: 3, borderRadius: 2 },
-  progressBarActive: { backgroundColor: "#fff" },
+  progressBarActive: { backgroundColor: colors.surface },
   progressBarInactive: { backgroundColor: "rgba(255,255,255,0.3)" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 8 },
   userInfo: { flexDirection: "row", alignItems: "center", gap: 8 },

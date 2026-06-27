@@ -7,6 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#007AFF;--bg:#F2F2F7;--card:#fff;--text:#000;--text2:#666;--text3:#999;--border:#E5E5EA;--danger:#FF3B30;--success:#34C759;--warning:#FF9500;--purple:#AF52DE}
+[data-theme="dark"]{--primary:#0A84FF;--bg:#1C1C1E;--card:#2C2C2E;--text:#fff;--text2:#AEAEB2;--text3:#636366;--border:#3A3A3C;--danger:#FF453A;--success:#30D158;--warning:#FF9F0A;--purple:#BF5AF2}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
 .login-card{background:var(--card);border-radius:16px;padding:40px;max-width:400px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
@@ -95,6 +96,21 @@ table tr:hover td{background:rgba(0,122,255,0.03)}
 .mobile-menu h2{font-size:16px;font-weight:700;color:var(--primary)}
 .sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:90}
 @media(max-width:768px){.sidebar{display:none;z-index:100}.sidebar.open{display:block}.sidebar-overlay.open{display:block}.main{margin-left:0;padding-top:72px}.mobile-menu{display:flex}}
+.theme-toggle{display:flex;align-items:center;gap:8px;padding:12px 20px;cursor:pointer;font-size:14px;color:var(--text2)}
+.theme-toggle .switch{width:40px;height:22px;background:var(--border);border-radius:11px;position:relative;transition:background .3s}
+.theme-toggle .switch::after{content:"";width:18px;height:18px;background:var(--card);border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .3s}
+.theme-toggle .switch.on{background:var(--primary)}
+.theme-toggle .switch.on::after{transform:translateX(18px)}
+.auto-refresh{display:flex;align-items:center;gap:8px;padding:8px 20px;font-size:12px;color:var(--text3)}
+.auto-refresh select{padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--card);color:var(--text);outline:none}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--success);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;z-index:200;animation:slideUp .3s ease;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.toast.error{background:var(--danger)}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.confirm-dialog{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:300}
+.confirm-dialog .dialog{background:var(--card);border-radius:12px;padding:24px;max-width:400px;width:90%;text-align:center}
+.confirm-dialog .dialog h4{margin-bottom:8px;font-size:18px;color:var(--text)}
+.confirm-dialog .dialog p{color:var(--text2);margin-bottom:16px;font-size:14px}
+.confirm-dialog .dialog .btns{display:flex;gap:8px;justify-content:center}
 </style>
 </head>
 <body>
@@ -104,6 +120,42 @@ const API_BASE = window.location.origin;
 let token = localStorage.getItem("admin_token") || "";
 let currentUser = null;
 let currentPage = "dashboard";
+let darkMode = localStorage.getItem("admin_dark") === "true";
+let autoRefreshInterval = parseInt(localStorage.getItem("admin_refresh") || "0");
+let refreshTimer = null;
+
+if (darkMode) document.documentElement.setAttribute("data-theme","dark");
+
+function showToast(msg, isError) {
+  const t = document.createElement("div");
+  t.className = "toast" + (isError ? " error" : "");
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function toggleDarkMode() {
+  darkMode = !darkMode;
+  localStorage.setItem("admin_dark", darkMode);
+  document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "");
+  render();
+}
+
+function setAutoRefresh(sec) {
+  autoRefreshInterval = sec;
+  localStorage.setItem("admin_refresh", sec);
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = null;
+  if (sec > 0) {
+    refreshTimer = setInterval(() => { if (token) loadPage(); }, sec * 1000);
+  }
+}
+
+function startAutoRefresh() {
+  if (autoRefreshInterval > 0 && !refreshTimer) {
+    refreshTimer = setInterval(() => { if (token) loadPage(); }, autoRefreshInterval * 1000);
+  }
+}
 
 async function api(path, opts = {}) {
   const res = await fetch(API_BASE + path, {
@@ -132,7 +184,7 @@ function renderLogin() {
   </div></div>`;
 }
 
-const PAGE_TITLES = {dashboard:"Dashboard",users:"Foydalanuvchilar",posts:"Postlar",reels:"Reels",stories:"Hikoyalar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi",marketplace:"Bozor",payments:"To'lovlar",communities:"Jamiyatlar",bots:"Botlar"};
+const PAGE_TITLES = {dashboard:"Dashboard",users:"Foydalanuvchilar",posts:"Postlar",reels:"Reels",stories:"Hikoyalar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi",marketplace:"Bozor",payments:"To'lovlar",communities:"Jamiyatlar",bots:"Botlar",settings:"Sozlamalar"};
 
 function renderApp() {
   const sidebarLinks = [
@@ -148,12 +200,16 @@ function renderApp() {
     {page:"reports",icon:"🚨",label:"Shikoyatlar"},
     {page:"audit",icon:"📋",label:"Audit log"},
     {page:"logins",icon:"🔐",label:"Kirish tarixi"},
+    {page:"settings",icon:"⚙️",label:"Sozlamalar"},
   ].map(l=>`<a href="#" data-page="${l.page}" class="${currentPage===l.page?'active':''}" onclick="event.preventDefault();currentPage='${l.page}';document.querySelector('.sidebar').classList.remove('open');document.querySelector('.sidebar-overlay').classList.remove('open');render();loadPage();"><span class="icon">${l.icon}</span>${l.label}</a>`).join("");
+
+  const themeToggle = `<div class="theme-toggle" onclick="toggleDarkMode()"><span>${darkMode?"☀️ Kunduzgi":"🌙 Tungi"} rejim</span><div class="switch ${darkMode?"on":""}"></div></div>`;
+  const autoRefreshEl = `<div class="auto-refresh"><span>Yangilash:</span><select onchange="setAutoRefresh(+this.value)"><option value="0" ${autoRefreshInterval===0?"selected":""}>O'chirilgan</option><option value="10" ${autoRefreshInterval===10?"selected":""}>10s</option><option value="30" ${autoRefreshInterval===30?"selected":""}>30s</option><option value="60" ${autoRefreshInterval===60?"selected":""}>1 daqiqa</option></select></div>`;
 
   return `<div class="layout">
     <div class="mobile-menu"><button id="menuBtn">☰</button><h2>UzChat Admin</h2></div>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <div class="sidebar" id="sidebarEl">${'<h2>UzChat Admin</h2>'+sidebarLinks}</div>
+    <div class="sidebar" id="sidebarEl">${'<h2>UzChat Admin</h2>'+sidebarLinks+themeToggle+autoRefreshEl}</div>
     <div class="main">
       <div class="header">
         <h1>${PAGE_TITLES[currentPage]||"Dashboard"}</h1>
@@ -178,7 +234,7 @@ function attachEvents() {
     document.getElementById("sidebarEl")?.classList.remove("open");
     document.getElementById("sidebarOverlay")?.classList.remove("open");
   });
-  if (token) loadPage();
+  if (token) { loadPage(); startAutoRefresh(); }
 }
 
 async function doLogin() {
@@ -224,6 +280,7 @@ async function loadPage() {
       case "reports": await loadReports(el); break;
       case "audit": await loadAudit(el); break;
       case "logins": await loadLogins(el); break;
+      case "settings": await loadSettings(el); break;
     }
   } catch (e) { el.innerHTML = `<div class="card"><div class="error">${e.message}</div></div>`; }
 }
@@ -570,6 +627,49 @@ async function loadBots(el) {
   </div>`;
 }
 
+async function loadSettings(el) {
+  const health = await api("/admin/health");
+  el.innerHTML = `
+    <div class="card"><h3>Mavzu sozlamalari</h3>
+      <div class="health-row"><span class="label">Joriy mavzu</span><span class="value">${darkMode?"Tungi":"Kunduzgi"}</span></div>
+      <div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="toggleDarkMode()">${darkMode?"☀️ Kunduzgi rejimga o'tish":"🌙 Tungi rejimga o'tish"}</button></div>
+    </div>
+    <div class="card"><h3>Avtomatik yangilash</h3>
+      <div class="health-row"><span class="label">Holat</span><span class="value">${autoRefreshInterval>0?autoRefreshInterval+"s oraliqda":"O'chirilgan"}</span></div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-sm ${autoRefreshInterval===0?"btn-primary":""}" style="${autoRefreshInterval!==0?"background:var(--border);color:var(--text)":""}" onclick="setAutoRefresh(0);loadPage()">O'chirish</button>
+        <button class="btn btn-sm ${autoRefreshInterval===10?"btn-primary":""}" style="${autoRefreshInterval!==10?"background:var(--border);color:var(--text)":""}" onclick="setAutoRefresh(10);loadPage()">10s</button>
+        <button class="btn btn-sm ${autoRefreshInterval===30?"btn-primary":""}" style="${autoRefreshInterval!==30?"background:var(--border);color:var(--text)":""}" onclick="setAutoRefresh(30);loadPage()">30s</button>
+        <button class="btn btn-sm ${autoRefreshInterval===60?"btn-primary":""}" style="${autoRefreshInterval!==60?"background:var(--border);color:var(--text)":""}" onclick="setAutoRefresh(60);loadPage()">1 daqiqa</button>
+      </div>
+    </div>
+    <div class="card"><h3>Tizim ma'lumotlari</h3>
+      <div class="health-row"><span class="label">Node.js</span><span class="value">${health.nodeVersion}</span></div>
+      <div class="health-row"><span class="label">Ishlash vaqti</span><span class="value">${Math.floor(health.uptime/3600)} soat ${Math.floor((health.uptime%3600)/60)} daqiqa</span></div>
+      <div class="health-row"><span class="label">Xotira (RSS)</span><span class="value">${(health.memory.rss/1024/1024).toFixed(1)} MB</span></div>
+      <div class="health-row"><span class="label">Heap ishlatilgan</span><span class="value">${(health.memory.heapUsed/1024/1024).toFixed(1)} MB</span></div>
+      <div class="health-row"><span class="label">DB kechikish</span><span class="value">${health.dbLatencyMs}ms</span></div>
+    </div>
+    <div class="card"><h3>Ma'lumotlarni eksport qilish</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="exportUsersCSV()">👥 Foydalanuvchilar CSV</button>
+        <button class="btn btn-sm" style="background:var(--success);color:#fff" onclick="exportDashboardJSON()">📊 Dashboard JSON</button>
+      </div>
+    </div>`;
+}
+
+window.exportDashboardJSON = async function() {
+  try {
+    const [stats, health, contentStats] = await Promise.all([api("/admin/dashboard"), api("/admin/health"), api("/admin/content-stats")]);
+    const data = { exportedAt: new Date().toISOString(), stats, health, contentStats };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "uzchat_dashboard_"+new Date().toISOString().slice(0,10)+".json"; a.click();
+    URL.revokeObjectURL(url);
+    showToast("Dashboard ma'lumotlari eksport qilindi");
+  } catch(e) { showToast("Eksport xatoligi: "+e.message, true); }
+};
+
 window.exportUsersCSV = async function() {
   try {
     const data = await api("/admin/users?page=1&limit=1000");
@@ -580,7 +680,8 @@ window.exportUsersCSV = async function() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "uzchat_users.csv"; a.click();
     URL.revokeObjectURL(url);
-  } catch(e) { alert("Eksport xatoligi: "+e.message); }
+    showToast("Foydalanuvchilar CSV eksport qilindi");
+  } catch(e) { showToast("Eksport xatoligi: "+e.message, true); }
 };
 
 function esc(s) { if (!s) return ""; const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
