@@ -192,6 +192,11 @@ export const authService = {
       throw Errors.invalidCredentials();
     }
 
+    if (user.isBanned) {
+      await prisma.loginAttempt.create({ data: { phone, ip, userAgent, success: false, reason: "BANNED" } });
+      throw Errors.forbidden("Hisobingiz bloklangan" + (user.banReason ? `: ${user.banReason}` : ""));
+    }
+
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const remainingSec = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 1000);
       await prisma.loginAttempt.create({ data: { phone, ip, userAgent, success: false, reason: "ACCOUNT_LOCKED" } });

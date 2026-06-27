@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Switch, Alert } from "react-native";
+import * as Location from "expo-location";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { nearbyApi, NearbyPerson } from "../../api/nearby";
+import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NearbyPeople">;
@@ -12,18 +14,42 @@ export function NearbyPeopleScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(true);
   const [radius, setRadius] = useState(5);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const locationRef = useRef<{ latitude: number; longitude: number } | null>(null);
+
+  const getLocation = useCallback(async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      setLocationError("Joylashuvga ruxsat berilmagan");
+      return null;
+    }
+    try {
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      locationRef.current = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+      setLocationError(null);
+      return locationRef.current;
+    } catch {
+      setLocationError("Joylashuvni aniqlab bo'lmadi");
+      return null;
+    }
+  }, []);
 
   const search = useCallback(async () => {
     setLoading(true);
+    const loc = await getLocation();
+    if (!loc) {
+      setLoading(false);
+      return;
+    }
     try {
-      await nearbyApi.updateLocation({ latitude: 41.2995, longitude: 69.2401, accuracy: 10 });
-      const result = await nearbyApi.findNearby({ latitude: 41.2995, longitude: 69.2401, radiusKm: radius });
+      await nearbyApi.updateLocation({ latitude: loc.latitude, longitude: loc.longitude, accuracy: 10 });
+      const result = await nearbyApi.findNearby({ latitude: loc.latitude, longitude: loc.longitude, radiusKm: radius });
       setPeople(result);
     } catch {
       Alert.alert("Xatolik", "Yaqin odamlarni topib bo'lmadi");
     }
     setLoading(false);
-  }, [radius]);
+  }, [radius, getLocation]);
 
   useEffect(() => { search(); }, [search]);
 
@@ -63,6 +89,15 @@ export function NearbyPeopleScreen({ navigation }: Props) {
         </View>
       </View>
 
+      {locationError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>📍 {locationError}</Text>
+          <TouchableOpacity onPress={search}>
+            <Text style={styles.retryText}>Qayta urinish</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
@@ -74,11 +109,7 @@ export function NearbyPeopleScreen({ navigation }: Props) {
               style={styles.personCard}
               onPress={() => navigation.navigate("UserProfile", { userId: item.user.id })}
             >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {item.user.displayName.charAt(0).toUpperCase()}
-                </Text>
-              </View>
+              <Avatar uri={item.user.avatarUrl} name={item.user.displayName} size={48} />
               <View style={styles.personInfo}>
                 <Text style={styles.personName}>{item.user.displayName}</Text>
                 <Text style={styles.personUsername}>@{item.user.username}</Text>
@@ -114,6 +145,9 @@ const styles = StyleSheet.create({
   radiusBtnActive: { backgroundColor: colors.primary },
   radiusBtnText: { fontSize: 13, fontWeight: "600", color: "#666" },
   radiusBtnTextActive: { color: "#fff" },
+  errorBanner: { backgroundColor: "#FFF3CD", padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginHorizontal: 12, borderRadius: 8, marginBottom: 8 },
+  errorText: { fontSize: 13, color: "#856404", flex: 1 },
+  retryText: { fontSize: 13, color: colors.primary, fontWeight: "600", marginLeft: 12 },
   loader: { marginTop: 40 },
   list: { paddingHorizontal: 12, paddingBottom: 20 },
   personCard: {
@@ -125,15 +159,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { fontSize: 18, fontWeight: "700", color: "#fff" },
   personInfo: { flex: 1 },
   personName: { fontSize: 15, fontWeight: "600", color: "#333" },
   personUsername: { fontSize: 13, color: "#888", marginTop: 1 },
