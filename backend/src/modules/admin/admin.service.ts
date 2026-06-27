@@ -10,6 +10,8 @@ const userSummarySelect = {
   isAdmin: true,
   isVerified: true,
   verifiedType: true,
+  isBanned: true,
+  banReason: true,
   createdAt: true,
   lastSeenAt: true,
 };
@@ -198,5 +200,109 @@ export const adminService = {
       prisma.loginAttempt.count(),
     ]);
     return { attempts, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async listPosts(page = 1, limit = 50, search?: string) {
+    const skip = (page - 1) * limit;
+    const where = search
+      ? { content: { contains: search, mode: "insensitive" as const } }
+      : {};
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          user: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+          _count: { select: { likes: true, comments: true } },
+        },
+      }),
+      prisma.post.count({ where }),
+    ]);
+    return { posts, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async deletePost(postId: string) {
+    const post = await prisma.post.findUnique({ where: { id: postId } });
+    if (!post) throw Errors.notFound("Post topilmadi");
+    await prisma.post.delete({ where: { id: postId } });
+  },
+
+  async listReels(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const [reels, total] = await Promise.all([
+      prisma.reel.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          author: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+          _count: { select: { likes: true, comments: true } },
+        },
+      }),
+      prisma.reel.count(),
+    ]);
+    return { reels, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async deleteReel(reelId: string) {
+    const reel = await prisma.reel.findUnique({ where: { id: reelId } });
+    if (!reel) throw Errors.notFound("Reel topilmadi");
+    await prisma.reel.delete({ where: { id: reelId } });
+  },
+
+  async listStories(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const [stories, total] = await Promise.all([
+      prisma.story.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          user: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
+          _count: { select: { views: true } },
+        },
+      }),
+      prisma.story.count(),
+    ]);
+    return { stories, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async deleteStory(storyId: string) {
+    const story = await prisma.story.findUnique({ where: { id: storyId } });
+    if (!story) throw Errors.notFound("Hikoya topilmadi");
+    await prisma.story.delete({ where: { id: storyId } });
+  },
+
+  async banUser(userId: string, reason: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw Errors.notFound("Foydalanuvchi topilmadi");
+    if (user.isAdmin) throw Errors.forbidden("Admin foydalanuvchini bloklash mumkin emas");
+    return prisma.user.update({
+      where: { id: userId },
+      data: { isBanned: true, banReason: reason },
+      select: userSummarySelect,
+    });
+  },
+
+  async unbanUser(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw Errors.notFound("Foydalanuvchi topilmadi");
+    return prisma.user.update({
+      where: { id: userId },
+      data: { isBanned: false, banReason: null },
+      select: userSummarySelect,
+    });
+  },
+
+  async getContentStats() {
+    const [postCount, reelCount, storyCount, reportPending] = await Promise.all([
+      prisma.post.count(),
+      prisma.reel.count(),
+      prisma.story.count(),
+      prisma.report.count({ where: { status: "PENDING" } }),
+    ]);
+    return { posts: postCount, reels: reelCount, stories: storyCount, pendingReports: reportPending };
   },
 };

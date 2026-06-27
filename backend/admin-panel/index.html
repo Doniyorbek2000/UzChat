@@ -120,13 +120,16 @@ function renderApp() {
       <h2>UzChat Admin</h2>
       <a href="#" data-page="dashboard" class="${currentPage==='dashboard'?'active':''}"><span class="icon">📊</span>Dashboard</a>
       <a href="#" data-page="users" class="${currentPage==='users'?'active':''}"><span class="icon">👥</span>Foydalanuvchilar</a>
+      <a href="#" data-page="posts" class="${currentPage==='posts'?'active':''}"><span class="icon">📝</span>Postlar</a>
+      <a href="#" data-page="reels" class="${currentPage==='reels'?'active':''}"><span class="icon">🎬</span>Reels</a>
+      <a href="#" data-page="stories" class="${currentPage==='stories'?'active':''}"><span class="icon">📷</span>Hikoyalar</a>
       <a href="#" data-page="reports" class="${currentPage==='reports'?'active':''}"><span class="icon">🚨</span>Shikoyatlar</a>
       <a href="#" data-page="audit" class="${currentPage==='audit'?'active':''}"><span class="icon">📋</span>Audit log</a>
       <a href="#" data-page="logins" class="${currentPage==='logins'?'active':''}"><span class="icon">🔐</span>Kirish tarixi</a>
     </div>
     <div class="main">
       <div class="header">
-        <h1>${{dashboard:"Dashboard",users:"Foydalanuvchilar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi"}[currentPage]||"Dashboard"}</h1>
+        <h1>${{dashboard:"Dashboard",users:"Foydalanuvchilar",posts:"Postlar",reels:"Reels",stories:"Hikoyalar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi"}[currentPage]||"Dashboard"}</h1>
         <div class="user-info">
           <button class="logout-btn" id="logoutBtn">Chiqish</button>
         </div>
@@ -168,6 +171,9 @@ async function loadPage() {
     switch (currentPage) {
       case "dashboard": await loadDashboard(el); break;
       case "users": await loadUsers(el); break;
+      case "posts": await loadPosts(el); break;
+      case "reels": await loadReels(el); break;
+      case "stories": await loadStories(el); break;
       case "reports": await loadReports(el); break;
       case "audit": await loadAudit(el); break;
       case "logins": await loadLogins(el); break;
@@ -176,7 +182,7 @@ async function loadPage() {
 }
 
 async function loadDashboard(el) {
-  const [stats, health] = await Promise.all([api("/admin/dashboard"), api("/admin/health")]);
+  const [stats, health, contentStats] = await Promise.all([api("/admin/dashboard"), api("/admin/health"), api("/admin/content-stats")]);
   const fmtBytes = b => (b/1024/1024).toFixed(1)+" MB";
   const fmtUp = s => { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h+"s "+m+"d"; };
   el.innerHTML = `
@@ -187,6 +193,9 @@ async function loadDashboard(el) {
       <div class="stat-card" style="border-left-color:var(--purple)"><div class="value">${stats.stores.total.toLocaleString()}</div><div class="label">Do'konlar</div></div>
       <div class="stat-card" style="border-left-color:var(--danger)"><div class="value">${stats.orders.total.toLocaleString()}</div><div class="label">Buyurtmalar</div></div>
       <div class="stat-card" style="border-left-color:#5856D6"><div class="value">${stats.posts.total.toLocaleString()}</div><div class="label">Postlar</div></div>
+      <div class="stat-card" style="border-left-color:#FF2D55"><div class="value">${contentStats.reels.toLocaleString()}</div><div class="label">Reels</div></div>
+      <div class="stat-card" style="border-left-color:#5AC8FA"><div class="value">${contentStats.stories.toLocaleString()}</div><div class="label">Hikoyalar</div></div>
+      <div class="stat-card" style="border-left-color:var(--danger)"><div class="value">${contentStats.pendingReports.toLocaleString()}</div><div class="label">Kutilayotgan shikoyatlar</div></div>
     </div>
     <div class="card"><h3><span class="status-dot ${health.status==="ok"?"status-ok":"status-error"}"></span>Tizim holati</h3>
       <div class="health-row"><span class="label">Holat</span><span class="value">${health.status==="ok"?"Ishlayapti":"Xatolik"}</span></div>
@@ -240,6 +249,7 @@ window.viewUser = async function(userId) {
       <div class="actions">
         <button class="btn btn-sm ${u.isAdmin?"btn-danger":"btn-primary"}" onclick="toggleAdmin('${u.id}',${!u.isAdmin})">${u.isAdmin?"Admin olib tashlash":"Admin qilish"}</button>
         <button class="btn btn-sm ${u.isVerified?"btn-danger":"btn-primary"}" onclick="toggleVerify('${u.id}',${!u.isVerified})">${u.isVerified?"Tasdiqlashni olib tashlash":"Tasdiqlash"}</button>
+        <button class="btn btn-sm" style="background:var(--warning);color:#fff" onclick="banUser('${u.id}',${!u.isBanned})">${u.isBanned?"Blokdan chiqarish":"Bloklash"}</button>
         <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">O'chirish</button>
         <button class="btn btn-sm" style="background:var(--border)" onclick="this.closest('.modal-bg').remove()">Yopish</button>
       </div>
@@ -258,6 +268,94 @@ window.toggleVerify = async function(id, val) {
 window.deleteUser = async function(id) {
   if (!confirm("Bu foydalanuvchini o'chirishni xohlaysizmi?")) return;
   try { await api(`/admin/users/${id}`, { method: "DELETE" }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+};
+window.banUser = async function(id, ban) {
+  if (ban) {
+    const reason = prompt("Bloklash sababi:");
+    if (!reason) return;
+    try { await api(`/admin/users/${id}/ban`, { method: "PATCH", body: JSON.stringify({reason}) }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+  } else {
+    try { await api(`/admin/users/${id}/unban`, { method: "PATCH" }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+  }
+};
+
+let postsPage = 1, postsSearch = "";
+async function loadPosts(el) {
+  const data = await api(`/admin/posts?page=${postsPage}&limit=20${postsSearch?"&search="+encodeURIComponent(postsSearch):""}`);
+  el.innerHTML = `
+    <div class="search-bar"><input id="postSearch" placeholder="Post kontenti bo'yicha qidirish" value="${postsSearch}"></div>
+    <div class="card">
+      <table><thead><tr><th>Muallif</th><th>Kontent</th><th>Layklar</th><th>Izohlar</th><th>Sana</th><th>Amallar</th></tr></thead>
+      <tbody>${data.posts.length?data.posts.map(p=>`<tr>
+        <td>${esc(p.user?.displayName||"-")} (@${esc(p.user?.username||"")})</td>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.content||"-")}</td>
+        <td>${p._count?.likes||0}</td>
+        <td>${p._count?.comments||0}</td>
+        <td>${new Date(p.createdAt).toLocaleDateString("uz")}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="deletePost('${p.id}')">O'chirish</button></td>
+      </tr>`).join(""):'<tr><td colspan="6" class="empty">Postlar yo\'q</td></tr>'}</tbody></table>
+    </div>
+    <div class="pagination">
+      <button ${postsPage<=1?"disabled":""} onclick="postsPage--;loadPage()">Oldingi</button>
+      <button class="active">${postsPage}/${data.totalPages||1}</button>
+      <button ${postsPage>=data.totalPages?"disabled":""} onclick="postsPage++;loadPage()">Keyingi</button>
+    </div>`;
+  document.getElementById("postSearch").addEventListener("input", e => { postsSearch = e.target.value; });
+  document.getElementById("postSearch").addEventListener("keydown", e => { if(e.key==="Enter"){postsPage=1;loadPage();} });
+}
+window.deletePost = async function(id) {
+  if(!confirm("Bu postni o'chirishni xohlaysizmi?")) return;
+  try { await api(`/admin/posts/${id}`,{method:"DELETE"}); loadPage(); } catch(e) { alert(e.message); }
+};
+
+let reelsPage = 1;
+async function loadReels(el) {
+  const data = await api(`/admin/reels?page=${reelsPage}&limit=20`);
+  el.innerHTML = `<div class="card">
+    <table><thead><tr><th>Muallif</th><th>Tavsif</th><th>Layklar</th><th>Izohlar</th><th>Ko'rishlar</th><th>Sana</th><th>Amallar</th></tr></thead>
+    <tbody>${data.reels.length?data.reels.map(r=>`<tr>
+      <td>${esc(r.author?.displayName||"-")} (@${esc(r.author?.username||"")})</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.caption||"-")}</td>
+      <td>${r._count?.likes||0}</td>
+      <td>${r._count?.comments||0}</td>
+      <td>${r.viewCount||0}</td>
+      <td>${new Date(r.createdAt).toLocaleDateString("uz")}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteReel('${r.id}')">O'chirish</button></td>
+    </tr>`).join(""):'<tr><td colspan="7" class="empty">Reels yo\'q</td></tr>'}</tbody></table>
+  </div>
+  <div class="pagination">
+    <button ${reelsPage<=1?"disabled":""} onclick="reelsPage--;loadPage()">Oldingi</button>
+    <button class="active">${reelsPage}/${data.totalPages||1}</button>
+    <button ${reelsPage>=data.totalPages?"disabled":""} onclick="reelsPage++;loadPage()">Keyingi</button>
+  </div>`;
+}
+window.deleteReel = async function(id) {
+  if(!confirm("Bu reelni o'chirishni xohlaysizmi?")) return;
+  try { await api(`/admin/reels/${id}`,{method:"DELETE"}); loadPage(); } catch(e) { alert(e.message); }
+};
+
+let storiesPage = 1;
+async function loadStories(el) {
+  const data = await api(`/admin/stories?page=${storiesPage}&limit=20`);
+  el.innerHTML = `<div class="card">
+    <table><thead><tr><th>Muallif</th><th>Tavsif</th><th>Ko'rishlar</th><th>Sana</th><th>Amallar</th></tr></thead>
+    <tbody>${data.stories.length?data.stories.map(s=>`<tr>
+      <td>${esc(s.user?.displayName||"-")} (@${esc(s.user?.username||"")})</td>
+      <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.caption||"-")}</td>
+      <td>${s._count?.views||0}</td>
+      <td>${new Date(s.createdAt).toLocaleDateString("uz")}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteStory('${s.id}')">O'chirish</button></td>
+    </tr>`).join(""):'<tr><td colspan="5" class="empty">Hikoyalar yo\'q</td></tr>'}</tbody></table>
+  </div>
+  <div class="pagination">
+    <button ${storiesPage<=1?"disabled":""} onclick="storiesPage--;loadPage()">Oldingi</button>
+    <button class="active">${storiesPage}/${data.totalPages||1}</button>
+    <button ${storiesPage>=data.totalPages?"disabled":""} onclick="storiesPage++;loadPage()">Keyingi</button>
+  </div>`;
+}
+window.deleteStory = async function(id) {
+  if(!confirm("Bu hikoyani o'chirishni xohlaysizmi?")) return;
+  try { await api(`/admin/stories/${id}`,{method:"DELETE"}); loadPage(); } catch(e) { alert(e.message); }
 };
 
 let reportsPage = 1;

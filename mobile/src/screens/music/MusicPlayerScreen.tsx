@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from "react-native";
+import { Audio } from "expo-av";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { musicApi, MusicTrack } from "../../api/music";
@@ -13,6 +14,9 @@ export function MusicPlayerScreen(_props: Props) {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const soundRef = useRef<Audio.Sound | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -28,9 +32,55 @@ export function MusicPlayerScreen(_props: Props) {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    return () => {
+      soundRef.current?.unloadAsync().catch(() => {});
+    };
+  }, []);
+
   const handlePlay = async (track: MusicTrack) => {
+    if (playing === track.id && soundRef.current) {
+      if (isPlaying) {
+        await soundRef.current.pauseAsync();
+        setIsPlaying(false);
+      } else {
+        await soundRef.current.playAsync();
+        setIsPlaying(true);
+      }
+      return;
+    }
+
+    if (soundRef.current) {
+      await soundRef.current.unloadAsync().catch(() => {});
+      soundRef.current = null;
+    }
+
     setPlaying(track.id);
-    await musicApi.play(track.id).catch(() => {});
+    setIsPlaying(true);
+    setProgress(0);
+    musicApi.play(track.id).catch(() => {});
+
+    if (track.audioUrl) {
+      try {
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true, staysActiveInBackground: true });
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: track.audioUrl },
+          { shouldPlay: true },
+          (status) => {
+            if (status.isLoaded) {
+              if (status.durationMillis && status.positionMillis) {
+                setProgress(status.positionMillis / status.durationMillis);
+              }
+              if (status.didJustFinish) {
+                setIsPlaying(false);
+                setProgress(0);
+              }
+            }
+          }
+        );
+        soundRef.current = sound;
+      } catch {}
+    }
   };
 
   const handleLike = async (trackId: string) => {
@@ -52,12 +102,17 @@ export function MusicPlayerScreen(_props: Props) {
           renderItem={({ item }) => (
             <TouchableOpacity style={[styles.trackCard, playing === item.id && styles.trackPlaying]} onPress={() => handlePlay(item)}>
               <View style={styles.trackCover}>
-                <Text style={styles.trackCoverText}>{playing === item.id ? "▶" : "♪"}</Text>
+                <Text style={styles.trackCoverText}>{playing === item.id && isPlaying ? "⏸" : "▶"}</Text>
               </View>
               <View style={styles.trackInfo}>
                 <Text style={styles.trackTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.trackArtist}>{item.artist}</Text>
                 <Text style={styles.trackMeta}>{formatDuration(item.duration)} · {item.playCount.toLocaleString()} tinglash</Text>
+                {playing === item.id && (
+                  <View style={styles.progressBar}>
+                    <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+                  </View>
+                )}
               </View>
               <TouchableOpacity style={styles.likeBtn} onPress={() => handleLike(item.id)}>
                 <Text style={styles.likeBtnText}>♥ {item.likeCount}</Text>
@@ -90,6 +145,8 @@ const styles = StyleSheet.create({
   trackTitle: { fontSize: 15, fontWeight: "600", color: "#fff" },
   trackArtist: { fontSize: 12, color: "#aaa", marginTop: 2 },
   trackMeta: { fontSize: 10, color: "#666", marginTop: 2 },
+  progressBar: { height: 3, backgroundColor: "#333", borderRadius: 2, marginTop: 6 },
+  progressFill: { height: 3, backgroundColor: colors.primary, borderRadius: 2 },
   likeBtn: { paddingHorizontal: 10 },
   likeBtnText: { fontSize: 13, color: "#FF2D55" },
   emptyContainer: { alignItems: "center", paddingTop: 60 },

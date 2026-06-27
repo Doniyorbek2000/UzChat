@@ -10,7 +10,11 @@ import {
   Dimensions,
   RefreshControl,
   Animated,
+  Modal,
+  StatusBar,
+  SafeAreaView,
 } from "react-native";
+import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
 import { MainTabScreenProps } from "../../navigation/types";
 import { reelsApi, Reel } from "../../api/reels";
 import { Avatar } from "../../components/Avatar";
@@ -28,6 +32,9 @@ export function ReelsFeedScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [likedReels, setLikedReels] = useState<Set<string>>(new Set());
+  const [activeReel, setActiveReel] = useState<Reel | null>(null);
+  const [videoPaused, setVideoPaused] = useState(false);
+  const videoRef = useRef<Video>(null);
   const heartScales = useRef<Record<string, Animated.Value>>({});
 
   const getHeartScale = (reelId: string) => {
@@ -122,7 +129,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
 
     return (
       <View style={styles.reelCard}>
-        <TouchableOpacity activeOpacity={0.9}>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => setActiveReel(item)}>
           {item.thumbnailUrl ? (
             <Image source={{ uri: item.thumbnailUrl }} style={styles.thumbnail} />
           ) : (
@@ -247,6 +254,68 @@ export function ReelsFeedScreen({ navigation }: Props) {
           }
         />
       )}
+
+      <Modal visible={!!activeReel} animationType="slide" statusBarTranslucent>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <SafeAreaView style={styles.playerContainer}>
+          <TouchableOpacity style={styles.closeBtn} onPress={() => { setActiveReel(null); setVideoPaused(false); }}>
+            <Text style={styles.closeBtnText}>✕</Text>
+          </TouchableOpacity>
+
+          {activeReel && (
+            <>
+              <TouchableOpacity
+                activeOpacity={1}
+                style={styles.videoTap}
+                onPress={() => setVideoPaused((p) => !p)}
+              >
+                <Video
+                  ref={videoRef}
+                  source={{ uri: activeReel.videoUrl }}
+                  style={styles.video}
+                  resizeMode={ResizeMode.CONTAIN}
+                  shouldPlay={!videoPaused}
+                  isLooping
+                  useNativeControls={false}
+                />
+                {videoPaused && (
+                  <View style={styles.pauseOverlay}>
+                    <Text style={styles.pauseIcon}>▶</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.playerOverlay}>
+                <View style={styles.playerActions}>
+                  <TouchableOpacity style={styles.playerAction} onPress={() => activeReel && onToggleLike(activeReel)}>
+                    <Text style={styles.playerActionIcon}>{likedReels.has(activeReel.id) ? "❤️" : "🤍"}</Text>
+                    <Text style={styles.playerActionCount}>{formatCount(activeReel.likeCount)}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.playerAction}>
+                    <Text style={styles.playerActionIcon}>💬</Text>
+                    <Text style={styles.playerActionCount}>{formatCount(activeReel.commentCount)}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.playerAction}>
+                    <Text style={styles.playerActionIcon}>📤</Text>
+                    <Text style={styles.playerActionCount}>{formatCount(activeReel.shareCount)}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.playerInfo}>
+                  <View style={styles.authorRow}>
+                    <Avatar uri={activeReel.author.avatarUrl} name={activeReel.author.displayName} size={32} />
+                    <Text style={styles.playerAuthor}>{activeReel.author.displayName}</Text>
+                  </View>
+                  {activeReel.caption && <Text style={styles.playerCaption}>{activeReel.caption}</Text>}
+                  {activeReel.musicTitle && (
+                    <Text style={styles.playerMusic}>🎵 {activeReel.musicTitle}{activeReel.musicArtist ? ` — ${activeReel.musicArtist}` : ""}</Text>
+                  )}
+                </View>
+              </View>
+            </>
+          )}
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }
@@ -360,4 +429,20 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   emptyButtonText: { fontSize: 15, fontWeight: "600", color: "#fff" },
+  playerContainer: { flex: 1, backgroundColor: "#000" },
+  closeBtn: { position: "absolute", top: 50, left: 16, zIndex: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
+  closeBtnText: { fontSize: 18, color: "#fff", fontWeight: "700" },
+  videoTap: { flex: 1, justifyContent: "center" },
+  video: { width: "100%", height: "100%" },
+  pauseOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.3)" },
+  pauseIcon: { fontSize: 56, color: "#fff", opacity: 0.8 },
+  playerOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, paddingBottom: 40 },
+  playerActions: { position: "absolute", right: 12, bottom: 80, alignItems: "center", gap: 20 },
+  playerAction: { alignItems: "center" },
+  playerActionIcon: { fontSize: 28 },
+  playerActionCount: { fontSize: 12, color: "#fff", fontWeight: "600", marginTop: 4, textShadowColor: "#000", textShadowRadius: 4 },
+  playerInfo: { padding: 16, paddingRight: 60 },
+  playerAuthor: { fontSize: 16, fontWeight: "700", color: "#fff", marginLeft: 8 },
+  playerCaption: { fontSize: 14, color: "#eee", marginTop: 6 },
+  playerMusic: { fontSize: 12, color: "#ccc", marginTop: 4 },
 });

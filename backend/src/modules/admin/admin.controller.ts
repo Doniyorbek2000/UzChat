@@ -98,4 +98,59 @@ router.get("/login-attempts", validateQuery(paginationSchema), async (req: Reque
   res.json(result);
 });
 
+router.get("/content-stats", async (_req: Request, res: Response) => {
+  const stats = await adminService.getContentStats();
+  res.json(stats);
+});
+
+router.get("/posts", validateQuery(paginationSchema), async (req: Request, res: Response) => {
+  const { page, limit, search } = req.query as unknown as z.infer<typeof paginationSchema>;
+  const result = await adminService.listPosts(page, limit, search);
+  res.json(result);
+});
+
+router.delete("/posts/:postId", async (req: Request, res: Response) => {
+  await adminService.deletePost(req.params.postId);
+  auditLog(req.user!.sub, "DELETE_POST", "post", req.params.postId, undefined, req.ip);
+  res.status(204).send();
+});
+
+router.get("/reels", validateQuery(paginationSchema), async (req: Request, res: Response) => {
+  const { page, limit } = req.query as unknown as z.infer<typeof paginationSchema>;
+  const result = await adminService.listReels(page, limit);
+  res.json(result);
+});
+
+router.delete("/reels/:reelId", async (req: Request, res: Response) => {
+  await adminService.deleteReel(req.params.reelId);
+  auditLog(req.user!.sub, "DELETE_REEL", "reel", req.params.reelId, undefined, req.ip);
+  res.status(204).send();
+});
+
+router.get("/stories", validateQuery(paginationSchema), async (req: Request, res: Response) => {
+  const { page, limit } = req.query as unknown as z.infer<typeof paginationSchema>;
+  const result = await adminService.listStories(page, limit);
+  res.json(result);
+});
+
+router.delete("/stories/:storyId", async (req: Request, res: Response) => {
+  await adminService.deleteStory(req.params.storyId);
+  auditLog(req.user!.sub, "DELETE_STORY", "story", req.params.storyId, undefined, req.ip);
+  res.status(204).send();
+});
+
+const banSchema = z.object({ reason: z.string().min(1).max(500) });
+
+router.patch("/users/:userId/ban", validateBody(banSchema), async (req: Request, res: Response) => {
+  const user = await adminService.banUser(req.params.userId, req.body.reason);
+  auditLog(req.user!.sub, "BAN_USER", "user", req.params.userId, req.body.reason, req.ip);
+  res.json(user);
+});
+
+router.patch("/users/:userId/unban", async (req: Request, res: Response) => {
+  const user = await adminService.unbanUser(req.params.userId);
+  auditLog(req.user!.sub, "UNBAN_USER", "user", req.params.userId, undefined, req.ip);
+  res.json(user);
+});
+
 export { router as adminRouter };
