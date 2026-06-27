@@ -1,9 +1,22 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { Platform } from "react-native";
 import { API_URL } from "../config/env";
 import { secureStorage } from "../storage/secureStorage";
 import { isJwtExpired } from "../utils/jwt";
 
-export const apiClient = axios.create({ baseURL: API_URL, timeout: 30_000 });
+const isProduction = !__DEV__;
+const effectiveUrl = isProduction && API_URL.startsWith("http://")
+  ? API_URL.replace("http://", "https://")
+  : API_URL;
+
+export const apiClient = axios.create({
+  baseURL: effectiveUrl,
+  timeout: 30_000,
+  headers: {
+    "X-Client-Platform": Platform.OS,
+    "X-Client-Version": "1.0.0",
+  },
+});
 
 let onUnauthorized: (() => void) | null = null;
 export function setUnauthorizedHandler(handler: () => void) {
