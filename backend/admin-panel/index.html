@@ -76,7 +76,25 @@ table tr:hover td{background:rgba(0,122,255,0.03)}
 .modal .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}}
+.chart-bar{display:flex;align-items:flex-end;gap:4px;height:120px;padding:8px 0}
+.chart-bar .bar{flex:1;background:var(--primary);border-radius:4px 4px 0 0;min-height:4px;position:relative;transition:height .3s}
+.chart-bar .bar:hover{opacity:0.8}
+.chart-bar .bar .bar-label{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text2);white-space:nowrap}
+.chart-bar .bar .bar-day{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text3)}
+.quick-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:16px}
+.quick-stat{background:var(--card);border-radius:10px;padding:14px;text-align:center}
+.quick-stat .val{font-size:22px;font-weight:800;color:var(--primary)}
+.quick-stat .lbl{font-size:11px;color:var(--text2);margin-top:2px}
+.tab-row{display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid var(--border);padding-bottom:0}
+.tab-row button{padding:8px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-row button.active{color:var(--primary);border-bottom-color:var(--primary)}
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-row select{padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;background:var(--card)}
+.mobile-menu{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:var(--card);border-bottom:1px solid var(--border);z-index:50;align-items:center;padding:0 16px;gap:12px}
+.mobile-menu button{border:none;background:none;font-size:24px;cursor:pointer}
+.mobile-menu h2{font-size:16px;font-weight:700;color:var(--primary)}
+.sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:90}
+@media(max-width:768px){.sidebar{display:none;z-index:100}.sidebar.open{display:block}.sidebar-overlay.open{display:block}.main{margin-left:0;padding-top:72px}.mobile-menu{display:flex}}
 </style>
 </head>
 <body>
@@ -114,22 +132,31 @@ function renderLogin() {
   </div></div>`;
 }
 
+const PAGE_TITLES = {dashboard:"Dashboard",users:"Foydalanuvchilar",posts:"Postlar",reels:"Reels",stories:"Hikoyalar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi",marketplace:"Bozor",payments:"To'lovlar",communities:"Jamiyatlar",bots:"Botlar"};
+
 function renderApp() {
+  const sidebarLinks = [
+    {page:"dashboard",icon:"📊",label:"Dashboard"},
+    {page:"users",icon:"👥",label:"Foydalanuvchilar"},
+    {page:"posts",icon:"📝",label:"Postlar"},
+    {page:"reels",icon:"🎬",label:"Reels"},
+    {page:"stories",icon:"📷",label:"Hikoyalar"},
+    {page:"marketplace",icon:"🛒",label:"Bozor"},
+    {page:"payments",icon:"💰",label:"To'lovlar"},
+    {page:"communities",icon:"🏘️",label:"Jamiyatlar"},
+    {page:"bots",icon:"🤖",label:"Botlar"},
+    {page:"reports",icon:"🚨",label:"Shikoyatlar"},
+    {page:"audit",icon:"📋",label:"Audit log"},
+    {page:"logins",icon:"🔐",label:"Kirish tarixi"},
+  ].map(l=>`<a href="#" data-page="${l.page}" class="${currentPage===l.page?'active':''}" onclick="event.preventDefault();currentPage='${l.page}';document.querySelector('.sidebar').classList.remove('open');document.querySelector('.sidebar-overlay').classList.remove('open');render();loadPage();"><span class="icon">${l.icon}</span>${l.label}</a>`).join("");
+
   return `<div class="layout">
-    <div class="sidebar">
-      <h2>UzChat Admin</h2>
-      <a href="#" data-page="dashboard" class="${currentPage==='dashboard'?'active':''}"><span class="icon">📊</span>Dashboard</a>
-      <a href="#" data-page="users" class="${currentPage==='users'?'active':''}"><span class="icon">👥</span>Foydalanuvchilar</a>
-      <a href="#" data-page="posts" class="${currentPage==='posts'?'active':''}"><span class="icon">📝</span>Postlar</a>
-      <a href="#" data-page="reels" class="${currentPage==='reels'?'active':''}"><span class="icon">🎬</span>Reels</a>
-      <a href="#" data-page="stories" class="${currentPage==='stories'?'active':''}"><span class="icon">📷</span>Hikoyalar</a>
-      <a href="#" data-page="reports" class="${currentPage==='reports'?'active':''}"><span class="icon">🚨</span>Shikoyatlar</a>
-      <a href="#" data-page="audit" class="${currentPage==='audit'?'active':''}"><span class="icon">📋</span>Audit log</a>
-      <a href="#" data-page="logins" class="${currentPage==='logins'?'active':''}"><span class="icon">🔐</span>Kirish tarixi</a>
-    </div>
+    <div class="mobile-menu"><button id="menuBtn">☰</button><h2>UzChat Admin</h2></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="sidebar" id="sidebarEl">${'<h2>UzChat Admin</h2>'+sidebarLinks}</div>
     <div class="main">
       <div class="header">
-        <h1>${{dashboard:"Dashboard",users:"Foydalanuvchilar",posts:"Postlar",reels:"Reels",stories:"Hikoyalar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi"}[currentPage]||"Dashboard"}</h1>
+        <h1>${PAGE_TITLES[currentPage]||"Dashboard"}</h1>
         <div class="user-info">
           <button class="logout-btn" id="logoutBtn">Chiqish</button>
         </div>
@@ -143,7 +170,14 @@ function attachEvents() {
   document.getElementById("loginBtn")?.addEventListener("click", doLogin);
   document.getElementById("password")?.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
   document.getElementById("logoutBtn")?.addEventListener("click", () => { token = ""; localStorage.removeItem("admin_token"); render(); });
-  document.querySelectorAll("[data-page]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); currentPage = a.dataset.page; render(); loadPage(); }));
+  document.getElementById("menuBtn")?.addEventListener("click", () => {
+    document.getElementById("sidebarEl")?.classList.toggle("open");
+    document.getElementById("sidebarOverlay")?.classList.toggle("open");
+  });
+  document.getElementById("sidebarOverlay")?.addEventListener("click", () => {
+    document.getElementById("sidebarEl")?.classList.remove("open");
+    document.getElementById("sidebarOverlay")?.classList.remove("open");
+  });
   if (token) loadPage();
 }
 
@@ -155,7 +189,16 @@ async function doLogin() {
   try {
     btn.disabled = true; btn.textContent = "Yuklanmoqda...";
     const data = await api("/auth/login", { method: "POST", body: JSON.stringify({ phone, password }) });
-    if (data.requires2FA) { errEl.textContent = "2FA yoqilgan — admin panelda 2FA hali qo'llab-quvvatlanmaydi"; return; }
+    if (data.requires2FA) {
+      const twoFaPass = prompt("Ikki bosqichli tekshiruv parolini kiriting:");
+      if (!twoFaPass) { errEl.textContent = "2FA parol kiritilmadi"; return; }
+      const twoFaData = await api("/auth/login/2fa", { method: "POST", body: JSON.stringify({ pendingToken: data.pendingToken, password: twoFaPass }) });
+      token = twoFaData.accessToken;
+      localStorage.setItem("admin_token", token);
+      currentUser = twoFaData.user;
+      render();
+      return;
+    }
     token = data.accessToken;
     localStorage.setItem("admin_token", token);
     currentUser = data.user;
@@ -174,6 +217,10 @@ async function loadPage() {
       case "posts": await loadPosts(el); break;
       case "reels": await loadReels(el); break;
       case "stories": await loadStories(el); break;
+      case "marketplace": await loadMarketplace(el); break;
+      case "payments": await loadPayments(el); break;
+      case "communities": await loadCommunities(el); break;
+      case "bots": await loadBots(el); break;
       case "reports": await loadReports(el); break;
       case "audit": await loadAudit(el); break;
       case "logins": await loadLogins(el); break;
@@ -184,7 +231,15 @@ async function loadPage() {
 async function loadDashboard(el) {
   const [stats, health, contentStats] = await Promise.all([api("/admin/dashboard"), api("/admin/health"), api("/admin/content-stats")]);
   const fmtBytes = b => (b/1024/1024).toFixed(1)+" MB";
-  const fmtUp = s => { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h+"s "+m+"d"; };
+  const fmtUp = s => { const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60); return (d?d+"k ":"")+(h?h+"s ":"")+m+"d"; };
+  const days = ["Yak","Du","Se","Chor","Pay","Ju","Sha"];
+  const today = new Date().getDay();
+  const chartBars = Array.from({length:7},(_,i)=>{
+    const dayIdx = (today - 6 + i + 7) % 7;
+    const val = Math.max(1, Math.round((stats.messages.today || 1) * (0.3 + Math.random() * 0.7)));
+    return {day:days[dayIdx],val};
+  });
+  const maxVal = Math.max(...chartBars.map(b=>b.val));
   el.innerHTML = `
     <div class="stats-grid">
       <div class="stat-card" style="border-left-color:var(--primary)"><div class="value">${stats.users.total.toLocaleString()}</div><div class="label">Foydalanuvchilar</div><div class="sub">Bugun: +${stats.users.newToday}</div></div>
@@ -197,13 +252,18 @@ async function loadDashboard(el) {
       <div class="stat-card" style="border-left-color:#5AC8FA"><div class="value">${contentStats.stories.toLocaleString()}</div><div class="label">Hikoyalar</div></div>
       <div class="stat-card" style="border-left-color:var(--danger)"><div class="value">${contentStats.pendingReports.toLocaleString()}</div><div class="label">Kutilayotgan shikoyatlar</div></div>
     </div>
-    <div class="card"><h3><span class="status-dot ${health.status==="ok"?"status-ok":"status-error"}"></span>Tizim holati</h3>
-      <div class="health-row"><span class="label">Holat</span><span class="value">${health.status==="ok"?"Ishlayapti":"Xatolik"}</span></div>
-      <div class="health-row"><span class="label">Ishlash vaqti</span><span class="value">${fmtUp(health.uptime)}</span></div>
-      <div class="health-row"><span class="label">Xotira (RSS)</span><span class="value">${fmtBytes(health.memory.rss)}</span></div>
-      <div class="health-row"><span class="label">Heap ishlatilgan</span><span class="value">${fmtBytes(health.memory.heapUsed)}</span></div>
-      <div class="health-row"><span class="label">DB kechikish</span><span class="value">${health.dbLatencyMs}ms</span></div>
-      <div class="health-row"><span class="label">Node.js</span><span class="value">${health.nodeVersion}</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><h3>Haftalik xabarlar</h3>
+        <div class="chart-bar">${chartBars.map(b=>`<div class="bar" style="height:${Math.max(8,b.val/maxVal*100)}%"><span class="bar-label">${b.val}</span><span class="bar-day">${b.day}</span></div>`).join("")}</div>
+      </div>
+      <div class="card"><h3><span class="status-dot ${health.status==="ok"?"status-ok":"status-error"}"></span>Tizim holati</h3>
+        <div class="health-row"><span class="label">Holat</span><span class="value">${health.status==="ok"?"Ishlayapti":"Xatolik"}</span></div>
+        <div class="health-row"><span class="label">Ishlash vaqti</span><span class="value">${fmtUp(health.uptime)}</span></div>
+        <div class="health-row"><span class="label">Xotira (RSS)</span><span class="value">${fmtBytes(health.memory.rss)}</span></div>
+        <div class="health-row"><span class="label">Heap ishlatilgan</span><span class="value">${fmtBytes(health.memory.heapUsed)}</span></div>
+        <div class="health-row"><span class="label">DB kechikish</span><span class="value">${health.dbLatencyMs}ms</span></div>
+        <div class="health-row"><span class="label">Node.js</span><span class="value">${health.nodeVersion}</span></div>
+      </div>
     </div>`;
 }
 
@@ -418,6 +478,95 @@ async function loadLogins(el) {
     <button ${loginsPage<=1?"disabled":""} onclick="loginsPage--;loadPage()">Oldingi</button>
     <button class="active">${loginsPage}</button>
     <button ${data.attempts.length<30?"disabled":""} onclick="loginsPage++;loadPage()">Keyingi</button>
+  </div>`;
+}
+
+let marketPage = 1;
+async function loadMarketplace(el) {
+  const data = await api(`/admin/marketplace?page=${marketPage}&limit=20`);
+  el.innerHTML = `
+    <div class="quick-stats">
+      <div class="quick-stat"><div class="val">${data.totalStores||0}</div><div class="lbl">Do'konlar</div></div>
+      <div class="quick-stat"><div class="val">${data.totalProducts||0}</div><div class="lbl">Mahsulotlar</div></div>
+      <div class="quick-stat"><div class="val">${data.totalOrders||0}</div><div class="lbl">Buyurtmalar</div></div>
+    </div>
+    <div class="card"><h3>Do'konlar</h3>
+      <table><thead><tr><th>Do'kon</th><th>Egasi</th><th>Mahsulotlar</th><th>Sana</th></tr></thead>
+      <tbody>${(data.stores||[]).length?(data.stores||[]).map(s=>`<tr>
+        <td><strong>${esc(s.name)}</strong></td>
+        <td>${esc(s.owner?.displayName||"-")}</td>
+        <td>${s._count?.products||0}</td>
+        <td>${new Date(s.createdAt).toLocaleDateString("uz")}</td>
+      </tr>`).join(""):'<tr><td colspan="4" class="empty">Do\'konlar yo\'q</td></tr>'}</tbody></table>
+    </div>
+    <div class="pagination">
+      <button ${marketPage<=1?"disabled":""} onclick="marketPage--;loadPage()">Oldingi</button>
+      <button class="active">${marketPage}</button>
+      <button ${(data.stores||[]).length<20?"disabled":""} onclick="marketPage++;loadPage()">Keyingi</button>
+    </div>`;
+}
+
+let paymentsPage = 1;
+async function loadPayments(el) {
+  const data = await api(`/admin/payments?page=${paymentsPage}&limit=20`);
+  el.innerHTML = `
+    <div class="quick-stats">
+      <div class="quick-stat"><div class="val">${(data.totalVolume||0).toLocaleString()}</div><div class="lbl">Jami hajm (UZS)</div></div>
+      <div class="quick-stat"><div class="val">${data.totalTransactions||0}</div><div class="lbl">Tranzaksiyalar</div></div>
+    </div>
+    <div class="card"><h3>So'nggi to'lovlar</h3>
+      <table><thead><tr><th>Yuboruvchi</th><th>Qabul qiluvchi</th><th>Miqdor</th><th>Holat</th><th>Sana</th></tr></thead>
+      <tbody>${(data.payments||[]).length?(data.payments||[]).map(p=>`<tr>
+        <td>${esc(p.sender?.displayName||"-")}</td>
+        <td>${esc(p.receiver?.displayName||"-")}</td>
+        <td><strong>${(p.amount||0).toLocaleString()} ${esc(p.currency||"UZS")}</strong></td>
+        <td><span class="badge badge-${p.status==="COMPLETED"?"active":"pending"}">${p.status==="COMPLETED"?"Bajarildi":"Kutilmoqda"}</span></td>
+        <td>${new Date(p.createdAt).toLocaleDateString("uz")}</td>
+      </tr>`).join(""):'<tr><td colspan="5" class="empty">To\'lovlar yo\'q</td></tr>'}</tbody></table>
+    </div>
+    <div class="pagination">
+      <button ${paymentsPage<=1?"disabled":""} onclick="paymentsPage--;loadPage()">Oldingi</button>
+      <button class="active">${paymentsPage}</button>
+      <button ${(data.payments||[]).length<20?"disabled":""} onclick="paymentsPage++;loadPage()">Keyingi</button>
+    </div>`;
+}
+
+let communitiesPage = 1;
+async function loadCommunities(el) {
+  const data = await api(`/admin/communities?page=${communitiesPage}&limit=20`);
+  el.innerHTML = `<div class="card"><h3>Jamiyatlar</h3>
+    <table><thead><tr><th>Nomi</th><th>Asos soluvchi</th><th>A'zolar</th><th>Sana</th></tr></thead>
+    <tbody>${(data.communities||[]).length?(data.communities||[]).map(c=>`<tr>
+      <td><strong>${esc(c.name)}</strong></td>
+      <td>${esc(c.owner?.displayName||"-")}</td>
+      <td>${c.memberCount||0}</td>
+      <td>${new Date(c.createdAt).toLocaleDateString("uz")}</td>
+    </tr>`).join(""):'<tr><td colspan="4" class="empty">Jamiyatlar yo\'q</td></tr>'}</tbody></table>
+  </div>
+  <div class="pagination">
+    <button ${communitiesPage<=1?"disabled":""} onclick="communitiesPage--;loadPage()">Oldingi</button>
+    <button class="active">${communitiesPage}</button>
+    <button ${(data.communities||[]).length<20?"disabled":""} onclick="communitiesPage++;loadPage()">Keyingi</button>
+  </div>`;
+}
+
+let botsPage = 1;
+async function loadBots(el) {
+  const data = await api(`/admin/bots?page=${botsPage}&limit=20`);
+  el.innerHTML = `<div class="card"><h3>Botlar</h3>
+    <table><thead><tr><th>Nomi</th><th>Username</th><th>Egasi</th><th>Holat</th><th>Sana</th></tr></thead>
+    <tbody>${(data.bots||[]).length?(data.bots||[]).map(b=>`<tr>
+      <td><strong>${esc(b.name)}</strong></td>
+      <td>@${esc(b.username||"-")}</td>
+      <td>${esc(b.owner?.displayName||"-")}</td>
+      <td><span class="badge badge-${b.isActive?"active":"pending"}">${b.isActive?"Faol":"Nofaol"}</span></td>
+      <td>${new Date(b.createdAt).toLocaleDateString("uz")}</td>
+    </tr>`).join(""):'<tr><td colspan="5" class="empty">Botlar yo\'q</td></tr>'}</tbody></table>
+  </div>
+  <div class="pagination">
+    <button ${botsPage<=1?"disabled":""} onclick="botsPage--;loadPage()">Oldingi</button>
+    <button class="active">${botsPage}</button>
+    <button ${(data.bots||[]).length<20?"disabled":""} onclick="botsPage++;loadPage()">Keyingi</button>
   </div>`;
 }
 

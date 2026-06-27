@@ -305,4 +305,74 @@ export const adminService = {
     ]);
     return { posts: postCount, reels: reelCount, stories: storyCount, pendingReports: reportPending };
   },
+
+  async listMarketplace(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [stores, totalStores, totalProducts, totalOrders] = await Promise.all([
+      prisma.store.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          owner: { select: { id: true, username: true, displayName: true } },
+          _count: { select: { products: true } },
+        },
+      }),
+      prisma.store.count(),
+      prisma.product.count(),
+      prisma.order.count(),
+    ]);
+    return { stores, totalStores, totalProducts, totalOrders, page, totalPages: Math.ceil(totalStores / limit) };
+  },
+
+  async listPayments(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [payments, totalTransactions] = await Promise.all([
+      prisma.payment.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          sender: { select: { id: true, username: true, displayName: true } },
+          receiver: { select: { id: true, username: true, displayName: true } },
+        },
+      }),
+      prisma.payment.count(),
+    ]);
+    const totalVolume = await prisma.payment.aggregate({ _sum: { amount: true } });
+    return { payments, totalTransactions, totalVolume: totalVolume._sum.amount ?? 0, page, totalPages: Math.ceil(totalTransactions / limit) };
+  },
+
+  async listCommunities(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [communities, total] = await Promise.all([
+      prisma.community.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          owner: { select: { id: true, username: true, displayName: true } },
+          _count: { select: { groups: true } },
+        },
+      }),
+      prisma.community.count(),
+    ]);
+    return { communities, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async listBots(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [bots, total] = await Promise.all([
+      prisma.bot.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        include: {
+          owner: { select: { id: true, username: true, displayName: true } },
+        },
+      }),
+      prisma.bot.count(),
+    ]);
+    return { bots, total, page, totalPages: Math.ceil(total / limit) };
+  },
 };

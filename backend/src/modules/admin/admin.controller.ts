@@ -153,4 +153,28 @@ router.patch("/users/:userId/unban", async (req: Request, res: Response) => {
   res.json(user);
 });
 
+router.get("/marketplace", validateQuery(paginationSchema), async (req: Request, res: Response) => {
+  const { page, limit } = req.query as unknown as z.infer<typeof paginationSchema>;
+  const result = await adminService.listMarketplace(page, limit);
+  res.json(result);
+});
+
+router.get("/payments", validateQuery(paginationSchema), async (req: Request, res: Response) => {
+  const { page, limit } = req.query as unknown as z.infer<typeof paginationSchema>;
+  const result = await adminService.listPayments(page, limit);
+  res.json(result);
+});
+
+router.get("/communities", validateQuery(paginationSchema), async (req: Request, res: Response) => {
+  const { page, limit } = req.query as unknown as z.infer<typeof paginationSchema>;
+  const result = await adminService.listCommunities(page, limit);
+  res.json(result);
+});
+
+router.get("/bots", validateQuery(paginationSchema), async (req: Request, res: Response) => {
+  const { page, limit } = req.query as unknown as z.infer<typeof paginationSchema>;
+  const result = await adminService.listBots(page, limit);
+  res.json(result);
+});
+
 export { router as adminRouter };
