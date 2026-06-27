@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, validateUuidParam } from "../../utils/validate";
 import { createStickerPackSchema, addStickerSchema } from "./stickers.schema";
 import { stickersService } from "./stickers.service";
 
@@ -28,7 +28,7 @@ router.get("/mine", async (req: Request, res: Response) => {
   res.json(packs);
 });
 
-router.get("/:packId", async (req: Request, res: Response) => {
+router.get("/:packId", validateUuidParam("packId"), async (req: Request, res: Response) => {
   const pack = await stickersService.getPack(req.params.packId);
   res.json(pack);
 });
@@ -38,27 +38,27 @@ router.post("/", validateBody(createStickerPackSchema), async (req: Request, res
   res.status(201).json(pack);
 });
 
-router.post("/:packId/stickers", validateBody(addStickerSchema), async (req: Request, res: Response) => {
+router.post("/:packId/stickers", validateUuidParam("packId"), validateBody(addStickerSchema), async (req: Request, res: Response) => {
   const sticker = await stickersService.addSticker(req.user!.sub, req.params.packId, req.body);
   res.status(201).json(sticker);
 });
 
-router.delete("/:packId/stickers/:stickerId", async (req: Request, res: Response) => {
+router.delete("/:packId/stickers/:stickerId", validateUuidParam("packId"), validateUuidParam("stickerId"), async (req: Request, res: Response) => {
   await stickersService.removeSticker(req.user!.sub, req.params.stickerId);
   res.status(204).send();
 });
 
-router.post("/:packId/install", async (req: Request, res: Response) => {
+router.post("/:packId/install", validateUuidParam("packId"), async (req: Request, res: Response) => {
   await stickersService.installPack(req.user!.sub, req.params.packId);
   res.status(204).send();
 });
 
-router.delete("/:packId/install", async (req: Request, res: Response) => {
+router.delete("/:packId/install", validateUuidParam("packId"), async (req: Request, res: Response) => {
   await stickersService.uninstallPack(req.user!.sub, req.params.packId);
   res.status(204).send();
 });
 
-router.delete("/:packId", async (req: Request, res: Response) => {
+router.delete("/:packId", validateUuidParam("packId"), async (req: Request, res: Response) => {
   await stickersService.deletePack(req.user!.sub, req.params.packId);
   res.status(204).send();
 });

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, validateUuidParam } from "../../utils/validate";
 import { uploadTrackSchema, createPlaylistSchema } from "./music.schema";
 import { musicService } from "./music.service";
 
@@ -22,17 +22,17 @@ router.post("/tracks", validateBody(uploadTrackSchema), async (req: Request, res
   res.status(201).json(track);
 });
 
-router.post("/tracks/:trackId/play", async (req: Request, res: Response) => {
+router.post("/tracks/:trackId/play", validateUuidParam("trackId"), async (req: Request, res: Response) => {
   await musicService.play(req.params.trackId);
   res.status(204).send();
 });
 
-router.post("/tracks/:trackId/like", async (req: Request, res: Response) => {
+router.post("/tracks/:trackId/like", validateUuidParam("trackId"), async (req: Request, res: Response) => {
   const result = await musicService.toggleLike(req.user!.sub, req.params.trackId);
   res.json(result);
 });
 
-router.delete("/tracks/:trackId", async (req: Request, res: Response) => {
+router.delete("/tracks/:trackId", validateUuidParam("trackId"), async (req: Request, res: Response) => {
   await musicService.deleteTrack(req.user!.sub, req.params.trackId);
   res.status(204).send();
 });
@@ -47,17 +47,17 @@ router.post("/playlists", validateBody(createPlaylistSchema), async (req: Reques
   res.status(201).json(playlist);
 });
 
-router.get("/playlists/:playlistId/tracks", async (req: Request, res: Response) => {
+router.get("/playlists/:playlistId/tracks", validateUuidParam("playlistId"), async (req: Request, res: Response) => {
   const tracks = await musicService.getPlaylistTracks(req.params.playlistId);
   res.json(tracks);
 });
 
-router.post("/playlists/:playlistId/tracks/:trackId", async (req: Request, res: Response) => {
+router.post("/playlists/:playlistId/tracks/:trackId", validateUuidParam("playlistId"), validateUuidParam("trackId"), async (req: Request, res: Response) => {
   const pt = await musicService.addToPlaylist(req.user!.sub, req.params.playlistId, req.params.trackId);
   res.status(201).json(pt);
 });
 
-router.delete("/playlists/:playlistId/tracks/:trackId", async (req: Request, res: Response) => {
+router.delete("/playlists/:playlistId/tracks/:trackId", validateUuidParam("playlistId"), validateUuidParam("trackId"), async (req: Request, res: Response) => {
   await musicService.removeFromPlaylist(req.user!.sub, req.params.playlistId, req.params.trackId);
   res.status(204).send();
 });

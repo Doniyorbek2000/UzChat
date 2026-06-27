@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody, validateQuery } from "../../utils/validate";
+import { validateBody, validateQuery, validateUuidParam } from "../../utils/validate";
 import { createStoreSchema, updateStoreSchema, createProductSchema, updateProductSchema, createOrderSchema, updateOrderStatusSchema } from "./marketplace.schema";
 import { z } from "zod";
 
@@ -33,34 +33,34 @@ router.get("/stores/mine", async (req: Request, res: Response) => {
   res.json(stores);
 });
 
-router.get("/stores/:storeId", async (req: Request, res: Response) => {
+router.get("/stores/:storeId", validateUuidParam("storeId"), async (req: Request, res: Response) => {
   const store = await marketplaceService.getStore(req.params.storeId);
   res.json(store);
 });
 
-router.patch("/stores/:storeId", validateBody(updateStoreSchema), async (req: Request, res: Response) => {
+router.patch("/stores/:storeId", validateUuidParam("storeId"), validateBody(updateStoreSchema), async (req: Request, res: Response) => {
   const store = await marketplaceService.updateStore(req.user!.sub, req.params.storeId, req.body);
   res.json(store);
 });
 
 // Products
-router.post("/stores/:storeId/products", validateBody(createProductSchema), async (req: Request, res: Response) => {
+router.post("/stores/:storeId/products", validateUuidParam("storeId"), validateBody(createProductSchema), async (req: Request, res: Response) => {
   const product = await marketplaceService.addProduct(req.user!.sub, req.params.storeId, req.body);
   res.status(201).json(product);
 });
 
-router.get("/stores/:storeId/products", validateQuery(cursorQuery), async (req: Request, res: Response) => {
+router.get("/stores/:storeId/products", validateUuidParam("storeId"), validateQuery(cursorQuery), async (req: Request, res: Response) => {
   const cursor = req.query.cursor as string | undefined;
   const result = await marketplaceService.listProducts(req.params.storeId, cursor);
   res.json(result);
 });
 
-router.patch("/products/:productId", validateBody(updateProductSchema), async (req: Request, res: Response) => {
+router.patch("/products/:productId", validateUuidParam("productId"), validateBody(updateProductSchema), async (req: Request, res: Response) => {
   const product = await marketplaceService.updateProduct(req.user!.sub, req.params.productId, req.body);
   res.json(product);
 });
 
-router.delete("/products/:productId", async (req: Request, res: Response) => {
+router.delete("/products/:productId", validateUuidParam("productId"), async (req: Request, res: Response) => {
   await marketplaceService.deleteProduct(req.user!.sub, req.params.productId);
   res.status(204).send();
 });
@@ -84,12 +84,12 @@ router.get("/orders/mine", async (req: Request, res: Response) => {
   res.json(orders);
 });
 
-router.get("/orders/store/:storeId", async (req: Request, res: Response) => {
+router.get("/orders/store/:storeId", validateUuidParam("storeId"), async (req: Request, res: Response) => {
   const orders = await marketplaceService.getStoreOrders(req.user!.sub, req.params.storeId);
   res.json(orders);
 });
 
-router.patch("/orders/:orderId/status", validateBody(updateOrderStatusSchema), async (req: Request, res: Response) => {
+router.patch("/orders/:orderId/status", validateUuidParam("orderId"), validateBody(updateOrderStatusSchema), async (req: Request, res: Response) => {
   const order = await marketplaceService.updateOrderStatus(req.user!.sub, req.params.orderId, req.body.status);
   res.json(order);
 });
