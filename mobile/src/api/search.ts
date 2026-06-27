@@ -1,10 +1,10 @@
 import { apiClient as api } from "./client";
 
 export interface SearchResult {
-  users?: Array<{ id: string; displayName: string; username: string; avatarUrl: string | null; bio: string | null; isVerified: boolean }>;
-  groups?: Array<{ id: string; name: string | null; avatarUrl: string | null; type: string; _count: { participants: number } }>;
-  channels?: Array<{ id: string; name: string | null; avatarUrl: string | null; type: string; _count: { participants: number } }>;
-  messages?: Array<{ id: string; conversationId: string; type: string; ciphertext: string; createdAt: string; sender: { id: string; displayName: string }; conversation: { id: string; name: string | null; type: string } }>;
+  users?: Array<{ id: string; displayName: string; username: string; avatarUrl: string | null; bio: string | null; isVerified: boolean; verifiedType: string | null }>;
+  groups?: Array<{ id: string; title: string | null; avatarUrl: string | null; type: string; createdAt: string; _count: { participants: number } }>;
+  channels?: Array<{ id: string; title: string | null; avatarUrl: string | null; type: string; createdAt: string; _count: { participants: number } }>;
+  messages?: Array<{ id: string; conversationId: string; type: string; ciphertext: string; nonce: string | null; createdAt: string; sender: { id: string; displayName: string; username: string; avatarUrl: string | null }; conversation: { id: string; title: string | null; type: string } }>;
 }
 
 export interface SearchHistoryItem {

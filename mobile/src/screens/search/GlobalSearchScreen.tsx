@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { searchApi, SearchResult, SearchHistoryItem } from "../../api/search";
+import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GlobalSearch">;
@@ -15,22 +16,34 @@ export function GlobalSearchScreen({ navigation }: Props) {
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(true);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     searchApi.getHistory().then(setHistory).catch(() => {});
-  });
+  }, []);
 
-  const handleSearch = useCallback(async () => {
-    if (!query.trim()) return;
+  const doSearch = useCallback(async (q: string, t: SearchTab) => {
+    if (!q.trim()) return;
     setLoading(true);
     setShowHistory(false);
     try {
-      const type = tab === "all" ? undefined : tab;
-      const data = await searchApi.search(query.trim(), type as any);
+      const type = t === "all" ? undefined : t;
+      const data = await searchApi.search(q.trim(), type as any);
       setResults(data);
     } catch {}
     setLoading(false);
-  }, [query, tab]);
+  }, []);
+
+  const handleSearch = useCallback(() => {
+    doSearch(query, tab);
+  }, [query, tab, doSearch]);
+
+  useEffect(() => {
+    if (!query.trim() || query.trim().length < 2) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => doSearch(query, tab), 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [query, tab, doSearch]);
 
   const handleHistoryPress = (q: string) => {
     setQuery(q);
@@ -113,7 +126,7 @@ export function GlobalSearchScreen({ navigation }: Props) {
             if (item.type === "user") {
               return (
                 <TouchableOpacity style={styles.resultRow} onPress={() => navigation.navigate("UserProfile", { userId: item.id })}>
-                  <View style={styles.resultAvatar}><Text style={styles.resultAvatarText}>{item.displayName?.charAt(0)}</Text></View>
+                  <Avatar uri={item.avatarUrl} name={item.displayName} size={40} />
                   <View style={styles.resultInfo}>
                     <Text style={styles.resultName}>{item.displayName} {item.isVerified ? "✅" : ""}</Text>
                     <Text style={styles.resultSub}>@{item.username}</Text>
@@ -123,10 +136,10 @@ export function GlobalSearchScreen({ navigation }: Props) {
             }
             if (item.type === "group" || item.type === "channel") {
               return (
-                <TouchableOpacity style={styles.resultRow} onPress={() => navigation.navigate("ChatRoom", { conversationId: item.id, title: item.name ?? "" })}>
-                  <View style={[styles.resultAvatar, { backgroundColor: item.type === "channel" ? "#FF9500" : colors.primary }]}><Text style={styles.resultAvatarText}>{(item.name ?? "?").charAt(0)}</Text></View>
+                <TouchableOpacity style={styles.resultRow} onPress={() => navigation.navigate("ChatRoom", { conversationId: item.id, title: item.title ?? "" })}>
+                  <Avatar uri={item.avatarUrl} name={item.title ?? "?"} size={40} />
                   <View style={styles.resultInfo}>
-                    <Text style={styles.resultName}>{item.name}</Text>
+                    <Text style={styles.resultName}>{item.title}</Text>
                     <Text style={styles.resultSub}>{item._count?.participants ?? 0} a'zo</Text>
                   </View>
                 </TouchableOpacity>
@@ -134,11 +147,11 @@ export function GlobalSearchScreen({ navigation }: Props) {
             }
             if (item.type === "message") {
               return (
-                <TouchableOpacity style={styles.resultRow} onPress={() => navigation.navigate("ChatRoom", { conversationId: item.conversationId, title: item.conversation?.name ?? "", highlightMessageId: item.id })}>
-                  <View style={[styles.resultAvatar, { backgroundColor: "#C7C7CC" }]}><Text style={styles.resultAvatarText}>💬</Text></View>
+                <TouchableOpacity style={styles.resultRow} onPress={() => navigation.navigate("ChatRoom", { conversationId: item.conversationId, title: item.conversation?.title ?? "", highlightMessageId: item.id })}>
+                  <Avatar uri={item.sender?.avatarUrl} name={item.sender?.displayName ?? "?"} size={40} />
                   <View style={styles.resultInfo}>
                     <Text style={styles.resultName}>{item.sender?.displayName}</Text>
-                    <Text style={styles.resultSub} numberOfLines={1}>{item.conversation?.name} · {new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
+                    <Text style={styles.resultSub} numberOfLines={1}>{item.conversation?.title} · {new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -173,8 +186,6 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 12, paddingBottom: 20, paddingTop: 8 },
   sectionHeader: { fontSize: 14, fontWeight: "600", color: "#888", marginTop: 12, marginBottom: 6 },
   resultRow: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#fff", borderRadius: 10, padding: 12, marginBottom: 4 },
-  resultAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  resultAvatarText: { fontSize: 16, fontWeight: "600", color: "#fff" },
   resultInfo: { flex: 1 },
   resultName: { fontSize: 15, fontWeight: "600", color: "#333" },
   resultSub: { fontSize: 12, color: "#888", marginTop: 1 },
