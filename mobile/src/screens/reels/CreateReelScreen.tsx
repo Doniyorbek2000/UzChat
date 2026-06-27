@@ -1,23 +1,54 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, Image } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { reelsApi } from "../../api/reels";
+import { uploadPlainFile } from "../../utils/mediaFile";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreateReel">;
 
 export function CreateReelScreen({ navigation }: Props) {
   const [videoUrl, setVideoUrl] = useState("");
+  const [videoLocalUri, setVideoLocalUri] = useState<string | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [caption, setCaption] = useState("");
   const [musicTitle, setMusicTitle] = useState("");
   const [hashtags, setHashtags] = useState("");
   const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const onPickVideo = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Ruxsat kerak", "Video tanlash uchun gallereyaga ruxsat bering");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["videos"],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+
+    const asset = result.assets[0];
+    setVideoLocalUri(asset.uri);
+    setUploading(true);
+    try {
+      const { url } = await uploadPlainFile(asset.uri, asset.mimeType ?? "video/mp4");
+      setVideoUrl(url);
+    } catch {
+      Alert.alert("Xatolik", "Video yuklashda xatolik");
+      setVideoLocalUri(null);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!videoUrl.trim()) {
-      Alert.alert("Xatolik", "Video URL kiritilishi shart");
+      Alert.alert("Xatolik", "Video tanlang yoki URL kiriting");
       return;
     }
     setCreating(true);
@@ -42,11 +73,27 @@ export function CreateReelScreen({ navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.uploadArea}>
-        <Text style={styles.uploadIcon}>🎬</Text>
-        <Text style={styles.uploadText}>Video yuklash</Text>
-        <Text style={styles.uploadHint}>Yoki URL kiriting</Text>
-      </View>
+      <TouchableOpacity style={styles.uploadArea} onPress={onPickVideo} disabled={uploading}>
+        {uploading ? (
+          <>
+            <ActivityIndicator size="large" color="#fff" />
+            <Text style={styles.uploadText}>Yuklanmoqda...</Text>
+          </>
+        ) : videoLocalUri ? (
+          <>
+            <Image source={{ uri: videoLocalUri }} style={styles.uploadPreview} />
+            <View style={styles.uploadOverlay}>
+              <Text style={styles.uploadOverlayText}>O'zgartirish</Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={styles.uploadIcon}>🎬</Text>
+            <Text style={styles.uploadText}>Video tanlash</Text>
+            <Text style={styles.uploadHint}>Galereyadan tanlang yoki URL kiriting</Text>
+          </>
+        )}
+      </TouchableOpacity>
 
       <Text style={styles.label}>Video URL</Text>
       <TextInput
@@ -124,6 +171,9 @@ const styles = StyleSheet.create({
   uploadIcon: { fontSize: 40 },
   uploadText: { color: "#fff", fontSize: 16, fontWeight: "600", marginTop: 8 },
   uploadHint: { color: "#888", fontSize: 12, marginTop: 4 },
+  uploadPreview: { width: "100%", height: "100%", borderRadius: 16 },
+  uploadOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "rgba(0,0,0,0.5)", padding: 8, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, alignItems: "center" },
+  uploadOverlayText: { color: "#fff", fontSize: 13, fontWeight: "600" },
   label: { fontSize: 14, fontWeight: "600", color: "#333", marginTop: 12, marginBottom: 6 },
   input: {
     backgroundColor: "#fff",
