@@ -37,7 +37,7 @@ r.post("/award", requireAdmin, validateBody(badgeActionSchema), async (req, res)
 r.delete("/revoke", requireAdmin, validateBody(badgeActionSchema), async (req, res) => {
   const { userId, badge } = req.body;
   await badgesService.revokeBadge(userId, badge);
-  res.json({ success: true });
+  res.status(204).send();
 });
 
 export const badgesRouter = r;

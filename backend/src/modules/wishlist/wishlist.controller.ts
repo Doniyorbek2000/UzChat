@@ -17,7 +17,7 @@ r.post("/:productId", async (req, res) => {
 
 r.delete("/:productId", async (req, res) => {
   await wishlistService.removeFromWishlist(req.user!.sub, req.params.productId);
-  res.json({ success: true });
+  res.status(204).send();
 });
 
 r.get("/:productId/check", async (req, res) => {

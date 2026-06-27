@@ -25,7 +25,7 @@ router.get("/user/:userId", async (req: Request, res: Response) => {
 
 router.delete("/:deviceId", async (req: Request, res: Response) => {
   await devicesService.removeDevice(req.user!.sub, req.params.deviceId);
-  res.json({ success: true });
+  res.status(204).send();
 });
 
 export { router as devicesRouter };

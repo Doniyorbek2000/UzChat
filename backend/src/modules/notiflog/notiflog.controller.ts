@@ -18,17 +18,17 @@ r.get("/unread-count", async (req, res) => {
 
 r.patch("/:id/read", async (req, res) => {
   await notifLogService.markAsRead(req.user!.sub, req.params.id);
-  res.json({ success: true });
+  res.status(204).send();
 });
 
 r.patch("/read-all", async (req, res) => {
   await notifLogService.markAllAsRead(req.user!.sub);
-  res.json({ success: true });
+  res.status(204).send();
 });
 
 r.delete("/clear", async (req, res) => {
   await notifLogService.clearAll(req.user!.sub);
-  res.json({ success: true });
+  res.status(204).send();
 });
 
 export const notifLogRouter = r;

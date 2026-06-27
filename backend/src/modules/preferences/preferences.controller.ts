@@ -34,12 +34,12 @@ r.put("/:key", validateBody(setValueSchema), async (req, res) => {
 
 r.put("/", validateBody(setManySchema), async (req, res) => {
   await preferencesService.setMany(req.user!.sub, req.body);
-  res.json({ success: true });
+  res.status(204).send();
 });
 
 r.delete("/:key", async (req, res) => {
   await preferencesService.remove(req.user!.sub, req.params.key);
-  res.json({ success: true });
+  res.status(204).send();
 });
 
 export const preferencesRouter = r;
