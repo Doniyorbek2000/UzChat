@@ -1,4 +1,5 @@
 import "express-async-errors";
+import path from "path";
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
@@ -155,6 +156,8 @@ export function createApp() {
 <p>Ushbu shartlar vaqti-vaqti bilan yangilanishi mumkin. Muhim o'zgarishlar haqida xabar beriladi.</p>
 </body></html>`);
   });
+
+  app.use("/admin-panel", express.static(path.join(__dirname, "../admin-panel")));
 
   app.use("/auth", authRouter);
   app.use("/users", apiRateLimiter, usersRouter);

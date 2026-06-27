@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UzChat Admin Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#007AFF;--bg:#F2F2F7;--card:#fff;--text:#000;--text2:#666;--text3:#999;--border:#E5E5EA;--danger:#FF3B30;--success:#34C759;--warning:#FF9500;--purple:#AF52DE}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.login-card{background:var(--card);border-radius:16px;padding:40px;max-width:400px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.login-card h1{text-align:center;margin-bottom:8px;font-size:28px}
+.login-card p{text-align:center;color:var(--text2);margin-bottom:24px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.form-group input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:16px;outline:none;transition:border-color .2s}
+.form-group input:focus{border-color:var(--primary)}
+.btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn:hover{opacity:0.9}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto;border-radius:6px}
+.error{color:var(--danger);text-align:center;margin-top:12px;font-size:14px}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--card);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
+.sidebar h2{padding:0 20px;margin-bottom:20px;font-size:20px;color:var(--primary)}
+.sidebar a{display:flex;align-items:center;gap:10px;padding:12px 20px;color:var(--text);text-decoration:none;font-size:14px;font-weight:500;transition:background .2s}
+.sidebar a:hover,.sidebar a.active{background:rgba(0,122,255,0.08);color:var(--primary)}
+.sidebar a .icon{font-size:18px;width:24px;text-align:center}
+.main{margin-left:240px;flex:1;padding:24px;min-height:100vh}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.header h1{font-size:28px;font-weight:800}
+.header .user-info{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--text2)}
+.header .logout-btn{padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:transparent;cursor:pointer;font-size:13px;color:var(--danger);font-weight:500}
+.header .logout-btn:hover{background:rgba(255,59,48,0.08)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--card);border-radius:12px;padding:20px;border-left:4px solid var(--primary);box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+.stat-card .value{font-size:28px;font-weight:800}
+.stat-card .label{font-size:13px;color:var(--text2);margin-top:4px}
+.stat-card .sub{font-size:11px;color:var(--text3);margin-top:2px}
+.card{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.05);margin-bottom:16px}
+.card h3{font-size:16px;font-weight:700;margin-bottom:12px}
+.health-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px}
+.health-row:last-child{border-bottom:none}
+.health-row .label{color:var(--text2)}
+.health-row .value{font-weight:600}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.status-ok{background:var(--success)}
+.status-error{background:var(--danger)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+table th{text-align:left;padding:12px 16px;background:var(--bg);color:var(--text2);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
+table td{padding:12px 16px;border-bottom:1px solid var(--border)}
+table tr:hover td{background:rgba(0,122,255,0.03)}
+.badge{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-admin{background:rgba(255,59,48,0.1);color:var(--danger)}
+.badge-verified{background:rgba(52,199,89,0.1);color:var(--success)}
+.badge-active{background:rgba(52,199,89,0.1);color:var(--success)}
+.badge-pending{background:rgba(255,149,0,0.1);color:var(--warning)}
+.badge-resolved{background:rgba(0,122,255,0.1);color:var(--primary)}
+.badge-dismissed{background:rgba(102,102,102,0.1);color:var(--text2)}
+.pagination{display:flex;gap:8px;justify-content:center;margin-top:16px}
+.pagination button{padding:8px 14px;border:1px solid var(--border);border-radius:6px;background:var(--card);cursor:pointer;font-size:13px}
+.pagination button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pagination button:disabled{opacity:0.4;cursor:not-allowed}
+.search-bar{display:flex;gap:12px;margin-bottom:16px}
+.search-bar input{flex:1;padding:10px 16px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none}
+.search-bar input:focus{border-color:var(--primary)}
+.empty{text-align:center;padding:40px;color:var(--text2);font-size:14px}
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--card);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.modal h3{margin-bottom:16px}
+.modal .detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.modal .detail-row .label{color:var(--text2)}
+.modal .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const API_BASE = window.location.origin;
+let token = localStorage.getItem("admin_token") || "";
+let currentUser = null;
+let currentPage = "dashboard";
+
+async function api(path, opts = {}) {
+  const res = await fetch(API_BASE + path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}), ...opts.headers },
+  });
+  if (res.status === 401) { token = ""; localStorage.removeItem("admin_token"); render(); throw new Error("Unauthorized"); }
+  if (res.status === 204) return null;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || "Xatolik");
+  return data;
+}
+
+function render() {
+  document.getElementById("app").innerHTML = token ? renderApp() : renderLogin();
+  attachEvents();
+}
+
+function renderLogin() {
+  return `<div class="login-page"><div class="login-card">
+    <h1>UzChat</h1><p>Admin panelga kirish</p>
+    <div class="form-group"><label>Telefon raqam</label><input id="phone" value="+998" placeholder="+998901234567"></div>
+    <div class="form-group"><label>Parol</label><input id="password" type="password" placeholder="Parolingiz"></div>
+    <button class="btn btn-primary" id="loginBtn">Kirish</button>
+    <div class="error" id="loginError"></div>
+  </div></div>`;
+}
+
+function renderApp() {
+  return `<div class="layout">
+    <div class="sidebar">
+      <h2>UzChat Admin</h2>
+      <a href="#" data-page="dashboard" class="${currentPage==='dashboard'?'active':''}"><span class="icon">📊</span>Dashboard</a>
+      <a href="#" data-page="users" class="${currentPage==='users'?'active':''}"><span class="icon">👥</span>Foydalanuvchilar</a>
+      <a href="#" data-page="reports" class="${currentPage==='reports'?'active':''}"><span class="icon">🚨</span>Shikoyatlar</a>
+      <a href="#" data-page="audit" class="${currentPage==='audit'?'active':''}"><span class="icon">📋</span>Audit log</a>
+      <a href="#" data-page="logins" class="${currentPage==='logins'?'active':''}"><span class="icon">🔐</span>Kirish tarixi</a>
+    </div>
+    <div class="main">
+      <div class="header">
+        <h1>${{dashboard:"Dashboard",users:"Foydalanuvchilar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi"}[currentPage]||"Dashboard"}</h1>
+        <div class="user-info">
+          <button class="logout-btn" id="logoutBtn">Chiqish</button>
+        </div>
+      </div>
+      <div id="content"><div class="spinner"></div></div>
+    </div>
+  </div>`;
+}
+
+function attachEvents() {
+  document.getElementById("loginBtn")?.addEventListener("click", doLogin);
+  document.getElementById("password")?.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  document.getElementById("logoutBtn")?.addEventListener("click", () => { token = ""; localStorage.removeItem("admin_token"); render(); });
+  document.querySelectorAll("[data-page]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); currentPage = a.dataset.page; render(); loadPage(); }));
+  if (token) loadPage();
+}
+
+async function doLogin() {
+  const phone = document.getElementById("phone").value.trim();
+  const password = document.getElementById("password").value;
+  const errEl = document.getElementById("loginError");
+  const btn = document.getElementById("loginBtn");
+  try {
+    btn.disabled = true; btn.textContent = "Yuklanmoqda...";
+    const data = await api("/auth/login", { method: "POST", body: JSON.stringify({ phone, password }) });
+    if (data.requires2FA) { errEl.textContent = "2FA yoqilgan — admin panelda 2FA hali qo'llab-quvvatlanmaydi"; return; }
+    token = data.accessToken;
+    localStorage.setItem("admin_token", token);
+    currentUser = data.user;
+    render();
+  } catch (e) { errEl.textContent = e.message; } finally { btn.disabled = false; btn.textContent = "Kirish"; }
+}
+
+async function loadPage() {
+  const el = document.getElementById("content");
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
+  try {
+    switch (currentPage) {
+      case "dashboard": await loadDashboard(el); break;
+      case "users": await loadUsers(el); break;
+      case "reports": await loadReports(el); break;
+      case "audit": await loadAudit(el); break;
+      case "logins": await loadLogins(el); break;
+    }
+  } catch (e) { el.innerHTML = `<div class="card"><div class="error">${e.message}</div></div>`; }
+}
+
+async function loadDashboard(el) {
+  const [stats, health] = await Promise.all([api("/admin/dashboard"), api("/admin/health")]);
+  const fmtBytes = b => (b/1024/1024).toFixed(1)+" MB";
+  const fmtUp = s => { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h+"s "+m+"d"; };
+  el.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card" style="border-left-color:var(--primary)"><div class="value">${stats.users.total.toLocaleString()}</div><div class="label">Foydalanuvchilar</div><div class="sub">Bugun: +${stats.users.newToday}</div></div>
+      <div class="stat-card" style="border-left-color:var(--success)"><div class="value">${stats.conversations.total.toLocaleString()}</div><div class="label">Suhbatlar</div></div>
+      <div class="stat-card" style="border-left-color:var(--warning)"><div class="value">${stats.messages.total.toLocaleString()}</div><div class="label">Xabarlar</div><div class="sub">Bugun: ${stats.messages.today}</div></div>
+      <div class="stat-card" style="border-left-color:var(--purple)"><div class="value">${stats.stores.total.toLocaleString()}</div><div class="label">Do'konlar</div></div>
+      <div class="stat-card" style="border-left-color:var(--danger)"><div class="value">${stats.orders.total.toLocaleString()}</div><div class="label">Buyurtmalar</div></div>
+      <div class="stat-card" style="border-left-color:#5856D6"><div class="value">${stats.posts.total.toLocaleString()}</div><div class="label">Postlar</div></div>
+    </div>
+    <div class="card"><h3><span class="status-dot ${health.status==="ok"?"status-ok":"status-error"}"></span>Tizim holati</h3>
+      <div class="health-row"><span class="label">Holat</span><span class="value">${health.status==="ok"?"Ishlayapti":"Xatolik"}</span></div>
+      <div class="health-row"><span class="label">Ishlash vaqti</span><span class="value">${fmtUp(health.uptime)}</span></div>
+      <div class="health-row"><span class="label">Xotira (RSS)</span><span class="value">${fmtBytes(health.memory.rss)}</span></div>
+      <div class="health-row"><span class="label">Heap ishlatilgan</span><span class="value">${fmtBytes(health.memory.heapUsed)}</span></div>
+      <div class="health-row"><span class="label">DB kechikish</span><span class="value">${health.dbLatencyMs}ms</span></div>
+      <div class="health-row"><span class="label">Node.js</span><span class="value">${health.nodeVersion}</span></div>
+    </div>`;
+}
+
+let usersPage = 1, usersSearch = "";
+async function loadUsers(el) {
+  const data = await api(`/admin/users?page=${usersPage}&limit=20${usersSearch?"&search="+encodeURIComponent(usersSearch):""}`);
+  el.innerHTML = `
+    <div class="search-bar"><input id="userSearch" placeholder="Qidirish (ism, username, telefon)" value="${usersSearch}"></div>
+    <div class="card">
+      <table><thead><tr><th>Foydalanuvchi</th><th>Username</th><th>Telefon</th><th>Holat</th><th>Ro'yxatdan o'tgan</th><th>Amallar</th></tr></thead>
+      <tbody>${data.users.length?data.users.map(u=>`<tr>
+        <td><strong>${esc(u.displayName)}</strong></td>
+        <td>@${esc(u.username)}</td>
+        <td>${esc(u.phone)}</td>
+        <td>${u.isAdmin?'<span class="badge badge-admin">Admin</span> ':''}${u.isVerified?'<span class="badge badge-verified">Tasdiqlangan</span>':''}</td>
+        <td>${new Date(u.createdAt).toLocaleDateString("uz")}</td>
+        <td><button class="btn btn-primary btn-sm" onclick="viewUser('${u.id}')">Ko'rish</button></td>
+      </tr>`).join(""):'<tr><td colspan="6" class="empty">Foydalanuvchilar topilmadi</td></tr>'}</tbody></table>
+    </div>
+    <div class="pagination">
+      <button ${usersPage<=1?"disabled":""} onclick="usersPage--;loadPage()">Oldingi</button>
+      <button class="active">${usersPage}</button>
+      <button ${data.users.length<20?"disabled":""} onclick="usersPage++;loadPage()">Keyingi</button>
+    </div>`;
+  document.getElementById("userSearch").addEventListener("input", e => { usersSearch = e.target.value; });
+  document.getElementById("userSearch").addEventListener("keydown", e => { if (e.key==="Enter"){usersPage=1;loadPage();} });
+}
+
+window.viewUser = async function(userId) {
+  try {
+    const u = await api("/admin/users/"+userId);
+    const modal = document.createElement("div");
+    modal.className = "modal-bg";
+    modal.innerHTML = `<div class="modal">
+      <h3>${esc(u.displayName)} (@${esc(u.username)})</h3>
+      <div class="detail-row"><span class="label">ID</span><span>${u.id}</span></div>
+      <div class="detail-row"><span class="label">Telefon</span><span>${esc(u.phone)}</span></div>
+      <div class="detail-row"><span class="label">Bio</span><span>${esc(u.bio||"-")}</span></div>
+      <div class="detail-row"><span class="label">Admin</span><span>${u.isAdmin?"Ha":"Yo'q"}</span></div>
+      <div class="detail-row"><span class="label">Tasdiqlangan</span><span>${u.isVerified?"Ha":"Yo'q"}</span></div>
+      <div class="detail-row"><span class="label">Ro'yxatdan o'tgan</span><span>${new Date(u.createdAt).toLocaleString("uz")}</span></div>
+      <div class="detail-row"><span class="label">Oxirgi faollik</span><span>${u.lastSeenAt?new Date(u.lastSeenAt).toLocaleString("uz"):"-"}</span></div>
+      <div class="actions">
+        <button class="btn btn-sm ${u.isAdmin?"btn-danger":"btn-primary"}" onclick="toggleAdmin('${u.id}',${!u.isAdmin})">${u.isAdmin?"Admin olib tashlash":"Admin qilish"}</button>
+        <button class="btn btn-sm ${u.isVerified?"btn-danger":"btn-primary"}" onclick="toggleVerify('${u.id}',${!u.isVerified})">${u.isVerified?"Tasdiqlashni olib tashlash":"Tasdiqlash"}</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">O'chirish</button>
+        <button class="btn btn-sm" style="background:var(--border)" onclick="this.closest('.modal-bg').remove()">Yopish</button>
+      </div>
+    </div>`;
+    modal.addEventListener("click", e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  } catch(e) { alert(e.message); }
+};
+
+window.toggleAdmin = async function(id, val) {
+  try { await api(`/admin/users/${id}/admin`, { method: "PATCH", body: JSON.stringify({isAdmin:val}) }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+};
+window.toggleVerify = async function(id, val) {
+  try { await api(`/admin/users/${id}/verify`, { method: "PATCH", body: JSON.stringify({isVerified:val}) }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+};
+window.deleteUser = async function(id) {
+  if (!confirm("Bu foydalanuvchini o'chirishni xohlaysizmi?")) return;
+  try { await api(`/admin/users/${id}`, { method: "DELETE" }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+};
+
+let reportsPage = 1;
+async function loadReports(el) {
+  const data = await api(`/admin/reports?page=${reportsPage}`);
+  el.innerHTML = `<div class="card">
+    <table><thead><tr><th>Shikoyatchi</th><th>Sabab</th><th>Holat</th><th>Sana</th><th>Amallar</th></tr></thead>
+    <tbody>${data.reports.length?data.reports.map(r=>`<tr>
+      <td>${esc(r.reporter?.displayName||"-")}</td>
+      <td>${esc(r.reason||"-")}</td>
+      <td><span class="badge badge-${r.status==='PENDING'?'pending':r.status==='RESOLVED'?'resolved':'dismissed'}">${r.status==='PENDING'?'Kutilmoqda':r.status==='RESOLVED'?'Hal qilindi':'Rad etildi'}</span></td>
+      <td>${new Date(r.createdAt).toLocaleDateString("uz")}</td>
+      <td>${r.status==='PENDING'?`<button class="btn btn-sm btn-primary" onclick="resolveReport('${r.id}')">Hal qilish</button> <button class="btn btn-sm" style="background:var(--border)" onclick="dismissReport('${r.id}')">Rad etish</button>`:'-'}</td>
+    </tr>`).join(""):'<tr><td colspan="5" class="empty">Shikoyatlar yo\'q</td></tr>'}</tbody></table>
+  </div>
+  <div class="pagination">
+    <button ${reportsPage<=1?"disabled":""} onclick="reportsPage--;loadPage()">Oldingi</button>
+    <button class="active">${reportsPage}</button>
+    <button ${data.reports.length<50?"disabled":""} onclick="reportsPage++;loadPage()">Keyingi</button>
+  </div>`;
+}
+window.resolveReport = async function(id) { try { await api(`/admin/reports/${id}/resolve`,{method:"PATCH"}); loadPage(); } catch(e) { alert(e.message); } };
+window.dismissReport = async function(id) { try { await api(`/admin/reports/${id}/dismiss`,{method:"PATCH"}); loadPage(); } catch(e) { alert(e.message); } };
+
+let auditPage = 1;
+async function loadAudit(el) {
+  const data = await api(`/admin/audit-log?page=${auditPage}&limit=30`);
+  el.innerHTML = `<div class="card">
+    <table><thead><tr><th>Admin</th><th>Amal</th><th>Maqsad</th><th>Tafsilotlar</th><th>Sana</th></tr></thead>
+    <tbody>${data.logs.length?data.logs.map(l=>`<tr>
+      <td>${esc(l.admin?.displayName||l.adminId)}</td>
+      <td><strong>${esc(l.action)}</strong></td>
+      <td>${esc(l.targetType||"")} ${esc(l.targetId?l.targetId.slice(0,8)+"...":"")}</td>
+      <td>${esc(l.details||"-")}</td>
+      <td>${new Date(l.createdAt).toLocaleString("uz")}</td>
+    </tr>`).join(""):'<tr><td colspan="5" class="empty">Audit log bo\'sh</td></tr>'}</tbody></table>
+  </div>
+  <div class="pagination">
+    <button ${auditPage<=1?"disabled":""} onclick="auditPage--;loadPage()">Oldingi</button>
+    <button class="active">${auditPage}</button>
+    <button ${data.logs.length<30?"disabled":""} onclick="auditPage++;loadPage()">Keyingi</button>
+  </div>`;
+}
+
+let loginsPage = 1;
+async function loadLogins(el) {
+  const data = await api(`/admin/login-attempts?page=${loginsPage}&limit=30`);
+  el.innerHTML = `<div class="card">
+    <table><thead><tr><th>Telefon</th><th>Natija</th><th>Sabab</th><th>IP</th><th>Qurilma</th><th>Sana</th></tr></thead>
+    <tbody>${data.attempts.length?data.attempts.map(a=>`<tr>
+      <td>${esc(a.phone)}</td>
+      <td><span class="badge badge-${a.success?'active':'pending'}">${a.success?"Muvaffaqiyatli":"Muvaffaqiyatsiz"}</span></td>
+      <td>${esc(a.reason||"-")}</td>
+      <td>${esc(a.ip||"-")}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(a.userAgent||"-")}</td>
+      <td>${new Date(a.createdAt).toLocaleString("uz")}</td>
+    </tr>`).join(""):'<tr><td colspan="6" class="empty">Kirish tarixi bo\'sh</td></tr>'}</tbody></table>
+  </div>
+  <div class="pagination">
+    <button ${loginsPage<=1?"disabled":""} onclick="loginsPage--;loadPage()">Oldingi</button>
+    <button class="active">${loginsPage}</button>
+    <button ${data.attempts.length<30?"disabled":""} onclick="loginsPage++;loadPage()">Keyingi</button>
+  </div>`;
+}
+
+function esc(s) { if (!s) return ""; const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
+
+render();
+</script>
+</body>
+</html>
