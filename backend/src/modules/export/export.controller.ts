@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, validateUuidParam } from "../../utils/validate";
 import { createExportSchema } from "./export.schema";
 import { exportService } from "./export.service";
 
@@ -17,12 +17,12 @@ router.post("/", validateBody(createExportSchema), async (req: Request, res: Res
   res.status(201).json(chatExport);
 });
 
-router.get("/:exportId", async (req: Request, res: Response) => {
+router.get("/:exportId", validateUuidParam("exportId"), async (req: Request, res: Response) => {
   const chatExport = await exportService.getExport(req.user!.sub, req.params.exportId);
   res.json(chatExport);
 });
 
-router.delete("/:exportId", async (req: Request, res: Response) => {
+router.delete("/:exportId", validateUuidParam("exportId"), async (req: Request, res: Response) => {
   await exportService.deleteExport(req.user!.sub, req.params.exportId);
   res.status(204).send();
 });
