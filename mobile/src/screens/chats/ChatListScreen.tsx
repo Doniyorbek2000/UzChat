@@ -118,6 +118,9 @@ export function ChatListScreen({ navigation }: Props) {
         headerLeft: undefined,
         headerRight: () => (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginRight: 8 }}>
+            <TouchableOpacity onPress={() => navigation.navigate("Contacts")} hitSlop={8}>
+              <Text style={{ fontSize: 20 }}>👥</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate("CallHistory")} hitSlop={8}>
               <Text style={{ fontSize: 20 }}>📞</Text>
             </TouchableOpacity>

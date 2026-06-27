@@ -1,29 +1,114 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Dimensions } from "react-native";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  ActivityIndicator,
+  Dimensions,
+  RefreshControl,
+  Animated,
+} from "react-native";
 import { MainTabScreenProps } from "../../navigation/types";
 import { reelsApi, Reel } from "../../api/reels";
+import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
 type Props = MainTabScreenProps<"Reels">;
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = (width - 36) / 2;
+const TAB_BAR_HEIGHT = 80;
 
 export function ReelsFeedScreen({ navigation }: Props) {
   const [tab, setTab] = useState<"feed" | "trending">("feed");
   const [reels, setReels] = useState<Reel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [likedReels, setLikedReels] = useState<Set<string>>(new Set());
+  const heartScales = useRef<Record<string, Animated.Value>>({});
+
+  const getHeartScale = (reelId: string) => {
+    if (!heartScales.current[reelId]) {
+      heartScales.current[reelId] = new Animated.Value(1);
+    }
+    return heartScales.current[reelId];
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = tab === "trending" ? await reelsApi.getTrending() : await reelsApi.getFeed();
       setReels(data);
+      const liked = new Set<string>();
+      data.forEach((r) => {
+        if (r.likes && r.likes.length > 0) liked.add(r.id);
+      });
+      setLikedReels(liked);
     } catch {}
     setLoading(false);
   }, [tab]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const data = tab === "trending" ? await reelsApi.getTrending() : await reelsApi.getFeed();
+      setReels(data);
+    } catch {}
+    setRefreshing(false);
+  }, [tab]);
+
+  const onToggleLike = async (reel: Reel) => {
+    const wasLiked = likedReels.has(reel.id);
+    const scale = getHeartScale(reel.id);
+
+    setLikedReels((prev) => {
+      const next = new Set(prev);
+      if (wasLiked) {
+        next.delete(reel.id);
+      } else {
+        next.add(reel.id);
+      }
+      return next;
+    });
+    setReels((prev) =>
+      prev.map((r) =>
+        r.id === reel.id ? { ...r, likeCount: r.likeCount + (wasLiked ? -1 : 1) } : r
+      )
+    );
+
+    if (!wasLiked) {
+      Animated.sequence([
+        Animated.spring(scale, { toValue: 1.4, useNativeDriver: true, speed: 50, bounciness: 15 }),
+        Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 10 }),
+      ]).start();
+    }
+
+    try {
+      await reelsApi.toggleLike(reel.id);
+    } catch {
+      setLikedReels((prev) => {
+        const next = new Set(prev);
+        if (wasLiked) {
+          next.add(reel.id);
+        } else {
+          next.delete(reel.id);
+        }
+        return next;
+      });
+      setReels((prev) =>
+        prev.map((r) =>
+          r.id === reel.id ? { ...r, likeCount: r.likeCount + (wasLiked ? 1 : -1) } : r
+        )
+      );
+    }
+  };
 
   const formatCount = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
@@ -31,34 +116,80 @@ export function ReelsFeedScreen({ navigation }: Props) {
     return String(n);
   };
 
-  const renderReel = ({ item }: { item: Reel }) => (
-    <TouchableOpacity style={styles.reelCard}>
-      {item.thumbnailUrl ? (
-        <Image source={{ uri: item.thumbnailUrl }} style={styles.thumbnail} />
-      ) : (
-        <View style={[styles.thumbnail, styles.thumbnailPlaceholder]}>
-          <Text style={styles.playIcon}>▶️</Text>
-        </View>
-      )}
-      <View style={styles.reelOverlay}>
-        <View style={styles.reelStats}>
-          <Text style={styles.statText}>▶ {formatCount(item.viewCount)}</Text>
-          <Text style={styles.statText}>❤ {formatCount(item.likeCount)}</Text>
-        </View>
+  const renderReel = ({ item }: { item: Reel }) => {
+    const isLiked = likedReels.has(item.id);
+    const scale = getHeartScale(item.id);
+
+    return (
+      <View style={styles.reelCard}>
+        <TouchableOpacity activeOpacity={0.9}>
+          {item.thumbnailUrl ? (
+            <Image source={{ uri: item.thumbnailUrl }} style={styles.thumbnail} />
+          ) : (
+            <View style={[styles.thumbnail, styles.thumbnailPlaceholder]}>
+              <Text style={styles.playIcon}>▶</Text>
+            </View>
+          )}
+
+          <View style={styles.reelGradient} />
+
+          <View style={styles.reelActions}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => onToggleLike(item)}>
+              <Animated.Text
+                style={[
+                  styles.actionIcon,
+                  isLiked && styles.actionIconLiked,
+                  { transform: [{ scale }] },
+                ]}
+              >
+                {isLiked ? "❤️" : "🤍"}
+              </Animated.Text>
+              <Text style={styles.actionCount}>{formatCount(item.likeCount)}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionIcon}>💬</Text>
+              <Text style={styles.actionCount}>{formatCount(item.commentCount)}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionIcon}>📤</Text>
+              <Text style={styles.actionCount}>{formatCount(item.shareCount)}</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.reelInfo}>
+            <View style={styles.authorRow}>
+              <Avatar uri={item.author.avatarUrl} name={item.author.displayName} size={24} />
+              <Text style={styles.reelAuthor} numberOfLines={1}>
+                {item.author.displayName}
+              </Text>
+            </View>
+            {item.caption && (
+              <Text style={styles.reelCaption} numberOfLines={2}>
+                {item.caption}
+              </Text>
+            )}
+            {item.musicTitle && (
+              <Text style={styles.reelMusic} numberOfLines={1}>
+                🎵 {item.musicTitle}
+                {item.musicArtist ? ` — ${item.musicArtist}` : ""}
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.viewCount}>
+            <Text style={styles.viewCountText}>▶ {formatCount(item.viewCount)}</Text>
+          </View>
+        </TouchableOpacity>
       </View>
-      <View style={styles.reelInfo}>
-        <Text style={styles.reelAuthor} numberOfLines={1}>{item.author.displayName}</Text>
-        {item.caption && <Text style={styles.reelCaption} numberOfLines={2}>{item.caption}</Text>}
-        {item.musicTitle && (
-          <Text style={styles.reelMusic} numberOfLines={1}>🎵 {item.musicTitle}</Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <Text style={styles.headerTitle}>Reels</Text>
         <View style={styles.tabs}>
           <TouchableOpacity
             style={[styles.tab, tab === "feed" && styles.tabActive]}
@@ -81,7 +212,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {loading && !refreshing ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
         <FlatList
@@ -91,11 +222,27 @@ export function ReelsFeedScreen({ navigation }: Props) {
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#fff"
+              colors={[colors.primary]}
+              progressBackgroundColor="#222"
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>🎬</Text>
-              <Text style={styles.emptyText}>Hali reellar yo'q</Text>
+              <Text style={styles.emptyTitle}>Hali reellar yo'q</Text>
               <Text style={styles.emptyHint}>Birinchi bo'lib reel yarating!</Text>
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => navigation.navigate("CreateReel")}
+              >
+                <Text style={styles.emptyButtonText}>Reel yaratish</Text>
+              </TouchableOpacity>
             </View>
           }
         />
@@ -106,9 +253,23 @@ export function ReelsFeedScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000" },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 8, backgroundColor: "#111" },
-  tabs: { flex: 1, flexDirection: "row", gap: 8 },
-  tab: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 8 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#111",
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#333",
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#fff",
+    marginRight: 16,
+  },
+  tabs: { flex: 1, flexDirection: "row", gap: 4 },
+  tab: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16 },
   tabActive: { backgroundColor: "#333" },
   tabText: { fontSize: 14, fontWeight: "600", color: "#888" },
   tabTextActive: { color: "#fff" },
@@ -122,33 +283,81 @@ const styles = StyleSheet.create({
   },
   createFabText: { fontSize: 20, fontWeight: "700", color: "#fff" },
   loader: { marginTop: 40 },
-  list: { padding: 8, paddingBottom: 20 },
+  list: { padding: 8, paddingBottom: TAB_BAR_HEIGHT },
   row: { justifyContent: "space-between", paddingHorizontal: 4 },
   reelCard: {
     width: CARD_WIDTH,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
     marginBottom: 8,
     backgroundColor: "#1C1C1E",
   },
   thumbnail: { width: "100%", aspectRatio: 9 / 16, backgroundColor: "#222" },
   thumbnailPlaceholder: { alignItems: "center", justifyContent: "center" },
-  playIcon: { fontSize: 32 },
-  reelOverlay: {
+  playIcon: { fontSize: 36, color: "#fff", opacity: 0.7 },
+  reelGradient: {
     position: "absolute",
-    bottom: 70,
+    bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 8,
+    height: 120,
+    backgroundColor: "transparent",
   },
-  reelStats: { flexDirection: "row", gap: 8 },
-  statText: { fontSize: 11, color: "#fff", fontWeight: "600", textShadowColor: "#000", textShadowRadius: 2 },
-  reelInfo: { padding: 8 },
-  reelAuthor: { fontSize: 13, fontWeight: "600", color: "#fff" },
-  reelCaption: { fontSize: 11, color: "#ccc", marginTop: 2 },
-  reelMusic: { fontSize: 10, color: "#aaa", marginTop: 2 },
+  reelActions: {
+    position: "absolute",
+    right: 6,
+    bottom: 70,
+    alignItems: "center",
+    gap: 12,
+  },
+  actionButton: { alignItems: "center" },
+  actionIcon: { fontSize: 20 },
+  actionIconLiked: { fontSize: 20 },
+  actionCount: {
+    fontSize: 10,
+    color: "#fff",
+    fontWeight: "600",
+    marginTop: 2,
+    textShadowColor: "#000",
+    textShadowRadius: 3,
+  },
+  reelInfo: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 36,
+    padding: 10,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  authorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+  reelAuthor: { fontSize: 13, fontWeight: "700", color: "#fff" },
+  reelCaption: { fontSize: 11, color: "#ddd", marginTop: 2 },
+  reelMusic: { fontSize: 10, color: "#bbb", marginTop: 3 },
+  viewCount: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  viewCountText: { fontSize: 10, color: "#fff", fontWeight: "600" },
   emptyContainer: { alignItems: "center", paddingTop: 80 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: "#fff", marginTop: 12 },
-  emptyHint: { fontSize: 13, color: "#888", marginTop: 4 },
+  emptyIcon: { fontSize: 56 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#fff", marginTop: 16 },
+  emptyHint: { fontSize: 14, color: "#888", marginTop: 8 },
+  emptyButton: {
+    marginTop: 20,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  emptyButtonText: { fontSize: 15, fontWeight: "600", color: "#fff" },
 });

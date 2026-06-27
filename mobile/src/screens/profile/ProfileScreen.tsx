@@ -239,6 +239,25 @@ export function ProfileScreen({ navigation }: Props) {
         </View>
       </View>
 
+      <View style={styles.quickActions}>
+        <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("Stories")}>
+          <Text style={styles.quickActionIcon}>📷</Text>
+          <Text style={styles.quickActionLabel}>Hikoyalar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("Contacts")}>
+          <Text style={styles.quickActionIcon}>👥</Text>
+          <Text style={styles.quickActionLabel}>Kontaktlar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("Wallet")}>
+          <Text style={styles.quickActionIcon}>💰</Text>
+          <Text style={styles.quickActionLabel}>Hamyon</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.quickAction} onPress={onShare}>
+          <Text style={styles.quickActionIcon}>📤</Text>
+          <Text style={styles.quickActionLabel}>Ulashish</Text>
+        </TouchableOpacity>
+      </View>
+
       <Text style={styles.label}>Username</Text>
       <View style={styles.usernameInputRow}>
         <Text style={styles.usernamePrefix}>@</Text>
@@ -628,6 +647,10 @@ const styles = StyleSheet.create({
   headerInfo: { flex: 1 },
   username: { fontSize: 18, fontWeight: "700", color: colors.text },
   phone: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
+  quickActions: { flexDirection: "row", justifyContent: "space-around", marginBottom: 20, paddingVertical: 12, backgroundColor: colors.background, borderRadius: 12 },
+  quickAction: { alignItems: "center", gap: 4 },
+  quickActionIcon: { fontSize: 24 },
+  quickActionLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: "500" },
   label: { fontSize: 13, color: colors.textSecondary, marginBottom: 6, marginTop: 12 },
   input: {
     backgroundColor: colors.background,
