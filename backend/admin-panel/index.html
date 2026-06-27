@@ -271,7 +271,7 @@ let usersPage = 1, usersSearch = "";
 async function loadUsers(el) {
   const data = await api(`/admin/users?page=${usersPage}&limit=20${usersSearch?"&search="+encodeURIComponent(usersSearch):""}`);
   el.innerHTML = `
-    <div class="search-bar"><input id="userSearch" placeholder="Qidirish (ism, username, telefon)" value="${usersSearch}"></div>
+    <div class="search-bar"><input id="userSearch" placeholder="Qidirish (ism, username, telefon)" value="${usersSearch}"><button class="btn btn-primary btn-sm" onclick="exportUsersCSV()">CSV eksport</button></div>
     <div class="card">
       <table><thead><tr><th>Foydalanuvchi</th><th>Username</th><th>Telefon</th><th>Holat</th><th>Ro'yxatdan o'tgan</th><th>Amallar</th></tr></thead>
       <tbody>${data.users.length?data.users.map(u=>`<tr>
@@ -569,6 +569,19 @@ async function loadBots(el) {
     <button ${(data.bots||[]).length<20?"disabled":""} onclick="botsPage++;loadPage()">Keyingi</button>
   </div>`;
 }
+
+window.exportUsersCSV = async function() {
+  try {
+    const data = await api("/admin/users?page=1&limit=1000");
+    const headers = ["ID","Username","Ism","Telefon","Admin","Tasdiqlangan","Ro'yxatdan o'tgan"];
+    const rows = data.users.map(u => [u.id, u.username, u.displayName, u.phone, u.isAdmin?"Ha":"Yo'q", u.isVerified?"Ha":"Yo'q", new Date(u.createdAt).toLocaleDateString("uz")]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const blob = new Blob(["﻿"+csv], {type: "text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "uzchat_users.csv"; a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) { alert("Eksport xatoligi: "+e.message); }
+};
 
 function esc(s) { if (!s) return ""; const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
 
