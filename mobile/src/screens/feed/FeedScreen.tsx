@@ -1,13 +1,14 @@
 import React, { useCallback, useState } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
-  Image, TextInput, RefreshControl, Alert,
+  Image, RefreshControl, Alert, Share,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { feedApi, Post } from "../../api/feed";
 import { useAuthStore } from "../../store/authStore";
+import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Feed">;
@@ -106,13 +107,7 @@ export function FeedScreen({ navigation }: Props) {
         style={styles.postHeader}
         onPress={() => navigation.navigate("UserProfile", { userId: item.userId })}
       >
-        {item.user.avatarUrl ? (
-          <Image source={{ uri: item.user.avatarUrl }} style={styles.avatar} />
-        ) : (
-          <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Text style={styles.avatarText}>{item.user.displayName.charAt(0).toUpperCase()}</Text>
-          </View>
-        )}
+        <Avatar uri={item.user.avatarUrl} name={item.user.displayName} size={40} />
         <View style={{ flex: 1 }}>
           <Text style={styles.displayName}>{item.user.displayName}</Text>
           <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
@@ -148,6 +143,13 @@ export function FeedScreen({ navigation }: Props) {
         >
           <Text style={styles.actionIcon}>💬</Text>
           <Text style={styles.actionCount}>{item._count.comments}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => Share.share({ message: item.content || "UzChat'dagi postni ko'ring!" }).catch(() => {})}
+        >
+          <Text style={styles.actionIcon}>📤</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -191,10 +193,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     padding: 16,
   },
-  postHeader: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
-  avatar: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
-  avatarPlaceholder: { backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  avatarText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  postHeader: { flexDirection: "row", alignItems: "center", marginBottom: 10, gap: 10 },
   displayName: { fontSize: 15, fontWeight: "600", color: colors.text },
   date: { fontSize: 12, color: colors.textSecondary },
   postContent: { fontSize: 15, color: colors.text, lineHeight: 22, marginBottom: 10 },

@@ -1,13 +1,31 @@
 import { Router } from "express";
+import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { requireAdmin } from "../../middleware/admin.middleware";
+import { validateBody, validateQuery } from "../../utils/validate";
 import { greetingsService } from "./greetings.service";
+
+const sendCardSchema = z.object({
+  receiverId: z.string().uuid(),
+  cardId: z.string().uuid(),
+  message: z.string().max(500).optional(),
+});
+
+const createCardSchema = z.object({
+  templateName: z.string().min(1).max(100),
+  category: z.string().min(1).max(50),
+  imageUrl: z.string().url().max(500),
+});
+
+const listCardsQuery = z.object({
+  category: z.string().max(50).optional(),
+});
 
 const r = Router();
 r.use(requireAuth);
 
-r.get("/", async (req, res) => {
-  const category = req.query.category as string | undefined;
+r.get("/", validateQuery(listCardsQuery), async (req, res) => {
+  const { category } = req.query as unknown as z.infer<typeof listCardsQuery>;
   const cards = await greetingsService.listCards(category);
   res.json(cards);
 });
@@ -17,7 +35,7 @@ r.get("/categories", async (_req, res) => {
   res.json(categories);
 });
 
-r.post("/send", async (req, res) => {
+r.post("/send", validateBody(sendCardSchema), async (req, res) => {
   const { receiverId, cardId, message } = req.body;
   const result = await greetingsService.sendCard(req.user!.sub, receiverId, cardId, message);
   res.json(result);
@@ -33,7 +51,7 @@ r.get("/sent", async (req, res) => {
   res.json(cards);
 });
 
-r.post("/create", requireAdmin, async (req, res) => {
+r.post("/create", requireAdmin, validateBody(createCardSchema), async (req, res) => {
   const { templateName, category, imageUrl } = req.body;
   const card = await greetingsService.createCard({ templateName, category, imageUrl });
   res.status(201).json(card);

@@ -1,6 +1,13 @@
 import { Router } from "express";
+import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
+import { validateBody } from "../../utils/validate";
 import { loyaltyService } from "./loyalty.service";
+
+const spendPointsSchema = z.object({
+  amount: z.number().int().min(1).max(1000000),
+  reason: z.string().min(1).max(200),
+});
 
 const r = Router();
 r.use(requireAuth);
@@ -20,7 +27,7 @@ r.get("/leaderboard", async (_req, res) => {
   res.json(leaderboard);
 });
 
-r.post("/spend", async (req, res) => {
+r.post("/spend", validateBody(spendPointsSchema), async (req, res) => {
   const { amount, reason } = req.body;
   const result = await loyaltyService.spendPoints(req.user!.sub, amount, reason);
   res.json(result);
