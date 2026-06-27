@@ -11,6 +11,7 @@ import { badgeActionSchema } from "../modules/badges/badges.controller";
 import { createFaqSchema, faqSearchQuery } from "../modules/faq/faq.controller";
 import { autoReplySchema } from "../modules/autoreply/autoreply.controller";
 import { syncSchema } from "../modules/contactimport/contactimport.controller";
+import { upsertDraftSchema } from "../modules/drafts/drafts.controller";
 
 describe("Feed schemas", () => {
   describe("createPostSchema", () => {
@@ -489,5 +490,51 @@ describe("Contact import schema", () => {
       contacts: [{ phone: "+998901234567", displayName: "a".repeat(101) }],
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("Draft schema", () => {
+  it("accepts valid draft with content", () => {
+    const result = upsertDraftSchema.safeParse({ content: "Salom!" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts draft with attachments", () => {
+    const result = upsertDraftSchema.safeParse({
+      content: "Rasm",
+      attachments: [{ type: "image", url: "https://example.com/img.jpg" }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects content over 10000 chars", () => {
+    const result = upsertDraftSchema.safeParse({ content: "a".repeat(10001) });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects non-UUID replyToId", () => {
+    const result = upsertDraftSchema.safeParse({ content: "test", replyToId: "bad" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid attachment url", () => {
+    const result = upsertDraftSchema.safeParse({
+      attachments: [{ type: "file", url: "not-a-url" }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects more than 20 attachments", () => {
+    const attachments = Array.from({ length: 21 }, () => ({
+      type: "image",
+      url: "https://example.com/img.jpg",
+    }));
+    const result = upsertDraftSchema.safeParse({ attachments });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts empty object", () => {
+    const result = upsertDraftSchema.safeParse({});
+    expect(result.success).toBe(true);
   });
 });
