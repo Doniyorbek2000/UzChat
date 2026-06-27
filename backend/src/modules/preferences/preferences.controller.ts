@@ -4,11 +4,11 @@ import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
 import { preferencesService } from "./preferences.service";
 
-const setValueSchema = z.object({
+export const setValueSchema = z.object({
   value: z.union([z.string(), z.number(), z.boolean()]),
 });
 
-const setManySchema = z.record(z.string().max(100), z.union([z.string(), z.number(), z.boolean()])).refine(
+export const setManySchema = z.record(z.string().max(100), z.union([z.string(), z.number(), z.boolean()])).refine(
   (obj) => Object.keys(obj).length <= 50,
   { message: "Maksimum 50 ta sozlama bir vaqtda o'rnatish mumkin" },
 );

@@ -5,20 +5,20 @@ import { requireAdmin } from "../../middleware/admin.middleware";
 import { validateBody, validateQuery } from "../../utils/validate";
 import { giftsService } from "./gifts.service";
 
-const sendGiftSchema = z.object({
+export const sendGiftSchema = z.object({
   receiverId: z.string().uuid(),
   giftId: z.string().uuid(),
   message: z.string().max(500).optional(),
 });
 
-const createGiftSchema = z.object({
+export const createGiftSchema = z.object({
   name: z.string().min(1).max(100),
   icon: z.string().min(1).max(200),
   price: z.number().int().min(0),
   category: z.string().min(1).max(50),
 });
 
-const listGiftsQuery = z.object({
+export const listGiftsQuery = z.object({
   category: z.string().max(50).optional(),
 });
 

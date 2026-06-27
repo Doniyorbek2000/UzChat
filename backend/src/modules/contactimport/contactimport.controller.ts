@@ -4,7 +4,7 @@ import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
 import { contactImportService } from "./contactimport.service";
 
-const syncSchema = z.object({
+export const syncSchema = z.object({
   contacts: z.array(z.object({
     phone: z.string().min(5).max(20),
     displayName: z.string().max(100).optional(),

@@ -5,19 +5,19 @@ import { requireAdmin } from "../../middleware/admin.middleware";
 import { validateBody, validateQuery } from "../../utils/validate";
 import { greetingsService } from "./greetings.service";
 
-const sendCardSchema = z.object({
+export const sendCardSchema = z.object({
   receiverId: z.string().uuid(),
   cardId: z.string().uuid(),
   message: z.string().max(500).optional(),
 });
 
-const createCardSchema = z.object({
+export const createCardSchema = z.object({
   templateName: z.string().min(1).max(100),
   category: z.string().min(1).max(50),
   imageUrl: z.string().url().max(500),
 });
 
-const listCardsQuery = z.object({
+export const listCardsQuery = z.object({
   category: z.string().max(50).optional(),
 });
 

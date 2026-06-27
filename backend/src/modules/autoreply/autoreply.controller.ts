@@ -4,7 +4,7 @@ import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
 import { autoReplyService } from "./autoreply.service";
 
-const autoReplySchema = z.object({
+export const autoReplySchema = z.object({
   enabled: z.boolean(),
   message: z.string().max(500),
   startTime: z.string().max(30).optional(),

@@ -5,7 +5,7 @@ import { requireAdmin } from "../../middleware/admin.middleware";
 import { validateBody } from "../../utils/validate";
 import { badgesService } from "./badges.service";
 
-const badgeActionSchema = z.object({
+export const badgeActionSchema = z.object({
   userId: z.string().uuid(),
   badge: z.string().min(1).max(50),
 });

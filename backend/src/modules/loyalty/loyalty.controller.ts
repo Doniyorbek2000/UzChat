@@ -4,7 +4,7 @@ import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody } from "../../utils/validate";
 import { loyaltyService } from "./loyalty.service";
 
-const spendPointsSchema = z.object({
+export const spendPointsSchema = z.object({
   amount: z.number().int().min(1).max(1000000),
   reason: z.string().min(1).max(200),
 });

@@ -4,6 +4,13 @@ import { createStoreSchema, createProductSchema, createOrderSchema, updateOrderS
 import { createRedPacketSchema } from "../modules/redpackets/redpackets.schema";
 import { sendPaymentSchema, topUpSchema } from "../modules/payments/payments.schema";
 import { translateSchema } from "../modules/translate/translate.schema";
+import { sendGiftSchema, createGiftSchema, listGiftsQuery } from "../modules/gifts/gifts.controller";
+import { sendCardSchema, createCardSchema } from "../modules/greetings/greetings.controller";
+import { spendPointsSchema } from "../modules/loyalty/loyalty.controller";
+import { badgeActionSchema } from "../modules/badges/badges.controller";
+import { createFaqSchema, faqSearchQuery } from "../modules/faq/faq.controller";
+import { autoReplySchema } from "../modules/autoreply/autoreply.controller";
+import { syncSchema } from "../modules/contactimport/contactimport.controller";
 
 describe("Feed schemas", () => {
   describe("createPostSchema", () => {
@@ -242,6 +249,245 @@ describe("Translate schema", () => {
 
   it("rejects missing messageId", () => {
     const result = translateSchema.safeParse({ toLang: "uz" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("Gift schemas", () => {
+  describe("sendGiftSchema", () => {
+    it("accepts valid gift send", () => {
+      const result = sendGiftSchema.safeParse({
+        receiverId: "550e8400-e29b-41d4-a716-446655440000",
+        giftId: "550e8400-e29b-41d4-a716-446655440001",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts optional message", () => {
+      const result = sendGiftSchema.safeParse({
+        receiverId: "550e8400-e29b-41d4-a716-446655440000",
+        giftId: "550e8400-e29b-41d4-a716-446655440001",
+        message: "Tabriklayman!",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects non-UUID receiverId", () => {
+      const result = sendGiftSchema.safeParse({
+        receiverId: "invalid",
+        giftId: "550e8400-e29b-41d4-a716-446655440001",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects message over 500 chars", () => {
+      const result = sendGiftSchema.safeParse({
+        receiverId: "550e8400-e29b-41d4-a716-446655440000",
+        giftId: "550e8400-e29b-41d4-a716-446655440001",
+        message: "a".repeat(501),
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("createGiftSchema", () => {
+    it("accepts valid gift creation", () => {
+      const result = createGiftSchema.safeParse({
+        name: "Gul",
+        icon: "🌹",
+        price: 5000,
+        category: "flowers",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects non-integer price", () => {
+      const result = createGiftSchema.safeParse({
+        name: "Gul",
+        icon: "🌹",
+        price: 50.5,
+        category: "flowers",
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("listGiftsQuery", () => {
+    it("accepts valid category filter", () => {
+      const result = listGiftsQuery.safeParse({ category: "flowers" });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts empty query", () => {
+      const result = listGiftsQuery.safeParse({});
+      expect(result.success).toBe(true);
+    });
+  });
+});
+
+describe("Greeting card schemas", () => {
+  it("accepts valid card send", () => {
+    const result = sendCardSchema.safeParse({
+      receiverId: "550e8400-e29b-41d4-a716-446655440000",
+      cardId: "550e8400-e29b-41d4-a716-446655440001",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects non-UUID cardId", () => {
+    const result = sendCardSchema.safeParse({
+      receiverId: "550e8400-e29b-41d4-a716-446655440000",
+      cardId: "bad-id",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts valid card creation", () => {
+    const result = createCardSchema.safeParse({
+      templateName: "Bayram tabrigi",
+      category: "holiday",
+      imageUrl: "https://example.com/card.png",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid imageUrl", () => {
+    const result = createCardSchema.safeParse({
+      templateName: "Bayram",
+      category: "holiday",
+      imageUrl: "not-a-url",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("Loyalty schema", () => {
+  it("accepts valid spend points", () => {
+    const result = spendPointsSchema.safeParse({ amount: 100, reason: "Sovg'a" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects zero amount", () => {
+    const result = spendPointsSchema.safeParse({ amount: 0, reason: "test" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects amount over 1M", () => {
+    const result = spendPointsSchema.safeParse({ amount: 1000001, reason: "test" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty reason", () => {
+    const result = spendPointsSchema.safeParse({ amount: 50, reason: "" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("Badge schema", () => {
+  it("accepts valid badge action", () => {
+    const result = badgeActionSchema.safeParse({
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      badge: "early_adopter",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects non-UUID userId", () => {
+    const result = badgeActionSchema.safeParse({ userId: "invalid", badge: "test" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects badge over 50 chars", () => {
+    const result = badgeActionSchema.safeParse({
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      badge: "a".repeat(51),
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("FAQ schemas", () => {
+  it("accepts valid FAQ creation", () => {
+    const result = createFaqSchema.safeParse({
+      title: "Ro'yxatdan o'tish",
+      content: "Ilovani yuklab oling va ro'yxatdan o'ting",
+      category: "general",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects FAQ without title", () => {
+    const result = createFaqSchema.safeParse({ content: "test", category: "general" });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts valid search query", () => {
+    const result = faqSearchQuery.safeParse({ q: "parol" });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("AutoReply schema", () => {
+  it("accepts valid auto-reply config", () => {
+    const result = autoReplySchema.safeParse({
+      enabled: true,
+      message: "Hozir band, keyinroq javob beraman",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects message over 500 chars", () => {
+    const result = autoReplySchema.safeParse({
+      enabled: true,
+      message: "a".repeat(501),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts optional time range", () => {
+    const result = autoReplySchema.safeParse({
+      enabled: true,
+      message: "Kechasi javob bermayman",
+      startTime: "22:00",
+      endTime: "08:00",
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("Contact import schema", () => {
+  it("accepts valid contact sync", () => {
+    const result = syncSchema.safeParse({
+      contacts: [{ phone: "+998901234567", displayName: "Ali" }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty contacts array", () => {
+    const result = syncSchema.safeParse({ contacts: [] });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects phone shorter than 5 chars", () => {
+    const result = syncSchema.safeParse({
+      contacts: [{ phone: "123", displayName: "Test" }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects contacts array over 1000", () => {
+    const contacts = Array.from({ length: 1001 }, (_, i) => ({
+      phone: `+9989012345${String(i).padStart(2, "0")}`,
+      displayName: `User ${i}`,
+    }));
+    const result = syncSchema.safeParse({ contacts });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects displayName over 100 chars", () => {
+    const result = syncSchema.safeParse({
+      contacts: [{ phone: "+998901234567", displayName: "a".repeat(101) }],
+    });
     expect(result.success).toBe(false);
   });
 });

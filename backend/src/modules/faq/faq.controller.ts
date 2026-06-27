@@ -5,21 +5,21 @@ import { requireAdmin } from "../../middleware/admin.middleware";
 import { validateBody, validateQuery } from "../../utils/validate";
 import { faqService } from "./faq.service";
 
-const faqCategoryQuery = z.object({
+export const faqCategoryQuery = z.object({
   category: z.string().max(50).optional(),
 });
 
-const faqSearchQuery = z.object({
+export const faqSearchQuery = z.object({
   q: z.string().max(200).default(""),
 });
 
-const createFaqSchema = z.object({
+export const createFaqSchema = z.object({
   title: z.string().min(1).max(200),
   content: z.string().min(1).max(10000),
   category: z.string().min(1).max(50),
 });
 
-const updateFaqSchema = createFaqSchema.partial();
+export const updateFaqSchema = createFaqSchema.partial();
 
 const r = Router();
 r.use(requireAuth);
