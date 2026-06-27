@@ -1,13 +1,14 @@
 import React, { useCallback, useState, useRef } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
-  Image, TextInput, KeyboardAvoidingView, Platform,
+  TextInput, KeyboardAvoidingView, Platform,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { feedApi, PostComment } from "../../api/feed";
 import { useAuthStore } from "../../store/authStore";
+import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PostComments">;
@@ -78,13 +79,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <View style={styles.commentRow}>
-              {item.user.avatarUrl ? (
-                <Image source={{ uri: item.user.avatarUrl }} style={styles.avatar} />
-              ) : (
-                <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                  <Text style={styles.avatarText}>{item.user.displayName.charAt(0).toUpperCase()}</Text>
-                </View>
-              )}
+              <Avatar uri={item.user.avatarUrl} name={item.user.displayName} size={32} />
               <View style={{ flex: 1 }}>
                 <View style={styles.commentHeader}>
                   <Text style={styles.commentUser}>{item.user.displayName}</Text>
@@ -135,9 +130,6 @@ const styles = StyleSheet.create({
   emptyText: { color: colors.textSecondary },
   list: { padding: 16 },
   commentRow: { flexDirection: "row", marginBottom: 16, gap: 10, alignItems: "flex-start" },
-  avatar: { width: 32, height: 32, borderRadius: 16 },
-  avatarPlaceholder: { backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  avatarText: { color: "#fff", fontSize: 13, fontWeight: "700" },
   commentHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   commentUser: { fontSize: 13, fontWeight: "600", color: colors.text },
   commentDate: { fontSize: 11, color: colors.textSecondary },

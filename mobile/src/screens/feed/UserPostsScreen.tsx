@@ -6,14 +6,12 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { feedApi, Post } from "../../api/feed";
-import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "UserPosts">;
 
 export function UserPostsScreen({ route, navigation }: Props) {
   const { userId } = route.params;
-  const currentUserId = useAuthStore((s) => s.user?.id);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
