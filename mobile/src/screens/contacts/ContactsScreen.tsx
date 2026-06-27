@@ -18,6 +18,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { Avatar } from "../../components/Avatar";
+import { EmptyState } from "../../components/EmptyState";
 import { colors } from "../../theme/colors";
 import { Contact, ContactRequest, ContactSuggestion, OutgoingContactRequest } from "../../types";
 import { useContactsStore } from "../../store/contactsStore";
@@ -423,11 +424,11 @@ export function ContactsScreen({ navigation }: Props) {
             );
           }}
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>
-                {contacts.length === 0 ? "Hali kontaktlar yo'q" : "Hech narsa topilmadi"}
-              </Text>
-            </View>
+            <EmptyState
+              icon={contacts.length === 0 ? "👥" : "🔍"}
+              title={contacts.length === 0 ? "Hali kontaktlar yo'q" : "Hech narsa topilmadi"}
+              subtitle={contacts.length === 0 ? "Kontakt qo'shish uchun yuqoridagi + tugmani bosing" : undefined}
+            />
           }
         />
         {!sortOnlineFirst && !search.trim() && sections.length > 1 && (

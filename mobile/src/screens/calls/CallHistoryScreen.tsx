@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { callsApi, CallLog } from "../../api/calls";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { EmptyState } from "../../components/EmptyState";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CallHistory">;
@@ -105,9 +106,7 @@ export function CallHistoryScreen({ navigation }: Props) {
           );
         }}
         ListEmptyComponent={
-          <View style={styles.center}>
-            <Text style={styles.emptyText}>Hali qo'ng'iroqlar yo'q</Text>
-          </View>
+          <EmptyState icon="📞" title="Hali qo'ng'iroqlar yo'q" subtitle="Qo'ng'iroq qilish uchun kontaktni tanlang" />
         }
       />
     </View>

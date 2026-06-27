@@ -6,6 +6,7 @@ import { MainTabScreenProps } from "../../navigation/types";
 import { useChatStore, DecryptedMessage } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { EmptyState } from "../../components/EmptyState";
 import { colors } from "../../theme/colors";
 import { ChatFolder, Conversation, ConversationParticipant } from "../../types";
 import { getConversationDisplay, formatTime, isConversationUnread } from "../../utils/conversation";
@@ -707,9 +708,11 @@ export function ChatListScreen({ navigation }: Props) {
           ) : null
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>{query ? "Hech narsa topilmadi" : "Hali suhbatlar yo'q"}</Text>
-          </View>
+          <EmptyState
+            icon={query ? "🔍" : "💬"}
+            title={query ? "Hech narsa topilmadi" : "Hali suhbatlar yo'q"}
+            subtitle={query ? undefined : "Yangi suhbat boshlash uchun + tugmasini bosing"}
+          />
         }
       />
       {!selectionMode && (

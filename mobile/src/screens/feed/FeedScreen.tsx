@@ -9,6 +9,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { feedApi, Post } from "../../api/feed";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { EmptyState } from "../../components/EmptyState";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Feed">;
@@ -173,10 +174,13 @@ export function FeedScreen({ navigation }: Props) {
       onEndReached={() => nextCursor && loadPosts(nextCursor)}
       onEndReachedThreshold={0.5}
       ListEmptyComponent={
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>Hali postlar yo'q</Text>
-          <Text style={styles.emptySubText}>Birinchi postingizni yarating!</Text>
-        </View>
+        <EmptyState
+          icon="📝"
+          title="Hali postlar yo'q"
+          subtitle="Birinchi postingizni yarating!"
+          actionLabel="Post yaratish"
+          onAction={() => navigation.navigate("CreatePost")}
+        />
       }
     />
   );

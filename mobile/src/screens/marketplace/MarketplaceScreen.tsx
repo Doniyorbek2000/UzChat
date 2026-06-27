@@ -7,6 +7,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Store } from "../../api/marketplace";
+import { EmptyState } from "../../components/EmptyState";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Marketplace">;
@@ -129,9 +130,13 @@ export function MarketplaceScreen({ navigation }: Props) {
             </TouchableOpacity>
           )}
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>Do'konlar topilmadi</Text>
-            </View>
+            <EmptyState
+              icon="🛒"
+              title="Do'konlar topilmadi"
+              subtitle="Yangi do'kon ochish uchun pastdagi tugmani bosing"
+              actionLabel="Do'kon ochish"
+              onAction={() => navigation.navigate("CreateStore")}
+            />
           }
         />
       )}

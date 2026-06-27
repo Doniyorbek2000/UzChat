@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { paymentsApi, Payment, WalletBalance } from "../../api/payments";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { EmptyState } from "../../components/EmptyState";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Wallet">;
@@ -128,9 +129,7 @@ export function WalletScreen({ navigation }: Props) {
           );
         }}
         ListEmptyComponent={
-          <View style={styles.center}>
-            <Text style={styles.emptyText}>Hali to'lovlar yo'q</Text>
-          </View>
+          <EmptyState icon="💰" title="Hali to'lovlar yo'q" subtitle="Birinchi to'lovni yuborish uchun pastdagi tugmani bosing" />
         }
       />
     </View>
