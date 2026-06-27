@@ -71,7 +71,7 @@ export function ChatExportsScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   list: { padding: 12, paddingBottom: 20 },
   card: { backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 8 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },

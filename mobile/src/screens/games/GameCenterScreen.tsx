@@ -68,7 +68,7 @@ export function GameCenterScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   categories: { flexDirection: "row", padding: 12, gap: 6, flexWrap: "wrap" },
   catBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: "#E5E5EA" },
   catBtnActive: { backgroundColor: colors.primary },
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 8, paddingBottom: 20 },
   row: { justifyContent: "space-between", paddingHorizontal: 4 },
   gameCard: { width: "48%", backgroundColor: "#fff", borderRadius: 14, padding: 14, marginBottom: 10, alignItems: "center" },
-  gameIcon: { width: 56, height: 56, borderRadius: 14, backgroundColor: "#F2F2F7", alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  gameIcon: { width: 56, height: 56, borderRadius: 14, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", marginBottom: 8 },
   gameIconText: { fontSize: 28 },
   gameTitle: { fontSize: 14, fontWeight: "600", color: "#333", textAlign: "center" },
   gameMeta: { fontSize: 11, color: "#888", marginTop: 4 },

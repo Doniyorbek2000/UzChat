@@ -70,7 +70,7 @@ export function AutoReplyScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7", padding: 16 },
+  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
   toggleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#fff", padding: 14, borderRadius: 10, marginBottom: 12 },
   toggleLabel: { fontSize: 15, fontWeight: "600", color: "#333" },
   toggleHint: { fontSize: 11, color: "#888", marginTop: 2 },

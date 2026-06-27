@@ -79,7 +79,7 @@ export function MySubscriptionsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   list: { padding: 12, paddingBottom: 20 },
   subCard: { flexDirection: "row", backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 8, alignItems: "center", gap: 12 },
   subAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#FF9500", alignItems: "center", justifyContent: "center" },

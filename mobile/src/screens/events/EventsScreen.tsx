@@ -87,7 +87,7 @@ export function EventsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   list: { padding: 12, paddingBottom: 20 },
   eventCard: { flexDirection: "row", backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 10, borderLeftWidth: 4, gap: 14 },
   dateColumn: { alignItems: "center", width: 50 },
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   eventGroup: { fontSize: 12, color: "#888", marginBottom: 2 },
   eventCreator: { fontSize: 11, color: "#999", marginBottom: 8 },
   rsvpRow: { flexDirection: "row", gap: 6 },
-  rsvpBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14, backgroundColor: "#F2F2F7" },
+  rsvpBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14, backgroundColor: colors.surface },
   rsvpBtnActive: { backgroundColor: colors.primary },
   rsvpBtnText: { fontSize: 11, fontWeight: "600", color: "#666" },
   rsvpBtnTextActive: { color: "#fff" },

@@ -95,7 +95,7 @@ export function ReferralsScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   codeCard: { backgroundColor: colors.primary, margin: 16, borderRadius: 16, padding: 24, alignItems: "center" },
   codeLabel: { fontSize: 13, color: "rgba(255,255,255,0.8)", marginBottom: 8 },
   code: { fontSize: 32, fontWeight: "800", color: "#fff", letterSpacing: 4 },

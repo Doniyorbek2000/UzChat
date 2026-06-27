@@ -80,7 +80,7 @@ export function ChannelStatsScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, paddingBottom: 40 },
   statsGrid: { flexDirection: "row", gap: 10, marginBottom: 20 },
   statCard: {

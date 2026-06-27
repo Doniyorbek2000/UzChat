@@ -87,7 +87,7 @@ export function NotificationLogScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   markAllBtn: { padding: 12, alignItems: "center" },
   markAllText: { fontSize: 14, fontWeight: "600", color: colors.primary },
   list: { paddingHorizontal: 12, paddingBottom: 20 },

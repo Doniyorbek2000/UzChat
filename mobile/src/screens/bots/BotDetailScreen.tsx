@@ -101,7 +101,7 @@ export function BotDetailScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   content: { paddingBottom: 40 },
   header: { backgroundColor: "#fff", padding: 24, alignItems: "center", marginBottom: 8 },
   avatar: {

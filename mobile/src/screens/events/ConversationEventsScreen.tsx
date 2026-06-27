@@ -131,7 +131,7 @@ export function ConversationEventsScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   createBtn: { margin: 12, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   createBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
   form: { marginHorizontal: 12, marginBottom: 8, gap: 8 },
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   eventDesc: { fontSize: 13, color: "#666", marginBottom: 4 },
   eventMeta: { fontSize: 11, color: "#999", marginBottom: 8 },
   rsvpRow: { flexDirection: "row", gap: 6 },
-  rsvpBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14, backgroundColor: "#F2F2F7" },
+  rsvpBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14, backgroundColor: colors.surface },
   rsvpBtnActive: { backgroundColor: colors.primary },
   rsvpText: { fontSize: 11, fontWeight: "600", color: "#666" },
   rsvpTextActive: { color: "#fff" },

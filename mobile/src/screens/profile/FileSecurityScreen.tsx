@@ -210,7 +210,7 @@ export function FileSecurityScreen({}: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, paddingBottom: 40 },
   sectionTitle: { fontSize: 14, fontWeight: "600", color: "#666", marginTop: 16, marginBottom: 8, marginLeft: 4, textTransform: "uppercase" },
   card: { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 8 },
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   settingHint: { fontSize: 12, color: "#888", marginTop: 2 },
   divider: { height: StyleSheet.hairlineWidth, backgroundColor: "#E5E5EA", marginVertical: 12 },
   sizeOptions: { flexDirection: "row", gap: 8 },
-  sizeBtn: { flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: "#F2F2F7", alignItems: "center" },
+  sizeBtn: { flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: colors.surface, alignItems: "center" },
   sizeBtnActive: { backgroundColor: colors.primary },
   sizeBtnText: { fontSize: 14, fontWeight: "600", color: "#666" },
   sizeBtnTextActive: { color: "#fff" },
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   addTypeRow: { flexDirection: "row", gap: 8 },
   addTypeInput: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: colors.surface,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,

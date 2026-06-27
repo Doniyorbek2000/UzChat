@@ -174,7 +174,7 @@ export function GlobalSearchScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   searchBar: { paddingHorizontal: 12, paddingTop: 8 },
   searchInput: { backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, color: "#333" },
   tabs: { flexDirection: "row", paddingHorizontal: 12, paddingTop: 10, gap: 6 },

@@ -142,7 +142,7 @@ export function ForumTopicsScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   createBtn: { margin: 12, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   createBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
   createForm: { marginHorizontal: 12, marginBottom: 8, gap: 8 },

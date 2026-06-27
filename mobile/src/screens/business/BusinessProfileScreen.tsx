@@ -152,7 +152,7 @@ export function BusinessProfileScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, paddingBottom: 40 },
   verifiedBadge: { backgroundColor: "#E8F5E9", borderRadius: 10, padding: 10, alignItems: "center", marginBottom: 12 },
   verifiedText: { fontSize: 13, fontWeight: "600", color: "#2E7D32" },

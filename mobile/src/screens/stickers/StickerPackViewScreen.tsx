@@ -87,7 +87,7 @@ export function StickerPackViewScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   header: { flexDirection: "row", padding: 16, backgroundColor: "#fff", gap: 12, alignItems: "center" },
   cover: { width: 80, height: 80, borderRadius: 16 },
   headerInfo: { flex: 1 },

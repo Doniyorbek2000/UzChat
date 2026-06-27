@@ -134,7 +134,7 @@ export function CloudStorageScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   usageBar: { backgroundColor: "#fff", padding: 12, alignItems: "center" },
   usageText: { fontSize: 12, color: "#888" },
   backBtn: { paddingHorizontal: 16, paddingVertical: 8 },

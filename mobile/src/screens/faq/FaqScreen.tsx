@@ -62,7 +62,7 @@ export function FaqScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   searchInput: { margin: 12, backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: "#333" },
   loader: { marginTop: 40 },
   list: { paddingHorizontal: 12, paddingBottom: 20 },

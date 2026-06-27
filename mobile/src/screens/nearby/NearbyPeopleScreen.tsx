@@ -135,7 +135,7 @@ export function NearbyPeopleScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   controls: { backgroundColor: "#fff", padding: 16, marginBottom: 8 },
   visibilityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   controlLabel: { fontSize: 15, fontWeight: "600", color: "#333" },

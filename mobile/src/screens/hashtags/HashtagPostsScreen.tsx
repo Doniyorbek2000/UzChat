@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator }
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { hashtagsApi } from "../../api/hashtags";
+import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "HashtagPosts">;
@@ -46,9 +47,7 @@ export function HashtagPostsScreen({ route }: Props) {
         renderItem={({ item }) => (
           <View style={styles.postCard}>
             <View style={styles.postHeader}>
-              <View style={styles.postAvatar}>
-                <Text style={styles.postAvatarText}>{item.user?.displayName?.charAt(0) ?? "?"}</Text>
-              </View>
+              <Avatar uri={item.user?.avatarUrl} name={item.user?.displayName ?? "?"} size={36} />
               <View>
                 <Text style={styles.postAuthor}>{item.user?.displayName}</Text>
                 <Text style={styles.postDate}>{new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
@@ -76,21 +75,19 @@ export function HashtagPostsScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   header: { backgroundColor: colors.primary, padding: 20, alignItems: "center" },
   hashtagText: { fontSize: 24, fontWeight: "800", color: "#fff" },
   postCount: { fontSize: 13, color: "rgba(255,255,255,0.8)", marginTop: 4 },
   list: { padding: 12, paddingBottom: 20 },
-  postCard: { backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 8 },
+  postCard: { backgroundColor: colors.background, borderRadius: 12, padding: 14, marginBottom: 8 },
   postHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
-  postAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  postAvatarText: { fontSize: 14, fontWeight: "700", color: "#fff" },
-  postAuthor: { fontSize: 14, fontWeight: "600", color: "#333" },
-  postDate: { fontSize: 11, color: "#888" },
-  postContent: { fontSize: 14, color: "#333", lineHeight: 20, marginBottom: 8 },
+  postAuthor: { fontSize: 14, fontWeight: "600", color: colors.text },
+  postDate: { fontSize: 11, color: colors.textSecondary },
+  postContent: { fontSize: 14, color: colors.text, lineHeight: 20, marginBottom: 8 },
   postStats: { flexDirection: "row", gap: 16 },
-  statText: { fontSize: 12, color: "#888" },
+  statText: { fontSize: 12, color: colors.textSecondary },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48, color: "#ccc", fontWeight: "800" },
-  emptyText: { fontSize: 16, fontWeight: "600", color: "#333", marginTop: 12 },
+  emptyIcon: { fontSize: 48, color: colors.border, fontWeight: "800" },
+  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
 });

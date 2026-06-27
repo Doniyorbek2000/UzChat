@@ -116,11 +116,11 @@ export function QRPaymentScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7", padding: 16 },
+  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
   createSection: { backgroundColor: "#fff", borderRadius: 14, padding: 16, marginBottom: 16 },
   sectionTitle: { fontSize: 16, fontWeight: "700", color: "#333", marginBottom: 12 },
   input: {
-    backgroundColor: "#F2F2F7",
+    backgroundColor: colors.surface,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,

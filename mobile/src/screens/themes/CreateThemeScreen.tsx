@@ -113,7 +113,7 @@ export function CreateThemeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16, paddingBottom: 40 },
   label: { fontSize: 14, fontWeight: "600", color: "#666", marginTop: 16, marginBottom: 6 },
   input: { backgroundColor: "#fff", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: "#333" },

@@ -64,10 +64,10 @@ export function WishlistScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   list: { padding: 12, paddingBottom: 20 },
   itemCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 6, gap: 12 },
-  itemImage: { width: 56, height: 56, borderRadius: 10, backgroundColor: "#F2F2F7", alignItems: "center", justifyContent: "center" },
+  itemImage: { width: 56, height: 56, borderRadius: 10, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   itemImageText: { fontSize: 24 },
   itemInfo: { flex: 1 },
   itemName: { fontSize: 15, fontWeight: "600", color: "#333" },

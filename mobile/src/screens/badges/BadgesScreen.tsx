@@ -47,15 +47,15 @@ export function BadgesScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   list: { padding: 12, paddingBottom: 20 },
   row: { justifyContent: "space-between", marginBottom: 8 },
-  badgeCard: { width: "31%", backgroundColor: "#fff", borderRadius: 14, padding: 14, alignItems: "center" },
+  badgeCard: { width: "31%", backgroundColor: colors.background, borderRadius: 14, padding: 14, alignItems: "center" },
   badgeIcon: { fontSize: 36, marginBottom: 6 },
-  badgeLabel: { fontSize: 12, fontWeight: "600", color: "#333", textAlign: "center" },
-  badgeDate: { fontSize: 10, color: "#888", marginTop: 4 },
+  badgeLabel: { fontSize: 12, fontWeight: "600", color: colors.text, textAlign: "center" },
+  badgeDate: { fontSize: 10, color: colors.textSecondary, marginTop: 4 },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: "#333", marginTop: 12 },
-  emptyHint: { fontSize: 13, color: "#888", marginTop: 4 },
+  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
+  emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
 });

@@ -191,7 +191,7 @@ export function DiscoverScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   content: { padding: 16 },
   searchContainer: { marginBottom: 12 },
   searchInput: {

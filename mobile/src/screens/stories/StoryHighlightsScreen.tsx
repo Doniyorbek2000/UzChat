@@ -96,7 +96,7 @@ export function StoryHighlightsScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   list: { padding: 12, paddingBottom: 20 },
   highlightCard: { backgroundColor: "#fff", borderRadius: 14, marginBottom: 12, overflow: "hidden" },
   highlightHeader: { flexDirection: "row", padding: 14, alignItems: "center", gap: 12 },

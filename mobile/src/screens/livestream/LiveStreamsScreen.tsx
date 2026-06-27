@@ -87,7 +87,7 @@ export function LiveStreamsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   tabs: { flexDirection: "row", padding: 12, gap: 8 },
   tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: "#E5E5EA", alignItems: "center" },
   tabActive: { backgroundColor: "#FF3B30" },

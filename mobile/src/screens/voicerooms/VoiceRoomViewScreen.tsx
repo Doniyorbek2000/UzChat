@@ -167,7 +167,7 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   header: { padding: 20, alignItems: "center", backgroundColor: "#fff", borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
   statusRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 },
   statusDot: { width: 10, height: 10, borderRadius: 5 },

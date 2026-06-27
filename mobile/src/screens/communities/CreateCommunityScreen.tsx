@@ -76,7 +76,7 @@ export function CreateCommunityScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7", padding: 16 },
+  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
   previewAvatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#4CAF50", alignSelf: "center", alignItems: "center", justifyContent: "center", marginVertical: 20 },
   previewAvatarText: { fontSize: 34, fontWeight: "700", color: "#fff" },
   label: { fontSize: 14, fontWeight: "600", color: "#666", marginTop: 16, marginBottom: 6 },
