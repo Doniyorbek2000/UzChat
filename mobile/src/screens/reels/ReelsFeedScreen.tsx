@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Dimensions } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../navigation/types";
+import { MainTabScreenProps } from "../../navigation/types";
 import { reelsApi, Reel } from "../../api/reels";
 import { colors } from "../../theme/colors";
 
-type Props = NativeStackScreenProps<RootStackParamList, "ReelsFeed">;
+type Props = MainTabScreenProps<"Reels">;
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 36) / 2;

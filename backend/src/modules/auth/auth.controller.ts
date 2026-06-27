@@ -18,6 +18,16 @@ export const authController = {
     res.status(201).json(result);
   },
 
+  async requestLoginOtp(req: Request, res: Response) {
+    await authService.requestLoginOtp(req.body);
+    res.status(204).send();
+  },
+
+  async verifyLoginOtp(req: Request, res: Response) {
+    const result = await authService.verifyLoginOtp(req.body, req.headers["user-agent"]);
+    res.json(result);
+  },
+
   async login(req: Request, res: Response) {
     const ip = req.ip ?? req.socket.remoteAddress ?? null;
     const result = await authService.login(req.body, req.headers["user-agent"], ip);

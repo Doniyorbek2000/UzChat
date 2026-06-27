@@ -14,7 +14,8 @@ import {
   RefreshControl,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { MainTabScreenProps } from "../../navigation/types";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
@@ -23,7 +24,7 @@ import { useContactsStore } from "../../store/contactsStore";
 import { useChatStore } from "../../store/chatStore";
 import { formatTime } from "../../utils/conversation";
 
-type Props = MainTabScreenProps<"Contacts">;
+type Props = NativeStackScreenProps<RootStackParamList, "Contacts">;
 
 export function ContactsScreen({ navigation }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);

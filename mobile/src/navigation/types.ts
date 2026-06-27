@@ -21,13 +21,14 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Chats: undefined;
-  Contacts: undefined;
+  Reels: undefined;
   Discover: undefined;
   Profile: undefined;
 };
 
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
+  Contacts: undefined;
   ChatRoom: { conversationId: string; title: string; highlightMessageId?: string };
   NewChat: undefined;
   NewGroup: undefined;
@@ -112,7 +113,6 @@ export type RootStackParamList = {
   BotStore: undefined;
   BotDetail: { botId: string };
   CreateBot: undefined;
-  ReelsFeed: undefined;
   CreateReel: undefined;
   FileSecurity: undefined;
   ForumTopics: { conversationId: string };

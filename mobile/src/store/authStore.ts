@@ -28,6 +28,8 @@ interface AuthState {
     phone: string,
     password: string
   ) => Promise<{ requires2FA: true; pendingToken: string; hint: string | null } | { requires2FA: false }>;
+  requestLoginOtp: (phone: string) => Promise<void>;
+  verifyLoginOtp: (phone: string, code: string) => Promise<void>;
   completeTwoFactorLogin: (pendingToken: string, password: string) => Promise<void>;
   requestTwoFactorRecovery: (pendingToken: string) => Promise<void>;
   recoverTwoFactorLogin: (pendingToken: string, code: string) => Promise<void>;
@@ -108,6 +110,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
     return { requires2FA: false };
+  },
+
+  requestLoginOtp: async (phone) => {
+    await authApi.requestLoginOtp(phone);
+  },
+
+  verifyLoginOtp: async (phone, code) => {
+    const keyPair = await ensureKeyPair();
+    const { user, accessToken, refreshToken } = await authApi.verifyLoginOtp(phone, code);
+    await secureStorage.setTokens(accessToken, refreshToken);
+    connectSocket();
+    set({ user, keyPair, isAuthenticated: true });
+    registerForPushNotificationsAsync().catch(() => {});
   },
 
   completeTwoFactorLogin: async (pendingToken, password) => {

@@ -20,10 +20,12 @@ import {
 } from "../../utils/otp";
 import {
   LoginInput,
+  RequestLoginOtpInput,
   RequestOtpInput,
   RequestPasswordResetInput,
   RequestPhoneChangeInput,
   ResetPasswordInput,
+  VerifyLoginOtpInput,
   VerifyOtpInput,
   VerifyPhoneChangeInput,
   VerifyTwoFactorInput,
@@ -221,6 +223,52 @@ export const authService = {
     }
 
     await prisma.user.update({ where: { id: user.id }, data: { lastSeenAt: new Date() } });
+
+    const tokens = await issueTokens(user, userAgent);
+    notifyNewLogin(user.id, userAgent);
+    return { user: toPublicUser(user), ...tokens };
+  },
+
+  async requestLoginOtp({ phone }: RequestLoginOtpInput) {
+    const user = await prisma.user.findUnique({ where: { phone }, select: { id: true } });
+    if (!user) throw Errors.badRequest("Bu raqam ro'yxatdan o'tmagan");
+
+    await assertOtpCooldown(phone);
+
+    const code = generateOtpCode();
+    const codeHash = await hashOtpCode(code);
+
+    await prisma.otpCode.create({
+      data: { phone, codeHash, expiresAt: new Date(Date.now() + OTP_TTL_MS) },
+    });
+
+    await sendOtpSms(phone, code);
+  },
+
+  async verifyLoginOtp({ phone, code }: VerifyLoginOtpInput, userAgent?: string | null) {
+    const user = await prisma.user.findUnique({ where: { phone } });
+    if (!user) throw Errors.badRequest("Bu raqam ro'yxatdan o'tmagan");
+
+    const otp = await prisma.otpCode.findFirst({
+      where: { phone },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!otp || otp.expiresAt < new Date()) {
+      throw Errors.badRequest("Tasdiqlash kodi muddati o'tgan, qaytadan so'rang");
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      throw Errors.badRequest("Urinishlar soni tugadi, qaytadan so'rang");
+    }
+
+    const valid = await verifyOtpCode(code, otp.codeHash);
+    if (!valid) {
+      await prisma.otpCode.update({ where: { id: otp.id }, data: { attempts: { increment: 1 } } });
+      throw Errors.badRequest("Tasdiqlash kodi noto'g'ri");
+    }
+
+    await prisma.otpCode.delete({ where: { id: otp.id } });
+    await prisma.user.update({ where: { id: user.id }, data: { lastSeenAt: new Date(), failedLoginAttempts: 0, lockedUntil: null } });
 
     const tokens = await issueTokens(user, userAgent);
     notifyNewLogin(user.id, userAgent);

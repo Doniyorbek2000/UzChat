@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Share, Modal, FlatList, Pressable } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Share, Modal, FlatList, Pressable, ScrollView } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
@@ -223,7 +223,7 @@ export function ProfileScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onChangeAvatar} disabled={uploadingAvatar}>
           <Avatar uri={user.avatarUrl} name={user.displayName} size={72} />
@@ -611,7 +611,7 @@ export function ProfileScreen({ navigation }: Props) {
           </Pressable>
         </Pressable>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 

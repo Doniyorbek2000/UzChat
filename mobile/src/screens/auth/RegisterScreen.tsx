@@ -1,5 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ScrollView,
+} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -10,17 +23,23 @@ type Props = NativeStackScreenProps<AuthStackParamList, "Register">;
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,24}$/;
 
+type Step = "phone" | "otp" | "profile";
+
 export function RegisterScreen({ navigation }: Props) {
   const requestRegisterOtp = useAuthStore((s) => s.requestRegisterOtp);
+  const [step, setStep] = useState<Step>("phone");
+  const [phone, setPhone] = useState("+998");
+  const [code, setCode] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
-  const [phone, setPhone] = useState("+998");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const codeRef = useRef<TextInput>(null);
   const usernameRef = useRef<TextInput>(null);
-  const phoneRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -42,33 +61,84 @@ export function RegisterScreen({ navigation }: Props) {
     };
   }, [username]);
 
-  const onSubmit = async () => {
-    if (!displayName || !username || !phone || !password) {
-      Alert.alert("Xatolik", "Barcha maydonlarni to'ldiring");
+  const startCountdown = () => {
+    setCountdown(60);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const onRequestOtp = async () => {
+    if (phone.trim().length < 10) {
+      Alert.alert("Xatolik", "Telefon raqamni to'g'ri kiriting");
       return;
     }
-    if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
-      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak");
+    setLoading(true);
+    try {
+      await requestRegisterOtp(phone.trim());
+      setStep("otp");
+      startCountdown();
+      setTimeout(() => codeRef.current?.focus(), 300);
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "SMS yuborishda xatolik");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onVerifyCode = () => {
+    if (code.length !== 6) {
+      Alert.alert("Xatolik", "6 xonali kodni kiriting");
+      return;
+    }
+    setStep("profile");
+  };
+
+  const onResendOtp = async () => {
+    if (countdown > 0) return;
+    setLoading(true);
+    try {
+      await requestRegisterOtp(phone.trim());
+      startCountdown();
+      Alert.alert("Yuborildi", "Yangi tasdiqlash kodi yuborildi");
+    } catch (err: any) {
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Qaytadan yuborishda xatolik");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onComplete = async () => {
+    if (!displayName.trim()) {
+      Alert.alert("Xatolik", "Ismingizni kiriting");
+      return;
+    }
+    if (!USERNAME_PATTERN.test(username.trim())) {
+      Alert.alert("Xatolik", "Username 3-24 ta belgi, faqat harf, raqam va _ bo'lishi kerak");
       return;
     }
     if (usernameStatus === "taken") {
       Alert.alert("Xatolik", "Bu username band");
       return;
     }
-    setLoading(true);
-    try {
-      await requestRegisterOtp(phone.trim());
-      navigation.navigate("VerifyOtp", {
-        phone: phone.trim(),
-        displayName: displayName.trim(),
-        username: username.trim(),
-        password,
-      });
-    } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Ro'yxatdan o'tishda xatolik");
-    } finally {
-      setLoading(false);
+    if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak");
+      return;
     }
+
+    navigation.navigate("VerifyOtp", {
+      phone: phone.trim(),
+      displayName: displayName.trim(),
+      username: username.trim(),
+      password,
+    });
   };
 
   return (
@@ -77,60 +147,142 @@ export function RegisterScreen({ navigation }: Props) {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Ro'yxatdan o'tish</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Ismingiz"
-            value={displayName}
-            onChangeText={setDisplayName}
-            returnKeyType="next"
-            onSubmitEditing={() => usernameRef.current?.focus()}
-          />
-          <View style={styles.usernameWrapper}>
-            <TextInput
-              ref={usernameRef}
-              style={[styles.input, styles.usernameInput]}
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              returnKeyType="next"
-              onSubmitEditing={() => phoneRef.current?.focus()}
-            />
-            {usernameStatus === "checking" && <ActivityIndicator style={styles.usernameStatusIcon} size="small" color={colors.textSecondary} />}
-            {usernameStatus === "available" && <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>}
-            {usernameStatus === "taken" && <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>}
-          </View>
-          {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
-          {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
-          <TextInput
-            ref={phoneRef}
-            style={styles.input}
-            placeholder="+998901234567"
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
-            autoCapitalize="none"
-            returnKeyType="next"
-            onSubmitEditing={() => passwordRef.current?.focus()}
-          />
-          <TextInput
-            ref={passwordRef}
-            style={styles.input}
-            placeholder="Parol (kamida 10 ta belgi, AaBb1)"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            returnKeyType="go"
-            onSubmitEditing={onSubmit}
-          />
+          {step === "phone" && (
+            <>
+              <Text style={styles.subtitle}>Telefon raqamingizni kiriting</Text>
+              <Text style={styles.hint}>Tasdiqlash kodi SMS orqali yuboriladi</Text>
 
-          <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Davom etish</Text>}
-          </TouchableOpacity>
+              <TextInput
+                style={styles.input}
+                placeholder="+998901234567"
+                keyboardType="phone-pad"
+                value={phone}
+                onChangeText={setPhone}
+                autoCapitalize="none"
+                returnKeyType="go"
+                onSubmitEditing={onRequestOtp}
+                accessibilityLabel="Telefon raqam"
+              />
 
-          <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-            <Text style={styles.link}>Hisobingiz bormi? Kirish</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={onRequestOtp}
+                disabled={loading}
+              >
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Davom etish</Text>}
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                <Text style={styles.link}>Hisobingiz bormi? Kirish</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {step === "otp" && (
+            <>
+              <Text style={styles.subtitle}>Tasdiqlash kodi</Text>
+              <Text style={styles.hint}>{phone} raqamiga yuborilgan 6 xonali kodni kiriting</Text>
+
+              <TextInput
+                ref={codeRef}
+                style={[styles.input, styles.codeInput]}
+                placeholder="000000"
+                keyboardType="number-pad"
+                value={code}
+                onChangeText={(text) => setCode(text.replace(/\D/g, "").slice(0, 6))}
+                maxLength={6}
+                returnKeyType="go"
+                onSubmitEditing={onVerifyCode}
+                autoFocus
+                accessibilityLabel="Tasdiqlash kodi"
+              />
+
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={onVerifyCode}
+                disabled={loading}
+              >
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={onResendOtp} disabled={countdown > 0}>
+                <Text style={[styles.link, countdown > 0 && styles.linkDisabled]}>
+                  {countdown > 0 ? `Qaytadan yuborish (${countdown}s)` : "Qaytadan yuborish"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => { setStep("phone"); setCode(""); }}>
+                <Text style={styles.link}>Raqamni o'zgartirish</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {step === "profile" && (
+            <>
+              <Text style={styles.subtitle}>Profilingizni yarating</Text>
+
+              <TextInput
+                style={styles.input}
+                placeholder="Ismingiz"
+                value={displayName}
+                onChangeText={setDisplayName}
+                returnKeyType="next"
+                onSubmitEditing={() => usernameRef.current?.focus()}
+                accessibilityLabel="Ism"
+              />
+
+              <View style={styles.usernameWrapper}>
+                <TextInput
+                  ref={usernameRef}
+                  style={[styles.input, styles.usernameInput]}
+                  placeholder="Username"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
+                  accessibilityLabel="Username"
+                />
+                {usernameStatus === "checking" && (
+                  <ActivityIndicator style={styles.usernameStatusIcon} size="small" color={colors.textSecondary} />
+                )}
+                {usernameStatus === "available" && (
+                  <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>
+                )}
+                {usernameStatus === "taken" && (
+                  <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>
+                )}
+              </View>
+              {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
+              {usernameStatus === "available" && (
+                <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>
+              )}
+
+              <TextInput
+                ref={passwordRef}
+                style={styles.input}
+                placeholder="Parol (kamida 10 ta belgi, AaBb1)"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                returnKeyType="go"
+                onSubmitEditing={onComplete}
+                accessibilityLabel="Parol"
+              />
+
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={onComplete}
+                disabled={loading}
+              >
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Ro'yxatdan o'tish</Text>}
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => setStep("otp")}>
+                <Text style={styles.link}>Orqaga</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
@@ -140,7 +292,9 @@ export function RegisterScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scrollContent: { flexGrow: 1, justifyContent: "center", padding: 24 },
-  title: { fontSize: 24, fontWeight: "700", color: colors.text, textAlign: "center", marginBottom: 32 },
+  title: { fontSize: 28, fontWeight: "700", color: colors.primary, textAlign: "center", marginBottom: 8 },
+  subtitle: { fontSize: 18, fontWeight: "600", color: colors.text, textAlign: "center", marginBottom: 8 },
+  hint: { fontSize: 14, color: colors.textSecondary, textAlign: "center", marginBottom: 24 },
   input: {
     backgroundColor: colors.surface,
     borderRadius: 8,
@@ -151,6 +305,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  codeInput: {
+    textAlign: "center",
+    fontSize: 24,
+    letterSpacing: 8,
+    fontWeight: "700",
+  },
   button: {
     backgroundColor: colors.primary,
     borderRadius: 8,
@@ -158,8 +318,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
+  buttonDisabled: { opacity: 0.7 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   link: { color: colors.primary, textAlign: "center", marginTop: 20, fontSize: 14 },
+  linkDisabled: { color: colors.textSecondary },
   usernameWrapper: { position: "relative" },
   usernameInput: { paddingRight: 40 },
   usernameStatusIcon: { position: "absolute", right: 14, top: 14, fontSize: 18, fontWeight: "700" },

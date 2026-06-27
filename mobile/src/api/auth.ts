@@ -29,6 +29,16 @@ export const authApi = {
     return apiClient.post<LoginResult>("/auth/login", { phone, password }).then((r) => r.data);
   },
 
+  requestLoginOtp(phone: string) {
+    return apiClient.post("/auth/login/request-otp", { phone });
+  },
+
+  verifyLoginOtp(phone: string, code: string) {
+    return apiClient
+      .post<{ user: AuthUser } & AuthTokens>("/auth/login/verify-otp", { phone, code })
+      .then((r) => r.data);
+  },
+
   verifyTwoFactor(pendingToken: string, password: string) {
     return apiClient
       .post<{ user: AuthUser } & AuthTokens>("/auth/login/2fa", { pendingToken, password })

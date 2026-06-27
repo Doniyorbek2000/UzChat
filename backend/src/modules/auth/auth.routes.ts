@@ -4,11 +4,13 @@ import { validateBody } from "../../utils/validate";
 import {
   loginSchema,
   refreshSchema,
+  requestLoginOtpSchema,
   requestOtpSchema,
   requestPasswordResetSchema,
   requestPhoneChangeSchema,
   requestTwoFactorRecoverySchema,
   resetPasswordSchema,
+  verifyLoginOtpSchema,
   verifyOtpSchema,
   verifyPhoneChangeSchema,
   verifyTwoFactorRecoverySchema,
@@ -34,6 +36,18 @@ authRouter.post(
   authController.verifyOtp
 );
 authRouter.post("/login", loginRateLimiter, validateBody(loginSchema), authController.login);
+authRouter.post(
+  "/login/request-otp",
+  authRateLimiter,
+  validateBody(requestLoginOtpSchema),
+  authController.requestLoginOtp
+);
+authRouter.post(
+  "/login/verify-otp",
+  authRateLimiter,
+  validateBody(verifyLoginOtpSchema),
+  authController.verifyLoginOtp
+);
 authRouter.post(
   "/login/2fa",
   authRateLimiter,

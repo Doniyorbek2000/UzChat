@@ -36,6 +36,7 @@ import { EditBroadcastListScreen } from "../screens/chats/EditBroadcastListScree
 import { ChatWallpaperScreen } from "../screens/chats/ChatWallpaperScreen";
 import { BlockedUsersScreen } from "../screens/contacts/BlockedUsersScreen";
 import { BirthdaysScreen } from "../screens/contacts/BirthdaysScreen";
+import { ContactsScreen } from "../screens/contacts/ContactsScreen";
 import { AddContactScreen } from "../screens/contacts/AddContactScreen";
 import { ChangePasswordScreen } from "../screens/profile/ChangePasswordScreen";
 import { ChangePhoneScreen } from "../screens/profile/ChangePhoneScreen";
@@ -89,7 +90,6 @@ import { NearbyPeopleScreen } from "../screens/nearby/NearbyPeopleScreen";
 import { BotStoreScreen } from "../screens/bots/BotStoreScreen";
 import { BotDetailScreen } from "../screens/bots/BotDetailScreen";
 import { CreateBotScreen } from "../screens/bots/CreateBotScreen";
-import { ReelsFeedScreen } from "../screens/reels/ReelsFeedScreen";
 import { CreateReelScreen } from "../screens/reels/CreateReelScreen";
 import { FileSecurityScreen } from "../screens/profile/FileSecurityScreen";
 import { ForumTopicsScreen } from "../screens/forums/ForumTopicsScreen";
@@ -150,7 +150,7 @@ const linking = {
   prefixes: ["uzchat://", "https://uzchat.app"],
   config: {
     screens: {
-      MainTabs: { screens: { Chats: "chats", Contacts: "contacts", Calls: "calls", Profile: "profile" } },
+      MainTabs: { screens: { Chats: "chats", Reels: "reels", Discover: "discover", Profile: "profile" } },
       ChatRoom: "chat/:conversationId",
       UserProfile: "user/:userId",
       JoinGroup: "join/:inviteCode",
@@ -172,7 +172,7 @@ function navigateFromNotification(data?: MessageNotificationData) {
     return;
   }
   if (data?.type === "contact_request" || data?.type === "contact_accepted") {
-    navigationRef.navigate("MainTabs", { screen: "Contacts" });
+    navigationRef.navigate("Contacts");
     return;
   }
   if (data?.type === "group_join_request" && data.conversationId) {
@@ -390,6 +390,7 @@ export function RootNavigator() {
         {isAuthenticated ? (
           <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: themeColors.surface }, headerTintColor: themeColors.text }}>
             <Stack.Screen name="MainTabs" component={MainNavigator} options={{ title: "UzChat" }} />
+            <Stack.Screen name="Contacts" component={ContactsScreen} options={{ title: "Kontaktlar" }} />
             <Stack.Screen name="ChatRoom" component={ChatRoomScreen} options={{ title: "" }} />
             <Stack.Screen name="NewChat" component={NewChatScreen} options={{ title: "Yangi suhbat" }} />
             <Stack.Screen name="NewGroup" component={NewGroupScreen} options={{ title: "Yangi guruh" }} />
@@ -473,7 +474,6 @@ export function RootNavigator() {
             <Stack.Screen name="BotStore" component={BotStoreScreen} options={{ title: "Botlar" }} />
             <Stack.Screen name="BotDetail" component={BotDetailScreen} options={{ title: "Bot" }} />
             <Stack.Screen name="CreateBot" component={CreateBotScreen} options={{ title: "Bot yaratish" }} />
-            <Stack.Screen name="ReelsFeed" component={ReelsFeedScreen} options={{ title: "Reels", headerStyle: { backgroundColor: "#111" }, headerTintColor: "#fff" }} />
             <Stack.Screen name="CreateReel" component={CreateReelScreen} options={{ title: "Reel yaratish" }} />
             <Stack.Screen name="FileSecurity" component={FileSecurityScreen} options={{ title: "Fayl xavfsizligi" }} />
             <Stack.Screen name="ForumTopics" component={ForumTopicsScreen} options={{ title: "Forum mavzulari" }} />
