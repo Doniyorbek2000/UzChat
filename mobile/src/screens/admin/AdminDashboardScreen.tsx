@@ -12,6 +12,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { adminApi, DashboardStats, SystemHealth } from "../../api/admin";
 import type { RootStackParamList } from "../../navigation/types";
+import { colors } from "../../theme/colors";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -137,7 +138,7 @@ function HealthRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7", padding: 16 },
+  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   title: { fontSize: 28, fontWeight: "800", marginBottom: 20, color: "#000" },
   sectionTitle: { fontSize: 18, fontWeight: "700", marginTop: 16, marginBottom: 10, color: "#333" },

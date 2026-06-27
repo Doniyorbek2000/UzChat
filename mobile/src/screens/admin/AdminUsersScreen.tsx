@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { adminApi, AdminUser } from "../../api/admin";
+import { colors } from "../../theme/colors";
 
 export default function AdminUsersScreen() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -164,7 +165,7 @@ export default function AdminUsersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   searchRow: { flexDirection: "row", padding: 12, gap: 8 },
   searchInput: {
     flex: 1,

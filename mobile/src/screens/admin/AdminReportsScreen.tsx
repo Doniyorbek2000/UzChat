@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { adminApi, AdminReport } from "../../api/admin";
+import { colors } from "../../theme/colors";
 
 const reasonLabels: Record<string, string> = {
   SPAM: "Spam",
@@ -144,7 +145,7 @@ export default function AdminReportsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F2F2F7" },
+  container: { flex: 1, backgroundColor: colors.surface },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   card: {
     backgroundColor: "#fff",
