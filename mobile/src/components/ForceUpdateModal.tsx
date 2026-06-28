@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from "react-native";
 import { API_URL } from "../config/env";
+import { colors } from "../theme/colors";
 import appJson from "../../app.json";
 
 const APP_VERSION = appJson.expo.version;
@@ -66,16 +67,16 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 24,
     width: "100%",
     alignItems: "center",
   },
-  title: { fontSize: 20, fontWeight: "700", color: "#1A1A1A", marginBottom: 12 },
-  message: { fontSize: 14, color: "#666", textAlign: "center", lineHeight: 22, marginBottom: 24 },
+  title: { fontSize: 20, fontWeight: "700", color: colors.text, marginBottom: 12 },
+  message: { fontSize: 14, color: colors.textSecondary, textAlign: "center", lineHeight: 22, marginBottom: 24 },
   button: {
-    backgroundColor: "#07C160",
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingHorizontal: 40,
     paddingVertical: 14,

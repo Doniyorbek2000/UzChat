@@ -1,8 +1,11 @@
 export { Avatar } from "./Avatar";
 export { Badge } from "./Badge";
 export { EmptyState } from "./EmptyState";
+export { ErrorBoundary } from "./ErrorBoundary";
 export { ErrorView } from "./ErrorView";
+export { ForceUpdateModal } from "./ForceUpdateModal";
 export { LoadingScreen } from "./LoadingScreen";
+export { OfflineBanner } from "./OfflineBanner";
 export { PinPad } from "./PinPad";
 export { ChatToastBanner } from "./ChatToastBanner";
 export { Linkify } from "./Linkify";

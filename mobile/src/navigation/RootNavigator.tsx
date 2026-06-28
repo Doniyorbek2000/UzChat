@@ -127,6 +127,7 @@ import { WishlistScreen } from "../screens/wishlist/WishlistScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { ForceUpdateModal } from "../components/ForceUpdateModal";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { navigationRef } from "./navigationRef";
 import { useAuthStore } from "../store/authStore";
@@ -518,6 +519,7 @@ export function RootNavigator() {
       </NavigationContainer>
       {isAuthenticated && isLocked && <LockScreen />}
       {isAuthenticated && !isLocked && <ChatToastBanner />}
+      <ForceUpdateModal />
     </ErrorBoundary>
   );
 }
