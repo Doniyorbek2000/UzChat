@@ -133,6 +133,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 15,
     color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   tabs: { flexDirection: "row", paddingHorizontal: 12, gap: 8, marginBottom: 8 },
   tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: colors.background, alignItems: "center" },
