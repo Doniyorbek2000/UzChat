@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView , KeyboardAvoidingView, Platform} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { miniAppsApi } from "../../api/miniapps";
@@ -8,11 +8,16 @@ import { colors } from "../../theme/colors";
 type Props = NativeStackScreenProps<RootStackParamList, "CreateMiniApp">;
 
 const CATEGORIES = [
-  { key: "games", label: "O'yinlar" },
-  { key: "tools", label: "Asboblar" },
-  { key: "finance", label: "Moliya" },
-  { key: "social", label: "Ijtimoiy" },
-  { key: "other", label: "Boshqa" },
+  { key: "transport", label: "Transport", icon: "🚕" },
+  { key: "food", label: "Ovqat", icon: "🍽️" },
+  { key: "health", label: "Sog'liq", icon: "🏥" },
+  { key: "shopping", label: "Xaridlar", icon: "🛍️" },
+  { key: "finance", label: "Moliya", icon: "💰" },
+  { key: "games", label: "O'yinlar", icon: "🎮" },
+  { key: "news", label: "Yangiliklar", icon: "📰" },
+  { key: "entertainment", label: "Ko'ngilochar", icon: "🎬" },
+  { key: "travel", label: "Sayohat", icon: "✈️" },
+  { key: "other", label: "Boshqa", icon: "📦" },
 ];
 
 export function CreateMiniAppScreen({ navigation }: Props) {
@@ -50,75 +55,135 @@ export function CreateMiniAppScreen({ navigation }: Props) {
     }
   };
 
+  const previewLetter = name.trim().charAt(0).toUpperCase() || "?";
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
+      <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.previewCard}>
+          <View style={styles.previewIcon}>
+            <Text style={styles.previewIconText}>{previewLetter}</Text>
+          </View>
+          <Text style={styles.previewName}>{name.trim() || "Mini-dastur nomi"}</Text>
+          <Text style={styles.previewHint}>Oldindan ko'rinish</Text>
+        </View>
 
-    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>Nomi *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={64} placeholder="Mini-dastur nomi" placeholderTextColor={colors.textSecondary} />
+        <View style={styles.formCard}>
+          <Text style={styles.formTitle}>Asosiy ma'lumotlar</Text>
 
-      <Text style={styles.label}>URL *</Text>
-      <TextInput
-        style={styles.input}
-        value={url}
-        onChangeText={setUrl}
-        placeholder="https://example.com/app"
-        placeholderTextColor={colors.textSecondary}
-        autoCapitalize="none"
-        keyboardType="url"
-      />
+          <Text style={styles.label}>Nomi *</Text>
+          <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={64} placeholder="Mini-dastur nomi" placeholderTextColor={colors.textSecondary} />
 
-      <Text style={styles.label}>Tavsif</Text>
-      <TextInput
-        style={[styles.input, styles.descInput]}
-        value={description}
-        onChangeText={setDescription}
-        maxLength={256}
-        placeholder="Qisqacha tavsif"
-        placeholderTextColor={colors.textSecondary}
-        multiline
-      />
+          <Text style={styles.label}>URL *</Text>
+          <TextInput
+            style={styles.input}
+            value={url}
+            onChangeText={setUrl}
+            placeholder="https://example.com/app"
+            placeholderTextColor={colors.textSecondary}
+            autoCapitalize="none"
+            keyboardType="url"
+          />
 
-      <Text style={styles.label}>Ikon URL</Text>
-      <TextInput
-        style={styles.input}
-        value={iconUrl}
-        onChangeText={setIconUrl}
-        placeholder="https://example.com/icon.png"
-        placeholderTextColor={colors.textSecondary}
-        autoCapitalize="none"
-        keyboardType="url"
-      />
+          <Text style={styles.label}>Tavsif</Text>
+          <TextInput
+            style={[styles.input, styles.descInput]}
+            value={description}
+            onChangeText={setDescription}
+            maxLength={256}
+            placeholder="Qisqacha tavsif"
+            placeholderTextColor={colors.textSecondary}
+            multiline
+          />
+          <Text style={styles.charCounter}>{description.length}/256</Text>
 
-      <Text style={styles.label}>Kategoriya</Text>
-      <View style={styles.categoryRow}>
-        {CATEGORIES.map((c) => (
-          <TouchableOpacity
-            key={c.key}
-            style={[styles.categoryChip, category === c.key && styles.categoryChipActive]}
-            onPress={() => setCategory(c.key)}
-          >
-            <Text style={[styles.categoryText, category === c.key && styles.categoryTextActive]}>{c.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+          <Text style={styles.label}>Ikon URL</Text>
+          <TextInput
+            style={styles.input}
+            value={iconUrl}
+            onChangeText={setIconUrl}
+            placeholder="https://example.com/icon.png"
+            placeholderTextColor={colors.textSecondary}
+            autoCapitalize="none"
+            keyboardType="url"
+          />
+        </View>
 
-      <TouchableOpacity style={styles.createBtn} onPress={onCreate} disabled={creating}>
-        {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>Yaratish</Text>}
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={styles.formCard}>
+          <Text style={styles.formTitle}>Kategoriya</Text>
+          <View style={styles.categoryGrid}>
+            {CATEGORIES.map((c) => {
+              const active = category === c.key;
+              return (
+                <TouchableOpacity
+                  key={c.key}
+                  style={[styles.categoryChip, active && styles.categoryChipActive]}
+                  onPress={() => setCategory(c.key)}
+                >
+                  <Text style={styles.categoryIcon}>{c.icon}</Text>
+                  <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{c.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
 
+        <TouchableOpacity
+          style={[styles.createBtn, (!name.trim() || !url.trim() || creating) && styles.createBtnDisabled]}
+          onPress={onCreate}
+          disabled={!name.trim() || !url.trim() || creating}
+          activeOpacity={0.7}
+        >
+          {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>Yaratish</Text>}
+        </TouchableOpacity>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  content: { padding: 16 },
-  label: { fontSize: 13, color: colors.textSecondary, marginTop: 16, marginBottom: 6 },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 16, paddingBottom: 40 },
+  previewCard: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  previewIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  previewIconText: { color: "#fff", fontSize: 28, fontWeight: "700" },
+  previewName: { fontSize: 16, fontWeight: "600", color: colors.text },
+  previewHint: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
+  formCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  formTitle: { fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 8 },
+  label: { fontSize: 13, color: colors.textSecondary, marginTop: 14, marginBottom: 6, fontWeight: "500" },
   input: {
     backgroundColor: colors.background,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     color: colors.text,
@@ -127,24 +192,35 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   descInput: { minHeight: 80, textAlignVertical: "top" },
-  categoryRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  charCounter: { fontSize: 12, color: colors.textSecondary, textAlign: "right", marginTop: 4 },
+  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: 20,
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
+    gap: 6,
   },
   categoryChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  categoryText: { fontSize: 13, color: colors.textSecondary },
+  categoryIcon: { fontSize: 14 },
+  categoryText: { fontSize: 13, color: colors.text, fontWeight: "500" },
   categoryTextActive: { color: "#fff", fontWeight: "600" },
   createBtn: {
     backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingVertical: 14,
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: "center",
-    marginTop: 32,
+    marginTop: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
+  createBtnDisabled: { opacity: 0.5 },
   createBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });

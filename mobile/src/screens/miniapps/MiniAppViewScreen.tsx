@@ -11,9 +11,10 @@ type Props = NativeStackScreenProps<RootStackParamList, "MiniAppView">;
 
 export function MiniAppViewScreen({ route, navigation }: Props) {
   const { name, url } = route.params;
-  const webViewRef = useRef<{ goBack: () => void } | null>(null);
+  const webViewRef = useRef<{ goBack: () => void; reload: () => void } | null>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   const onShare = () => {
     Share.share({ message: `${name} mini-dasturini UzChat'da ochish: ${url}` }).catch(() => {});
@@ -22,22 +23,33 @@ export function MiniAppViewScreen({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.toolbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.toolbarBtn}>
-          <Text style={styles.toolbarBtnText}>Yopish</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.toolbarBtn} activeOpacity={0.6}>
+          <Text style={styles.closeBtnText}>✕</Text>
         </TouchableOpacity>
-        <Text style={styles.toolbarTitle} numberOfLines={1}>{name}</Text>
+        <View style={styles.toolbarCenter}>
+          <Text style={styles.toolbarTitle} numberOfLines={1}>{name}</Text>
+          {loading && <Text style={styles.toolbarSubtitle}>Yuklanmoqda...</Text>}
+        </View>
         <View style={styles.toolbarRight}>
           {canGoBack && (
-            <TouchableOpacity onPress={() => webViewRef.current?.goBack()} style={styles.toolbarBtn}>
-              <Text style={styles.toolbarBtnText}>Orqaga</Text>
+            <TouchableOpacity onPress={() => webViewRef.current?.goBack()} style={styles.toolbarBtn} activeOpacity={0.6}>
+              <Text style={styles.actionIcon}>←</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity onPress={onShare} style={styles.toolbarBtn}>
-            <Text style={styles.toolbarBtnText}>Ulashish</Text>
+          <TouchableOpacity onPress={() => webViewRef.current?.reload()} style={styles.toolbarBtn} activeOpacity={0.6}>
+            <Text style={styles.actionIcon}>↻</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onShare} style={styles.toolbarBtn} activeOpacity={0.6}>
+            <Text style={styles.shareIcon}>📤</Text>
           </TouchableOpacity>
         </View>
       </View>
-      {loading && (
+      {loading && progress < 1 && (
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${Math.max(progress * 100, 5)}%` }]} />
+        </View>
+      )}
+      {loading && progress === 0 && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -46,12 +58,13 @@ export function MiniAppViewScreen({ route, navigation }: Props) {
         ref={webViewRef}
         source={{ uri: url }}
         style={styles.webview}
-        onLoadStart={() => setLoading(true)}
-        onLoadEnd={() => setLoading(false)}
+        onLoadStart={() => { setLoading(true); setProgress(0); }}
+        onLoadEnd={() => { setLoading(false); setProgress(1); }}
+        onLoadProgress={({ nativeEvent }: { nativeEvent: { progress: number } }) => setProgress(nativeEvent.progress)}
         onNavigationStateChange={(navState: { canGoBack: boolean }) => setCanGoBack(navState.canGoBack)}
         javaScriptEnabled
         domStorageEnabled
-        startInLoadingState
+        startInLoadingState={false}
         allowsInlineMediaPlayback
       />
     </View>
@@ -63,20 +76,33 @@ const styles = StyleSheet.create({
   toolbar: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
+    gap: 4,
   },
-  toolbarBtn: { paddingHorizontal: 8, paddingVertical: 4 },
-  toolbarBtnText: { color: colors.primary, fontWeight: "600", fontSize: 14 },
-  toolbarTitle: { flex: 1, fontSize: 15, fontWeight: "600", color: colors.text, textAlign: "center", marginHorizontal: 8 },
-  toolbarRight: { flexDirection: "row", gap: 4 },
+  toolbarBtn: { paddingHorizontal: 10, paddingVertical: 6 },
+  closeBtnText: { fontSize: 18, color: colors.textSecondary, fontWeight: "500" },
+  toolbarCenter: { flex: 1, alignItems: "center" },
+  toolbarTitle: { fontSize: 15, fontWeight: "600", color: colors.text },
+  toolbarSubtitle: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
+  toolbarRight: { flexDirection: "row", alignItems: "center" },
+  actionIcon: { fontSize: 20, color: colors.primary, fontWeight: "600" },
+  shareIcon: { fontSize: 16 },
+  progressBarBg: {
+    height: 2,
+    backgroundColor: colors.border,
+  },
+  progressBarFill: {
+    height: 2,
+    backgroundColor: colors.primary,
+  },
   webview: { flex: 1 },
   loadingOverlay: {
     position: "absolute",
-    top: 50,
+    top: 60,
     left: 0,
     right: 0,
     bottom: 0,
