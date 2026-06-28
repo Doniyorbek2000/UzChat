@@ -139,7 +139,7 @@ export function BlockedUsersScreen() {
         data={blocked}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => (
           <View style={styles.row}>
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
@@ -158,6 +158,8 @@ export function BlockedUsersScreen() {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

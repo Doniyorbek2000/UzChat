@@ -98,7 +98,7 @@ export function ActiveSessionsScreen() {
         data={sessions}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         ListHeaderComponent={
           otherSessionsCount > 0 ? (
             <TouchableOpacity style={styles.terminateAllRow} onPress={onTerminateOthers}>
@@ -132,6 +132,8 @@ export function ActiveSessionsScreen() {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

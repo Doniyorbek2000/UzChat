@@ -89,7 +89,7 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
         data={conversations}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         ListHeaderComponent={
           <View style={styles.filtersSection}>
             <Text style={styles.filtersTitle}>Avtomatik qo'shish</Text>
@@ -121,6 +121,8 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

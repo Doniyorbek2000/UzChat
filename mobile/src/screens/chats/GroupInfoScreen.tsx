@@ -907,7 +907,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           keyboardShouldPersistTaps="handled"
           data={filteredParticipants}
           keyExtractor={(item) => item.userId}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={Separator}
           ListHeaderComponent={
             <>
               {canManage || conversation.membersCanAddMembers ? (
@@ -982,6 +982,8 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

@@ -115,7 +115,7 @@ export function MentionsScreen({ navigation }: Props) {
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -126,6 +126,8 @@ export function MentionsScreen({ navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

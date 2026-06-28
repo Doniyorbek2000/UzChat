@@ -81,7 +81,7 @@ export function BirthdaysScreen({ navigation }: Props) {
         data={birthdays}
         keyExtractor={(item) => item.user.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("UserProfile", { userId: item.user.id })}>
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
@@ -118,6 +118,8 @@ export function BirthdaysScreen({ navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

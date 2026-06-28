@@ -133,7 +133,7 @@ export function ScheduledMessagesScreen({ route }: Props) {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>🕒 Rejalashtirilgan xabarlar yo'q</Text>
@@ -143,6 +143,8 @@ export function ScheduledMessagesScreen({ route }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

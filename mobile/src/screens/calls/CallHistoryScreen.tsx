@@ -72,7 +72,7 @@ export function CallHistoryScreen({ navigation }: Props) {
       <FlatList
         data={logs}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         renderItem={({ item }) => {
           const isOutgoing = item.caller.id === currentUser?.id;
@@ -121,6 +121,8 @@ export function CallHistoryScreen({ navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

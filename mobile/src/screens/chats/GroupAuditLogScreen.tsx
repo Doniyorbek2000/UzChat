@@ -174,7 +174,7 @@ export function GroupAuditLogScreen({ route }: Props) {
       <FlatList
         data={entries}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         onEndReached={onLoadMore}
         onEndReachedThreshold={0.5}
@@ -199,6 +199,8 @@ export function GroupAuditLogScreen({ route }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

@@ -62,7 +62,7 @@ export function DeviceKeysScreen({}: Props) {
       <FlatList
         data={devices}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => (
           <View style={styles.row}>
             <View style={styles.deviceIcon}>
@@ -91,6 +91,8 @@ export function DeviceKeysScreen({}: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

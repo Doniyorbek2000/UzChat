@@ -108,7 +108,7 @@ export function ChatFoldersScreen({ navigation }: Props) {
         data={folders}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>Hali papkalar yo'q</Text>
@@ -166,6 +166,8 @@ export function ChatFoldersScreen({ navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

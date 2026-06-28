@@ -52,7 +52,7 @@ export function CommonGroupsScreen({ route, navigation }: Props) {
         data={groups}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.row}
@@ -76,6 +76,8 @@ export function CommonGroupsScreen({ route, navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

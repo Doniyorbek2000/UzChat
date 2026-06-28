@@ -252,7 +252,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
         data={filteredConversations}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         ListHeaderComponent={
           !search.trim() && recentConversations.length > 0 ? (
             <View>
@@ -312,6 +312,8 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
     </KeyboardAvoidingView>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

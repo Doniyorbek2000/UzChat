@@ -118,7 +118,7 @@ export function WalletScreen({ navigation }: Props) {
         data={history}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => {
           const isSent = item.sender.id === currentUser?.id;
           const otherUser = isSent ? item.receiver : item.sender;
@@ -145,6 +145,8 @@ export function WalletScreen({ navigation }: Props) {
     </KeyboardAvoidingView>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

@@ -101,7 +101,7 @@ export function NewChannelScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         data={filteredContacts}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => {
           const isSelected = selected.has(item.user.id);
           return (
@@ -128,6 +128,8 @@ export function NewChannelScreen({ navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

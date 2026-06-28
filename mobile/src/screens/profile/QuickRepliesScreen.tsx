@@ -86,7 +86,7 @@ export function QuickRepliesScreen() {
         data={quickReplies}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>Hali tezkor javoblar yo'q</Text>
@@ -110,6 +110,8 @@ export function QuickRepliesScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

@@ -82,7 +82,7 @@ export function ShareContactScreen({ route, navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         data={filteredContacts}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.row} onPress={() => onSelect(item)} disabled={!!sendingId}>
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
@@ -101,6 +101,8 @@ export function ShareContactScreen({ route, navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

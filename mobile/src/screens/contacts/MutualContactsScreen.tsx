@@ -52,7 +52,7 @@ export function MutualContactsScreen({ route, navigation }: Props) {
         data={users}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("UserProfile", { userId: item.id })}>
             <Avatar uri={item.avatarUrl} name={item.displayName} />
@@ -73,6 +73,8 @@ export function MutualContactsScreen({ route, navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

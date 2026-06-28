@@ -145,7 +145,7 @@ export function BannedUsersScreen({ route }: Props) {
           keyboardShouldPersistTaps="handled"
         data={bans}
         keyExtractor={(item) => item.user.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => (
           <View style={styles.row}>
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
@@ -167,6 +167,8 @@ export function BannedUsersScreen({ route }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

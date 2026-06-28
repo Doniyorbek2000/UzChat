@@ -232,7 +232,7 @@ export function SharedMediaScreen({ route, navigation }: Props) {
         data={activeTab === "links" ? linkMessages : filteredItems}
         keyExtractor={(item) => item.id}
         renderItem={activeTab === "links" ? renderLinkItem : renderItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         ListFooterComponent={loadingMore && activeTab !== "links" ? <ActivityIndicator style={styles.footer} color={colors.primary} /> : null}
@@ -258,6 +258,8 @@ export function SharedMediaScreen({ route, navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

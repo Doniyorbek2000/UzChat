@@ -105,7 +105,7 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
           keyboardShouldPersistTaps="handled"
         data={filteredContacts}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => {
           const isSelected = selected.has(item.user.id);
           return (
@@ -132,6 +132,8 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

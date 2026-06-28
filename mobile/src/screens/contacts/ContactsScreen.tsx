@@ -406,7 +406,7 @@ export function ContactsScreen({ navigation }: Props) {
           ref={sectionListRef}
           sections={sections}
           keyExtractor={(item) => item.id}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={Separator}
           stickySectionHeadersEnabled
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           renderSectionHeader={({ section }) =>
@@ -510,6 +510,8 @@ export function ContactsScreen({ navigation }: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },

@@ -105,7 +105,7 @@ export function LastSeenExceptionsScreen({}: Props) {
       <FlatList
         data={filteredContacts}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => {
           const mode = exceptionByUserId.get(item.user.id);
           return (
@@ -128,6 +128,8 @@ export function LastSeenExceptionsScreen({}: Props) {
     </View>
   );
 }
+
+const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
