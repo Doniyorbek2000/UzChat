@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   toggleThumb: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.surface },
   toggleThumbActive: { alignSelf: "flex-end" },
   label: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 6 },
-  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
+  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border },
   multiline: { minHeight: 100, textAlignVertical: "top", marginBottom: 12 },
   saveBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 12 },
   saveBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },

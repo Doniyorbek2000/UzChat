@@ -141,6 +141,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   createBtn: {
     backgroundColor: colors.primary,

@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   createBtn: { margin: 12, marginBottom: 4, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
   createBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
   createForm: { flexDirection: "row", marginHorizontal: 12, marginBottom: 8, gap: 8 },
-  input: { flex: 1, backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, fontSize: 14, color: colors.text },
+  input: { flex: 1, backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, fontSize: 14, color: colors.text, borderWidth: 1, borderColor: colors.border },
   submitBtn: { backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 16, justifyContent: "center" },
   submitBtnText: { color: "#fff", fontWeight: "600", fontSize: 13 },
   list: { paddingHorizontal: 12, paddingBottom: 20 },

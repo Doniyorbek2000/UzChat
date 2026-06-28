@@ -97,6 +97,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 15,
     color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   multiline: { minHeight: 80, textAlignVertical: "top" },
   hint: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },

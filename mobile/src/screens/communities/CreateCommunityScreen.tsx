@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   content: { padding: 16 },
   avatarContainer: { alignSelf: "center", marginVertical: 20 },
   label: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginTop: 16, marginBottom: 6 },
-  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
+  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border },
   multiline: { minHeight: 80, textAlignVertical: "top" },
   hint: { flexDirection: "row", alignItems: "flex-start", gap: 8, backgroundColor: "#FFF9E6", padding: 12, borderRadius: 10, marginTop: 20 },
   hintIcon: { fontSize: 16 },

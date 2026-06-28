@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   verifiedBadge: { backgroundColor: "#E8F5E9", borderRadius: 10, padding: 10, alignItems: "center", marginBottom: 12 },
   verifiedText: { fontSize: 13, fontWeight: "600", color: "#2E7D32" },
   label: { fontSize: 13, fontWeight: "600", color: colors.textSecondary, marginBottom: 6, marginTop: 12 },
-  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
+  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border },
   multiline: { minHeight: 80, textAlignVertical: "top" },
   categories: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   catBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.background },

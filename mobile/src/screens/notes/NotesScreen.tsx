@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   createBtn: { margin: 12, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   createBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
   form: { marginHorizontal: 12, marginBottom: 8, gap: 8 },
-  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
+  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border },
   multiline: { minHeight: 80, textAlignVertical: "top" },
   colorRow: { flexDirection: "row", gap: 8, paddingVertical: 4 },
   colorDot: { width: 32, height: 32, borderRadius: 16 },
