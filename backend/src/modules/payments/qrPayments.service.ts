@@ -55,15 +55,15 @@ export const qrPaymentsService = {
     const amount = qr.amount ?? input.amount;
     if (!amount) throw Errors.badRequest("Summa ko'rsatilishi kerak");
 
-    const payer = await prisma.user.findUnique({
-      where: { id: payerId },
-      select: { walletBalance: true },
-    });
-    if (!payer || payer.walletBalance.lt(new Prisma.Decimal(amount.toString()))) {
-      throw Errors.badRequest("Hisobingizda yetarli mablag' yo'q");
-    }
-
     return prisma.$transaction(async (tx) => {
+      const payer = await tx.user.findUnique({
+        where: { id: payerId },
+        select: { walletBalance: true },
+      });
+      if (!payer || payer.walletBalance.lt(new Prisma.Decimal(amount.toString()))) {
+        throw Errors.badRequest("Hisobingizda yetarli mablag' yo'q");
+      }
+
       await tx.user.update({
         where: { id: payerId },
         data: { walletBalance: { decrement: amount } },

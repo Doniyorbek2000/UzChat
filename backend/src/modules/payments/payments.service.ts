@@ -33,20 +33,21 @@ export const paymentsService = {
       throw Errors.badRequest("O'zingizga pul yuborib bo'lmaydi");
     }
 
-    const sender = await prisma.user.findUnique({
-      where: { id: senderId },
-      select: { walletBalance: true },
-    });
-    if (!sender || sender.walletBalance.lt(new Prisma.Decimal(input.amount))) {
-      throw Errors.badRequest("Hisobingizda yetarli mablag' yo'q");
-    }
-
     const receiver = await prisma.user.findUnique({
       where: { id: input.receiverId },
+      select: { id: true },
     });
     if (!receiver) throw Errors.notFound("Qabul qiluvchi");
 
     const payment = await prisma.$transaction(async (tx) => {
+      const sender = await tx.user.findUnique({
+        where: { id: senderId },
+        select: { walletBalance: true },
+      });
+      if (!sender || sender.walletBalance.lt(new Prisma.Decimal(input.amount))) {
+        throw Errors.badRequest("Hisobingizda yetarli mablag' yo'q");
+      }
+
       await tx.user.update({
         where: { id: senderId },
         data: { walletBalance: { decrement: input.amount } },

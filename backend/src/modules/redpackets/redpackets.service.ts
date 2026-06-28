@@ -7,11 +7,12 @@ const userSelect = { id: true, username: true, displayName: true, avatarUrl: tru
 export const redPacketsService = {
   async create(userId: string, data: { amount: number; currency?: string; message?: string }) {
     const amount = new Prisma.Decimal(data.amount);
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw Errors.notFound("Foydalanuvchi");
-    if (user.walletBalance.lt(amount)) throw Errors.badRequest("Hisobda yetarli mablag' yo'q");
 
     return prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: userId }, select: { walletBalance: true } });
+      if (!user) throw Errors.notFound("Foydalanuvchi");
+      if (user.walletBalance.lt(amount)) throw Errors.badRequest("Hisobda yetarli mablag' yo'q");
+
       await tx.user.update({
         where: { id: userId },
         data: { walletBalance: { decrement: amount } },
