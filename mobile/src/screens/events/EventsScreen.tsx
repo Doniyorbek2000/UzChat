@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator , RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { eventsApi, ChatEvent } from "../../api/events";
@@ -13,6 +13,7 @@ export function EventsScreen({ navigation }: Props) {
   const [events, setEvents] = useState<ChatEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const userId = useAuthStore((s) => s.user?.id);
 
   const loadData = useCallback(() => {
@@ -22,6 +23,11 @@ export function EventsScreen({ navigation }: Props) {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    eventsApi.getUpcoming().then(setEvents).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const handleRsvp = async (eventId: string, status: "going" | "maybe" | "not_going") => {
     try {
@@ -83,6 +89,7 @@ export function EventsScreen({ navigation }: Props) {
         data={events}
         keyExtractor={(item) => item.id}
         renderItem={renderEvent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

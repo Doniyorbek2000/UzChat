@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { notesApi, Note } from "../../api/notes";
@@ -20,6 +20,7 @@ export function NotesScreen(_props: Props) {
   const [saving, setSaving] = useState(false);
 
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -28,6 +29,11 @@ export function NotesScreen(_props: Props) {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    notesApi.list().then(setNotes).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const handleCreate = async () => {
     if (!title.trim() || !content.trim()) return;
@@ -118,6 +124,7 @@ export function NotesScreen(_props: Props) {
             <Text style={styles.noteDate}>{new Date(item.updatedAt).toLocaleDateString("uz-UZ")}</Text>
           </TouchableOpacity>
         )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

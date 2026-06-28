@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator , RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { giftsApi, SentGiftData } from "../../api/gifts";
@@ -13,6 +13,7 @@ export function GiftsScreen(_props: Props) {
   const [items, setItems] = useState<SentGiftData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -22,6 +23,12 @@ export function GiftsScreen(_props: Props) {
   }, [tab]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    const load = tab === "received" ? giftsApi.getReceived() : giftsApi.getSent();
+    load.then(setItems).catch(() => {}).finally(() => setRefreshing(false));
+  }, [tab]);
 
   return (
     <View style={styles.container}>
@@ -56,6 +63,7 @@ export function GiftsScreen(_props: Props) {
               </View>
             );
           }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>

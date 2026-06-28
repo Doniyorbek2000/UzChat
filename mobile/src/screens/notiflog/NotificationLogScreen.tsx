@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator , RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { notifLogApi, NotifLogEntry } from "../../api/notifLog";
@@ -17,6 +17,7 @@ export function NotificationLogScreen(_props: Props) {
   const [items, setItems] = useState<NotifLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   const loadData = useCallback(() => {
@@ -29,6 +30,11 @@ export function NotificationLogScreen(_props: Props) {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    notifLogApi.getAll().then((r) => { setItems(r.notifications); setNextCursor(r.nextCursor); }).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const loadMore = async () => {
     if (!nextCursor) return;
@@ -84,6 +90,7 @@ export function NotificationLogScreen(_props: Props) {
         )}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

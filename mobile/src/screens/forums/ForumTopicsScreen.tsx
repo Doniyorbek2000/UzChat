@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { forumsApi, ForumTopic } from "../../api/forums";
@@ -13,6 +13,7 @@ export function ForumTopicsScreen({ route }: Props) {
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
@@ -24,6 +25,11 @@ export function ForumTopicsScreen({ route }: Props) {
   }, [conversationId]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    forumsApi.listTopics(conversationId).then(setTopics).catch(() => {}).finally(() => setRefreshing(false));
+  }, [conversationId]);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -138,6 +144,7 @@ export function ForumTopicsScreen({ route }: Props) {
             </View>
           </TouchableOpacity>
         )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

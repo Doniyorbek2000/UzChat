@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { bookmarksApi, Bookmark } from "../../api/bookmarks";
@@ -12,6 +12,7 @@ export function BookmarksScreen({ navigation }: Props) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -20,6 +21,11 @@ export function BookmarksScreen({ navigation }: Props) {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    bookmarksApi.list().then(setBookmarks).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const handleRemove = (bookmark: Bookmark) => {
     Alert.alert("O'chirish", "Bu xatcho'pni o'chirmoqchimisiz?", [
@@ -69,6 +75,7 @@ export function BookmarksScreen({ navigation }: Props) {
             <Text style={styles.chatName}>💬 {item.message.conversation?.title ?? "Suhbat"}</Text>
           </TouchableOpacity>
         )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

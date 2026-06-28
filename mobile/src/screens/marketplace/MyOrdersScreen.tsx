@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
+  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
@@ -33,6 +33,7 @@ export function MyOrdersScreen({ navigation }: Props) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -44,6 +45,11 @@ export function MyOrdersScreen({ navigation }: Props) {
   }, []);
 
   useFocusEffect(loadData);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    marketplaceApi.getMyOrders().then(setOrders).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const cancelOrder = (orderId: string) => {
     Alert.alert("Bekor qilish", "Buyurtmani bekor qilmoqchimisiz?", [
@@ -73,6 +79,7 @@ export function MyOrdersScreen({ navigation }: Props) {
       style={styles.container}
       data={orders}
       keyExtractor={(item) => item.id}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       contentContainerStyle={styles.list}
       renderItem={({ item }) => (
         <View style={styles.orderCard}>

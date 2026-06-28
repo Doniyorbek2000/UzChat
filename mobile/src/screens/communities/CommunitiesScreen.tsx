@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { communitiesApi, Community } from "../../api/communities";
@@ -12,6 +12,7 @@ export function CommunitiesScreen({ navigation }: Props) {
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -20,6 +21,11 @@ export function CommunitiesScreen({ navigation }: Props) {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    communitiesApi.listMine().then(setCommunities).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const handleDelete = (communityId: string) => {
     Alert.alert("O'chirish", "Bu jamiyatni o'chirmoqchimisiz?", [
@@ -70,6 +76,7 @@ export function CommunitiesScreen({ navigation }: Props) {
             </View>
           </TouchableOpacity>
         )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { badgesApi, BadgeData } from "../../api/badges";
@@ -12,6 +12,7 @@ export function BadgesScreen(_props: Props) {
   const [badges, setBadges] = useState<BadgeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -20,6 +21,11 @@ export function BadgesScreen(_props: Props) {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    badgesApi.getMyBadges().then(setBadges).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
@@ -36,6 +42,7 @@ export function BadgesScreen(_props: Props) {
         keyExtractor={(item) => item.id}
         numColumns={3}
         columnWrapperStyle={styles.row}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         renderItem={({ item }) => (
           <View style={styles.badgeCard}>
             <Text style={styles.badgeIcon}>{item.icon}</Text>

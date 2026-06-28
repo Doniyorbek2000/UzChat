@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { wishlistApi, WishlistItem } from "../../api/wishlist";
@@ -12,6 +12,7 @@ export function WishlistScreen({ navigation }: Props) {
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -20,6 +21,11 @@ export function WishlistScreen({ navigation }: Props) {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    wishlistApi.getAll().then(setItems).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const removeItem = (productId: string) => {
     Alert.alert("O'chirish", "Istaklar ro'yxatidan olib tashlansinmi?", [
@@ -60,6 +66,7 @@ export function WishlistScreen({ navigation }: Props) {
             </View>
           </TouchableOpacity>
         )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
