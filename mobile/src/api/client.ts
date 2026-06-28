@@ -67,6 +67,15 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
+    if (error.response?.status === 403) {
+      const data = error.response.data as { error?: { message?: string } } | undefined;
+      if (data?.error?.message?.includes("bloklangan")) {
+        await secureStorage.clearTokens();
+        onUnauthorized?.();
+      }
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && original && !original._retry) {
       original._retry = true;
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { PinPad } from "../components/PinPad";
 import { useAppLockStore } from "../store/appLockStore";
@@ -8,14 +8,36 @@ import { colors } from "../theme/colors";
 export function LockScreen() {
   const unlock = useAppLockStore((s) => s.unlock);
   const reset = useAppLockStore((s) => s.reset);
+  const getRemainingLockSeconds = useAppLockStore((s) => s.getRemainingLockSeconds);
+  const failedAttempts = useAppLockStore((s) => s.failedAttempts);
   const logout = useAuthStore((s) => s.logout);
   const [error, setError] = useState("");
   const [resetKey, setResetKey] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    const remaining = getRemainingLockSeconds();
+    if (remaining <= 0) return;
+    setCountdown(remaining);
+    const timer = setInterval(() => {
+      const r = getRemainingLockSeconds();
+      setCountdown(r);
+      if (r <= 0) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [failedAttempts]);
 
   const onComplete = async (pin: string) => {
+    const remaining = getRemainingLockSeconds();
+    if (remaining > 0) {
+      setError(`${remaining} soniya kutib turing`);
+      setResetKey((k) => k + 1);
+      return;
+    }
     const ok = await unlock(pin);
     if (!ok) {
-      setError("Noto'g'ri PIN kod");
+      const newRemaining = getRemainingLockSeconds();
+      setError(newRemaining > 0 ? `Noto'g'ri PIN. ${newRemaining}s kutib turing` : "Noto'g'ri PIN kod");
       setResetKey((k) => k + 1);
     } else {
       setError("");
@@ -40,7 +62,7 @@ export function LockScreen() {
     <View style={styles.container}>
       <PinPad
         title="Ilova qulflangan"
-        subtitle="Davom etish uchun PIN kodni kiriting"
+        subtitle={countdown > 0 ? `${countdown} soniya kutib turing` : "Davom etish uchun PIN kodni kiriting"}
         error={error}
         resetKey={resetKey}
         onComplete={onComplete}

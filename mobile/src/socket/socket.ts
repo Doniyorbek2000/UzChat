@@ -27,7 +27,11 @@ export function connectSocket(): Socket {
       onForceLogout?.();
     }
   });
-  socket.on("connect_error", () => {});
+  socket.on("connect_error", (err) => {
+    if (err.message === "BANNED") {
+      onForceLogout?.();
+    }
+  });
   return socket;
 }
 
