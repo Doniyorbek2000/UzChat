@@ -19,6 +19,7 @@ export const badgesService = {
     return prisma.userBadge.findMany({
       where: { userId },
       orderBy: { earnedAt: "desc" },
+      take: 50,
     });
   },
 

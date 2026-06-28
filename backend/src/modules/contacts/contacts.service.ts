@@ -163,6 +163,7 @@ export const contactsService = {
       where: { ownerId: userId, status: ContactStatus.ACCEPTED },
       include: { target: { select: userSummarySelect } },
       orderBy: [{ isFavorite: "desc" }, { target: { displayName: "asc" } }],
+      take: 500,
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
     return contacts.map((c) => ({

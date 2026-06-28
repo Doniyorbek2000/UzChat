@@ -5,6 +5,7 @@ export const faqService = {
     return prisma.faqArticle.findMany({
       where: { isActive: true, ...(category ? { category } : {}) },
       orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+      take: 200,
     });
   },
 
@@ -14,6 +15,7 @@ export const faqService = {
       select: { category: true },
       distinct: ["category"],
       orderBy: { category: "asc" },
+      take: 50,
     });
     return articles.map((a) => a.category);
   },

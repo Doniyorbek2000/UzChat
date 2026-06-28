@@ -63,6 +63,7 @@ export const botsService = {
       where: { ownerId },
       include: { commands: true },
       orderBy: { createdAt: "desc" },
+      take: 50,
     });
   },
 

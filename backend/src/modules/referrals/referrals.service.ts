@@ -26,6 +26,7 @@ export const referralsService = {
       where: { referrerId: userId },
       include: { referred: { select: userSelect } },
       orderBy: { createdAt: "desc" },
+      take: 100,
     });
   },
 

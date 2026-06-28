@@ -82,6 +82,7 @@ export const redPacketsService = {
     return prisma.redPacket.findMany({
       where: { senderId: userId },
       orderBy: { createdAt: "desc" },
+      take: 100,
       include: { claimedBy: { select: userSelect } },
     });
   },
@@ -90,6 +91,7 @@ export const redPacketsService = {
     return prisma.redPacket.findMany({
       where: { claimedById: userId },
       orderBy: { claimedAt: "desc" },
+      take: 100,
       include: { sender: { select: userSelect } },
     });
   },

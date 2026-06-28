@@ -6,6 +6,7 @@ export const greetingsService = {
     return prisma.greetingCard.findMany({
       where: { isActive: true, ...(category ? { category } : {}) },
       orderBy: { createdAt: "desc" },
+      take: 200,
     });
   },
 
@@ -51,6 +52,7 @@ export const greetingsService = {
       where: { isActive: true },
       select: { category: true },
       distinct: ["category"],
+      take: 50,
     });
     return cards.map((c) => c.category);
   },

@@ -6,6 +6,7 @@ export const cloudService = {
     return prisma.cloudFile.findMany({
       where: { userId, folderId: folderId ?? null },
       orderBy: { createdAt: "desc" },
+      take: 200,
     });
   },
 
@@ -14,6 +15,7 @@ export const cloudService = {
       where: { userId, parentId: parentId ?? null },
       include: { _count: { select: { files: true, children: true } } },
       orderBy: { name: "asc" },
+      take: 100,
     });
   },
 

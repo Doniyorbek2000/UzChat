@@ -8,6 +8,7 @@ export const forumsService = {
     return prisma.forumTopic.findMany({
       where: { conversationId },
       orderBy: [{ isPinned: "desc" }, { lastMessageAt: "desc" }],
+      take: 100,
       include: {
         creator: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
       },

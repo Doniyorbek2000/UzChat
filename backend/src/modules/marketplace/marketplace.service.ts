@@ -44,6 +44,7 @@ export const marketplaceService = {
       where: { ownerId: userId },
       include: { _count: { select: { products: true, orders: true } } },
       orderBy: { createdAt: "desc" },
+      take: 50,
     });
   },
 
@@ -157,6 +158,7 @@ export const marketplaceService = {
     return prisma.order.findMany({
       where: { buyerId: userId },
       orderBy: { createdAt: "desc" },
+      take: 100,
       include: { items: { include: { product: true } }, store: { select: { id: true, name: true, avatarUrl: true } } },
     });
   },
@@ -168,6 +170,7 @@ export const marketplaceService = {
     return prisma.order.findMany({
       where: { storeId },
       orderBy: { createdAt: "desc" },
+      take: 100,
       include: { items: { include: { product: true } }, buyer: { select: userSelect } },
     });
   },

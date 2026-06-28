@@ -6,6 +6,7 @@ export const giftsService = {
     return prisma.virtualGift.findMany({
       where: { isActive: true, ...(category ? { category } : {}) },
       orderBy: { price: "asc" },
+      take: 200,
     });
   },
 

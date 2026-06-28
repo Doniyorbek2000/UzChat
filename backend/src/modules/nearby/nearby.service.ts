@@ -57,6 +57,7 @@ export const nearbyService = {
         longitude: { gte: query.longitude - degreeRange, lte: query.longitude + degreeRange },
       },
       include: { user: { select: userSummarySelect } },
+      take: 100,
     });
 
     return locations

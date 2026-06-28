@@ -19,6 +19,7 @@ export const gamesService = {
       where: { isActive: true, category },
       include: { developer: { select: userSelect } },
       orderBy: { playCount: "desc" },
+      take: 50,
     });
   },
 
@@ -63,6 +64,7 @@ export const gamesService = {
     return prisma.game.findMany({
       where: { developerId: userId },
       orderBy: { createdAt: "desc" },
+      take: 50,
     });
   },
 };

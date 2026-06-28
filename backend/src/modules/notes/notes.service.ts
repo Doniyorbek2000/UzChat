@@ -7,6 +7,7 @@ export const notesService = {
     return prisma.note.findMany({
       where: { userId },
       orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
+      take: 200,
     });
   },
 

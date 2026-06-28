@@ -57,6 +57,7 @@ export const stickersService = {
     return prisma.stickerPack.findMany({
       where: { isOfficial: true },
       orderBy: { installCount: "desc" },
+      take: 50,
       include: {
         stickers: { take: 5, orderBy: { order: "asc" } },
         creator: { select: { id: true, username: true, displayName: true } },
@@ -88,6 +89,7 @@ export const stickersService = {
     const installs = await prisma.stickerPackInstall.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
+      take: 100,
       include: {
         pack: {
           include: {
@@ -104,6 +106,7 @@ export const stickersService = {
     return prisma.stickerPack.findMany({
       where: { creatorId: userId },
       orderBy: { createdAt: "desc" },
+      take: 50,
       include: packInclude,
     });
   },

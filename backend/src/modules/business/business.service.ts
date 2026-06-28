@@ -40,6 +40,7 @@ export const businessService = {
       where: { category: { contains: category, mode: "insensitive" } },
       include: { user: { select: { id: true, displayName: true, username: true, avatarUrl: true } } },
       orderBy: { businessName: "asc" },
+      take: 50,
     });
   },
 

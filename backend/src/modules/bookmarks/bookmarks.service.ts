@@ -17,6 +17,7 @@ export const bookmarksService = {
         },
       },
       orderBy: { createdAt: "desc" },
+      take: 200,
     });
   },
 

@@ -6,6 +6,7 @@ export const wishlistService = {
     return prisma.wishlist.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
+      take: 200,
       include: {
         product: {
           include: {

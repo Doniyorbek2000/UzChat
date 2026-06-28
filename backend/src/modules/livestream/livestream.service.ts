@@ -20,6 +20,7 @@ export const liveStreamService = {
       where: { status: "LIVE" },
       include: { host: { select: { id: true, displayName: true, username: true, avatarUrl: true } } },
       orderBy: { startedAt: "desc" },
+      take: 50,
     });
   },
 
@@ -28,6 +29,7 @@ export const liveStreamService = {
       where: { status: "SCHEDULED" },
       include: { host: { select: { id: true, displayName: true, username: true, avatarUrl: true } } },
       orderBy: { scheduledFor: "asc" },
+      take: 50,
     });
   },
 

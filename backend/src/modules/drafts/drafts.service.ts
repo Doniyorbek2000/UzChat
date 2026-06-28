@@ -6,6 +6,7 @@ export const draftsService = {
       where: { userId },
       include: { conversation: { select: { id: true, title: true, type: true } } },
       orderBy: { updatedAt: "desc" },
+      take: 100,
     });
   },
 

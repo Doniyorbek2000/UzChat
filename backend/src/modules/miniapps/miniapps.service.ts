@@ -17,6 +17,7 @@ export const miniAppsService = {
     return prisma.miniApp.findMany({
       where: { isActive: true, ...(category ? { category } : {}) },
       orderBy: { createdAt: "desc" },
+      take: 100,
       include: { creator: { select: { id: true, displayName: true, username: true, avatarUrl: true } } },
     });
   },
@@ -52,6 +53,7 @@ export const miniAppsService = {
     return prisma.miniApp.findMany({
       where: { creatorId: userId },
       orderBy: { createdAt: "desc" },
+      take: 50,
       include: { creator: { select: { id: true, displayName: true, username: true, avatarUrl: true } } },
     });
   },

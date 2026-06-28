@@ -56,6 +56,7 @@ export const reelsService = {
         ...(userId !== viewerId ? { isPublic: true } : {}),
       },
       orderBy: { createdAt: "desc" },
+      take: 50,
       include: {
         author: { select: authorSelect },
         likes: { where: { userId: viewerId }, select: { id: true } },

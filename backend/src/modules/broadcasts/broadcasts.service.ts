@@ -17,6 +17,7 @@ export const broadcastsService = {
     return prisma.broadcastList.findMany({
       where: { userId },
       orderBy: { createdAt: "asc" },
+      take: 50,
     });
   },
 

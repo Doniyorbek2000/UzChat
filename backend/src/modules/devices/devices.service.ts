@@ -23,6 +23,7 @@ export const devicesService = {
     return prisma.deviceKey.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
+      take: 20,
       select: { id: true, deviceId: true, publicKey: true, label: true, createdAt: true },
     });
   },
@@ -30,6 +31,7 @@ export const devicesService = {
   async getDeviceKeys(userId: string) {
     return prisma.deviceKey.findMany({
       where: { userId },
+      take: 20,
       select: { deviceId: true, publicKey: true },
     });
   },

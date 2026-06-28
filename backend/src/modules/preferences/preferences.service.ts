@@ -2,7 +2,7 @@ import { prisma } from "../../config/prisma";
 
 export const preferencesService = {
   async getAll(userId: string) {
-    const prefs = await prisma.appPreference.findMany({ where: { userId } });
+    const prefs = await prisma.appPreference.findMany({ where: { userId }, take: 100 });
     const map: Record<string, string> = {};
     for (const p of prefs) map[p.key] = p.value;
     return map;

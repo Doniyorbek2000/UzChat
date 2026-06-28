@@ -69,6 +69,7 @@ export const locationService = {
       where: { userId, isLive: true, expiresAt: { gt: new Date() } },
       include: { conversation: { select: { id: true, title: true } } },
       orderBy: { createdAt: "desc" },
+      take: 20,
     });
   },
 };

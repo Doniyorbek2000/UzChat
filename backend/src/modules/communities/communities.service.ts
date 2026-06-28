@@ -8,6 +8,7 @@ export const communitiesService = {
       where: { ownerId: userId },
       include: { groups: true },
       orderBy: { createdAt: "desc" },
+      take: 50,
     });
   },
 
@@ -51,6 +52,14 @@ export const communitiesService = {
   async addGroup(ownerId: string, communityId: string, conversationId: string) {
     const community = await prisma.community.findUnique({ where: { id: communityId } });
     if (!community || community.ownerId !== ownerId) throw Errors.notFound("Jamoa");
+
+    const participant = await prisma.conversationParticipant.findUnique({
+      where: { conversationId_userId: { conversationId, userId: ownerId } },
+      select: { role: true },
+    });
+    if (!participant || !["OWNER", "ADMIN"].includes(participant.role)) {
+      throw Errors.forbidden("Siz bu guruhning egasi yoki admini emassiz");
+    }
 
     const existing = await prisma.communityGroup.findUnique({
       where: { communityId_conversationId: { communityId, conversationId } },

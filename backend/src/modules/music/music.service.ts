@@ -53,6 +53,7 @@ export const musicService = {
       where: { userId },
       include: { _count: { select: { tracks: true } } },
       orderBy: { updatedAt: "desc" },
+      take: 100,
     });
   },
 
@@ -74,6 +75,7 @@ export const musicService = {
       where: { playlistId },
       include: { track: { include: { uploader: { select: userSelect } } } },
       orderBy: { position: "asc" },
+      take: 500,
     });
   },
 

@@ -10,6 +10,7 @@ export const eventsService = {
       where: { conversationId },
       include: { creator: { select: userSelect }, rsvps: { include: { user: { select: userSelect } } } },
       orderBy: { startAt: "asc" },
+      take: 100,
     });
   },
 
@@ -90,6 +91,7 @@ export const eventsService = {
       where: { eventId },
       include: { user: { select: userSelect } },
       orderBy: { respondedAt: "desc" },
+      take: 500,
     });
   },
 };
