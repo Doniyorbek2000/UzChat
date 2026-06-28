@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ActivityIndicator, AppState, View } from "react-native";
+import { ActivityIndicator, AppState, StatusBar, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import * as Notifications from "expo-notifications";
@@ -389,6 +389,7 @@ export function RootNavigator() {
 
   return (
     <ErrorBoundary>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={themeColors.surface} />
       <OfflineBanner />
       <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
         {isAuthenticated ? (
