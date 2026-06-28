@@ -91,7 +91,7 @@ export function ChangePhoneScreen({ navigation }: Props) {
           style={styles.input}
           placeholder="+998901234567"
           placeholderTextColor={colors.textSecondary}
-          keyboardType="phone-pad"
+          keyboardType="phone-pad" autoComplete="tel"
           value={newPhone}
           onChangeText={setNewPhone}
           autoFocus

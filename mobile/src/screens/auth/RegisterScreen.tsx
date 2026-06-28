@@ -156,7 +156,7 @@ export function RegisterScreen({ navigation }: Props) {
                 style={styles.input}
                 placeholder="+998901234567"
                 placeholderTextColor={colors.textSecondary}
-                keyboardType="phone-pad"
+                keyboardType="phone-pad" autoComplete="tel"
                 value={phone}
                 onChangeText={setPhone}
                 autoCapitalize="none"
@@ -268,6 +268,7 @@ export function RegisterScreen({ navigation }: Props) {
                 placeholder="Parol (kamida 10 ta belgi, AaBb1)"
                 placeholderTextColor={colors.textSecondary}
                 secureTextEntry
+                autoComplete="password"
                 value={password}
                 onChangeText={setPassword}
                 returnKeyType="go"

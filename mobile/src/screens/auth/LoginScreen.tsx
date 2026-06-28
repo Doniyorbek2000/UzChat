@@ -135,7 +135,7 @@ export function LoginScreen({ navigation }: Props) {
               style={styles.input}
               placeholder="+998901234567"
               placeholderTextColor={colors.textSecondary}
-              keyboardType="phone-pad"
+              keyboardType="phone-pad" autoComplete="tel"
               value={phone}
               onChangeText={setPhone}
               autoCapitalize="none"
@@ -220,7 +220,7 @@ export function LoginScreen({ navigation }: Props) {
               style={styles.input}
               placeholder="+998901234567"
               placeholderTextColor={colors.textSecondary}
-              keyboardType="phone-pad"
+              keyboardType="phone-pad" autoComplete="tel"
               value={phone}
               onChangeText={setPhone}
               autoCapitalize="none"
@@ -234,6 +234,7 @@ export function LoginScreen({ navigation }: Props) {
               placeholder="Parol"
               placeholderTextColor={colors.textSecondary}
               secureTextEntry
+                autoComplete="password"
               value={password}
               onChangeText={setPassword}
               returnKeyType="go"

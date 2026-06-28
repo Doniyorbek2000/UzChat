@@ -97,6 +97,7 @@ export function TwoFactorLoginScreen({ route }: Props) {
         placeholder="Qo'shimcha parol"
         placeholderTextColor={colors.textSecondary}
         secureTextEntry
+                autoComplete="password"
         value={password}
         onChangeText={setPassword}
         autoFocus

@@ -123,7 +123,7 @@ export function BusinessProfileScreen(_props: Props) {
       <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Manzil..." placeholderTextColor={colors.textSecondary} />
 
       <Text style={styles.label}>Telefon</Text>
-      <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+998 ..." placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" />
+      <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+998 ..." placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" autoComplete="tel" />
 
       <Text style={styles.label}>Email</Text>
       <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="email@example.com" placeholderTextColor={colors.textSecondary} keyboardType="email-address" autoCapitalize="none" />

@@ -48,14 +48,15 @@ export function ChangePasswordScreen({ navigation }: Props) {
           value={currentPassword}
           onChangeText={setCurrentPassword}
           secureTextEntry
+                autoComplete="password"
           autoFocus
         />
 
         <Text style={styles.label}>Yangi parol</Text>
-        <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry />
+        <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry autoComplete="password" />
 
         <Text style={styles.label}>Yangi parolni tasdiqlang</Text>
-        <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+        <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry autoComplete="password" />
 
         <TouchableOpacity style={[styles.button, !canSubmit && styles.buttonDisabled]} onPress={onSubmit} disabled={!canSubmit}>
           {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Saqlash</Text>}

@@ -100,13 +100,13 @@ export function TwoFactorSettingsScreen({}: Props) {
       </Text>
 
       <Text style={styles.label}>Joriy parol</Text>
-      <TextInput style={styles.input} value={currentPassword} onChangeText={setCurrentPassword} secureTextEntry />
+      <TextInput style={styles.input} value={currentPassword} onChangeText={setCurrentPassword} secureTextEntry autoComplete="password" />
 
       <Text style={styles.label}>Qo'shimcha parol</Text>
-      <TextInput style={styles.input} value={twoFactorPassword} onChangeText={setTwoFactorPassword} secureTextEntry />
+      <TextInput style={styles.input} value={twoFactorPassword} onChangeText={setTwoFactorPassword} secureTextEntry autoComplete="password" />
 
       <Text style={styles.label}>Qo'shimcha parolni tasdiqlang</Text>
-      <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+      <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry autoComplete="password" />
 
       <Text style={styles.label}>Maslahat (ixtiyoriy)</Text>
       <TextInput style={styles.input} value={hint} onChangeText={setHint} placeholder="Masalan, sevimli kitobim" placeholderTextColor={colors.textSecondary} />
