@@ -247,6 +247,6 @@ const styles = StyleSheet.create({
   },
   menuIcon: { fontSize: 20 },
   menuLabel: { flex: 1, fontSize: 15, color: colors.text, fontWeight: "500" },
-  menuArrow: { fontSize: 18, color: "#C7C7CC" },
+  menuArrow: { fontSize: 18, color: colors.textSecondary },
   emptyText: { textAlign: "center", color: colors.textSecondary, fontSize: 15, padding: 20 },
 });

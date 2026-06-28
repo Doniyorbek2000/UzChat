@@ -472,7 +472,7 @@ export function ProfileScreen({ navigation }: Props) {
       </TouchableOpacity>
 
       {user?.isAdmin && (
-        <TouchableOpacity style={[styles.menuRow, { borderLeftWidth: 3, borderLeftColor: "#FF3B30" }]} onPress={() => navigation.navigate("AdminDashboard")}>
+        <TouchableOpacity style={[styles.menuRow, { borderLeftWidth: 3, borderLeftColor: colors.danger }]} onPress={() => navigation.navigate("AdminDashboard")}>
           <Text style={styles.menuRowText}>🛡️ Admin panel</Text>
           <Text style={styles.menuRowArrow}>›</Text>
         </TouchableOpacity>

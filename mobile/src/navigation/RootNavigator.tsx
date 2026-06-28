@@ -126,6 +126,8 @@ import { NotificationLogScreen } from "../screens/notiflog/NotificationLogScreen
 import { WishlistScreen } from "../screens/wishlist/WishlistScreen";
 import { LockScreen } from "../screens/LockScreen";
 import { ChatToastBanner } from "../components/ChatToastBanner";
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import { OfflineBanner } from "../components/OfflineBanner";
 import { navigationRef } from "./navigationRef";
 import { useAuthStore } from "../store/authStore";
 import { useAppLockStore } from "../store/appLockStore";
@@ -385,7 +387,8 @@ export function RootNavigator() {
   };
 
   return (
-    <>
+    <ErrorBoundary>
+      <OfflineBanner />
       <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
         {isAuthenticated ? (
           <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: themeColors.surface }, headerTintColor: themeColors.text }}>
@@ -515,6 +518,6 @@ export function RootNavigator() {
       </NavigationContainer>
       {isAuthenticated && isLocked && <LockScreen />}
       {isAuthenticated && !isLocked && <ChatToastBanner />}
-    </>
+    </ErrorBoundary>
   );
 }

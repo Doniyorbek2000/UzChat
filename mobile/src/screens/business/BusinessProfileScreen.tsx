@@ -167,5 +167,5 @@ const styles = StyleSheet.create({
   saveBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 20 },
   saveBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   deleteBtn: { alignItems: "center", marginTop: 16 },
-  deleteBtnText: { color: "#FF3B30", fontSize: 14, fontWeight: "600" },
+  deleteBtnText: { color: colors.danger, fontSize: 14, fontWeight: "600" },
 });

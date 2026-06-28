@@ -56,7 +56,7 @@ export function LiveStreamViewScreen({ route, navigation }: Props) {
   };
 
   if (loading || !stream) {
-    return <ActivityIndicator size="large" color="#FF3B30" style={{ flex: 1, justifyContent: "center", backgroundColor: "#000" }} />;
+    return <ActivityIndicator size="large" color={colors.danger} style={{ flex: 1, justifyContent: "center", backgroundColor: "#000" }} />;
   }
 
   const isHost = stream.hostId === userId;
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16, paddingTop: 50 },
   backBtn: { fontSize: 24, color: "#fff", fontWeight: "600" },
   topInfo: { flexDirection: "row", alignItems: "center", gap: 10 },
-  liveBadge: { backgroundColor: "#FF3B30", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
+  liveBadge: { backgroundColor: colors.danger, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 },
   liveBadgeText: { color: "#fff", fontSize: 12, fontWeight: "800" },
   viewerCount: { fontSize: 14, color: "#fff", fontWeight: "600" },
   bottomBar: { padding: 16, paddingBottom: 40, backgroundColor: "rgba(0,0,0,0.6)" },
@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   actionBtn: { alignItems: "center" },
   actionIcon: { fontSize: 24 },
   actionCount: { fontSize: 12, color: "#fff", marginTop: 2 },
-  startBtn: { backgroundColor: "#FF3B30", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
+  startBtn: { backgroundColor: colors.danger, borderRadius: 12, paddingVertical: 14, alignItems: "center" },
   startBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   endBtn: { backgroundColor: "#333", borderRadius: 12, paddingVertical: 14, alignItems: "center" },
-  endBtnText: { color: "#FF3B30", fontWeight: "700", fontSize: 16 },
+  endBtnText: { color: colors.danger, fontWeight: "700", fontSize: 16 },
 });

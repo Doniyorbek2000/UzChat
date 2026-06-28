@@ -78,7 +78,7 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: room.status === "LIVE" ? "#FF3B30" : "#FF9500" }]} />
+          <View style={[styles.statusDot, { backgroundColor: room.status === "LIVE" ? colors.danger : "#FF9500" }]} />
           <Text style={styles.statusText}>{room.status === "LIVE" ? "JONLI" : room.status}</Text>
         </View>
         <Text style={styles.title}>{room.title}</Text>
@@ -180,11 +180,11 @@ const styles = StyleSheet.create({
   speakerCard: { alignItems: "center", width: 72 },
   speakerAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   speakerAvatarText: { fontSize: 22, fontWeight: "700", color: "#fff" },
-  speakingIndicator: { position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: 7, backgroundColor: "#4CD964", borderWidth: 2, borderColor: "#fff" },
+  speakingIndicator: { position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: 7, backgroundColor: colors.online, borderWidth: 2, borderColor: "#fff" },
   speakerName: { fontSize: 11, color: colors.text, marginTop: 4, textAlign: "center" },
   mutedIcon: { fontSize: 10 },
   listenerCard: { alignItems: "center", width: "25%", marginBottom: 12 },
-  listenerAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: "#C7C7CC", alignItems: "center", justifyContent: "center" },
+  listenerAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.border, alignItems: "center", justifyContent: "center" },
   listenerAvatarText: { fontSize: 16, fontWeight: "600", color: "#fff" },
   listenerName: { fontSize: 10, color: colors.textSecondary, marginTop: 4, textAlign: "center" },
   controls: { flexDirection: "row", gap: 10, padding: 16, position: "absolute", bottom: 30, left: 0, right: 0, justifyContent: "center" },
@@ -194,6 +194,6 @@ const styles = StyleSheet.create({
   joinBtnText: { fontSize: 15, fontWeight: "600", color: "#fff" },
   leaveBtn: { backgroundColor: "#FF9500", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24 },
   leaveBtnText: { fontSize: 13, fontWeight: "600", color: "#fff" },
-  endBtn: { backgroundColor: "#FF3B30", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24 },
+  endBtn: { backgroundColor: colors.danger, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24 },
   endBtnText: { fontSize: 13, fontWeight: "600", color: "#fff" },
 });

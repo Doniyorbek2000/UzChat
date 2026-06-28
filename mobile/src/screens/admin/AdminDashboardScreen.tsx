@@ -193,5 +193,5 @@ const styles = StyleSheet.create({
   },
   menuIcon: { fontSize: 24, marginRight: 12 },
   menuText: { flex: 1, fontSize: 16, fontWeight: "600", color: colors.text },
-  menuArrow: { fontSize: 22, color: "#C7C7CC" },
+  menuArrow: { fontSize: 22, color: colors.textSecondary },
 });

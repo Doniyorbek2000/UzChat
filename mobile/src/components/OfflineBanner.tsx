@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, AppState } from "react-native";
 import { API_URL } from "../config/env";
+import { colors } from "../theme/colors";
 
 export function OfflineBanner() {
   const [offline, setOffline] = useState(false);
@@ -45,7 +46,7 @@ export function OfflineBanner() {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: colors.danger,
     paddingVertical: 6,
     alignItems: "center",
   },

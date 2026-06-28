@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   list: { padding: 12, paddingBottom: 20 },
   eventCard: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 10, borderLeftWidth: 4, gap: 14 },
   dateColumn: { alignItems: "center", width: 50 },
-  dateMonth: { fontSize: 10, fontWeight: "700", color: "#FF3B30", letterSpacing: 0.5 },
+  dateMonth: { fontSize: 10, fontWeight: "700", color: colors.danger, letterSpacing: 0.5 },
   dateDay: { fontSize: 28, fontWeight: "700", color: colors.text },
   dateTime: { fontSize: 10, color: colors.textSecondary },
   eventInfo: { flex: 1 },

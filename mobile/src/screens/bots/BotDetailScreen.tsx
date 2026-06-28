@@ -63,7 +63,7 @@ export function BotDetailScreen({ route, navigation }: Props) {
         <Text style={styles.botUsername}>@{bot.username}</Text>
         {bot.description && <Text style={styles.description}>{bot.description}</Text>}
         <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: bot.isActive ? "#34C759" : "#FF3B30" }]} />
+          <View style={[styles.statusDot, { backgroundColor: bot.isActive ? colors.online : colors.danger }]} />
           <Text style={styles.statusText}>{bot.isActive ? "Faol" : "Nofaol"}</Text>
           {bot.isInline && <Text style={styles.inlineBadge}>Inline</Text>}
         </View>
@@ -134,6 +134,6 @@ const styles = StyleSheet.create({
   toggleBtn: { backgroundColor: colors.background, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   toggleBtnText: { fontWeight: "600", fontSize: 15, color: colors.text },
   deleteBtn: { backgroundColor: "#FFEBEE", borderRadius: 10, paddingVertical: 12, alignItems: "center" },
-  deleteBtnText: { fontWeight: "600", fontSize: 15, color: "#FF3B30" },
+  deleteBtnText: { fontWeight: "600", fontSize: 15, color: colors.danger },
   emptyText: { textAlign: "center", color: colors.textSecondary, fontSize: 15, padding: 40 },
 });
