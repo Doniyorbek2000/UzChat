@@ -1,11 +1,13 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { addBookmarkSchema } from "./bookmarks.schema";
 import { bookmarksService } from "./bookmarks.service";
 
 const router = Router();
 router.use(requireAuth);
+router.param("bookmarkId", uuidParamHandler);
+router.param("messageId", uuidParamHandler);
 
 router.get("/", async (req: Request, res: Response) => {
   const bookmarks = await bookmarksService.list(req.user!.sub);

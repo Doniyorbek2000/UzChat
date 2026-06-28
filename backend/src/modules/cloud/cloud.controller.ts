@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { cloudService } from "./cloud.service";
 
 const createFolderSchema = z.object({
@@ -20,6 +20,8 @@ const uploadFileSchema = z.object({
 
 const router = Router();
 router.use(requireAuth);
+router.param("fileId", uuidParamHandler);
+router.param("folderId", uuidParamHandler);
 
 router.get("/files", async (req: Request, res: Response) => {
   const files = await cloudService.listFiles(req.user!.sub, req.query.folderId as string | undefined);

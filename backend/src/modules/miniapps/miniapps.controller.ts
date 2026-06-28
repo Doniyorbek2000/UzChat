@@ -1,12 +1,13 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { createMiniAppSchema, updateMiniAppSchema } from "./miniapps.schema";
 import { miniAppsService } from "./miniapps.service";
 
 const router = Router();
 
 router.use(requireAuth);
+router.param("id", uuidParamHandler);
 
 router.get("/", async (req: Request, res: Response) => {
   const category = req.query.category as string | undefined;

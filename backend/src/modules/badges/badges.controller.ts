@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { requireAdmin } from "../../middleware/admin.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { badgesService } from "./badges.service";
 
 export const badgeActionSchema = z.object({
@@ -12,6 +12,7 @@ export const badgeActionSchema = z.object({
 
 const r = Router();
 r.use(requireAuth);
+r.param("userId", uuidParamHandler);
 
 r.get("/available", async (_req, res) => {
   const badges = await badgesService.getAvailableBadges();

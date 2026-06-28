@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { requireAdmin } from "../../middleware/admin.middleware";
-import { validateBody, validateQuery } from "../../utils/validate";
+import { validateBody, validateQuery, uuidParamHandler } from "../../utils/validate";
 import { adminService } from "./admin.service";
 import { prisma } from "../../config/prisma";
 
@@ -10,6 +10,11 @@ const router = Router();
 
 router.use(requireAuth);
 router.use(requireAdmin);
+router.param("userId", uuidParamHandler);
+router.param("reportId", uuidParamHandler);
+router.param("postId", uuidParamHandler);
+router.param("reelId", uuidParamHandler);
+router.param("storyId", uuidParamHandler);
 
 const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

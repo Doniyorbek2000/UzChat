@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
+import { uuidParamHandler } from "../../utils/validate";
 import { notifLogService } from "./notiflog.service";
 
 const r = Router();
 r.use(requireAuth);
+r.param("id", uuidParamHandler);
 
 r.get("/", async (req, res) => {
   const cursor = req.query.cursor as string | undefined;

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { createRedPacketSchema } from "./redpackets.schema";
 import { redPacketsService } from "./redpackets.service";
 import { getIo } from "../../sockets";
@@ -8,6 +8,7 @@ import { getIo } from "../../sockets";
 const router = Router();
 
 router.use(requireAuth);
+router.param("id", uuidParamHandler);
 
 router.post("/", validateBody(createRedPacketSchema), async (req: Request, res: Response) => {
   const packet = await redPacketsService.create(req.user!.sub, req.body);

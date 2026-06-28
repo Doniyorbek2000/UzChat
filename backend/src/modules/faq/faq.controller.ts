@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { requireAdmin } from "../../middleware/admin.middleware";
-import { validateBody, validateQuery } from "../../utils/validate";
+import { validateBody, validateQuery, uuidParamHandler } from "../../utils/validate";
 import { faqService } from "./faq.service";
 
 export const faqCategoryQuery = z.object({
@@ -23,6 +23,7 @@ export const updateFaqSchema = createFaqSchema.partial();
 
 const r = Router();
 r.use(requireAuth);
+r.param("id", uuidParamHandler);
 
 r.get("/", validateQuery(faqCategoryQuery), async (req, res) => {
   const { category } = req.query as unknown as z.infer<typeof faqCategoryQuery>;

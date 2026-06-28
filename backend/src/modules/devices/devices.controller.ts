@@ -1,12 +1,14 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { registerDeviceSchema } from "./devices.schema";
 import { devicesService } from "./devices.service";
 
 const router = Router();
 
 router.use(requireAuth);
+router.param("deviceId", uuidParamHandler);
+router.param("userId", uuidParamHandler);
 
 router.post("/", validateBody(registerDeviceSchema), async (req: Request, res: Response) => {
   const device = await devicesService.registerDevice(req.user!.sub, req.body);

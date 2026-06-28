@@ -1,12 +1,14 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { createTopicSchema, updateTopicSchema } from "./forums.schema";
 import { forumsService } from "./forums.service";
 
 const router = Router({ mergeParams: true });
 
 router.use(requireAuth);
+router.param("id", uuidParamHandler);
+router.param("topicId", uuidParamHandler);
 
 router.get("/conversations/:id/topics", async (req: Request, res: Response) => {
   const topics = await forumsService.listTopics(req.params.id);

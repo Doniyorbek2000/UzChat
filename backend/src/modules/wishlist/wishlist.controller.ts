@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
+import { uuidParamHandler } from "../../utils/validate";
 import { wishlistService } from "./wishlist.service";
 
 const r = Router();
 r.use(requireAuth);
+r.param("productId", uuidParamHandler);
 
 r.get("/", async (req, res) => {
   const items = await wishlistService.getWishlist(req.user!.sub);

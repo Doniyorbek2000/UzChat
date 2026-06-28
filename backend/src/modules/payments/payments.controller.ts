@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { sendPaymentSchema, topUpSchema } from "./payments.schema";
 import { createQrPaymentSchema, payQrSchema } from "./qrPayments.schema";
 import { paymentsService } from "./payments.service";
@@ -10,6 +10,7 @@ import { getIo } from "../../sockets";
 const router = Router();
 
 router.use(requireAuth);
+router.param("qrPaymentId", uuidParamHandler);
 
 router.get("/balance", async (req: Request, res: Response) => {
   const balance = await paymentsService.getBalance(req.user!.sub);

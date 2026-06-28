@@ -1,11 +1,12 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
-import { validateBody } from "../../utils/validate";
+import { validateBody, uuidParamHandler } from "../../utils/validate";
 import { createBusinessProfileSchema } from "./business.schema";
 import { businessService } from "./business.service";
 
 const router = Router();
 router.use(requireAuth);
+router.param("userId", uuidParamHandler);
 
 router.get("/me", async (req: Request, res: Response) => {
   const profile = await businessService.getProfile(req.user!.sub);
