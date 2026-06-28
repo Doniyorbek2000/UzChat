@@ -580,6 +580,7 @@ export const chatsService = {
         _count: { select: { participants: true } },
       },
       orderBy: { updatedAt: "desc" },
+      take: 100,
     });
 
     return groups.map((g) => ({
@@ -649,6 +650,7 @@ export const chatsService = {
     const due = await prisma.pinnedMessage.findMany({
       where: { expiresAt: { lte: new Date() } },
       select: { id: true, conversationId: true, messageId: true },
+      take: 500,
     });
     if (due.length === 0) return [];
 

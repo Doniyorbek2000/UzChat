@@ -916,7 +916,7 @@ export const messagesService = {
       notifyReaction(userId, conversationId, message, emoji).catch(() => {});
     }
 
-    return prisma.messageReaction.findMany({ where: { messageId }, ...reactionSelect });
+    return prisma.messageReaction.findMany({ where: { messageId }, ...reactionSelect, take: 500 });
   },
 
   async votePoll(userId: string, conversationId: string, messageId: string, optionIds: string[]) {
@@ -949,7 +949,7 @@ export const messagesService = {
       });
     }
 
-    const votes = await prisma.pollVote.findMany({ where: { messageId }, ...pollVoteSelect });
+    const votes = await prisma.pollVote.findMany({ where: { messageId }, ...pollVoteSelect, take: 1000 });
     if (!message.pollAnonymous) {
       return { responseVotes: votes, broadcastVotes: votes };
     }
@@ -999,6 +999,7 @@ export const messagesService = {
     const stars = await prisma.messageStar.findMany({
       where: { userId, message: { deletedAt: null, NOT: { hiddenFor: { has: userId } } } },
       orderBy: { createdAt: "desc" },
+      take: 200,
       include: { message: { include: { replyTo: replyToSelect, reactions: reactionSelect, pollVotes: pollVoteSelect } } },
     });
 
@@ -1036,6 +1037,7 @@ export const messagesService = {
     const reminders = await prisma.messageReminder.findMany({
       where: { userId, message: { deletedAt: null, NOT: { hiddenFor: { has: userId } } } },
       orderBy: { remindAt: "asc" },
+      take: 100,
       include: { message: { include: messageInclude(userId) } },
     });
 
@@ -1051,6 +1053,7 @@ export const messagesService = {
     const due = await prisma.messageReminder.findMany({
       where: { remindAt: { lte: new Date() } },
       select: { id: true, userId: true, messageId: true, message: { select: { conversationId: true } } },
+      take: 500,
     });
     if (due.length === 0) return [];
 
