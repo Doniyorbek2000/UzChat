@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { adminApi, AdminReport } from "../../api/admin";
@@ -131,6 +132,7 @@ export default function AdminReportsScreen() {
       keyExtractor={(i) => i.id}
       renderItem={renderReport}
       contentContainerStyle={{ padding: 16 }}
+      refreshControl={<RefreshControl refreshing={false} onRefresh={() => load(page)} tintColor={colors.primary} />}
       ListEmptyComponent={
         <Text style={styles.empty}>Shikoyatlar yo'q</Text>
       }

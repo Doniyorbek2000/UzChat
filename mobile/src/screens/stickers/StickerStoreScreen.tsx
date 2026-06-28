@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, Image, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, Image, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { stickersApi, StickerPack } from "../../api/stickers";
@@ -14,6 +14,7 @@ export function StickerStoreScreen({ navigation }: Props) {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,6 +38,24 @@ export function StickerStoreScreen({ navigation }: Props) {
   }, [tab, search]);
 
   useEffect(() => { load(); }, [load]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      let data: StickerPack[];
+      if (search.trim()) {
+        data = await stickersApi.list(search.trim());
+      } else if (tab === "featured") {
+        data = await stickersApi.featured();
+      } else if (tab === "installed") {
+        data = await stickersApi.installed();
+      } else {
+        data = await stickersApi.myPacks();
+      }
+      setPacks(data);
+    } catch {}
+    setRefreshing(false);
+  }, [tab, search]);
 
   const renderPack = ({ item }: { item: StickerPack }) => (
     <TouchableOpacity
@@ -96,6 +115,7 @@ export function StickerStoreScreen({ navigation }: Props) {
           keyExtractor={(item) => item.id}
           renderItem={renderPack}
           contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           ListEmptyComponent={<Text style={styles.emptyText}>Stiker to'plami topilmadi</Text>}
         />
       )}

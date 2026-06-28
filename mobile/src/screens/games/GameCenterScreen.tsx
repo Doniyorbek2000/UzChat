@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { gamesApi, GameData } from "../../api/games";
@@ -21,6 +21,7 @@ export function GameCenterScreen({ navigation }: Props) {
   const [category, setCategory] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -62,6 +63,7 @@ export function GameCenterScreen({ navigation }: Props) {
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); const load = category === "all" ? gamesApi.getPopular() : gamesApi.getByCategory(category); load.then(setGames).catch(() => {}).finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>🎮</Text>

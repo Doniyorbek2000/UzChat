@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image,
+  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image, RefreshControl,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
@@ -25,6 +25,7 @@ export function MyStoresScreen({ navigation }: Props) {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,6 +55,7 @@ export function MyStoresScreen({ navigation }: Props) {
       data={stores}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.list}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); marketplaceApi.getMyStores().then(setStores).catch(() => {}).finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
       renderItem={({ item }) => (
         <TouchableOpacity
           style={styles.storeCard}

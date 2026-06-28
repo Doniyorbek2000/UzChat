@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { greetingsApi, SentCardData } from "../../api/greetings";
@@ -13,6 +13,7 @@ export function GreetingCardsScreen(_props: Props) {
   const [items, setItems] = useState<SentCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -58,6 +59,7 @@ export function GreetingCardsScreen(_props: Props) {
             );
           }}
           contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); const load = tab === "received" ? greetingsApi.getReceived() : greetingsApi.getSent(); load.then(setItems).catch(() => {}).finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>💌</Text>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Image, RefreshControl } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -17,6 +17,7 @@ export function StoriesScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const currentUser = useAuthStore((s) => s.user);
 
   const loadFeed = useCallback(async () => {
@@ -110,6 +111,7 @@ export function StoriesScreen({ navigation }: Props) {
       <FlatList
         data={otherStories}
         keyExtractor={(item) => item.user.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); storiesApi.getFeed().then(setFeed).catch(() => {}).finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.storyRow} onPress={() => onViewStory(item)}>
             <View style={[styles.storyAvatarRing, hasUnviewedStories(item) && styles.storyAvatarRingActive]}>

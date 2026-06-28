@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Image } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Image, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
@@ -38,6 +38,7 @@ export function MiniAppsScreen({ navigation }: Props) {
   const [apps, setApps] = useState<MiniApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
 
@@ -110,6 +111,7 @@ export function MiniAppsScreen({ navigation }: Props) {
           keyExtractor={(item) => item.id}
           numColumns={2}
           contentContainerStyle={styles.grid}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadApps().finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
           columnWrapperStyle={styles.gridRow}
           renderItem={({ item }) => (
             <TouchableOpacity
