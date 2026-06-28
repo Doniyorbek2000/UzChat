@@ -146,7 +146,14 @@ export default function AdminUsersScreen() {
           data={users}
           keyExtractor={(i) => i.id}
           renderItem={renderUser}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+          ListEmptyComponent={
+            !loading ? (
+              <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 40 }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 15 }}>Foydalanuvchilar topilmadi</Text>
+              </View>
+            ) : null
+          }
           ListFooterComponent={
             totalPages > 1 ? (
               <View style={styles.pagination}>

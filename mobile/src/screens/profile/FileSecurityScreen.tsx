@@ -57,7 +57,7 @@ export function FileSecurityScreen({}: Props) {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       {/* Xavfli fayllar */}
       <Text style={styles.sectionTitle}>Xavfli fayllar himoyasi</Text>
       <View style={styles.card}>

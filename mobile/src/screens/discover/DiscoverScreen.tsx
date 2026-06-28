@@ -94,8 +94,7 @@ export function DiscoverScreen({ navigation }: Props) {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
+    <ScrollView keyboardDismissMode="on-drag"       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >

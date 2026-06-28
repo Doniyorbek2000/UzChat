@@ -57,7 +57,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
     const canReset = code.length === 6 && newPassword.length >= 8 && confirmPassword.length > 0 && !loading;
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <ScrollView keyboardDismissMode="on-drag" contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Parolni tiklash</Text>
           <Text style={styles.subtitle}>{phone} raqamiga yuborilgan 6 xonali kodni va yangi parolni kiriting</Text>
 

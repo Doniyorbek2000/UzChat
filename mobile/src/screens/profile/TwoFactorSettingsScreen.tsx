@@ -94,7 +94,7 @@ export function TwoFactorSettingsScreen({}: Props) {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.description}>
         Yoqilganda, hisobingizga kirishda oddiy paroldan tashqari qo'shimcha (bulutli) parol ham so'raladi.
       </Text>

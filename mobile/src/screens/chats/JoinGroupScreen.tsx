@@ -75,7 +75,7 @@ export function JoinGroupScreen({ navigation }: Props) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Taklif havolasini joylashtiring</Text>
       <TextInput
         style={styles.input}

@@ -48,7 +48,7 @@ export function AddProductScreen({ route, navigation }: Props) {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.label}>Mahsulot nomi *</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom" placeholderTextColor={colors.textSecondary} maxLength={200} />
 

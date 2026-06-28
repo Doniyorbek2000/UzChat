@@ -38,7 +38,7 @@ export function CreatePostScreen({ navigation }: Props) {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView keyboardDismissMode="on-drag" contentContainerStyle={styles.scroll}>
         <TextInput
           style={styles.textInput}
           placeholder="Nima haqida o'ylayapsiz?"

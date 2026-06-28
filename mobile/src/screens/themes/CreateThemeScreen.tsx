@@ -58,7 +58,7 @@ export function CreateThemeScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
 
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Mavzu nomi</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Masalan: Mening mavzum" placeholderTextColor={colors.textSecondary} maxLength={50} />
 

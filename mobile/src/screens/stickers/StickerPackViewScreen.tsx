@@ -90,6 +90,9 @@ export function StickerPackViewScreen({ route }: Props) {
         renderItem={renderSticker}
         numColumns={4}
         contentContainerStyle={styles.grid}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>Bu to'plamda stikerlar yo'q</Text>
+        }
       />
     </View>
   );

@@ -223,7 +223,7 @@ export function ProfileScreen({ navigation }: Props) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onChangeAvatar} disabled={uploadingAvatar}>
           <Avatar uri={user.avatarUrl} name={user.displayName} size={72} />

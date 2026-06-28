@@ -39,7 +39,7 @@ export function SendRedPacketScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
 
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.envelope}>
         <Text style={styles.envelopeIcon}>🧧</Text>
         <Text style={styles.envelopeTitle}>Qizil Konvert</Text>

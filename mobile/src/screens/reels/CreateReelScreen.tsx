@@ -74,7 +74,7 @@ export function CreateReelScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
 
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       <TouchableOpacity style={styles.uploadArea} onPress={onPickVideo} disabled={uploading}>
         {uploading ? (
           <>

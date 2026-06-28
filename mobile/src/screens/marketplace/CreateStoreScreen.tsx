@@ -46,7 +46,7 @@ export function CreateStoreScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
 
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Do'kon nomi *</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Do'kon nomini kiriting" placeholderTextColor={colors.textSecondary} maxLength={100} />
 
