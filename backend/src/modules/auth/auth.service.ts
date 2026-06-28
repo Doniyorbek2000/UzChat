@@ -236,7 +236,7 @@ export const authService = {
 
   async requestLoginOtp({ phone }: RequestLoginOtpInput) {
     const user = await prisma.user.findUnique({ where: { phone }, select: { id: true } });
-    if (!user) throw Errors.badRequest("Bu raqam ro'yxatdan o'tmagan");
+    if (!user) return;
 
     await assertOtpCooldown(phone);
 
@@ -252,7 +252,7 @@ export const authService = {
 
   async verifyLoginOtp({ phone, code }: VerifyLoginOtpInput, userAgent?: string | null) {
     const user = await prisma.user.findUnique({ where: { phone } });
-    if (!user) throw Errors.badRequest("Bu raqam ro'yxatdan o'tmagan");
+    if (!user) throw Errors.badRequest("Tasdiqlash kodi noto'g'ri");
 
     const otp = await prisma.otpCode.findFirst({
       where: { phone },

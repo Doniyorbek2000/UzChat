@@ -16,7 +16,8 @@ export const passwordSchema = z
   .max(128, "Parol juda uzun")
   .regex(/[a-z]/, "Parolda kamida bitta kichik harf bo'lishi kerak")
   .regex(/[A-Z]/, "Parolda kamida bitta katta harf bo'lishi kerak")
-  .regex(/\d/, "Parolda kamida bitta raqam bo'lishi kerak");
+  .regex(/\d/, "Parolda kamida bitta raqam bo'lishi kerak")
+  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, "Parolda kamida bitta maxsus belgi bo'lishi kerak (!@#$%^&*)");
 
 export const requestOtpSchema = z.object({
   phone: phoneSchema,
@@ -24,7 +25,7 @@ export const requestOtpSchema = z.object({
 
 export const verifyOtpSchema = z.object({
   phone: phoneSchema,
-  code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
+  code: z.string().regex(/^\d{6}$/, "Tasdiqlash kodi 6 xonali raqam bo'lishi kerak"),
   username: usernameSchema,
   displayName: z.string().trim().min(1, "Ism kiritilishi shart").max(64),
   password: passwordSchema,
@@ -52,7 +53,7 @@ export const requestPhoneChangeSchema = z.object({
 
 export const verifyPhoneChangeSchema = z.object({
   newPhone: phoneSchema,
-  code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
+  code: z.string().regex(/^\d{6}$/, "Tasdiqlash kodi 6 xonali raqam bo'lishi kerak"),
 });
 
 export const requestTwoFactorRecoverySchema = z.object({
@@ -61,7 +62,7 @@ export const requestTwoFactorRecoverySchema = z.object({
 
 export const verifyTwoFactorRecoverySchema = z.object({
   pendingToken: z.string().min(1),
-  code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
+  code: z.string().regex(/^\d{6}$/, "Tasdiqlash kodi 6 xonali raqam bo'lishi kerak"),
 });
 
 export const requestLoginOtpSchema = z.object({
@@ -70,7 +71,7 @@ export const requestLoginOtpSchema = z.object({
 
 export const verifyLoginOtpSchema = z.object({
   phone: phoneSchema,
-  code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
+  code: z.string().regex(/^\d{6}$/, "Tasdiqlash kodi 6 xonali raqam bo'lishi kerak"),
 });
 
 export const requestPasswordResetSchema = z.object({
@@ -79,7 +80,7 @@ export const requestPasswordResetSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   phone: phoneSchema,
-  code: z.string().length(6, "Tasdiqlash kodi 6 xonali bo'lishi kerak"),
+  code: z.string().regex(/^\d{6}$/, "Tasdiqlash kodi 6 xonali raqam bo'lishi kerak"),
   newPassword: passwordSchema,
 });
 

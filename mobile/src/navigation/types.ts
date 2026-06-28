@@ -128,7 +128,6 @@ export type RootStackParamList = {
   Events: undefined;
   ConversationEvents: { conversationId: string };
   GlobalSearch: undefined;
-  ChannelSubscriptions: { conversationId: string };
   MySubscriptions: undefined;
   Bookmarks: undefined;
   Notes: undefined;

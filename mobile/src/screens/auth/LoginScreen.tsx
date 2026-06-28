@@ -66,19 +66,7 @@ export function LoginScreen({ navigation }: Props) {
       startCountdown();
       setTimeout(() => codeRef.current?.focus(), 300);
     } catch (err: any) {
-      const msg = err?.response?.data?.error?.message ?? "SMS yuborishda xatolik";
-      if (msg.includes("ro'yxatdan o'tmagan")) {
-        Alert.alert(
-          "Hisob topilmadi",
-          "Bu raqam bilan hisob mavjud emas. Ro'yxatdan o'tmoqchimisiz?",
-          [
-            { text: "Bekor qilish", style: "cancel" },
-            { text: "Ro'yxatdan o'tish", onPress: () => navigation.navigate("Register") },
-          ]
-        );
-      } else {
-        Alert.alert("Xatolik", msg);
-      }
+      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "SMS yuborishda xatolik");
     } finally {
       setLoading(false);
     }

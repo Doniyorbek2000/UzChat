@@ -48,7 +48,7 @@ describe("Auth schemas", () => {
 
   describe("passwordSchema", () => {
     it("accepts valid password", () => {
-      expect(passwordSchema.safeParse("MyPassword1").success).toBe(true);
+      expect(passwordSchema.safeParse("MyPassword1!").success).toBe(true);
     });
 
     it("rejects password without uppercase", () => {
@@ -68,7 +68,11 @@ describe("Auth schemas", () => {
     });
 
     it("accepts 10+ char password with all requirements", () => {
-      expect(passwordSchema.safeParse("SecurePass99").success).toBe(true);
+      expect(passwordSchema.safeParse("SecurePass99!").success).toBe(true);
+    });
+
+    it("rejects password without special character", () => {
+      expect(passwordSchema.safeParse("SecurePass99").success).toBe(false);
     });
   });
 
@@ -96,7 +100,7 @@ describe("Auth schemas", () => {
         code: "123456",
         username: "testuser",
         displayName: "Test User",
-        password: "MyPassword1",
+        password: "MyPassword1!",
         publicKey: "a".repeat(44),
       });
       expect(result.success).toBe(true);
@@ -108,7 +112,7 @@ describe("Auth schemas", () => {
         code: "12345",
         username: "testuser",
         displayName: "Test",
-        password: "MyPassword1",
+        password: "MyPassword1!",
         publicKey: "a".repeat(44),
       });
       expect(result.success).toBe(false);
@@ -120,7 +124,7 @@ describe("Auth schemas", () => {
         code: "123456",
         username: "testuser",
         displayName: "  Test User  ",
-        password: "MyPassword1",
+        password: "MyPassword1!",
         publicKey: "a".repeat(44),
       });
       expect(result.success).toBe(true);

@@ -134,8 +134,8 @@ export function RegisterScreen({ navigation }: Props) {
       Alert.alert("Xatolik", "Bu username band");
       return;
     }
-    if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
-      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak");
+    if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf, 1 raqam va 1 maxsus belgi (!@#$%) bo'lishi kerak");
       return;
     }
 
@@ -271,7 +271,7 @@ export function RegisterScreen({ navigation }: Props) {
               <TextInput
                 ref={passwordRef}
                 style={styles.input}
-                placeholder="Parol (kamida 10 ta belgi, AaBb1)"
+                placeholder="Parol (kamida 10 ta belgi, AaBb1!)"
                 placeholderTextColor={colors.textSecondary}
                 secureTextEntry
                 autoComplete="password"

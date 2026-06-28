@@ -5,6 +5,7 @@ import { requireAdmin } from "../../middleware/admin.middleware";
 import { validateBody, validateQuery, uuidParamHandler } from "../../utils/validate";
 import { adminService } from "./admin.service";
 import { prisma } from "../../config/prisma";
+import { logger } from "../../utils/logger";
 
 const router = Router();
 
@@ -31,7 +32,9 @@ const setVerifiedSchema = z.object({
 function auditLog(adminId: string, action: string, targetType?: string, targetId?: string, details?: string, ip?: string) {
   prisma.adminAuditLog.create({
     data: { adminId, action, targetType, targetId, details, ip },
-  }).catch(() => {});
+  }).catch((err) => {
+    logger.error("Admin audit log yozishda xatolik", { error: (err as Error).message, action, targetType, targetId });
+  });
 }
 
 router.get("/dashboard", async (_req: Request, res: Response) => {
