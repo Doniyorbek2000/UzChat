@@ -938,6 +938,7 @@ export const chatsService = {
       where: { conversationId },
       include: { user: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
+      take: 200,
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
     return requests.map((r) => ({
@@ -1517,6 +1518,7 @@ export const chatsService = {
     const bans = await prisma.groupBan.findMany({
       where: { conversationId },
       orderBy: { createdAt: "desc" },
+      take: 200,
     });
     const users = await prisma.user.findMany({
       where: { id: { in: bans.map((b) => b.bannedUserId) } },

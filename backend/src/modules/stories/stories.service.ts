@@ -37,6 +37,7 @@ export const storiesService = {
     const contacts = await prisma.contact.findMany({
       where: { ownerId: userId, status: "ACCEPTED" },
       select: { targetId: true },
+      take: 500,
     });
     const contactIds = contacts.map((c) => c.targetId);
     contactIds.push(userId);
@@ -47,6 +48,7 @@ export const storiesService = {
         expiresAt: { gt: new Date() },
       },
       orderBy: { createdAt: "desc" },
+      take: 500,
       include: {
         user: { select: userSummarySelect },
         views: { where: { userId }, select: { userId: true } },
@@ -94,6 +96,7 @@ export const storiesService = {
     return prisma.storyView.findMany({
       where: { storyId },
       orderBy: { viewedAt: "desc" },
+      take: 200,
       include: { user: { select: userSummarySelect } },
     });
   },
