@@ -282,7 +282,7 @@ async function loadPage() {
       case "logins": await loadLogins(el); break;
       case "settings": await loadSettings(el); break;
     }
-  } catch (e) { el.innerHTML = `<div class="card"><div class="error">${e.message}</div></div>`; }
+  } catch (e) { el.innerHTML = `<div class="card"><div class="error">${esc(e.message)}</div></div>`; }
 }
 
 async function loadDashboard(el) {
@@ -328,7 +328,7 @@ let usersPage = 1, usersSearch = "";
 async function loadUsers(el) {
   const data = await api(`/admin/users?page=${usersPage}&limit=20${usersSearch?"&search="+encodeURIComponent(usersSearch):""}`);
   el.innerHTML = `
-    <div class="search-bar"><input id="userSearch" placeholder="Qidirish (ism, username, telefon)" value="${usersSearch}"><button class="btn btn-primary btn-sm" onclick="exportUsersCSV()">CSV eksport</button></div>
+    <div class="search-bar"><input id="userSearch" placeholder="Qidirish (ism, username, telefon)" value="${esc(usersSearch)}"><button class="btn btn-primary btn-sm" onclick="exportUsersCSV()">CSV eksport</button></div>
     <div class="card">
       <table><thead><tr><th>Foydalanuvchi</th><th>Username</th><th>Telefon</th><th>Holat</th><th>Ro'yxatdan o'tgan</th><th>Amallar</th></tr></thead>
       <tbody>${data.users.length?data.users.map(u=>`<tr>
@@ -400,7 +400,7 @@ let postsPage = 1, postsSearch = "";
 async function loadPosts(el) {
   const data = await api(`/admin/posts?page=${postsPage}&limit=20${postsSearch?"&search="+encodeURIComponent(postsSearch):""}`);
   el.innerHTML = `
-    <div class="search-bar"><input id="postSearch" placeholder="Post kontenti bo'yicha qidirish" value="${postsSearch}"></div>
+    <div class="search-bar"><input id="postSearch" placeholder="Post kontenti bo'yicha qidirish" value="${esc(postsSearch)}"></div>
     <div class="card">
       <table><thead><tr><th>Muallif</th><th>Kontent</th><th>Layklar</th><th>Izohlar</th><th>Sana</th><th>Amallar</th></tr></thead>
       <tbody>${data.posts.length?data.posts.map(p=>`<tr>
