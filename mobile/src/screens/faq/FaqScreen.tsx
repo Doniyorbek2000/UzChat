@@ -72,7 +72,7 @@ export function FaqScreen(_props: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
-  searchInput: { margin: 12, backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: colors.text },
+  searchInput: { margin: 12, backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border },
   loader: { marginTop: 40 },
   list: { paddingHorizontal: 12, paddingBottom: 20 },
   faqCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 6 },

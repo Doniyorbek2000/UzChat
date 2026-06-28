@@ -116,7 +116,7 @@ export function ThemeStoreScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
-  searchInput: { margin: 12, backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
+  searchInput: { margin: 12, backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border },
   tabs: { flexDirection: "row", paddingHorizontal: 12, gap: 8, marginBottom: 8 },
   tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: colors.background, alignItems: "center" },
   tabActive: { backgroundColor: colors.primary },

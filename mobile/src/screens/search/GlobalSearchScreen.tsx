@@ -179,7 +179,7 @@ export function GlobalSearchScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   searchBar: { paddingHorizontal: 12, paddingTop: 8 },
-  searchInput: { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, color: colors.text },
+  searchInput: { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, color: colors.text, borderWidth: 1, borderColor: colors.border },
   tabs: { flexDirection: "row", paddingHorizontal: 12, paddingTop: 10, gap: 6 },
   tab: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.background },
   tabActive: { backgroundColor: colors.primary },
