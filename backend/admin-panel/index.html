@@ -292,7 +292,7 @@ async function loadPage() {
 }
 
 async function loadDashboard(el) {
-  const [stats, health, contentStats] = await Promise.all([api("/admin/dashboard"), api("/admin/health"), api("/admin/content-stats")]);
+  const [stats, health, contentStats, onlineData] = await Promise.all([api("/admin/dashboard"), api("/admin/health"), api("/admin/content-stats"), api("/admin/online-users")]);
   const fmtBytes = b => (b/1024/1024).toFixed(1)+" MB";
   const fmtUp = s => { const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60); return (d?d+"k ":"")+(h?h+"s ":"")+m+"d"; };
   const days = ["Yak","Du","Se","Chor","Pay","Ju","Sha"];
@@ -305,7 +305,7 @@ async function loadDashboard(el) {
   const maxVal = Math.max(...chartBars.map(b=>b.val));
   el.innerHTML = `
     <div class="stats-grid">
-      <div class="stat-card" style="border-left-color:var(--primary)"><div class="value">${stats.users.total.toLocaleString()}</div><div class="label">Foydalanuvchilar</div><div class="sub">Bugun: +${stats.users.newToday}</div></div>
+      <div class="stat-card" style="border-left-color:var(--primary)"><div class="value">${stats.users.total.toLocaleString()}</div><div class="label">Foydalanuvchilar</div><div class="sub">Bugun: +${stats.users.newToday} | <span style="color:var(--success)">●</span> ${onlineData.online} onlayn</div></div>
       <div class="stat-card" style="border-left-color:var(--success)"><div class="value">${stats.conversations.total.toLocaleString()}</div><div class="label">Suhbatlar</div></div>
       <div class="stat-card" style="border-left-color:var(--warning)"><div class="value">${stats.messages.total.toLocaleString()}</div><div class="label">Xabarlar</div><div class="sub">Bugun: ${stats.messages.today}</div></div>
       <div class="stat-card" style="border-left-color:var(--purple)"><div class="value">${stats.stores.total.toLocaleString()}</div><div class="label">Do'konlar</div></div>
@@ -485,14 +485,17 @@ let reportsPage = 1;
 async function loadReports(el) {
   const data = await api(`/admin/reports?page=${reportsPage}`);
   el.innerHTML = `<div class="card">
-    <table><thead><tr><th>Shikoyatchi</th><th>Sabab</th><th>Holat</th><th>Sana</th><th>Amallar</th></tr></thead>
+    <div class="filter-row"><span style="font-size:13px;color:var(--text2)">Jami: ${data.total} ta shikoyat</span></div>
+    <table><thead><tr><th>Shikoyatchi</th><th>Shikoyat qilingan</th><th>Sabab</th><th>Tavsif</th><th>Holat</th><th>Sana</th><th>Amallar</th></tr></thead>
     <tbody>${data.reports.length?data.reports.map(r=>`<tr>
-      <td>${esc(r.reporter?.displayName||"-")}</td>
-      <td>${esc(r.reason||"-")}</td>
+      <td>${esc(r.reporter?.displayName||"-")} <span style="color:var(--text3);font-size:11px">@${esc(r.reporter?.username||"")}</span></td>
+      <td>${esc(r.reportedUser?.displayName||"-")} <span style="color:var(--text3);font-size:11px">@${esc(r.reportedUser?.username||"")}</span></td>
+      <td><span class="badge badge-pending">${esc(r.reason)}</span></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(r.description)}">${esc(r.description||"-")}</td>
       <td><span class="badge badge-${r.status==='PENDING'?'pending':r.status==='RESOLVED'?'resolved':'dismissed'}">${r.status==='PENDING'?'Kutilmoqda':r.status==='RESOLVED'?'Hal qilindi':'Rad etildi'}</span></td>
       <td>${new Date(r.createdAt).toLocaleDateString("uz")}</td>
       <td>${r.status==='PENDING'?`<button class="btn btn-sm btn-primary" onclick="resolveReport('${r.id}')">Hal qilish</button> <button class="btn btn-sm" style="background:var(--border)" onclick="dismissReport('${r.id}')">Rad etish</button>`:'-'}</td>
-    </tr>`).join(""):'<tr><td colspan="5" class="empty">Shikoyatlar yo\'q</td></tr>'}</tbody></table>
+    </tr>`).join(""):'<tr><td colspan="7" class="empty">Shikoyatlar yo\'q</td></tr>'}</tbody></table>
   </div>
   <div class="pagination">
     <button ${reportsPage<=1?"disabled":""} onclick="reportsPage--;loadPage()">Oldingi</button>
@@ -500,8 +503,8 @@ async function loadReports(el) {
     <button ${data.reports.length<50?"disabled":""} onclick="reportsPage++;loadPage()">Keyingi</button>
   </div>`;
 }
-window.resolveReport = async function(id) { try { await api(`/admin/reports/${id}/resolve`,{method:"PATCH"}); loadPage(); } catch(e) { alert(e.message); } };
-window.dismissReport = async function(id) { try { await api(`/admin/reports/${id}/dismiss`,{method:"PATCH"}); loadPage(); } catch(e) { alert(e.message); } };
+window.resolveReport = async function(id) { if(!confirm("Shikoyatni hal qilingan deb belgilamoqchimisiz?")) return; try { await api(`/admin/reports/${id}/resolve`,"PATCH"); showToast("Shikoyat hal qilindi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); } };
+window.dismissReport = async function(id) { if(!confirm("Shikoyatni rad etmoqchimisiz?")) return; try { await api(`/admin/reports/${id}/dismiss`,"PATCH"); showToast("Shikoyat rad etildi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); } };
 
 let auditPage = 1;
 async function loadAudit(el) {

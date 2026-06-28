@@ -134,6 +134,7 @@ export const adminService = {
         take: limit,
         include: {
           reporter: { select: { id: true, username: true, displayName: true } },
+          reportedUser: { select: { id: true, username: true, displayName: true } },
         },
       }),
       prisma.report.count(),
