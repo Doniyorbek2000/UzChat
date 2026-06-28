@@ -106,6 +106,7 @@ export function ConversationEventsScreen({ route }: Props) {
       )}
 
       <FlatList
+        keyboardShouldPersistTaps="handled"
         data={events}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {

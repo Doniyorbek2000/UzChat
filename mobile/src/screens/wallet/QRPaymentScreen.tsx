@@ -102,6 +102,7 @@ export function QRPaymentScreen({ navigation }: Props) {
         <ErrorView message="Tarixni yuklab bo'lmadi" onRetry={loadData} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={history}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (

@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, decryptReplyPreview } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { MessageReminderInfo } from "../../types";
 import { getConversationDisplay, formatTime } from "../../utils/conversation";
@@ -24,16 +25,18 @@ export function RemindersScreen({ navigation }: Props) {
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const user = useAuthStore((s) => s.user);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
 
-  useFocusEffect(
-    useCallback(() => {
-      Promise.all([fetchReminders(), loadConversations()])
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }, [fetchReminders, loadConversations])
-  );
+  const loadAll = useCallback(() => {
+    setError(false);
+    Promise.all([fetchReminders(), loadConversations()])
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [fetchReminders, loadConversations]);
+
+  useFocusEffect(loadAll);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -128,6 +131,10 @@ export function RemindersScreen({ navigation }: Props) {
     );
   }
 
+  if (error) {
+    return <ErrorView message="Eslatmalarni yuklab bo'lmadi" onRetry={loadAll} />;
+  }
+
   return (
     <View style={styles.container}>
       {reminders.length > 0 && (
@@ -149,6 +156,7 @@ export function RemindersScreen({ navigation }: Props) {
         </View>
       )}
       <FlatList
+        keyboardShouldPersistTaps="handled"
         data={filteredReminders}
         keyExtractor={(item) => item.message.id}
         renderItem={renderItem}

@@ -165,6 +165,7 @@ export function StarredMessagesScreen({ navigation }: Props) {
         </View>
       )}
       <FlatList
+        keyboardShouldPersistTaps="handled"
         data={filteredMessages}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}

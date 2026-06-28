@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { useChatStore } from "../../store/chatStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
 
@@ -15,16 +16,22 @@ export function NewChannelScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState("");
   const createChannelConversation = useChatStore((s) => s.createChannelConversation);
 
-  useEffect(() => {
+  const loadContacts = () => {
+    setError(false);
     contactsApi
       .list()
       .then(setContacts)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadContacts();
   }, []);
 
   const filteredContacts = useMemo(() => {
@@ -74,6 +81,10 @@ export function NewChannelScreen({ navigation }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={loadContacts} />;
   }
 
   return (

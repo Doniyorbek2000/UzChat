@@ -96,6 +96,7 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
         </View>
       )}
       <FlatList
+        keyboardShouldPersistTaps="handled"
         data={filteredPinnedMessages}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={Separator}

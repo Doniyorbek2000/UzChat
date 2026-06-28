@@ -92,6 +92,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
         <ErrorView message="Izohlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadComments().finally(() => setLoading(false)); }} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={comments}
           keyExtractor={(item) => item.id}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}

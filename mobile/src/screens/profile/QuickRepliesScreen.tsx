@@ -83,6 +83,7 @@ export function QuickRepliesScreen() {
         qo'shishingiz mumkin.
       </Text>
       <FlatList
+        keyboardShouldPersistTaps="handled"
         data={quickReplies}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
