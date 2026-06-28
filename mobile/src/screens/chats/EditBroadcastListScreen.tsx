@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { broadcastsApi } from "../../api/broadcasts";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
 
@@ -16,15 +17,21 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set(list?.memberIds ?? []));
   const [name, setName] = useState(list?.name ?? "");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
+  const loadContacts = () => {
+    setError(false);
     contactsApi
       .list()
       .then(setContacts)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadContacts();
   }, []);
 
   const filteredContacts = useMemo(() => {
@@ -78,6 +85,10 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={loadContacts} />;
   }
 
   return (

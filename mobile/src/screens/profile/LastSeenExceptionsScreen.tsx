@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact, LastSeenException } from "../../types";
 
@@ -15,15 +16,17 @@ export function LastSeenExceptionsScreen({}: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [exceptions, setExceptions] = useState<LastSeenException[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState("");
 
   const load = useCallback(() => {
+    setError(false);
     Promise.all([contactsApi.list(), usersApi.listLastSeenExceptions()])
       .then(([c, e]) => {
         setContacts(c);
         setExceptions(e);
       })
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -76,6 +79,10 @@ export function LastSeenExceptionsScreen({}: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Ma'lumotlarni yuklab bo'lmadi" onRetry={load} />;
   }
 
   return (

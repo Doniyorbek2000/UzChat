@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { chatsApi } from "../../api/chats";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { GroupAuditLogEntry } from "../../types";
 import { formatTime } from "../../utils/conversation";
@@ -123,18 +124,20 @@ export function GroupAuditLogScreen({ route }: Props) {
   const { conversationId } = route.params;
   const [entries, setEntries] = useState<GroupAuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
   const load = useCallback(() => {
+    setError(false);
     chatsApi
       .getAuditLog(conversationId)
       .then((data) => {
         setEntries(data);
         setHasMore(data.length === PAGE_SIZE);
       })
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [conversationId]);
 
@@ -167,6 +170,10 @@ export function GroupAuditLogScreen({ route }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Audit logni yuklab bo'lmadi" onRetry={load} />;
   }
 
   return (

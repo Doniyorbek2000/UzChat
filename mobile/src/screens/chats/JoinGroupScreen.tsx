@@ -7,6 +7,7 @@ import { useChatStore } from "../../store/chatStore";
 import { chatsApi } from "../../api/chats";
 import { decodeInviteLink } from "../../crypto/e2ee";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { InvitePreview, MyGroupJoinRequest } from "../../types";
 
@@ -20,12 +21,14 @@ export function JoinGroupScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [joining, setJoining] = useState(false);
   const [myRequests, setMyRequests] = useState<MyGroupJoinRequest[]>([]);
+  const [requestsError, setRequestsError] = useState(false);
 
   const loadMyRequests = useCallback(() => {
+    setRequestsError(false);
     chatsApi
       .listMyJoinRequests()
       .then(setMyRequests)
-      .catch(() => {});
+      .catch(() => setRequestsError(true));
   }, []);
 
   useFocusEffect(loadMyRequests);
@@ -111,6 +114,13 @@ export function JoinGroupScreen({ navigation }: Props) {
         </View>
       )}
 
+      {requestsError && (
+        <View style={styles.requestsSection}>
+          <TouchableOpacity onPress={loadMyRequests}>
+            <Text style={[styles.requestsTitle, { color: colors.danger }]}>So'rovlarni yuklab bo'lmadi. Qayta urinish</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       {myRequests.length > 0 && (
         <View style={styles.requestsSection}>
           <Text style={styles.requestsTitle}>Yuborilgan so'rovlar</Text>

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { adminApi, AdminUser } from "../../api/admin";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 export default function AdminUsersScreen() {
@@ -19,16 +20,18 @@ export default function AdminUsersScreen() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async (p = 1, q = "") => {
     setLoading(true);
+    setError(false);
     try {
       const res = await adminApi.listUsers(p, q || undefined);
       setUsers(res.users);
       setPage(res.page);
       setTotalPages(res.totalPages);
     } catch {
-      // ignore
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -111,7 +114,7 @@ export default function AdminUsersScreen() {
         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isAdmin ? colors.danger : colors.primary }]} onPress={() => toggleAdmin(item)}>
           <Text style={styles.actionText}>{item.isAdmin ? "Admin o'chirish" : "Admin qilish"}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isVerified ? "#FF9500" : "#34C759" }]} onPress={() => toggleVerified(item)}>
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isVerified ? colors.textSecondary : colors.primary }]} onPress={() => toggleVerified(item)}>
           <Text style={styles.actionText}>{item.isVerified ? "Tasdiq olish" : "Tasdiqlash"}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.danger }]} onPress={() => deleteUser(item)}>
@@ -140,6 +143,8 @@ export default function AdminUsersScreen() {
 
       {loading && users.length === 0 ? (
         <ActivityIndicator size="large" style={{ marginTop: 40 }} color={colors.primary} />
+      ) : error && users.length === 0 ? (
+        <ErrorView message="Foydalanuvchilarni yuklab bo'lmadi" onRetry={() => load(1, search)} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"
@@ -184,6 +189,8 @@ const styles = StyleSheet.create({
     height: 40,
     fontSize: 15,
     color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   searchBtn: { backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 16, justifyContent: "center" },
   searchBtnText: { color: "#fff", fontWeight: "600" },
