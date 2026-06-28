@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { loyaltyApi, LoyaltyPointsData, LoyaltyTxn, LeaderboardEntry } from "../../api/loyalty";
@@ -10,6 +10,13 @@ type Props = NativeStackScreenProps<RootStackParamList, "Loyalty">;
 
 const LEVEL_ICONS: Record<string, string> = { bronze: "🥉", silver: "🥈", gold: "🥇", diamond: "💎" };
 const LEVEL_LABELS: Record<string, string> = { bronze: "Bronza", silver: "Kumush", gold: "Oltin", diamond: "Olmos" };
+
+const REWARDS = [
+  { id: "r1", icon: "🎨", name: "Maxsus stiker to'plami", cost: 100, desc: "Premium stikerlar" },
+  { id: "r2", icon: "🏷️", name: "Profil badge", cost: 250, desc: "Maxsus profil nishoni" },
+  { id: "r3", icon: "🎨", name: "Maxsus mavzu", cost: 500, desc: "Premium ilova mavzusi" },
+  { id: "r4", icon: "💎", name: "VIP status (1 oy)", cost: 1000, desc: "1 oylik VIP imkoniyatlar" },
+];
 
 export function LoyaltyScreen(_props: Props) {
   const [tab, setTab] = useState<"overview" | "history" | "leaderboard">("overview");
@@ -62,12 +69,62 @@ export function LoyaltyScreen(_props: Props) {
       ) : error ? (
         <ErrorView message="Ma'lumotlarni yuklab bo'lmadi" onRetry={loadData} />
       ) : tab === "overview" && points ? (
-        <View style={styles.overviewCard}>
-          <Text style={styles.levelIcon}>{LEVEL_ICONS[points.level] ?? "🥉"}</Text>
-          <Text style={styles.pointsValue}>{points.points.toLocaleString()}</Text>
-          <Text style={styles.pointsLabel}>ball</Text>
-          <Text style={styles.levelText}>{LEVEL_LABELS[points.level] ?? points.level} darajasi</Text>
-        </View>
+        <FlatList
+          data={REWARDS}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <View style={styles.overviewCard}>
+              <Text style={styles.levelIcon}>{LEVEL_ICONS[points.level] ?? "🥉"}</Text>
+              <Text style={styles.pointsValue}>{points.points.toLocaleString()}</Text>
+              <Text style={styles.pointsLabel}>ball</Text>
+              <Text style={styles.levelText}>{LEVEL_LABELS[points.level] ?? points.level} darajasi</Text>
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: `${Math.min(100, (points.points % 1000) / 10)}%` }]} />
+                </View>
+                <Text style={styles.progressText}>Keyingi daraja: {Math.max(0, 1000 - (points.points % 1000))} ball</Text>
+              </View>
+            </View>
+          }
+          ListHeaderComponentStyle={{ marginBottom: 8 }}
+          renderItem={({ item }) => {
+            const canAfford = points.points >= item.cost;
+            return (
+              <TouchableOpacity
+                style={[styles.rewardCard, !canAfford && styles.rewardCardDisabled]}
+                onPress={() => {
+                  if (!canAfford) {
+                    Alert.alert("Ball yetarli emas", `Bu mukofot uchun ${item.cost} ball kerak`);
+                    return;
+                  }
+                  Alert.alert("Mukofot olish", `${item.name} uchun ${item.cost} ball sarflaysizmi?`, [
+                    { text: "Bekor qilish", style: "cancel" },
+                    { text: "Olish", onPress: async () => {
+                      try {
+                        await loyaltyApi.spend(item.cost, `Mukofot: ${item.name}`);
+                        setPoints({ ...points, points: points.points - item.cost });
+                        Alert.alert("Tabriklaymiz!", `${item.name} muvaffaqiyatli olindi`);
+                      } catch {
+                        Alert.alert("Xatolik", "Mukofotni olib bo'lmadi");
+                      }
+                    }},
+                  ]);
+                }}
+              >
+                <Text style={styles.rewardIcon}>{item.icon}</Text>
+                <View style={styles.rewardInfo}>
+                  <Text style={styles.rewardName}>{item.name}</Text>
+                  <Text style={styles.rewardDesc}>{item.desc}</Text>
+                </View>
+                <View style={[styles.rewardCost, canAfford && styles.rewardCostAffordable]}>
+                  <Text style={[styles.rewardCostText, canAfford && styles.rewardCostTextAffordable]}>{item.cost}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        />
       ) : tab === "history" ? (
         <FlatList
           data={history}
@@ -135,4 +192,18 @@ const styles = StyleSheet.create({
   lbName: { fontSize: 15, fontWeight: "600", color: colors.text },
   lbLevel: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   emptyText: { textAlign: "center", color: colors.textSecondary, fontSize: 15, padding: 40 },
+  progressContainer: { marginTop: 16, width: "100%", alignItems: "center" },
+  progressBar: { width: "80%", height: 6, borderRadius: 3, backgroundColor: colors.border },
+  progressFill: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  progressText: { fontSize: 11, color: colors.textSecondary, marginTop: 6 },
+  rewardCard: { flexDirection: "row", alignItems: "center", backgroundColor: colors.background, borderRadius: 12, padding: 14, marginBottom: 6, gap: 12 },
+  rewardCardDisabled: { opacity: 0.5 },
+  rewardIcon: { fontSize: 28 },
+  rewardInfo: { flex: 1 },
+  rewardName: { fontSize: 15, fontWeight: "600", color: colors.text },
+  rewardDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  rewardCost: { backgroundColor: colors.border, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 6 },
+  rewardCostAffordable: { backgroundColor: colors.primary },
+  rewardCostText: { fontSize: 13, fontWeight: "700", color: colors.textSecondary },
+  rewardCostTextAffordable: { color: "#fff" },
 });

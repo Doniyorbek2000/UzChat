@@ -8,7 +8,7 @@ import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ForumTopics">;
 
-export function ForumTopicsScreen({ route }: Props) {
+export function ForumTopicsScreen({ route, navigation }: Props) {
   const { conversationId } = route.params;
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +126,11 @@ export function ForumTopicsScreen({ route }: Props) {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[styles.topicCard, item.isPinned && styles.pinnedCard]}
+            onPress={() => navigation.navigate("ChatRoom", {
+              conversationId,
+              title: item.title,
+              highlightMessageId: undefined,
+            })}
             onLongPress={() => {
               Alert.alert(item.title, undefined, [
                 { text: item.isPinned ? "Olib tashlash" : "Qadash", onPress: () => handleTogglePin(item) },
