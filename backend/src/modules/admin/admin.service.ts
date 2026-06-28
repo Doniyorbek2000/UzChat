@@ -123,6 +123,7 @@ export const adminService = {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw Errors.notFound("Foydalanuvchi topilmadi");
     if (user.isAdmin) throw Errors.forbidden("Admin foydalanuvchini o'chirish mumkin emas");
+    disconnectUser(userId);
     await prisma.user.delete({ where: { id: userId } });
   },
 

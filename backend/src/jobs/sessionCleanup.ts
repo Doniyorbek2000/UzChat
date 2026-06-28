@@ -9,7 +9,8 @@ export function startSessionCleanupJob() {
     try {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-      const [sessions, otps, loginAttempts, notifications, lockedUsers] = await Promise.all([
+      const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+      const [sessions, otps, loginAttempts, notifications, lockedUsers, auditLogs] = await Promise.all([
         prisma.refreshToken.deleteMany({
           where: {
             OR: [
@@ -31,14 +32,18 @@ export function startSessionCleanupJob() {
           where: { lockedUntil: { lt: new Date() } },
           data: { failedLoginAttempts: 0, lockedUntil: null },
         }),
+        prisma.adminAuditLog.deleteMany({
+          where: { createdAt: { lt: oneYearAgo } },
+        }),
       ]);
-      const total = sessions.count + otps.count + loginAttempts.count + notifications.count;
+      const total = sessions.count + otps.count + loginAttempts.count + notifications.count + auditLogs.count;
       if (total > 0 || lockedUsers.count > 0) {
         logger.info("Session cleanup completed", {
           tokens: sessions.count,
           otps: otps.count,
           loginAttempts: loginAttempts.count,
           notifications: notifications.count,
+          auditLogs: auditLogs.count,
           unlockedUsers: lockedUsers.count,
         });
       }
