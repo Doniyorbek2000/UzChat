@@ -118,6 +118,7 @@ export function SendPaymentScreen({ navigation }: Props) {
         </View>
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={filteredContacts}
           keyExtractor={(item) => item.user.id}
           ItemSeparatorComponent={() => <View style={styles.separator} />}

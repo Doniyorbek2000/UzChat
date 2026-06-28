@@ -132,6 +132,7 @@ export function NewChatScreen({ navigation }: Props) {
       )}
 
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={filteredContacts}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

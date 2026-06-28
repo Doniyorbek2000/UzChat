@@ -677,6 +677,7 @@ export function ChatListScreen({ navigation }: Props) {
         )}
       </View>
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={filteredConversations}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}

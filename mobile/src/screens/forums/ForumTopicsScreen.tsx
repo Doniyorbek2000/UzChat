@@ -114,6 +114,7 @@ export function ForumTopicsScreen({ route }: Props) {
       )}
 
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={topics}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (

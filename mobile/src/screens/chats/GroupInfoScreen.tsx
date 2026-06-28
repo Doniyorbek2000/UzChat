@@ -904,6 +904,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={filteredParticipants}
           keyExtractor={(item) => item.userId}
           ItemSeparatorComponent={() => <View style={styles.separator} />}

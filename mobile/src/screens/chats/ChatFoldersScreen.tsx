@@ -104,6 +104,7 @@ export function ChatFoldersScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={folders}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}

@@ -117,6 +117,7 @@ export function GlobalSearchScreen({ navigation }: Props) {
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={allResults}
           keyExtractor={(item, i) => item.id ?? `header-${i}`}
           renderItem={({ item }) => {

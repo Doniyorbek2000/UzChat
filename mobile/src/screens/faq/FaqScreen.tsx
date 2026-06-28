@@ -42,6 +42,7 @@ export function FaqScreen(_props: Props) {
         <ErrorView message="Savollarni yuklab bo'lmadi" onRetry={loadData} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={articles}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (

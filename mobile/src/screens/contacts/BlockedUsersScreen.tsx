@@ -135,6 +135,7 @@ export function BlockedUsersScreen() {
         )}
       </View>
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={blocked}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}

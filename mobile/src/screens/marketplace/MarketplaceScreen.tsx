@@ -87,6 +87,7 @@ export function MarketplaceScreen({ navigation }: Props) {
       />
 
       <FlatList
+          keyboardShouldPersistTaps="handled"
         horizontal
         data={CATEGORIES}
         keyExtractor={(item) => item.key}

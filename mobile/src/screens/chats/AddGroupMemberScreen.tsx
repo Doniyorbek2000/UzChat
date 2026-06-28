@@ -121,6 +121,7 @@ export function AddGroupMemberScreen({ route, navigation }: Props) {
         </View>
       )}
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={filteredCandidates}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

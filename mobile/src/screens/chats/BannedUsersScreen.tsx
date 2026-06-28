@@ -142,6 +142,7 @@ export function BannedUsersScreen({ route }: Props) {
         )}
       </View>
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={bans}
         keyExtractor={(item) => item.user.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

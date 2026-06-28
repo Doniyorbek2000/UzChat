@@ -108,6 +108,7 @@ export function BotStoreScreen({ navigation }: Props) {
         <ErrorView message="Botlarni yuklab bo'lmadi" onRetry={load} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={bots}
           keyExtractor={(item) => item.id}
           renderItem={renderBot}

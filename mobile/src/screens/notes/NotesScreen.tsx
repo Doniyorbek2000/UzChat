@@ -103,6 +103,7 @@ export function NotesScreen(_props: Props) {
       )}
 
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={notes}
         keyExtractor={(item) => item.id}
         numColumns={2}

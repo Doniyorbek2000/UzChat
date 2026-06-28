@@ -97,6 +97,7 @@ export function MusicPlayerScreen(_props: Props) {
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={tracks}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (

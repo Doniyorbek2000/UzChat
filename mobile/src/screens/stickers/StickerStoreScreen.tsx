@@ -91,6 +91,7 @@ export function StickerStoreScreen({ navigation }: Props) {
         <ErrorView message="Stikerlarni yuklab bo'lmadi" onRetry={load} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={packs}
           keyExtractor={(item) => item.id}
           renderItem={renderPack}

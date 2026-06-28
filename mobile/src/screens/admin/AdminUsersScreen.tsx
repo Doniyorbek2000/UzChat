@@ -142,6 +142,7 @@ export default function AdminUsersScreen() {
         <ActivityIndicator size="large" style={{ marginTop: 40 }} color={colors.primary} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={users}
           keyExtractor={(i) => i.id}
           renderItem={renderUser}

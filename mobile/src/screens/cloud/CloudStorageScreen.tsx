@@ -104,6 +104,7 @@ export function CloudStorageScreen(_props: Props) {
       )}
 
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={[...folders.map((f) => ({ ...f, isFolder: true as const })), ...files.map((f) => ({ ...f, isFolder: false as const }))]}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {

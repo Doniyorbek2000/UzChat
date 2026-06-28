@@ -93,6 +93,7 @@ export function ThemeStoreScreen({ navigation }: Props) {
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={themes}
           keyExtractor={(item) => item.id}
           renderItem={renderTheme}

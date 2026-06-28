@@ -248,6 +248,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
         </View>
       )}
       <FlatList
+          keyboardShouldPersistTaps="handled"
         data={filteredConversations}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
