@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 12, paddingBottom: 20 },
   eventCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 8 },
   eventHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  eventDate: { fontSize: 12, color: "#FF9500", fontWeight: "600" },
+  eventDate: { fontSize: 12, color: colors.warning, fontWeight: "600" },
   eventLocation: { fontSize: 12, color: colors.textSecondary },
   eventTitle: { fontSize: 16, fontWeight: "600", color: colors.text, marginBottom: 4 },
   eventDesc: { fontSize: 13, color: colors.textSecondary, marginBottom: 4 },

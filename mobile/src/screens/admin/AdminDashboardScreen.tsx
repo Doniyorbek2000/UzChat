@@ -79,7 +79,7 @@ export default function AdminDashboardScreen() {
           <View style={styles.grid}>
             <StatCard label="Foydalanuvchilar" value={stats.users.total} sub={`Bugun: +${stats.users.newToday}`} color="#007AFF" />
             <StatCard label="Suhbatlar" value={stats.conversations.total} color="#34C759" />
-            <StatCard label="Xabarlar" value={stats.messages.total} sub={`Bugun: ${stats.messages.today}`} color="#FF9500" />
+            <StatCard label="Xabarlar" value={stats.messages.total} sub={`Bugun: ${stats.messages.today}`} color={colors.warning} />
             <StatCard label="Do'konlar" value={stats.stores.total} color="#AF52DE" />
             <StatCard label="Buyurtmalar" value={stats.orders.total} color="#FF3B30" />
             <StatCard label="Postlar" value={stats.posts.total} color="#5856D6" />

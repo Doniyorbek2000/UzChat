@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   botDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
   badgeRow: { flexDirection: "row", gap: 6, marginTop: 6, alignItems: "center" },
   badge: { fontSize: 10, fontWeight: "600", color: colors.primary, backgroundColor: "#E3F2FD", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  badgeInactive: { color: "#FF9500", backgroundColor: "#FFF3E0" },
+  badgeInactive: { color: colors.warning, backgroundColor: "#FFF3E0" },
   cmdCount: { fontSize: 11, color: colors.textSecondary },
   emptyText: { textAlign: "center", color: colors.textSecondary, fontSize: 15, padding: 40 },
 });

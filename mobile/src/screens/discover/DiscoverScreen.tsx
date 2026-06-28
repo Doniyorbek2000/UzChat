@@ -64,7 +64,7 @@ const QUICK_ACTIONS = [
 const FEATURED = [
   { key: "wallet", icon: "💰", title: "UzChat Hamyon", desc: "Pul yuborish va qabul qilish", color: "#007AFF", screen: "Wallet" as const },
   { key: "marketplace", icon: "🛒", title: "Bozor", desc: "Mahsulotlarni sotib oling", color: "#34C759", screen: "Marketplace" as const },
-  { key: "games", icon: "🎮", title: "O'yinlar", desc: "Do'stlar bilan o'ynang", color: "#FF9500", screen: "GameCenter" as const },
+  { key: "games", icon: "🎮", title: "O'yinlar", desc: "Do'stlar bilan o'ynang", color: colors.warning, screen: "GameCenter" as const },
 ];
 
 export function DiscoverScreen({ navigation }: Props) {

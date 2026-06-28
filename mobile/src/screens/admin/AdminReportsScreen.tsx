@@ -23,7 +23,7 @@ const reasonLabels: Record<string, string> = {
 };
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-  PENDING: { label: "Kutilmoqda", color: "#FF9500" },
+  PENDING: { label: "Kutilmoqda", color: colors.warning },
   RESOLVED: { label: "Hal qilindi", color: "#34C759" },
   DISMISSED: { label: "Rad etildi", color: "#8E8E93" },
 };

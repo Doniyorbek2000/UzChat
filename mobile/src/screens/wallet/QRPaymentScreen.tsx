@@ -50,7 +50,7 @@ export function QRPaymentScreen({ navigation }: Props) {
   const statusColor = (s: string) => {
     if (s === "COMPLETED") return colors.online;
     if (s === "EXPIRED" || s === "CANCELLED") return colors.danger;
-    return "#FF9500";
+    return colors.warning;
   };
 
   const statusText = (s: string) => {

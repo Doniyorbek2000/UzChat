@@ -9,6 +9,7 @@ export interface ThemeColors {
   bubbleSelf: string;
   bubbleOther: string;
   danger: string;
+  warning: string;
   online: string;
 }
 
@@ -23,6 +24,7 @@ export const lightTheme: ThemeColors = {
   bubbleSelf: "#A0E75A",
   bubbleOther: "#FFFFFF",
   danger: "#FA5151",
+  warning: "#FF9500",
   online: "#07C160",
 };
 
@@ -37,5 +39,6 @@ export const darkTheme: ThemeColors = {
   bubbleSelf: "#2B5F1E",
   bubbleOther: "#2A2A2A",
   danger: "#FA5151",
+  warning: "#FF9500",
   online: "#07C160",
 };

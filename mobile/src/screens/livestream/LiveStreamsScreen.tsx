@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   streamInfo: { padding: 14 },
   streamTitle: { fontSize: 16, fontWeight: "600", color: colors.text, marginBottom: 4 },
   streamHost: { fontSize: 13, color: colors.textSecondary },
-  scheduledTime: { fontSize: 12, color: "#FF9500", marginTop: 4 },
+  scheduledTime: { fontSize: 12, color: colors.warning, marginTop: 4 },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },

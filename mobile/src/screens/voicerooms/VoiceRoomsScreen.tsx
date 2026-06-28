@@ -46,7 +46,7 @@ export function VoiceRoomsScreen({ navigation }: Props) {
         onPress={() => navigation.navigate("VoiceRoomView", { roomId: item.id })}
       >
         <View style={styles.roomHeader}>
-          <View style={[styles.statusDot, { backgroundColor: item.status === "LIVE" ? colors.danger : "#FF9500" }]} />
+          <View style={[styles.statusDot, { backgroundColor: item.status === "LIVE" ? colors.danger : colors.warning }]} />
           <Text style={styles.roomStatus}>{item.status === "LIVE" ? "JONLI" : "REJALASHTIRILGAN"}</Text>
         </View>
         <Text style={styles.roomTitle}>{item.title}</Text>

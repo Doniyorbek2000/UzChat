@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   gameIconText: { fontSize: 28 },
   gameTitle: { fontSize: 14, fontWeight: "600", color: colors.text, textAlign: "center" },
   gameMeta: { fontSize: 11, color: colors.textSecondary, marginTop: 4 },
-  gameRating: { fontSize: 11, color: "#FF9500", marginTop: 2 },
+  gameRating: { fontSize: 11, color: colors.warning, marginTop: 2 },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },

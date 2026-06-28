@@ -62,7 +62,7 @@ export function ChatExportsScreen(_props: Props) {
           <TouchableOpacity style={styles.card} onLongPress={() => handleDelete(item)}>
             <View style={styles.cardHeader}>
               <Text style={styles.chatName}>{item.conversation?.title ?? "Suhbat"}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: item.status === "completed" ? colors.online : item.status === "processing" ? "#FF9500" : colors.danger }]}>
+              <View style={[styles.statusBadge, { backgroundColor: item.status === "completed" ? colors.online : item.status === "processing" ? colors.warning : colors.danger }]}>
                 <Text style={styles.statusText}>
                   {item.status === "completed" ? "Tayyor" : item.status === "processing" ? "Jarayonda" : "Kutilmoqda"}
                 </Text>

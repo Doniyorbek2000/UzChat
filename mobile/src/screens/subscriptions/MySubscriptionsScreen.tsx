@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   list: { padding: 12, paddingBottom: 20 },
   subCard: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 8, alignItems: "center", gap: 12 },
-  subAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#FF9500", alignItems: "center", justifyContent: "center" },
+  subAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.warning, alignItems: "center", justifyContent: "center" },
   subAvatarText: { fontSize: 20, fontWeight: "700", color: "#fff" },
   subInfo: { flex: 1 },
   subName: { fontSize: 15, fontWeight: "600", color: colors.text },
