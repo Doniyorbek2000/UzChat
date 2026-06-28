@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { useChatStore } from "../../store/chatStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
 
@@ -15,17 +16,23 @@ export function NewGroupScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState("");
   const createGroupConversation = useChatStore((s) => s.createGroupConversation);
 
-  useEffect(() => {
+  const loadContacts = useCallback(() => {
+    setError(false);
     contactsApi
       .list()
       .then(setContacts)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
 
   const filteredContacts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -76,6 +83,12 @@ export function NewGroupScreen({ navigation }: Props) {
     );
   }
 
+  if (error) {
+    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadContacts(); }} />;
+  }
+
+  const canCreate = title.trim().length > 0 && selected.size >= 1 && !creating;
+
   return (
     <View style={styles.container}>
       <TextInput style={styles.input} placeholder="Guruh nomi" value={title} onChangeText={setTitle} />
@@ -121,8 +134,8 @@ export function NewGroupScreen({ navigation }: Props) {
           </View>
         }
       />
-      <TouchableOpacity style={styles.button} onPress={onCreate} disabled={creating}>
-        {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Guruh yaratish</Text>}
+      <TouchableOpacity style={[styles.button, !canCreate && styles.buttonDisabled]} onPress={onCreate} disabled={!canCreate}>
+        {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Guruh yaratish ({selected.size})</Text>}
       </TouchableOpacity>
     </View>
   );
@@ -177,5 +190,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
   },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });

@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, decryptReplyPreview } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Conversation, Message } from "../../types";
 import { getConversationDisplay, formatTime } from "../../utils/conversation";
@@ -22,6 +23,7 @@ export function MentionsScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -29,12 +31,16 @@ export function MentionsScreen({ navigation }: Props) {
     setMessages(data);
   }, []);
 
+  const loadAll = useCallback(() => {
+    setError(false);
+    return Promise.all([load(), loadConversations()])
+      .catch(() => setError(true));
+  }, [load, loadConversations]);
+
   useFocusEffect(
     useCallback(() => {
-      Promise.all([load(), loadConversations()])
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }, [load, loadConversations])
+      loadAll().finally(() => setLoading(false));
+    }, [loadAll])
   );
 
   const onRefresh = async () => {
@@ -97,6 +103,10 @@ export function MentionsScreen({ navigation }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Eslatmalarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadAll().finally(() => setLoading(false)); }} />;
   }
 
   return (

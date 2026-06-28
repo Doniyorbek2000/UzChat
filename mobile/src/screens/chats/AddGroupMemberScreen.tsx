@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { useChatStore } from "../../store/chatStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
 
@@ -18,16 +19,22 @@ export function AddGroupMemberScreen({ route, navigation }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
+  const loadContacts = useCallback(() => {
+    setError(false);
     contactsApi
       .list()
       .then(setContacts)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadContacts();
+  }, [loadContacts]);
 
   const existingIds = new Set(conversation?.participants.map((p) => p.userId) ?? []);
   const candidates = contacts.filter((c) => !existingIds.has(c.user.id));
@@ -89,6 +96,10 @@ export function AddGroupMemberScreen({ route, navigation }: Props) {
     );
   }
 
+  if (error) {
+    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadContacts(); }} />;
+  }
+
   return (
     <View style={styles.container}>
       {candidates.length > 0 && (
@@ -133,8 +144,8 @@ export function AddGroupMemberScreen({ route, navigation }: Props) {
           </View>
         }
       />
-      <TouchableOpacity style={styles.button} onPress={onAdd} disabled={saving || selected.size === 0}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Qo'shish</Text>}
+      <TouchableOpacity style={[styles.button, (saving || selected.size === 0) && styles.buttonDisabled]} onPress={onAdd} disabled={saving || selected.size === 0}>
+        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Qo'shish ({selected.size})</Text>}
       </TouchableOpacity>
     </View>
   );
@@ -179,5 +190,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
   },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });

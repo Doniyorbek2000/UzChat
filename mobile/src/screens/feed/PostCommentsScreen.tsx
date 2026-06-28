@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useRef } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
-  TextInput, KeyboardAvoidingView, Platform,
+  TextInput, KeyboardAvoidingView, Platform, Alert,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
@@ -9,6 +9,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { feedApi, PostComment } from "../../api/feed";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PostComments">;
@@ -18,15 +19,19 @@ export function PostCommentsScreen({ route, navigation }: Props) {
   const userId = useAuthStore((s) => s.user?.id);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   const loadComments = useCallback(async () => {
+    setError(false);
     try {
       const result = await feedApi.getComments(postId);
       setComments(result.comments);
-    } catch {}
+    } catch {
+      setError(true);
+    }
   }, [postId]);
 
   useFocusEffect(
@@ -43,7 +48,9 @@ export function PostCommentsScreen({ route, navigation }: Props) {
       const comment = await feedApi.addComment(postId, text.trim());
       setComments((prev) => [...prev, comment]);
       setText("");
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Izoh qo'shib bo'lmadi");
+    }
     setSending(false);
   };
 
@@ -51,7 +58,9 @@ export function PostCommentsScreen({ route, navigation }: Props) {
     try {
       await feedApi.deleteComment(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Izohni o'chirib bo'lmadi");
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -72,6 +81,8 @@ export function PostCommentsScreen({ route, navigation }: Props) {
         <View style={styles.center}>
           <ActivityIndicator />
         </View>
+      ) : error ? (
+        <ErrorView message="Izohlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadComments().finally(() => setLoading(false)); }} />
       ) : (
         <FlatList
           data={comments}
