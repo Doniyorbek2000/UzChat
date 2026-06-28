@@ -334,6 +334,7 @@ model RefreshToken {
   revokedAt DateTime?
 
   @@index([userId])
+  @@index([expiresAt])
 }
 
 // A previous username a user has changed away from. Keeps the old handle
@@ -359,6 +360,7 @@ model OtpCode {
   createdAt DateTime @default(now())
 
   @@index([phone])
+  @@index([expiresAt])
 }
 
 model Contact {
@@ -379,6 +381,7 @@ model Contact {
   @@unique([ownerId, targetId])
   @@index([ownerId, status])
   @@index([targetId])
+  @@index([targetId, status])
 }
 
 // One-directional block: ownerId no longer wants contact/messages from blockedId.
@@ -652,6 +655,8 @@ model ConversationParticipant {
   @@unique([conversationId, userId])
   @@index([userId])
   @@index([userId, pinnedAt, pinnedOrder])
+  @@index([userId, isArchived])
+  @@index([userId, isMuted])
 }
 
 model Message {
@@ -745,6 +750,7 @@ model Message {
   pollClosesAt DateTime?
 
   @@index([conversationId, createdAt])
+  @@index([conversationId, type])
   @@index([senderId])
   @@index([replyToId])
   @@index([expiresAt])
