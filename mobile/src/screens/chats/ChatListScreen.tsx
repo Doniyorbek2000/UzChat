@@ -119,13 +119,13 @@ export function ChatListScreen({ navigation }: Props) {
         headerLeft: undefined,
         headerRight: () => (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginRight: 8 }}>
-            <TouchableOpacity onPress={() => navigation.navigate("Contacts")} hitSlop={8}>
+            <TouchableOpacity onPress={() => navigation.navigate("Contacts")} hitSlop={8} accessibilityLabel="Kontaktlar" accessibilityRole="button">
               <Text style={{ fontSize: 20 }}>👥</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate("CallHistory")} hitSlop={8}>
+            <TouchableOpacity onPress={() => navigation.navigate("CallHistory")} hitSlop={8} accessibilityLabel="Qo'ng'iroqlar tarixi" accessibilityRole="button">
               <Text style={{ fontSize: 20 }}>📞</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate("Stories")} hitSlop={8}>
+            <TouchableOpacity onPress={() => navigation.navigate("Stories")} hitSlop={8} accessibilityLabel="Hikoyalar" accessibilityRole="button">
               <Text style={{ fontSize: 20 }}>📷</Text>
             </TouchableOpacity>
           </View>
@@ -136,25 +136,25 @@ export function ChatListScreen({ navigation }: Props) {
     navigation.setOptions({
       title: `${selectedIds.size} ta tanlandi`,
       headerLeft: () => (
-        <TouchableOpacity onPress={exitSelectionMode} hitSlop={8}>
+        <TouchableOpacity onPress={exitSelectionMode} hitSlop={8} accessibilityLabel="Tanlovni bekor qilish" accessibilityRole="button">
           <Text style={styles.headerActionIcon}>✕</Text>
         </TouchableOpacity>
       ),
       headerRight: () => (
         <View style={styles.headerActions}>
-          <TouchableOpacity onPress={onToggleSelectAll} hitSlop={8}>
+          <TouchableOpacity onPress={onToggleSelectAll} hitSlop={8} accessibilityLabel="Barchasini tanlash" accessibilityRole="button">
             <Text style={styles.headerActionIcon}>☑️</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onBulkPin} hitSlop={8}>
+          <TouchableOpacity onPress={onBulkPin} hitSlop={8} accessibilityLabel="Biriktirish" accessibilityRole="button">
             <Text style={styles.headerActionIcon}>📌</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onBulkMarkRead} hitSlop={8}>
+          <TouchableOpacity onPress={onBulkMarkRead} hitSlop={8} accessibilityLabel="O'qilgan deb belgilash" accessibilityRole="button">
             <Text style={styles.headerActionIcon}>✅</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onBulkArchive} hitSlop={8}>
+          <TouchableOpacity onPress={onBulkArchive} hitSlop={8} accessibilityLabel="Arxivlash" accessibilityRole="button">
             <Text style={styles.headerActionIcon}>🗄</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onBulkDelete} hitSlop={8}>
+          <TouchableOpacity onPress={onBulkDelete} hitSlop={8} accessibilityLabel="O'chirish" accessibilityRole="button">
             <Text style={styles.headerActionIcon}>🗑</Text>
           </TouchableOpacity>
         </View>

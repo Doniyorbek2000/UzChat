@@ -2177,13 +2177,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <View style={styles.recordingDot} />
           <Text style={styles.recordingTime}>{formatDuration(recorderState.durationMillis / 1000)}</Text>
           <Text style={styles.recordingHint}>Ovoz yozilmoqda...</Text>
-          <TouchableOpacity style={styles.recordingCancel} onPress={cancelRecording}>
+          <TouchableOpacity style={styles.recordingCancel} onPress={cancelRecording} accessibilityLabel="Yozishni bekor qilish" accessibilityRole="button">
             <Text style={styles.recordingCancelText}>Bekor qilish</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.mediaPreviewViewOnce} onPress={() => sendRecording(true)}>
+          <TouchableOpacity style={styles.mediaPreviewViewOnce} onPress={() => sendRecording(true)} accessibilityLabel="Bir martalik ovozli xabar" accessibilityRole="button">
             <Text style={styles.mediaPreviewViewOnceText}>🔥</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sendButton} onPress={() => sendRecording(false)}>
+          <TouchableOpacity style={styles.sendButton} onPress={() => sendRecording(false)} accessibilityLabel="Ovozli xabar yuborish" accessibilityRole="button">
             <Text style={styles.sendText}>Yuborish</Text>
           </TouchableOpacity>
         </View>
@@ -2217,33 +2217,33 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           {selection.start !== selection.end && (
             <View style={styles.formatToolbar}>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("*")}>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("*")} accessibilityLabel="Qalin" accessibilityRole="button">
                 <Text style={[styles.formatButtonText, styles.boldText]}>B</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("_")}>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("_")} accessibilityLabel="Kursiv" accessibilityRole="button">
                 <Text style={[styles.formatButtonText, styles.italicText]}>I</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("~")}>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("~")} accessibilityLabel="Chizilgan" accessibilityRole="button">
                 <Text style={[styles.formatButtonText, styles.strikeText]}>S</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("`")}>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("`")} accessibilityLabel="Kod" accessibilityRole="button">
                 <Text style={[styles.formatButtonText, styles.codeText]}>{"</>"}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("||")}>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("||")} accessibilityLabel="Spoiler" accessibilityRole="button">
                 <Text style={styles.formatButtonText}>🙈</Text>
               </TouchableOpacity>
             </View>
           )}
           <View style={styles.inputRow}>
-            <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage}>
+            <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage} accessibilityLabel="Fayl biriktirish" accessibilityRole="button">
               {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
             </TouchableOpacity>
             {isGroupLike && (
-              <TouchableOpacity style={styles.attachButton} onPress={() => setMentionPickerVisible(true)} disabled={sending}>
+              <TouchableOpacity style={styles.attachButton} onPress={() => setMentionPickerVisible(true)} disabled={sending} accessibilityLabel="Foydalanuvchini eslatish" accessibilityRole="button">
                 <Text style={styles.attachIcon}>@</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.attachButton} onPress={onShowFormatHelp} disabled={sending}>
+            <TouchableOpacity style={styles.attachButton} onPress={onShowFormatHelp} disabled={sending} accessibilityLabel="Matn formatlash" accessibilityRole="button">
               <Text style={styles.formatHelpIcon}>Aa</Text>
             </TouchableOpacity>
             <TextInput
@@ -2254,6 +2254,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               placeholder="Xabar yozing..."
               placeholderTextColor={colors.textSecondary}
               multiline
+              accessibilityLabel="Xabar matni"
             />
             {text.trim() || editingMessage ? (
               <TouchableOpacity
@@ -2261,6 +2262,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 onPress={() => onSend()}
                 onLongPress={onSendOptions}
                 disabled={!editingMessage && slowModeRemaining > 0}
+                accessibilityLabel="Xabar yuborish"
+                accessibilityRole="button"
               >
                 <Text style={styles.sendText}>Yuborish</Text>
               </TouchableOpacity>
@@ -2269,6 +2272,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 style={styles.attachButton}
                 onPress={startRecording}
                 disabled={sending || !!editingMessage || !canSendMedia}
+                accessibilityLabel="Ovozli xabar yozish"
+                accessibilityRole="button"
               >
                 <Text style={styles.attachIcon}>🎤</Text>
               </TouchableOpacity>
