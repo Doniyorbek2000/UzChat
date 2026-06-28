@@ -153,7 +153,7 @@ export function RemindersScreen({ navigation }: Props) {
         keyExtractor={(item) => item.message.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>{search ? "Hech narsa topilmadi" : "⏰ Eslatmalar yo'q"}</Text>

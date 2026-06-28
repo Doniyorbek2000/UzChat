@@ -97,7 +97,7 @@ export function ActiveSessionsScreen() {
       <FlatList
         data={sessions}
         keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListHeaderComponent={
           otherSessionsCount > 0 ? (

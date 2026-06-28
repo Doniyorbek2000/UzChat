@@ -162,7 +162,7 @@ export function StarredMessagesScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>{search ? "Hech narsa topilmadi" : "⭐ Saqlangan xabarlar yo'q"}</Text>

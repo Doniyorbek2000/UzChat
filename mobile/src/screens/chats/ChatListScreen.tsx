@@ -681,7 +681,7 @@ export function ChatListScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           !query && archivedCount > 0 ? (
             <TouchableOpacity style={styles.archiveRow} onPress={() => navigation.navigate("ArchivedChats")}>

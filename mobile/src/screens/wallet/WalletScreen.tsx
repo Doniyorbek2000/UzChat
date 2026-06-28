@@ -116,7 +116,7 @@ export function WalletScreen({ navigation }: Props) {
       <FlatList
         data={history}
         keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => {
           const isSent = item.sender.id === currentUser?.id;

@@ -189,7 +189,7 @@ export function FeedScreen({ navigation }: Props) {
       data={posts}
       keyExtractor={(item) => item.id}
       renderItem={renderPost}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       onEndReached={() => nextCursor && loadPosts(nextCursor)}
       onEndReachedThreshold={0.5}
       ListEmptyComponent={
