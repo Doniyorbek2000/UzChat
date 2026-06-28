@@ -113,6 +113,7 @@ export function BannedUsersScreen({ route }: Props) {
         <TextInput
           style={styles.searchInput}
           placeholder="Username bo'yicha qidirish"
+          returnKeyType="search"
           placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={setQuery}

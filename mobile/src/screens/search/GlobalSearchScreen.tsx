@@ -79,11 +79,11 @@ export function GlobalSearchScreen({ navigation }: Props) {
         <TextInput
           style={styles.searchInput}
           placeholder="Qidirish..."
-          placeholderTextColor="#999"
+          returnKeyType="search"
+          placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={(t) => { setQuery(t); if (!t.trim()) setShowHistory(true); }}
           onSubmitEditing={handleSearch}
-          returnKeyType="search"
           autoFocus
         />
       </View>

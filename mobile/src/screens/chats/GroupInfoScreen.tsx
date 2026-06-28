@@ -923,6 +923,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
                   <TextInput
                     style={styles.memberSearchInput}
                     placeholder="A'zoni qidirish"
+                    returnKeyType="search"
                     placeholderTextColor={colors.textSecondary}
                     value={memberSearch}
                     onChangeText={setMemberSearch}

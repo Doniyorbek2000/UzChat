@@ -72,6 +72,7 @@ export function MiniAppsScreen({ navigation }: Props) {
       <TextInput
         style={styles.searchInput}
         placeholder="Mini-dastur qidirish..."
+        returnKeyType="search"
         placeholderTextColor={colors.textSecondary}
         value={search}
         onChangeText={setSearch}

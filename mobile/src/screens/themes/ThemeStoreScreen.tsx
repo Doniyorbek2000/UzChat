@@ -68,6 +68,7 @@ export function ThemeStoreScreen({ navigation }: Props) {
       <TextInput
         style={styles.searchInput}
         placeholder="Mavzularni qidirish..."
+        returnKeyType="search"
         placeholderTextColor="#999"
         value={search}
         onChangeText={setSearch}

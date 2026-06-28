@@ -127,11 +127,11 @@ export default function AdminUsersScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Qidirish (ism, username, telefon)..."
+          returnKeyType="search"
           placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
           onSubmitEditing={handleSearch}
-          returnKeyType="search"
         />
         <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
           <Text style={styles.searchBtnText}>Qidirish</Text>

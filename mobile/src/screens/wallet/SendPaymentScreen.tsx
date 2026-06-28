@@ -107,6 +107,7 @@ export function SendPaymentScreen({ navigation }: Props) {
       <TextInput
         style={styles.searchInput}
         placeholder="Kontakt qidirish..."
+        returnKeyType="search"
         placeholderTextColor={colors.textSecondary}
         value={search}
         onChangeText={setSearch}
