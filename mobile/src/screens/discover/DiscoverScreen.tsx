@@ -73,7 +73,8 @@ export function DiscoverScreen({ navigation }: Props) {
 
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 500);
+    setSearch("");
+    setTimeout(() => setRefreshing(false), 300);
   };
 
   const allItems = [...SERVICES, ...PLATFORM_SERVICES, ...QUICK_ACTIONS];
