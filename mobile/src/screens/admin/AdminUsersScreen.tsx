@@ -108,13 +108,13 @@ export default function AdminUsersScreen() {
         </View>
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isAdmin ? "#FF3B30" : colors.primary }]} onPress={() => toggleAdmin(item)}>
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isAdmin ? colors.danger : colors.primary }]} onPress={() => toggleAdmin(item)}>
           <Text style={styles.actionText}>{item.isAdmin ? "Admin o'chirish" : "Admin qilish"}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isVerified ? "#FF9500" : "#34C759" }]} onPress={() => toggleVerified(item)}>
           <Text style={styles.actionText}>{item.isVerified ? "Tasdiq olish" : "Tasdiqlash"}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FF3B30" }]} onPress={() => deleteUser(item)}>
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.danger }]} onPress={() => deleteUser(item)}>
           <Text style={styles.actionText}>O'chirish</Text>
         </TouchableOpacity>
       </View>
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   userHeader: { flexDirection: "row", alignItems: "flex-start" },
   userName: { fontSize: 16, fontWeight: "700", color: colors.text },
   badge: { fontSize: 14 },
-  adminBadge: { fontSize: 11, color: "#FF3B30", fontWeight: "800", marginLeft: 6 },
+  adminBadge: { fontSize: 11, color: colors.danger, fontWeight: "800", marginLeft: 6 },
   userSub: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
   userDate: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   actions: { flexDirection: "row", gap: 6, marginTop: 10 },
