@@ -26,6 +26,7 @@ export const feedService = {
     const contacts = await prisma.contact.findMany({
       where: { ownerId: userId, status: "ACCEPTED" },
       select: { targetId: true },
+      take: 500,
     });
     const contactIds = contacts.map((c) => c.targetId);
 

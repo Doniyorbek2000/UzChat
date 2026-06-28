@@ -239,6 +239,7 @@ export const contactsService = {
         target: { birthdayDay: day, birthdayMonth: month, birthdayPrivacy: { not: LastSeenPrivacy.NOBODY } },
       },
       select: { ownerId: true, target: { select: { id: true, displayName: true } } },
+      take: 1000,
     });
 
     for (const contact of contacts) {
@@ -276,14 +277,17 @@ export const contactsService = {
       prisma.contact.findMany({
         where: { OR: [{ ownerId: userId }, { targetId: userId }] },
         select: { ownerId: true, targetId: true },
+        take: 1000,
       }),
       prisma.blockedUser.findMany({
         where: { OR: [{ ownerId: userId }, { blockedId: userId }] },
         select: { ownerId: true, blockedId: true },
+        take: 500,
       }),
       prisma.dismissedSuggestion.findMany({
         where: { ownerId: userId },
         select: { dismissedUserId: true },
+        take: 500,
       }),
     ]);
 
