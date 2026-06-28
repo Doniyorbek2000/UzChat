@@ -48,11 +48,16 @@ export function initSocketServer(httpServer: HttpServer): Server {
     maxHttpBufferSize: 1e6,
   });
 
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token as string | undefined;
     if (!token) return next(new Error("UNAUTHORIZED"));
     try {
       const payload = verifyAccessToken(token);
+      const user = await prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { isBanned: true },
+      });
+      if (user?.isBanned) return next(new Error("BANNED"));
       (socket as AuthenticatedSocket).userId = payload.sub;
       (socket as AuthenticatedSocket).sid = payload.sid;
       next();

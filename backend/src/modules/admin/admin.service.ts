@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { pushService } from "../push/push.service";
+import { disconnectUser } from "../../sockets";
 
 const userSummarySelect = {
   id: true,
@@ -292,6 +293,7 @@ export const adminService = {
         data: { revokedAt: new Date() },
       }),
     ]);
+    disconnectUser(userId);
     return updated;
   },
 
