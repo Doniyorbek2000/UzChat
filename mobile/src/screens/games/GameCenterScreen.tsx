@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { gamesApi, GameData } from "../../api/games";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GameCenter">;
 
@@ -19,12 +20,16 @@ export function GameCenterScreen({ navigation }: Props) {
   const [games, setGames] = useState<GameData[]>([]);
   const [category, setCategory] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     setLoading(true);
+    setError(false);
     const load = category === "all" ? gamesApi.getPopular() : gamesApi.getByCategory(category);
-    load.then(setGames).catch(() => {}).finally(() => setLoading(false));
+    load.then(setGames).catch(() => setError(true)).finally(() => setLoading(false));
   }, [category]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   return (
     <View style={styles.container}>
@@ -38,6 +43,8 @@ export function GameCenterScreen({ navigation }: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="O'yinlarni yuklab bo'lmadi" onRetry={loadData} />
       ) : (
         <FlatList
           data={games}

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { greetingsApi, SentCardData } from "../../api/greetings";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GreetingCards">;
 
@@ -11,12 +12,16 @@ export function GreetingCardsScreen(_props: Props) {
   const [tab, setTab] = useState<"received" | "sent">("received");
   const [items, setItems] = useState<SentCardData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     setLoading(true);
+    setError(false);
     const load = tab === "received" ? greetingsApi.getReceived() : greetingsApi.getSent();
-    load.then(setItems).catch(() => {}).finally(() => setLoading(false));
+    load.then(setItems).catch(() => setError(true)).finally(() => setLoading(false));
   }, [tab]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   return (
     <View style={styles.container}>
@@ -31,6 +36,8 @@ export function GreetingCardsScreen(_props: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Kartochkalarni yuklab bo'lmadi" onRetry={loadData} />
       ) : (
         <FlatList
           data={items}

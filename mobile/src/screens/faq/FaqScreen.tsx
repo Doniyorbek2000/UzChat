@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { faqApi, FaqArticleData } from "../../api/faq";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Faq">;
 
@@ -13,11 +14,16 @@ export function FaqScreen(_props: Props) {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [error, setError] = useState(false);
+
+  const loadData = useCallback(() => {
     const load = search.trim() ? faqApi.search(search.trim()) : faqApi.list();
     setLoading(true);
-    load.then(setArticles).catch(() => {}).finally(() => setLoading(false));
+    setError(false);
+    load.then(setArticles).catch(() => setError(true)).finally(() => setLoading(false));
   }, [search]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   return (
     <View style={styles.container}>
@@ -32,6 +38,8 @@ export function FaqScreen(_props: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Savollarni yuklab bo'lmadi" onRetry={loadData} />
       ) : (
         <FlatList
           data={articles}

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { forumsApi, ForumTopic } from "../../api/forums";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ForumTopics">;
 
@@ -11,13 +12,18 @@ export function ForumTopicsScreen({ route }: Props) {
   const { conversationId } = route.params;
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    forumsApi.listTopics(conversationId).then(setTopics).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    forumsApi.listTopics(conversationId).then(setTopics).catch(() => setError(true)).finally(() => setLoading(false));
   }, [conversationId]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -65,6 +71,10 @@ export function ForumTopicsScreen({ route }: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Mavzularni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

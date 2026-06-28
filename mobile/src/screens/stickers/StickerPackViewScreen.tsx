@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { stickersApi, StickerPack, Sticker } from "../../api/stickers";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StickerPackView">;
 
@@ -11,11 +12,16 @@ export function StickerPackViewScreen({ route }: Props) {
   const { packId } = route.params;
   const [pack, setPack] = useState<StickerPack | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [installing, setInstalling] = useState(false);
 
-  useEffect(() => {
-    stickersApi.getPack(packId).then(setPack).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    stickersApi.getPack(packId).then(setPack).catch(() => setError(true)).finally(() => setLoading(false));
   }, [packId]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleInstall = async () => {
     setInstalling(true);
@@ -41,6 +47,9 @@ export function StickerPackViewScreen({ route }: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+  if (error) {
+    return <ErrorView message="Stiker to'plamini yuklab bo'lmadi" onRetry={loadData} />;
   }
   if (!pack) {
     return <Text style={styles.emptyText}>To'plam topilmadi</Text>;

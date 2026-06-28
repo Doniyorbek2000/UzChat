@@ -1,21 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { eventsApi, ChatEvent } from "../../api/events";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Events">;
 
 export function EventsScreen({ navigation }: Props) {
   const [events, setEvents] = useState<ChatEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const userId = useAuthStore((s) => s.user?.id);
 
-  useEffect(() => {
-    eventsApi.getUpcoming().then(setEvents).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    eventsApi.getUpcoming().then(setEvents).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleRsvp = async (eventId: string, status: "going" | "maybe" | "not_going") => {
     try {
@@ -65,6 +71,10 @@ export function EventsScreen({ navigation }: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Tadbirlarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (
