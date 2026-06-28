@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -33,6 +33,12 @@ export function LoginScreen({ navigation }: Props) {
   const codeRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, []);
 
   const startCountdown = () => {
     setCountdown(60);

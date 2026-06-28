@@ -53,6 +53,7 @@ export function VerifyOtpScreen({ route }: Props) {
     try {
       await requestRegisterOtp(phone);
       setCountdown(60);
+      if (countdownRef.current) clearInterval(countdownRef.current);
       countdownRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {

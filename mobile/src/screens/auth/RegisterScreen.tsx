@@ -61,6 +61,12 @@ export function RegisterScreen({ navigation }: Props) {
     };
   }, [username]);
 
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, []);
+
   const startCountdown = () => {
     setCountdown(60);
     if (countdownRef.current) clearInterval(countdownRef.current);
