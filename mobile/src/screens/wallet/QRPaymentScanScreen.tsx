@@ -56,7 +56,7 @@ export function QRPaymentScanScreen({ navigation }: Props) {
         <TextInput
           style={styles.input}
           placeholder="QR kodni kiriting"
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
           value={qrCode}
           onChangeText={setQrCode}
           autoCapitalize="none"
@@ -81,7 +81,7 @@ export function QRPaymentScanScreen({ navigation }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Summa kiriting"
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textSecondary}
             keyboardType="numeric"
             value={amount}
             onChangeText={setAmount}
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   lookupBtn: {
-    backgroundColor: "#E5E5EA",
+    backgroundColor: colors.background,
     borderRadius: 10,
     paddingVertical: 10,
     alignItems: "center",

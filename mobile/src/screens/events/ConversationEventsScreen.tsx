@@ -81,8 +81,8 @@ export function ConversationEventsScreen({ route }: Props) {
 
       {showCreate && (
         <View style={styles.form}>
-          <TextInput style={styles.input} placeholder="Tadbir nomi..." placeholderTextColor="#999" value={title} onChangeText={setTitle} />
-          <TextInput style={styles.input} placeholder="Manzil (ixtiyoriy)..." placeholderTextColor="#999" value={location} onChangeText={setLocation} />
+          <TextInput style={styles.input} placeholder="Tadbir nomi..." placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
+          <TextInput style={styles.input} placeholder="Manzil (ixtiyoriy)..." placeholderTextColor={colors.textSecondary} value={location} onChangeText={setLocation} />
           <TouchableOpacity style={[styles.submitBtn, (!title.trim() || creating) && { opacity: 0.5 }]} onPress={handleCreate} disabled={!title.trim() || creating}>
             {creating ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitBtnText}>Yaratish</Text>}
           </TouchableOpacity>

@@ -94,7 +94,7 @@ export function ForumTopicsScreen({ route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Mavzu nomi..."
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textSecondary}
             value={newTitle}
             onChangeText={setNewTitle}
             maxLength={100}

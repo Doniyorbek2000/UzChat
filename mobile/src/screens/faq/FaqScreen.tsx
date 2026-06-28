@@ -30,7 +30,7 @@ export function FaqScreen(_props: Props) {
       <TextInput
         style={styles.searchInput}
         placeholder="Savol qidirish..."
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={search}
         onChangeText={setSearch}
         returnKeyType="search"

@@ -56,7 +56,7 @@ export function QRPaymentScreen({ navigation }: Props) {
         <TextInput
           style={styles.input}
           placeholder="Summa (ixtiyoriy)"
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
           keyboardType="numeric"
           value={amount}
           onChangeText={setAmount}
@@ -64,7 +64,7 @@ export function QRPaymentScreen({ navigation }: Props) {
         <TextInput
           style={styles.input}
           placeholder="Izoh (ixtiyoriy)"
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
           value={note}
           onChangeText={setNote}
         />
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   },
   createBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
   scanBtn: {
-    backgroundColor: "#E5E5EA",
+    backgroundColor: colors.background,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",

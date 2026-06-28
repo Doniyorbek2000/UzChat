@@ -103,7 +103,7 @@ export function BusinessProfileScreen(_props: Props) {
       )}
 
       <Text style={styles.label}>Biznes nomi *</Text>
-      <TextInput style={styles.input} value={businessName} onChangeText={setBusinessName} placeholder="Biznes nomi..." placeholderTextColor="#999" maxLength={100} />
+      <TextInput style={styles.input} value={businessName} onChangeText={setBusinessName} placeholder="Biznes nomi..." placeholderTextColor={colors.textSecondary} maxLength={100} />
 
       <Text style={styles.label}>Kategoriya</Text>
       <View style={styles.categories}>
@@ -115,28 +115,28 @@ export function BusinessProfileScreen(_props: Props) {
       </View>
 
       <Text style={styles.label}>Tavsif</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={description} onChangeText={setDescription} placeholder="Biznes haqida..." placeholderTextColor="#999" multiline maxLength={500} />
+      <TextInput style={[styles.input, styles.multiline]} value={description} onChangeText={setDescription} placeholder="Biznes haqida..." placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
 
       <Text style={styles.label}>Manzil</Text>
-      <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Manzil..." placeholderTextColor="#999" />
+      <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Manzil..." placeholderTextColor={colors.textSecondary} />
 
       <Text style={styles.label}>Telefon</Text>
-      <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+998 ..." placeholderTextColor="#999" keyboardType="phone-pad" />
+      <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+998 ..." placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" />
 
       <Text style={styles.label}>Email</Text>
-      <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="email@example.com" placeholderTextColor="#999" keyboardType="email-address" autoCapitalize="none" />
+      <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="email@example.com" placeholderTextColor={colors.textSecondary} keyboardType="email-address" autoCapitalize="none" />
 
       <Text style={styles.label}>Veb-sayt</Text>
-      <TextInput style={styles.input} value={website} onChangeText={setWebsite} placeholder="https://..." placeholderTextColor="#999" autoCapitalize="none" />
+      <TextInput style={styles.input} value={website} onChangeText={setWebsite} placeholder="https://..." placeholderTextColor={colors.textSecondary} autoCapitalize="none" />
 
       <Text style={styles.label}>Ish vaqti</Text>
-      <TextInput style={styles.input} value={workingHours} onChangeText={setWorkingHours} placeholder="09:00 - 18:00" placeholderTextColor="#999" />
+      <TextInput style={styles.input} value={workingHours} onChangeText={setWorkingHours} placeholder="09:00 - 18:00" placeholderTextColor={colors.textSecondary} />
 
       <Text style={styles.label}>Salomlash xabari</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={greetingMsg} onChangeText={setGreetingMsg} placeholder="Xarid uchun rahmat!..." placeholderTextColor="#999" multiline maxLength={300} />
+      <TextInput style={[styles.input, styles.multiline]} value={greetingMsg} onChangeText={setGreetingMsg} placeholder="Xarid uchun rahmat!..." placeholderTextColor={colors.textSecondary} multiline maxLength={300} />
 
       <Text style={styles.label}>Avtomatik javob</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={autoReplyMsg} onChangeText={setAutoReplyMsg} placeholder="Hozirda band..." placeholderTextColor="#999" multiline maxLength={300} />
+      <TextInput style={[styles.input, styles.multiline]} value={autoReplyMsg} onChangeText={setAutoReplyMsg} placeholder="Hozirda band..." placeholderTextColor={colors.textSecondary} multiline maxLength={300} />
 
       <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.5 }]} onPress={handleSave} disabled={saving}>
         {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>Saqlash</Text>}
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
   multiline: { minHeight: 80, textAlignVertical: "top" },
   categories: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  catBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: "#E5E5EA" },
+  catBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.background },
   catBtnActive: { backgroundColor: colors.primary },
   catText: { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
   catTextActive: { color: "#fff" },

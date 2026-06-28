@@ -58,10 +58,10 @@ export function CreateThemeScreen({ navigation }: Props) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Mavzu nomi</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Masalan: Mening mavzum" placeholderTextColor="#999" maxLength={50} />
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Masalan: Mening mavzum" placeholderTextColor={colors.textSecondary} maxLength={50} />
 
       <Text style={styles.label}>Tavsif (ixtiyoriy)</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={description} onChangeText={setDescription} placeholder="Qisqacha tavsif..." placeholderTextColor="#999" multiline maxLength={200} />
+      <TextInput style={[styles.input, styles.multiline]} value={description} onChangeText={setDescription} placeholder="Qisqacha tavsif..." placeholderTextColor={colors.textSecondary} multiline maxLength={200} />
 
       <Text style={styles.label}>Tayyor ranglar</Text>
       <View style={styles.presets}>
@@ -73,16 +73,16 @@ export function CreateThemeScreen({ navigation }: Props) {
       </View>
 
       <Text style={styles.label}>Asosiy rang</Text>
-      <TextInput style={styles.input} value={primaryColor} onChangeText={setPrimaryColor} placeholder="#007AFF" placeholderTextColor="#999" />
+      <TextInput style={styles.input} value={primaryColor} onChangeText={setPrimaryColor} placeholder="#007AFF" placeholderTextColor={colors.textSecondary} />
 
       <Text style={styles.label}>Fon rangi</Text>
-      <TextInput style={styles.input} value={backgroundColor} onChangeText={setBackgroundColor} placeholder="#FFFFFF" placeholderTextColor="#999" />
+      <TextInput style={styles.input} value={backgroundColor} onChangeText={setBackgroundColor} placeholder="#FFFFFF" placeholderTextColor={colors.textSecondary} />
 
       <Text style={styles.label}>Yuza rangi</Text>
-      <TextInput style={styles.input} value={surfaceColor} onChangeText={setSurfaceColor} placeholder="#F2F2F7" placeholderTextColor="#999" />
+      <TextInput style={styles.input} value={surfaceColor} onChangeText={setSurfaceColor} placeholder="#F2F2F7" placeholderTextColor={colors.textSecondary} />
 
       <Text style={styles.label}>Matn rangi</Text>
-      <TextInput style={styles.input} value={textColor} onChangeText={setTextColor} placeholder="#000000" placeholderTextColor="#999" />
+      <TextInput style={styles.input} value={textColor} onChangeText={setTextColor} placeholder="#000000" placeholderTextColor={colors.textSecondary} />
 
       <TouchableOpacity style={styles.toggleRow} onPress={() => setIsDark(!isDark)}>
         <Text style={styles.toggleLabel}>Qorong'u mavzu</Text>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   presetLabel: { color: "#fff", fontWeight: "600", fontSize: 12 },
   toggleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: colors.surface, padding: 14, borderRadius: 10, marginTop: 16 },
   toggleLabel: { fontSize: 15, color: colors.text },
-  toggle: { width: 50, height: 28, borderRadius: 14, backgroundColor: "#E5E5EA", justifyContent: "center", paddingHorizontal: 2 },
+  toggle: { width: 50, height: 28, borderRadius: 14, backgroundColor: colors.background, justifyContent: "center", paddingHorizontal: 2 },
   toggleActive: { backgroundColor: colors.primary },
   toggleThumb: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.surface },
   toggleThumbActive: { alignSelf: "flex-end" },

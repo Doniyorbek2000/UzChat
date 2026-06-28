@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   controlLabel: { fontSize: 15, fontWeight: "600", color: colors.text },
   radiusRow: { gap: 8 },
   radiusBtns: { flexDirection: "row", gap: 8, marginTop: 8 },
-  radiusBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 8, backgroundColor: "#E5E5EA" },
+  radiusBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 8, backgroundColor: colors.background },
   radiusBtnActive: { backgroundColor: colors.primary },
   radiusBtnText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
   radiusBtnTextActive: { color: "#fff" },

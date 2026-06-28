@@ -91,7 +91,7 @@ export function MusicPlayerScreen(_props: Props) {
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.searchInput} placeholder="Qo'shiq qidirish..." placeholderTextColor="#999" value={search} onChangeText={(t) => { setSearch(t); setTab(t.trim() ? "search" : "trending"); }} returnKeyType="search" />
+      <TextInput style={styles.searchInput} placeholder="Qo'shiq qidirish..." placeholderTextColor={colors.textSecondary} value={search} onChangeText={(t) => { setSearch(t); setTab(t.trim() ? "search" : "trending"); }} returnKeyType="search" />
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />

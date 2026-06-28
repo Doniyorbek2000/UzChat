@@ -123,7 +123,7 @@ export function BotStoreScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   tabs: { flexDirection: "row", padding: 12, gap: 8 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: "#E5E5EA", alignItems: "center" },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: colors.background, alignItems: "center" },
   tabActive: { backgroundColor: colors.primary },
   tabText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
   tabTextActive: { color: "#fff" },

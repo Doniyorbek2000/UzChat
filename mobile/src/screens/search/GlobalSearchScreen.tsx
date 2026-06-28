@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   searchBar: { paddingHorizontal: 12, paddingTop: 8 },
   searchInput: { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, color: colors.text },
   tabs: { flexDirection: "row", paddingHorizontal: 12, paddingTop: 10, gap: 6 },
-  tab: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: "#E5E5EA" },
+  tab: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.background },
   tabActive: { backgroundColor: colors.primary },
   tabText: { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
   tabTextActive: { color: "#fff" },

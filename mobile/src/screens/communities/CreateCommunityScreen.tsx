@@ -46,7 +46,7 @@ export function CreateCommunityScreen({ navigation }: Props) {
         value={name}
         onChangeText={setName}
         placeholder="Masalan: O'zbek dasturchilar"
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         maxLength={100}
       />
 
@@ -56,7 +56,7 @@ export function CreateCommunityScreen({ navigation }: Props) {
         value={description}
         onChangeText={setDescription}
         placeholder="Jamiyat haqida qisqacha..."
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         multiline
         maxLength={500}
       />

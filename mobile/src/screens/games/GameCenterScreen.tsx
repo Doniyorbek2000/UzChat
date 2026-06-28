@@ -77,7 +77,7 @@ export function GameCenterScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   categories: { flexDirection: "row", padding: 12, gap: 6, flexWrap: "wrap" },
-  catBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: "#E5E5EA" },
+  catBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: colors.background },
   catBtnActive: { backgroundColor: colors.primary },
   catText: { fontSize: 12, fontWeight: "600", color: colors.textSecondary },
   catTextActive: { color: "#fff" },

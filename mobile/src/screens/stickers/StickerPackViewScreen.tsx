@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", padding: 12, gap: 10 },
   installBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
   installBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
-  removeBtn: { flex: 1, backgroundColor: "#E5E5EA", borderRadius: 10, paddingVertical: 10, alignItems: "center" },
+  removeBtn: { flex: 1, backgroundColor: colors.background, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
   removeBtnText: { color: colors.textSecondary, fontWeight: "600", fontSize: 15 },
   grid: { padding: 8, paddingBottom: 20 },
   stickerCell: { flex: 1, aspectRatio: 1, padding: 6, alignItems: "center", justifyContent: "center" },

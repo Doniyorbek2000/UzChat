@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   tabs: { flexDirection: "row", paddingHorizontal: 12, gap: 8, marginBottom: 8 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: "#E5E5EA", alignItems: "center" },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: colors.background, alignItems: "center" },
   tabActive: { backgroundColor: colors.primary },
   tabText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
   tabTextActive: { color: "#fff" },

@@ -135,7 +135,7 @@ export function FileSecurityScreen({}: Props) {
           <TextInput
             style={styles.addTypeInput}
             placeholder="Yangi tur qo'shish (masalan: zip)"
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textSecondary}
             value={customBlockType}
             onChangeText={setCustomBlockType}
             autoCapitalize="none"
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   settingInfo: { flex: 1, marginRight: 12 },
   settingLabel: { fontSize: 15, fontWeight: "500", color: colors.text },
   settingHint: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: "#E5E5EA", marginVertical: 12 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.background, marginVertical: 12 },
   sizeOptions: { flexDirection: "row", gap: 8 },
   sizeBtn: { flex: 1, paddingVertical: 10, borderRadius: 8, backgroundColor: colors.surface, alignItems: "center" },
   sizeBtnActive: { backgroundColor: colors.primary },

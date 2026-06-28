@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   cmdName: { fontSize: 14, fontWeight: "600", color: colors.primary },
   cmdDesc: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
   actions: { padding: 16, gap: 8 },
-  toggleBtn: { backgroundColor: "#E5E5EA", borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  toggleBtn: { backgroundColor: colors.background, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   toggleBtnText: { fontWeight: "600", fontSize: 15, color: colors.text },
   deleteBtn: { backgroundColor: "#FFEBEE", borderRadius: 10, paddingVertical: 12, alignItems: "center" },
   deleteBtnText: { fontWeight: "600", fontSize: 15, color: "#FF3B30" },

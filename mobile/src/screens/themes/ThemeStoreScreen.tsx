@@ -69,7 +69,7 @@ export function ThemeStoreScreen({ navigation }: Props) {
         style={styles.searchInput}
         placeholder="Mavzularni qidirish..."
         returnKeyType="search"
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={search}
         onChangeText={setSearch}
       />
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   searchInput: { margin: 12, backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
   tabs: { flexDirection: "row", paddingHorizontal: 12, gap: 8, marginBottom: 8 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: "#E5E5EA", alignItems: "center" },
+  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: colors.background, alignItems: "center" },
   tabActive: { backgroundColor: colors.primary },
   tabText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
   tabTextActive: { color: "#fff" },

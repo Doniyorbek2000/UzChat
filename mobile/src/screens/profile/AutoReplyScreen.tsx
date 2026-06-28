@@ -50,7 +50,7 @@ export function AutoReplyScreen(_props: Props) {
       </TouchableOpacity>
 
       <Text style={styles.label}>Javob matni</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={message} onChangeText={setMessage} placeholder="Avtomatik javob matni..." placeholderTextColor="#999" multiline maxLength={500} />
+      <TextInput style={[styles.input, styles.multiline]} value={message} onChangeText={setMessage} placeholder="Avtomatik javob matni..." placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
 
       <TouchableOpacity style={styles.toggleRow} onPress={() => setOnlyStrangers(!onlyStrangers)}>
         <View>
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   toggleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: colors.surface, padding: 14, borderRadius: 10, marginBottom: 12 },
   toggleLabel: { fontSize: 15, fontWeight: "600", color: colors.text },
   toggleHint: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-  toggle: { width: 50, height: 28, borderRadius: 14, backgroundColor: "#E5E5EA", justifyContent: "center", paddingHorizontal: 2 },
+  toggle: { width: 50, height: 28, borderRadius: 14, backgroundColor: colors.background, justifyContent: "center", paddingHorizontal: 2 },
   toggleActive: { backgroundColor: colors.primary },
   toggleThumb: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.surface },
   toggleThumbActive: { alignSelf: "flex-end" },

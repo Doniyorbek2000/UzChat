@@ -108,7 +108,7 @@ export default function AdminUsersScreen() {
         </View>
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isAdmin ? "#FF3B30" : "#007AFF" }]} onPress={() => toggleAdmin(item)}>
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isAdmin ? "#FF3B30" : colors.primary }]} onPress={() => toggleAdmin(item)}>
           <Text style={styles.actionText}>{item.isAdmin ? "Admin o'chirish" : "Admin qilish"}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isVerified ? "#FF9500" : "#34C759" }]} onPress={() => toggleVerified(item)}>
@@ -139,7 +139,7 @@ export default function AdminUsersScreen() {
       </View>
 
       {loading && users.length === 0 ? (
-        <ActivityIndicator size="large" style={{ marginTop: 40 }} color="#007AFF" />
+        <ActivityIndicator size="large" style={{ marginTop: 40 }} color={colors.primary} />
       ) : (
         <FlatList
           data={users}

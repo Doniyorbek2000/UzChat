@@ -98,7 +98,7 @@ export function CloudStorageScreen(_props: Props) {
 
       {showCreateFolder && (
         <View style={styles.createForm}>
-          <TextInput style={styles.input} placeholder="Papka nomi..." placeholderTextColor="#999" value={newFolderName} onChangeText={setNewFolderName} />
+          <TextInput style={styles.input} placeholder="Papka nomi..." placeholderTextColor={colors.textSecondary} value={newFolderName} onChangeText={setNewFolderName} />
           <TouchableOpacity style={styles.submitBtn} onPress={createFolder}><Text style={styles.submitBtnText}>Yaratish</Text></TouchableOpacity>
         </View>
       )}

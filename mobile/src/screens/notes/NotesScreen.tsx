@@ -89,8 +89,8 @@ export function NotesScreen(_props: Props) {
 
       {showCreate && (
         <View style={styles.form}>
-          <TextInput style={styles.input} placeholder="Sarlavha..." placeholderTextColor="#999" value={title} onChangeText={setTitle} maxLength={200} />
-          <TextInput style={[styles.input, styles.multiline]} placeholder="Matn..." placeholderTextColor="#999" value={content} onChangeText={setContent} multiline maxLength={10000} />
+          <TextInput style={styles.input} placeholder="Sarlavha..." placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} maxLength={200} />
+          <TextInput style={[styles.input, styles.multiline]} placeholder="Matn..." placeholderTextColor={colors.textSecondary} value={content} onChangeText={setContent} multiline maxLength={10000} />
           <View style={styles.colorRow}>
             {NOTE_COLORS.map((c) => (
               <TouchableOpacity key={c} style={[styles.colorDot, { backgroundColor: c }, selectedColor === c && styles.colorDotActive]} onPress={() => setSelectedColor(c)} />
