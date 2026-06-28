@@ -106,7 +106,7 @@ export function MarketplaceScreen({ navigation }: Props) {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.primary} />
         </View>
       ) : error ? (
         <ErrorView message="Do'konlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadStores().finally(() => setLoading(false)); }} />

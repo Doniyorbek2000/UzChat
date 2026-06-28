@@ -57,7 +57,7 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
     navigation.setOptions({
       headerRight: () =>
         saving ? (
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.primary} />
         ) : (
           <TouchableOpacity onPress={onSave} hitSlop={8}>
             <Text style={styles.saveButton}>Saqlash</Text>

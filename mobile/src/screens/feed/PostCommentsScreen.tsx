@@ -79,7 +79,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.primary} />
         </View>
       ) : error ? (
         <ErrorView message="Izohlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadComments().finally(() => setLoading(false)); }} />

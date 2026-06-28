@@ -95,7 +95,7 @@ export function StoriesScreen({ navigation }: Props) {
 
       {uploading && (
         <View style={styles.uploadingRow}>
-          <ActivityIndicator size="small" />
+          <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.uploadingText}> Yuklanmoqda...</Text>
         </View>
       )}

@@ -1961,7 +1961,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           {translatingId === item.id && (
             <View style={styles.translationBox}>
-              <ActivityIndicator size="small" />
+              <ActivityIndicator size="small" color={colors.primary} />
               <Text style={styles.translationLabel}> Tarjima qilinmoqda...</Text>
             </View>
           )}
@@ -3474,7 +3474,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
         </View>
         {gifLoading ? (
-          <View style={styles.centerContent}><ActivityIndicator /></View>
+          <View style={styles.centerContent}><ActivityIndicator color={colors.primary} /></View>
         ) : (
           <FlatList
             data={gifResults}

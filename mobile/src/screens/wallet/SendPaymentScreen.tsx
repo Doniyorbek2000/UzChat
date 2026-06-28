@@ -113,7 +113,7 @@ export function SendPaymentScreen({ navigation }: Props) {
       />
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
         <FlatList

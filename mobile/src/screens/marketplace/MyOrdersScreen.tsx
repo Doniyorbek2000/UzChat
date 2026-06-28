@@ -67,7 +67,7 @@ export function MyOrdersScreen({ navigation }: Props) {
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator /></View>;
+    return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
   }
 
   if (error) {
