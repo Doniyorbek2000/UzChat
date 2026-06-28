@@ -69,7 +69,7 @@ export default function AdminDashboardScreen() {
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
+      refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.primary} />}
     >
       <Text style={styles.title}>Admin Panel</Text>
 
