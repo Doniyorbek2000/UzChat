@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#007AFF"
+      "backgroundColor": "#07C160"
     },
     "ios": {
       "supportsTablet": true,
@@ -28,7 +28,7 @@
       "package": "com.uzchat.app",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#007AFF",
+        "backgroundColor": "#07C160",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -92,7 +92,7 @@
         "expo-notifications",
         {
           "icon": "./assets/android-icon-foreground.png",
-          "color": "#007AFF"
+          "color": "#07C160"
         }
       ],
       [
