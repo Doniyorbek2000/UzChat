@@ -319,6 +319,7 @@ export function ProfileScreen({ navigation }: Props) {
         </Text>
       </View>
 
+      <Text style={styles.sectionTitle}>Shaxsiy</Text>
       <TouchableOpacity style={styles.menuRow} onPress={onOpenBirthdayPicker}>
         <Text style={styles.menuRowText}>🎂 Tug'ilgan kun</Text>
         <View style={styles.menuRowRight}>
@@ -362,6 +363,7 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <Text style={styles.sectionTitle}>Xavfsizlik</Text>
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("ChangePassword")}>
         <Text style={styles.menuRowText}>🔑 Parolni o'zgartirish</Text>
         <Text style={styles.menuRowArrow}>›</Text>
@@ -377,6 +379,7 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <Text style={styles.sectionTitle}>Sozlamalar</Text>
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("NotificationSettings")}>
         <Text style={styles.menuRowText}>🔔 Bildirishnomalar</Text>
         <Text style={styles.menuRowArrow}>›</Text>
@@ -402,6 +405,7 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.menuRowArrow}>›</Text>
       </TouchableOpacity>
 
+      <Text style={styles.sectionTitle}>Xizmatlar</Text>
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Wallet")}>
         <Text style={styles.menuRowText}>💰 Hamyon</Text>
         <Text style={styles.menuRowArrow}>›</Text>
@@ -474,6 +478,7 @@ export function ProfileScreen({ navigation }: Props) {
         </TouchableOpacity>
       )}
 
+      <Text style={styles.sectionTitle}>Qo'shimcha</Text>
       <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AutoReplySettings")}>
         <Text style={styles.menuRowText}>💬 Avtomatik javob</Text>
         <Text style={styles.menuRowArrow}>›</Text>
@@ -637,6 +642,7 @@ export function ProfileScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
+  sectionTitle: { fontSize: 13, fontWeight: "700", color: colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 20, marginBottom: 8 },
   header: { flexDirection: "row", alignItems: "center", marginBottom: 24, gap: 16 },
   avatarOverlay: {
     ...StyleSheet.absoluteFill,
