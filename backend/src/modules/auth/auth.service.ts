@@ -64,7 +64,7 @@ async function issueTokens(user: { id: string; username: string }, userAgent?: s
       id: sid,
       token: refreshToken,
       userId: user.id,
-      userAgent: userAgent ?? null,
+      userAgent: userAgent ? userAgent.slice(0, 500) : null,
       expiresAt: new Date(Date.now() + msFromExpiresIn(env.jwt.refreshExpiresIn)),
     },
   });

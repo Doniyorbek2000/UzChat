@@ -73,7 +73,18 @@ export function createApp() {
   app.use(requestIdMiddleware);
   app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    contentSecurityPolicy: env.nodeEnv === "production" ? undefined : false,
+    contentSecurityPolicy: env.nodeEnv === "production" ? {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
+    } : false,
     hsts: env.nodeEnv === "production" ? { maxAge: 31536000, includeSubDomains: true } : false,
   }));
   app.use(cors({

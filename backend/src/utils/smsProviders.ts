@@ -58,6 +58,9 @@ const eskizProvider: SmsProvider = {
 
 const logProvider: SmsProvider = {
   async send(phone: string, message: string) {
+    if (env.nodeEnv === "production") {
+      logger.warn("SMS log provider used in production — OTP codes are being logged instead of sent. Set SMS_PROVIDER=eskiz for real delivery.");
+    }
     logger.info("SMS (dev mode)", {
       phone: phone.slice(0, -4).replace(/./g, "*") + phone.slice(-4),
       message,
