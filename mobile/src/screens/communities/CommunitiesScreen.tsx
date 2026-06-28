@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   createBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
   list: { paddingHorizontal: 12, paddingBottom: 20 },
   communityCard: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 8, alignItems: "center", gap: 12 },
-  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: "#4CAF50", alignItems: "center", justifyContent: "center" },
+  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   avatarText: { fontSize: 22, fontWeight: "700", color: "#fff" },
   info: { flex: 1 },
   name: { fontSize: 16, fontWeight: "600", color: colors.text },

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -71,6 +71,7 @@ export function VerifyOtpScreen({ route }: Props) {
   };
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <View style={styles.container}>
       <Text style={styles.title}>Tasdiqlash kodi</Text>
       <Text style={styles.subtitle}>{phone} raqamiga yuborilgan 6 xonali kodni kiriting</Text>
@@ -104,6 +105,7 @@ export function VerifyOtpScreen({ route }: Props) {
         </Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -93,7 +93,8 @@ export function TwoFactorSettingsScreen({}: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
+    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.description}>
         Yoqilganda, hisobingizga kirishda oddiy paroldan tashqari qo'shimcha (bulutli) parol ham so'raladi.
       </Text>
@@ -113,12 +114,13 @@ export function TwoFactorSettingsScreen({}: Props) {
       <TouchableOpacity style={styles.button} onPress={onEnable} disabled={saving}>
         {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Yoqish</Text>}
       </TouchableOpacity>
-    </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: colors.surface },
+  container: { flex: 1, backgroundColor: colors.surface },
   description: { fontSize: 13, color: colors.textSecondary, lineHeight: 18, marginBottom: 16 },
   label: { fontSize: 14, color: colors.textSecondary, marginBottom: 8, marginTop: 4 },
   input: {

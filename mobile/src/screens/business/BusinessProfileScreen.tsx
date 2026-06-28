@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert , KeyboardAvoidingView, Platform} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { businessApi, BusinessProfileData } from "../../api/business";
@@ -95,6 +95,8 @@ export function BusinessProfileScreen(_props: Props) {
   }
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
+
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {profile?.isVerified && (
         <View style={styles.verifiedBadge}>
@@ -148,6 +150,8 @@ export function BusinessProfileScreen(_props: Props) {
         </TouchableOpacity>
       )}
     </ScrollView>
+
+    </KeyboardAvoidingView>
   );
 }
 

@@ -101,7 +101,7 @@ export function CommunityViewScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   header: { backgroundColor: colors.surface, padding: 24, alignItems: "center", borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
-  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: "#4CAF50", alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center", marginBottom: 12 },
   avatarText: { fontSize: 30, fontWeight: "700", color: "#fff" },
   name: { fontSize: 22, fontWeight: "700", color: colors.text },
   description: { fontSize: 14, color: colors.textSecondary, marginTop: 6, textAlign: "center" },

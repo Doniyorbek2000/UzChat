@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView , KeyboardAvoidingView, Platform} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { miniAppsApi } from "../../api/miniapps";
@@ -51,6 +51,8 @@ export function CreateMiniAppScreen({ navigation }: Props) {
   };
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
+
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Nomi *</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={64} placeholder="Mini-dastur nomi" placeholderTextColor={colors.textSecondary} />
@@ -105,6 +107,8 @@ export function CreateMiniAppScreen({ navigation }: Props) {
         {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>Yaratish</Text>}
       </TouchableOpacity>
     </ScrollView>
+
+    </KeyboardAvoidingView>
   );
 }
 

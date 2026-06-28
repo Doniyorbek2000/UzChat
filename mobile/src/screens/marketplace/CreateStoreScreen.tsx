@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator,
-  ScrollView,
-} from "react-native";
+  ScrollView, KeyboardAvoidingView, Platform} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi } from "../../api/marketplace";
@@ -45,6 +44,8 @@ export function CreateStoreScreen({ navigation }: Props) {
   };
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
+
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Do'kon nomi *</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Do'kon nomini kiriting" placeholderTextColor={colors.textSecondary} maxLength={100} />
@@ -73,6 +74,8 @@ export function CreateStoreScreen({ navigation }: Props) {
         {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Do'kon yaratish</Text>}
       </TouchableOpacity>
     </ScrollView>
+
+    </KeyboardAvoidingView>
   );
 }
 

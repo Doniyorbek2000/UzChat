@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, ActivityIndicator , KeyboardAvoidingView, Platform} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { themesApi } from "../../api/themes";
@@ -56,6 +56,8 @@ export function CreateThemeScreen({ navigation }: Props) {
   };
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
+
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Mavzu nomi</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Masalan: Mening mavzum" placeholderTextColor={colors.textSecondary} maxLength={50} />
@@ -109,6 +111,8 @@ export function CreateThemeScreen({ navigation }: Props) {
         {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Mavzuni saqlash</Text>}
       </TouchableOpacity>
     </ScrollView>
+
+    </KeyboardAvoidingView>
   );
 }
 

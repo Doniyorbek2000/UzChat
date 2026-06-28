@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, Image , KeyboardAvoidingView, Platform} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -72,6 +72,8 @@ export function CreateReelScreen({ navigation }: Props) {
   };
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
+
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <TouchableOpacity style={styles.uploadArea} onPress={onPickVideo} disabled={uploading}>
         {uploading ? (
@@ -154,6 +156,8 @@ export function CreateReelScreen({ navigation }: Props) {
         )}
       </TouchableOpacity>
     </ScrollView>
+
+    </KeyboardAvoidingView>
   );
 }
 

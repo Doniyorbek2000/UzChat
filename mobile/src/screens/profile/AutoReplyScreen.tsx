@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { autoReplyApi, AutoReplySettings } from "../../api/autoReply";
@@ -41,6 +41,7 @@ export function AutoReplyScreen(_props: Props) {
   }
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
     <View style={styles.container}>
       <TouchableOpacity style={styles.toggleRow} onPress={() => setIsEnabled(!isEnabled)}>
         <Text style={styles.toggleLabel}>Avtomatik javob</Text>
@@ -66,6 +67,7 @@ export function AutoReplyScreen(_props: Props) {
         {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>Saqlash</Text>}
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
   );
 }
 

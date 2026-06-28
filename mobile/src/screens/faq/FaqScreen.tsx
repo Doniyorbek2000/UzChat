@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   faqCategory: { fontSize: 11, fontWeight: "600", color: colors.primary, backgroundColor: `${colors.primary}15`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   faqArrow: { fontSize: 10, color: colors.textSecondary },
   faqQuestion: { fontSize: 15, fontWeight: "600", color: colors.text },
-  faqAnswer: { fontSize: 14, color: colors.textSecondary, lineHeight: 22, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#F0F0F0" },
+  faqAnswer: { fontSize: 14, color: colors.textSecondary, lineHeight: 22, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },

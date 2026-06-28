@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView,
-} from "react-native";
+  View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { redPacketsApi } from "../../api/redpackets";
@@ -38,6 +37,8 @@ export function SendRedPacketScreen({ navigation }: Props) {
   };
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
+
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.envelope}>
         <Text style={styles.envelopeIcon}>🧧</Text>
@@ -78,6 +79,8 @@ export function SendRedPacketScreen({ navigation }: Props) {
         )}
       </TouchableOpacity>
     </ScrollView>
+
+    </KeyboardAvoidingView>
   );
 }
 

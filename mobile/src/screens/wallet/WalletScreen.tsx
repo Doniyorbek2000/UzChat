@@ -200,5 +200,5 @@ const styles = StyleSheet.create({
   historyDate: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   historyAmount: { fontSize: 15, fontWeight: "600" },
   amountSent: { color: colors.danger },
-  amountReceived: { color: "#4CAF50" },
+  amountReceived: { color: colors.online },
 });

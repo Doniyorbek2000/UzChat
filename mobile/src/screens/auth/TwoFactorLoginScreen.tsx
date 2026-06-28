@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
@@ -58,6 +58,7 @@ export function TwoFactorLoginScreen({ route }: Props) {
 
   if (mode === "recover") {
     return (
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.container}>
         <Text style={styles.title}>Parolni tiklash</Text>
         <Text style={styles.subtitle}>Telefon raqamingizga yuborilgan 6 xonali kodni kiriting</Text>
@@ -80,10 +81,12 @@ export function TwoFactorLoginScreen({ route }: Props) {
           <Text style={styles.linkButtonText}>Orqaga</Text>
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     );
   }
 
   return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <View style={styles.container}>
       <Text style={styles.title}>Ikki bosqichli tekshiruv</Text>
       <Text style={styles.subtitle}>Hisobingiz uchun qo'shimcha (bulutli) parolni kiriting</Text>
@@ -106,6 +109,7 @@ export function TwoFactorLoginScreen({ route }: Props) {
         <Text style={styles.linkButtonText}>Qo'shimcha parolni unutdingizmi?</Text>
       </TouchableOpacity>
     </View>
+    </KeyboardAvoidingView>
   );
 }
 
