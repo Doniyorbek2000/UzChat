@@ -1,5 +1,6 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
+import { pushService } from "../push/push.service";
 
 const userSummarySelect = {
   id: true,
@@ -374,5 +375,101 @@ export const adminService = {
       prisma.bot.count(),
     ]);
     return { bots, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async broadcastNotification(title: string, body: string, adminId: string) {
+    const allUserIds = await prisma.user.findMany({
+      where: { isBanned: false },
+      select: { id: true },
+    });
+    const userIds = allUserIds.map((u) => u.id);
+
+    await prisma.notificationLog.createMany({
+      data: userIds.map((userId) => ({ userId, type: "BROADCAST", title, body })),
+    });
+
+    await pushService.sendToUsers(userIds, { title, body, data: { type: "broadcast" } });
+
+    return { sentTo: userIds.length };
+  },
+
+  async getActivityStats() {
+    const now = new Date();
+    const days: { date: string; users: number; messages: number }[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(now);
+      dayStart.setDate(dayStart.getDate() - i);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      const [users, messages] = await Promise.all([
+        prisma.user.count({ where: { createdAt: { gte: dayStart, lt: dayEnd } } }),
+        prisma.message.count({ where: { createdAt: { gte: dayStart, lt: dayEnd } } }),
+      ]);
+
+      days.push({
+        date: dayStart.toISOString().slice(0, 10),
+        users,
+        messages,
+      });
+    }
+
+    const activeToday = await prisma.user.count({
+      where: { lastSeenAt: { gte: new Date(now.getFullYear(), now.getMonth(), now.getDate()) } },
+    });
+
+    const weekAgo = new Date(now);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const activeWeek = await prisma.user.count({
+      where: { lastSeenAt: { gte: weekAgo } },
+    });
+
+    const monthAgo = new Date(now);
+    monthAgo.setDate(monthAgo.getDate() - 30);
+    const activeMonth = await prisma.user.count({
+      where: { lastSeenAt: { gte: monthAgo } },
+    });
+
+    return { days, dau: activeToday, wau: activeWeek, mau: activeMonth };
+  },
+
+  async getOnlineUsers() {
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const [onlineCount, total] = await Promise.all([
+      prisma.user.count({ where: { lastSeenAt: { gte: fiveMinAgo } } }),
+      prisma.user.count(),
+    ]);
+    return { online: onlineCount, total };
+  },
+
+  async listBannedUsers(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where: { isBanned: true },
+        select: { ...userSummarySelect, walletBalance: true },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where: { isBanned: true } }),
+    ]);
+    return { users, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async exportUsersCSV() {
+    const users = await prisma.user.findMany({
+      select: userSummarySelect,
+      orderBy: { createdAt: "desc" },
+      take: 10000,
+    });
+
+    const header = "id,username,displayName,phone,isAdmin,isVerified,isBanned,createdAt,lastSeenAt";
+    const rows = users.map((u) =>
+      [u.id, u.username, `"${(u.displayName ?? "").replace(/"/g, '""')}"`, u.phone, u.isAdmin, u.isVerified, u.isBanned, u.createdAt.toISOString(), u.lastSeenAt?.toISOString() ?? ""].join(",")
+    );
+    return [header, ...rows].join("\n");
   },
 };

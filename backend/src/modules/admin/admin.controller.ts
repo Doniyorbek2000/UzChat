@@ -185,4 +185,38 @@ router.get("/bots", validateQuery(paginationSchema), async (req: Request, res: R
   res.json(result);
 });
 
+const broadcastSchema = z.object({
+  title: z.string().min(1).max(100),
+  body: z.string().min(1).max(500),
+});
+
+router.post("/broadcast", validateBody(broadcastSchema), async (req: Request, res: Response) => {
+  const result = await adminService.broadcastNotification(req.body.title, req.body.body, req.user!.sub);
+  auditLog(req.user!.sub, "BROADCAST", undefined, undefined, `title=${req.body.title}`, req.ip);
+  res.json(result);
+});
+
+router.get("/activity-stats", async (_req: Request, res: Response) => {
+  const stats = await adminService.getActivityStats();
+  res.json(stats);
+});
+
+router.get("/online-users", async (_req: Request, res: Response) => {
+  const result = await adminService.getOnlineUsers();
+  res.json(result);
+});
+
+router.get("/banned-users", validateQuery(paginationSchema), async (req: Request, res: Response) => {
+  const { page, limit } = req.query as unknown as z.infer<typeof paginationSchema>;
+  const result = await adminService.listBannedUsers(page, limit);
+  res.json(result);
+});
+
+router.get("/export/users", async (_req: Request, res: Response) => {
+  const csv = await adminService.exportUsersCSV();
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", "attachment; filename=users.csv");
+  res.send(csv);
+});
+
 export { router as adminRouter };

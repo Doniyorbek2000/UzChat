@@ -184,7 +184,7 @@ function renderLogin() {
   </div></div>`;
 }
 
-const PAGE_TITLES = {dashboard:"Dashboard",users:"Foydalanuvchilar",posts:"Postlar",reels:"Reels",stories:"Hikoyalar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi",marketplace:"Bozor",payments:"To'lovlar",communities:"Jamiyatlar",bots:"Botlar",settings:"Sozlamalar"};
+const PAGE_TITLES = {dashboard:"Dashboard",users:"Foydalanuvchilar",posts:"Postlar",reels:"Reels",stories:"Hikoyalar",reports:"Shikoyatlar",audit:"Audit log",logins:"Kirish tarixi",marketplace:"Bozor",payments:"To'lovlar",communities:"Jamiyatlar",bots:"Botlar",broadcast:"E'lonlar",activity:"Faoliyat",banned:"Bloklangan",settings:"Sozlamalar"};
 
 function renderApp() {
   const sidebarLinks = [
@@ -198,6 +198,9 @@ function renderApp() {
     {page:"communities",icon:"🏘️",label:"Jamiyatlar"},
     {page:"bots",icon:"🤖",label:"Botlar"},
     {page:"reports",icon:"🚨",label:"Shikoyatlar"},
+    {page:"broadcast",icon:"📢",label:"E'lonlar"},
+    {page:"activity",icon:"📈",label:"Faoliyat"},
+    {page:"banned",icon:"🚫",label:"Bloklangan"},
     {page:"audit",icon:"📋",label:"Audit log"},
     {page:"logins",icon:"🔐",label:"Kirish tarixi"},
     {page:"settings",icon:"⚙️",label:"Sozlamalar"},
@@ -278,6 +281,9 @@ async function loadPage() {
       case "communities": await loadCommunities(el); break;
       case "bots": await loadBots(el); break;
       case "reports": await loadReports(el); break;
+      case "broadcast": await loadBroadcast(el); break;
+      case "activity": await loadActivity(el); break;
+      case "banned": await loadBanned(el); break;
       case "audit": await loadAudit(el); break;
       case "logins": await loadLogins(el); break;
       case "settings": await loadSettings(el); break;
@@ -627,6 +633,88 @@ async function loadBots(el) {
   </div>`;
 }
 
+async function loadBroadcast(el) {
+  el.innerHTML = `
+    <div class="card"><h3>📢 Barcha foydalanuvchilarga e'lon yuborish</h3>
+      <div class="form-group"><label>Sarlavha</label><input type="text" id="broadcastTitle" placeholder="E'lon sarlavhasi" maxlength="100"></div>
+      <div class="form-group"><label>Matn</label><textarea id="broadcastBody" rows="4" placeholder="E'lon matni" maxlength="500" style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:14px;resize:vertical;font-family:inherit;outline:none;background:var(--card);color:var(--text)"></textarea></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" onclick="sendBroadcast()">📤 Yuborish</button>
+        <span id="broadcastStatus" style="font-size:13px;color:var(--text2)"></span>
+      </div>
+    </div>
+    <div class="card"><h3>So'nggi e'lonlar</h3>
+      <p style="color:var(--text2);font-size:13px">E'lonlar barcha foydalanuvchilarga push notification sifatida yuboriladi va notification log'da saqlanadi.</p>
+    </div>`;
+}
+
+window.sendBroadcast = async function() {
+  const title = document.getElementById("broadcastTitle")?.value?.trim();
+  const body = document.getElementById("broadcastBody")?.value?.trim();
+  const statusEl = document.getElementById("broadcastStatus");
+  if (!title || !body) { showToast("Sarlavha va matnni kiriting", true); return; }
+  if (!confirm("Barcha foydalanuvchilarga e'lon yuborilsinmi?\n\nSarlavha: "+title+"\nMatn: "+body)) return;
+  try {
+    if (statusEl) statusEl.textContent = "Yuborilmoqda...";
+    const result = await api("/admin/broadcast", "POST", { title, body });
+    showToast(result.sentTo + " ta foydalanuvchiga e'lon yuborildi");
+    document.getElementById("broadcastTitle").value = "";
+    document.getElementById("broadcastBody").value = "";
+    if (statusEl) statusEl.textContent = result.sentTo + " ta foydalanuvchiga yuborildi ✓";
+  } catch(e) { showToast("E'lon yuborishda xatolik: "+esc(e.message), true); if (statusEl) statusEl.textContent = ""; }
+};
+
+async function loadActivity(el) {
+  const [stats, onlineData] = await Promise.all([api("/admin/activity-stats"), api("/admin/online-users")]);
+  const maxMsg = Math.max(...stats.days.map(d => d.messages), 1);
+  const maxUsr = Math.max(...stats.days.map(d => d.users), 1);
+  el.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card" style="border-left-color:var(--success)"><div class="value">${onlineData.online}</div><div class="label">Hozir onlayn</div><div class="sub">${onlineData.total} jami foydalanuvchi</div></div>
+      <div class="stat-card" style="border-left-color:var(--primary)"><div class="value">${stats.dau}</div><div class="label">DAU (kunlik aktiv)</div></div>
+      <div class="stat-card" style="border-left-color:var(--warning)"><div class="value">${stats.wau}</div><div class="label">WAU (haftalik aktiv)</div></div>
+      <div class="stat-card" style="border-left-color:var(--purple)"><div class="value">${stats.mau}</div><div class="label">MAU (oylik aktiv)</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card"><h3>Haftalik xabarlar</h3>
+        <div class="chart-bar">${stats.days.map(d => `<div class="bar" style="height:${Math.max(8, d.messages/maxMsg*100)}%"><span class="bar-label">${d.messages}</span><span class="bar-day">${d.date.slice(5)}</span></div>`).join("")}</div>
+      </div>
+      <div class="card"><h3>Haftalik yangi foydalanuvchilar</h3>
+        <div class="chart-bar">${stats.days.map(d => `<div class="bar" style="height:${Math.max(8, d.users/maxUsr*100)}%;background:var(--success)"><span class="bar-label">${d.users}</span><span class="bar-day">${d.date.slice(5)}</span></div>`).join("")}</div>
+      </div>
+    </div>`;
+}
+
+let bannedPage = 1;
+async function loadBanned(el) {
+  const data = await api("/admin/banned-users?page="+bannedPage+"&limit=50");
+  el.innerHTML = `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3>Bloklangan foydalanuvchilar (${data.total})</h3>
+      </div>
+      ${data.users.length === 0 ? '<div class="empty">Bloklangan foydalanuvchi yo\'q</div>' : `<table><thead><tr><th>Username</th><th>Ism</th><th>Telefon</th><th>Sabab</th><th>Amallar</th></tr></thead><tbody>
+        ${data.users.map(u => `<tr>
+          <td>${esc(u.username)}</td>
+          <td>${esc(u.displayName)}</td>
+          <td>${esc(u.phone)}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(u.banReason)}">${esc(u.banReason) || "-"}</td>
+          <td><button class="btn btn-sm" style="background:var(--success);color:#fff" onclick="unbanUserFromList('${u.id}','${esc(u.username)}')">Blokdan chiqarish</button></td>
+        </tr>`).join("")}
+      </tbody></table>`}
+      ${data.totalPages > 1 ? `<div class="pagination">${Array.from({length:Math.min(data.totalPages,10)},(_,i)=>`<button class="${i+1===bannedPage?'active':''}" onclick="bannedPage=${i+1};loadPage()">${i+1}</button>`).join("")}</div>` : ""}
+    </div>`;
+}
+
+window.unbanUserFromList = async function(userId, username) {
+  if (!confirm(username + " foydalanuvchini blokdan chiqarilsinmi?")) return;
+  try {
+    await api("/admin/users/"+userId+"/unban", "PATCH");
+    showToast(username + " blokdan chiqarildi");
+    loadPage();
+  } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
+};
+
 async function loadSettings(el) {
   const health = await api("/admin/health");
   el.innerHTML = `
@@ -672,16 +760,15 @@ window.exportDashboardJSON = async function() {
 
 window.exportUsersCSV = async function() {
   try {
-    const data = await api("/admin/users?page=1&limit=1000");
-    const headers = ["ID","Username","Ism","Telefon","Admin","Tasdiqlangan","Ro'yxatdan o'tgan"];
-    const rows = data.users.map(u => [u.id, u.username, u.displayName, u.phone, u.isAdmin?"Ha":"Yo'q", u.isVerified?"Ha":"Yo'q", new Date(u.createdAt).toLocaleDateString("uz")]);
-    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const resp = await fetch(API_BASE+"/admin/export/users", { headers: { "Authorization": "Bearer "+token } });
+    if (!resp.ok) throw new Error("Eksport xatoligi");
+    const csv = await resp.text();
     const blob = new Blob(["﻿"+csv], {type: "text/csv;charset=utf-8;"});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "uzchat_users.csv"; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = "uzchat_users_"+new Date().toISOString().slice(0,10)+".csv"; a.click();
     URL.revokeObjectURL(url);
     showToast("Foydalanuvchilar CSV eksport qilindi");
-  } catch(e) { showToast("Eksport xatoligi: "+e.message, true); }
+  } catch(e) { showToast("Eksport xatoligi: "+esc(e.message), true); }
 };
 
 function esc(s) { if (!s) return ""; const d = document.createElement("div"); d.textContent = String(s); return d.innerHTML; }
