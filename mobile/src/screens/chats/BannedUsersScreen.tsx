@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { chatsApi } from "../../api/chats";
 import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { BannedGroupMember, User } from "../../types";
 import { formatJoinDate } from "../../utils/conversation";
@@ -16,16 +17,18 @@ export function BannedUsersScreen({ route }: Props) {
   const { conversationId } = route.params;
   const [bans, setBans] = useState<BannedGroupMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
   const [banningId, setBanningId] = useState<string | null>(null);
 
   const load = useCallback(() => {
+    setError(false);
     chatsApi
       .listBannedUsers(conversationId)
       .then(setBans)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [conversationId]);
 
@@ -93,6 +96,10 @@ export function BannedUsersScreen({ route }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Bloklangan foydalanuvchilarni yuklab bo'lmadi" onRetry={() => { setLoading(true); load(); }} />;
   }
 
   return (

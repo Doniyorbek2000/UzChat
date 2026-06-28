@@ -1,12 +1,13 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, RefreshControl, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { paymentsApi, Payment, WalletBalance } from "../../api/payments";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { EmptyState } from "../../components/EmptyState";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Wallet">;
@@ -19,6 +20,7 @@ export function WalletScreen({ navigation }: Props) {
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [history, setHistory] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState("");
   const [topUpVisible, setTopUpVisible] = useState(false);
@@ -29,7 +31,10 @@ export function WalletScreen({ navigation }: Props) {
       const [bal, hist] = await Promise.all([paymentsApi.getBalance(), paymentsApi.getHistory()]);
       setBalance(bal);
       setHistory(hist);
-    } catch {}
+      setError(false);
+    } catch {
+      setError(true);
+    }
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -71,8 +76,12 @@ export function WalletScreen({ navigation }: Props) {
     );
   }
 
+  if (error) {
+    return <ErrorView message="Hamyon ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); loadData(); }} />;
+  }
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.balanceCard}>
         <Text style={styles.balanceLabel}>Joriy balans</Text>
         <Text style={styles.balanceAmount}>
@@ -132,7 +141,7 @@ export function WalletScreen({ navigation }: Props) {
           <EmptyState icon="💰" title="Hali to'lovlar yo'q" subtitle="Birinchi to'lovni yuborish uchun pastdagi tugmani bosing" />
         }
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { authApi } from "../../api/auth";
@@ -52,53 +52,60 @@ export function ChangePhoneScreen({ navigation }: Props) {
   };
 
   if (step === "otp") {
+    const canVerify = code.length === 6 && !loading;
     return (
-      <View style={styles.container}>
-        <Text style={styles.label}>Tasdiqlash kodi</Text>
-        <Text style={styles.hint}>{newPhone.trim()} raqamiga yuborilgan 6 xonali kodni kiriting</Text>
-        <TextInput
-          style={[styles.input, styles.codeInput]}
-          placeholder="000000"
-          keyboardType="number-pad"
-          maxLength={6}
-          value={code}
-          onChangeText={setCode}
-          autoFocus
-        />
-        <TouchableOpacity style={styles.button} onPress={onVerifyOtp} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => setStep("phone")} disabled={loading}>
-          <Text style={styles.secondaryButtonText}>Raqamni o'zgartirish</Text>
-        </TouchableOpacity>
-      </View>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <Text style={styles.label}>Tasdiqlash kodi</Text>
+          <Text style={styles.hint}>{newPhone.trim()} raqamiga yuborilgan 6 xonali kodni kiriting</Text>
+          <TextInput
+            style={[styles.input, styles.codeInput]}
+            placeholder="000000"
+            keyboardType="number-pad"
+            maxLength={6}
+            value={code}
+            onChangeText={setCode}
+            autoFocus
+          />
+          <TouchableOpacity style={[styles.button, !canVerify && styles.buttonDisabled]} onPress={onVerifyOtp} disabled={!canVerify}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.secondaryButton} onPress={() => setStep("phone")} disabled={loading}>
+            <Text style={styles.secondaryButtonText}>Raqamni o'zgartirish</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
+  const canRequest = /^\+[1-9]\d{7,14}$/.test(newPhone.trim()) && !loading;
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Joriy raqam</Text>
-      <Text style={styles.hint}>{user?.phone}</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.label}>Joriy raqam</Text>
+        <Text style={styles.hint}>{user?.phone}</Text>
 
-      <Text style={styles.label}>Yangi raqam</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="+998901234567"
-        keyboardType="phone-pad"
-        value={newPhone}
-        onChangeText={setNewPhone}
-        autoFocus
-      />
+        <Text style={styles.label}>Yangi raqam</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="+998901234567"
+          keyboardType="phone-pad"
+          value={newPhone}
+          onChangeText={setNewPhone}
+          autoFocus
+        />
 
-      <TouchableOpacity style={styles.button} onPress={onRequestOtp} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kod yuborish</Text>}
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity style={[styles.button, !canRequest && styles.buttonDisabled]} onPress={onRequestOtp} disabled={!canRequest}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kod yuborish</Text>}
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: colors.surface },
+  container: { flex: 1, backgroundColor: colors.surface },
+  content: { padding: 16 },
   label: { fontSize: 14, color: colors.textSecondary, marginBottom: 8, marginTop: 4 },
   hint: { fontSize: 15, color: colors.text, marginBottom: 16 },
   input: {
@@ -113,6 +120,7 @@ const styles = StyleSheet.create({
   },
   codeInput: { fontSize: 24, textAlign: "center", letterSpacing: 8 },
   button: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 8 },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   secondaryButton: { alignItems: "center", paddingVertical: 14 },
   secondaryButtonText: { color: colors.primary, fontSize: 14 },

@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { botsApi, Bot } from "../../api/bots";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "BotStore">;
@@ -12,9 +13,26 @@ export function BotStoreScreen({ navigation }: Props) {
   const [bots, setBots] = useState<Bot[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
+    try {
+      if (tab === "mine") {
+        setBots(await botsApi.listMine());
+      } else {
+        setBots(await botsApi.search(search.trim() || undefined));
+      }
+    } catch {
+      setError(true);
+    }
+    setLoading(false);
+  }, [tab, search]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
     try {
       if (tab === "mine") {
         setBots(await botsApi.listMine());
@@ -22,7 +40,7 @@ export function BotStoreScreen({ navigation }: Props) {
         setBots(await botsApi.search(search.trim() || undefined));
       }
     } catch {}
-    setLoading(false);
+    setRefreshing(false);
   }, [tab, search]);
 
   useEffect(() => { load(); }, [load]);
@@ -86,11 +104,14 @@ export function BotStoreScreen({ navigation }: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Botlarni yuklab bo'lmadi" onRetry={load} />
       ) : (
         <FlatList
           data={bots}
           keyExtractor={(item) => item.id}
           renderItem={renderBot}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ListEmptyComponent={<Text style={styles.emptyText}>Bot topilmadi</Text>}
         />

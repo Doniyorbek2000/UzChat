@@ -4,22 +4,25 @@ import { useFocusEffect } from "@react-navigation/native";
 import { contactsApi } from "../../api/contacts";
 import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { BlockedUser, User } from "../../types";
 
 export function BlockedUsersScreen() {
   const [blocked, setBlocked] = useState<BlockedUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
   const [blockingId, setBlockingId] = useState<string | null>(null);
 
   const load = useCallback(() => {
+    setError(false);
     contactsApi
       .listBlocked()
       .then(setBlocked)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -84,6 +87,10 @@ export function BlockedUsersScreen() {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Bloklangan foydalanuvchilarni yuklab bo'lmadi" onRetry={() => { setLoading(true); load(); }} />;
   }
 
   return (

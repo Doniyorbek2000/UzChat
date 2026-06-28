@@ -10,6 +10,7 @@ import { feedApi, Post } from "../../api/feed";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { EmptyState } from "../../components/EmptyState";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Feed">;
@@ -28,6 +29,7 @@ export function FeedScreen({ navigation }: Props) {
   const userId = useAuthStore((s) => s.user?.id);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
@@ -40,7 +42,10 @@ export function FeedScreen({ navigation }: Props) {
         setPosts(result.posts);
       }
       setNextCursor(result.nextCursor);
-    } catch {}
+      setError(false);
+    } catch {
+      if (!cursor) setError(true);
+    }
   }, []);
 
   useFocusEffect(
@@ -162,6 +167,10 @@ export function FeedScreen({ navigation }: Props) {
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Postlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
   }
 
   return (

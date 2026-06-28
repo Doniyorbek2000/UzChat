@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { communitiesApi } from "../../api/communities";
+import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreateCommunity">;
@@ -33,9 +34,10 @@ export function CreateCommunityScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.previewAvatar}>
-        <Text style={styles.previewAvatarText}>{name.trim() ? name.charAt(0).toUpperCase() : "?"}</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <View style={styles.avatarContainer}>
+        <Avatar name={name.trim() || "?"} size={80} />
       </View>
 
       <Text style={styles.label}>Jamiyat nomi</Text>
@@ -71,14 +73,15 @@ export function CreateCommunityScreen({ navigation }: Props) {
       >
         {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>Jamiyat yaratish</Text>}
       </TouchableOpacity>
-    </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
-  previewAvatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#4CAF50", alignSelf: "center", alignItems: "center", justifyContent: "center", marginVertical: 20 },
-  previewAvatarText: { fontSize: 34, fontWeight: "700", color: "#fff" },
+  container: { flex: 1, backgroundColor: colors.surface },
+  content: { padding: 16 },
+  avatarContainer: { alignSelf: "center", marginVertical: 20 },
   label: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginTop: 16, marginBottom: 6 },
   input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
   multiline: { minHeight: 80, textAlignVertical: "top" },

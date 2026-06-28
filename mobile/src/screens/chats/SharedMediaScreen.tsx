@@ -12,6 +12,7 @@ import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { formatTime, getConversationDisplay } from "../../utils/conversation";
 import { extractFirstUrl } from "../../utils/linkPreview";
@@ -53,6 +54,7 @@ export function SharedMediaScreen({ route, navigation }: Props) {
 
   const [items, setItems] = useState<DecryptedMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [activeTab, setActiveTab] = useState<MediaTab>("all");
@@ -64,13 +66,14 @@ export function SharedMediaScreen({ route, navigation }: Props) {
       if (!conversation) return;
       const key = getConversationKey(conversation);
       setLoading(true);
+      setError(false);
       chatsApi
         .listMedia(conversationId)
         .then((messages) => {
           setItems(messages.map((m) => decryptToMessage(key, m)));
           setHasMore(messages.length === PAGE_SIZE);
         })
-        .catch(() => {})
+        .catch(() => setError(true))
         .finally(() => setLoading(false));
     }, [conversation, conversationId, getConversationKey])
   );
@@ -184,6 +187,10 @@ export function SharedMediaScreen({ route, navigation }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Mediafayllarni yuklab bo'lmadi" onRetry={() => { setLoading(true); setError(false); if (conversation) { const key = getConversationKey(conversation); chatsApi.listMedia(conversationId).then((messages) => { setItems(messages.map((m) => decryptToMessage(key, m))); setHasMore(messages.length === PAGE_SIZE); }).catch(() => setError(true)).finally(() => setLoading(false)); } }} />;
   }
 
   return (

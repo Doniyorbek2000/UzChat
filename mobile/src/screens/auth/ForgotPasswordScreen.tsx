@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { authApi } from "../../api/auth";
@@ -54,64 +54,70 @@ export function ForgotPasswordScreen({ navigation }: Props) {
   };
 
   if (step === "reset") {
+    const canReset = code.length === 6 && newPassword.length >= 8 && confirmPassword.length > 0 && !loading;
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Parolni tiklash</Text>
-        <Text style={styles.subtitle}>{phone} raqamiga yuborilgan 6 xonali kodni va yangi parolni kiriting</Text>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Parolni tiklash</Text>
+          <Text style={styles.subtitle}>{phone} raqamiga yuborilgan 6 xonali kodni va yangi parolni kiriting</Text>
 
-        <TextInput
-          style={[styles.input, styles.codeInput]}
-          placeholder="000000"
-          keyboardType="number-pad"
-          maxLength={6}
-          value={code}
-          onChangeText={setCode}
-          autoFocus
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Yangi parol"
-          secureTextEntry
-          value={newPassword}
-          onChangeText={setNewPassword}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Yangi parolni tasdiqlang"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
+          <TextInput
+            style={[styles.input, styles.codeInput]}
+            placeholder="000000"
+            keyboardType="number-pad"
+            maxLength={6}
+            value={code}
+            onChangeText={setCode}
+            autoFocus
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Yangi parol"
+            secureTextEntry
+            value={newPassword}
+            onChangeText={setNewPassword}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Yangi parolni tasdiqlang"
+            secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
 
-        <TouchableOpacity style={styles.button} onPress={onReset} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Parolni tiklash</Text>}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.linkButton} onPress={() => setStep("phone")} disabled={loading}>
-          <Text style={styles.linkButtonText}>Orqaga</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={[styles.button, !canReset && styles.buttonDisabled]} onPress={onReset} disabled={!canReset}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Parolni tiklash</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.linkButton} onPress={() => setStep("phone")} disabled={loading}>
+            <Text style={styles.linkButtonText}>Orqaga</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
+  const canRequest = phone.trim().length >= 9 && !loading;
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Parolni tiklash</Text>
-      <Text style={styles.subtitle}>Telefon raqamingizni kiriting, sizga tasdiqlash kodi yuboriladi</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}>Parolni tiklash</Text>
+        <Text style={styles.subtitle}>Telefon raqamingizni kiriting, sizga tasdiqlash kodi yuboriladi</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="+998901234567"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
-        autoCapitalize="none"
-        autoFocus
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="+998901234567"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+          autoCapitalize="none"
+          autoFocus
+        />
 
-      <TouchableOpacity style={styles.button} onPress={onRequestCode} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kod yuborish</Text>}
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity style={[styles.button, !canRequest && styles.buttonDisabled]} onPress={onRequestCode} disabled={!canRequest}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kod yuborish</Text>}
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -137,6 +143,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 8,
   },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   linkButton: { alignItems: "center", paddingVertical: 14 },
   linkButtonText: { color: colors.primary, fontSize: 14 },

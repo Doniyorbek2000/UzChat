@@ -18,6 +18,7 @@ import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
 import { MainTabScreenProps } from "../../navigation/types";
 import { reelsApi, Reel } from "../../api/reels";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = MainTabScreenProps<"Reels">;
@@ -30,6 +31,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
   const [tab, setTab] = useState<"feed" | "trending">("feed");
   const [reels, setReels] = useState<Reel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [likedReels, setLikedReels] = useState<Set<string>>(new Set());
   const [activeReel, setActiveReel] = useState<Reel | null>(null);
@@ -46,6 +48,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       const data = tab === "trending" ? await reelsApi.getTrending() : await reelsApi.getFeed();
       setReels(data);
@@ -54,7 +57,9 @@ export function ReelsFeedScreen({ navigation }: Props) {
         if (r.likes && r.likes.length > 0) liked.add(r.id);
       });
       setLikedReels(liked);
-    } catch {}
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, [tab]);
 
@@ -221,6 +226,8 @@ export function ReelsFeedScreen({ navigation }: Props) {
 
       {loading && !refreshing ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Reellarni yuklab bo'lmadi" onRetry={load} />
       ) : (
         <FlatList
           data={reels}

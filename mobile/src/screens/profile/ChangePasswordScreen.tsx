@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
@@ -37,32 +37,37 @@ export function ChangePasswordScreen({ navigation }: Props) {
     }
   };
 
+  const canSubmit = currentPassword.length > 0 && newPassword.length >= 10 && confirmPassword.length > 0 && !saving;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Joriy parol</Text>
-      <TextInput
-        style={styles.input}
-        value={currentPassword}
-        onChangeText={setCurrentPassword}
-        secureTextEntry
-        autoFocus
-      />
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.label}>Joriy parol</Text>
+        <TextInput
+          style={styles.input}
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          secureTextEntry
+          autoFocus
+        />
 
-      <Text style={styles.label}>Yangi parol</Text>
-      <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry />
+        <Text style={styles.label}>Yangi parol</Text>
+        <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry />
 
-      <Text style={styles.label}>Yangi parolni tasdiqlang</Text>
-      <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+        <Text style={styles.label}>Yangi parolni tasdiqlang</Text>
+        <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
 
-      <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Saqlash</Text>}
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity style={[styles.button, !canSubmit && styles.buttonDisabled]} onPress={onSubmit} disabled={!canSubmit}>
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Saqlash</Text>}
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: colors.surface },
+  container: { flex: 1, backgroundColor: colors.surface },
+  content: { padding: 16 },
   label: { fontSize: 14, color: colors.textSecondary, marginBottom: 8, marginTop: 4 },
   input: {
     backgroundColor: colors.background,
@@ -75,5 +80,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   button: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 8 },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });

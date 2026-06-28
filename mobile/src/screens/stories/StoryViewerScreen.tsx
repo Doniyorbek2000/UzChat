@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { storiesApi, StoryGroup } from "../../api/stories";
@@ -27,7 +27,9 @@ export function StoryViewerScreen({ navigation, route }: Props) {
       const feed = await storiesApi.getFeed();
       const found = feed.find((g) => g.user.id === userId);
       setGroup(found ?? null);
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Hikoyalarni yuklab bo'lmadi");
+    }
     setLoading(false);
   }, [userId]);
 
@@ -76,7 +78,9 @@ export function StoryViewerScreen({ navigation, route }: Props) {
         await loadStories();
         if (index > 0) setIndex(index - 1);
       }
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Hikoyani o'chirib bo'lmadi");
+    }
   };
 
   if (loading) {

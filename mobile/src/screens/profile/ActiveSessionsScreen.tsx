@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useFocusEffect } from "@react-navigation/native";
 import { authApi } from "../../api/auth";
 import { useAuthStore } from "../../store/authStore";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Session } from "../../types";
 import { formatDateTime } from "../../utils/conversation";
@@ -12,13 +13,15 @@ export function ActiveSessionsScreen() {
   const logout = useAuthStore((s) => s.logout);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(() => {
+    setError(false);
     return authApi
       .listSessions()
       .then(setSessions)
-      .catch(() => {});
+      .catch(() => setError(true));
   }, []);
 
   useFocusEffect(
@@ -81,6 +84,10 @@ export function ActiveSessionsScreen() {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Seanslarni yuklab bo'lmadi" onRetry={() => { setLoading(true); load().finally(() => setLoading(false)); }} />;
   }
 
   const otherSessionsCount = sessions.filter((s) => !s.isCurrent).length;

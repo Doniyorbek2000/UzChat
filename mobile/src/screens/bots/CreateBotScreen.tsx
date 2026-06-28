@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { botsApi } from "../../api/bots";
@@ -38,8 +38,11 @@ export function CreateBotScreen({ navigation }: Props) {
     setCreating(false);
   };
 
+  const canCreate = username.trim().length > 0 && displayName.trim().length > 0 && !creating;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.label}>Username</Text>
       <TextInput
         style={styles.input}
@@ -71,7 +74,7 @@ export function CreateBotScreen({ navigation }: Props) {
         numberOfLines={3}
       />
 
-      <TouchableOpacity style={styles.createBtn} onPress={handleCreate} disabled={creating}>
+      <TouchableOpacity style={[styles.createBtn, !canCreate && styles.createBtnDisabled]} onPress={handleCreate} disabled={!canCreate}>
         {creating ? (
           <ActivityIndicator color="#fff" />
         ) : (
@@ -79,6 +82,7 @@ export function CreateBotScreen({ navigation }: Props) {
         )}
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -103,5 +107,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 24,
   },
+  createBtnDisabled: { opacity: 0.5 },
   createBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });

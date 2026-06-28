@@ -8,6 +8,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Store } from "../../api/marketplace";
 import { EmptyState } from "../../components/EmptyState";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Marketplace">;
@@ -40,15 +41,19 @@ export function MarketplaceScreen({ navigation }: Props) {
 
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
 
   const loadStores = useCallback(async () => {
+    setError(false);
     try {
       const result = await marketplaceApi.listStores(category === "all" ? undefined : category);
       setStores(result.stores);
-    } catch {}
+    } catch {
+      setError(true);
+    }
   }, [category]);
 
   useFocusEffect(
@@ -102,6 +107,8 @@ export function MarketplaceScreen({ navigation }: Props) {
         <View style={styles.center}>
           <ActivityIndicator />
         </View>
+      ) : error ? (
+        <ErrorView message="Do'konlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadStores().finally(() => setLoading(false)); }} />
       ) : (
         <FlatList
           data={filtered}
