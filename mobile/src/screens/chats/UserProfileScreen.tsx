@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Share, Modal, Pressable, Image, TextInput } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, ScrollView, Alert, Share, Modal, Pressable, Image, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
@@ -287,30 +287,32 @@ export function UserProfileScreen({ route, navigation }: Props) {
       </Modal>
 
       <Modal visible={noteModalOpen} transparent animationType="fade" onRequestClose={() => setNoteModalOpen(false)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setNoteModalOpen(false)}>
-          <Pressable style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
-            <Text style={styles.modalSubtitle}>{contactAliases[profile.id] ?? profile.displayName}</Text>
-            <TextInput
-              style={[styles.modalInput, styles.modalNoteInput]}
-              value={noteInput}
-              onChangeText={setNoteInput}
-              placeholder="Faqat sizga ko'rinadigan eslatma..."
-              placeholderTextColor={colors.textSecondary}
-              autoFocus
-              multiline
-              maxLength={500}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteModalOpen(false)}>
-                <Text style={styles.modalCancelText}>Bekor qilish</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
-                {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setNoteModalOpen(false)}>
+            <Pressable style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
+              <Text style={styles.modalSubtitle}>{contactAliases[profile.id] ?? profile.displayName}</Text>
+              <TextInput
+                style={[styles.modalInput, styles.modalNoteInput]}
+                value={noteInput}
+                onChangeText={setNoteInput}
+                placeholder="Faqat sizga ko'rinadigan eslatma..."
+                placeholderTextColor={colors.textSecondary}
+                autoFocus
+                multiline
+                maxLength={500}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteModalOpen(false)}>
+                  <Text style={styles.modalCancelText}>Bekor qilish</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
+                  {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+                </TouchableOpacity>
+              </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
   );

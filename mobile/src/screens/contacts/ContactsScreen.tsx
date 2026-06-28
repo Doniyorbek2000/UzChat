@@ -12,6 +12,8 @@ import {
   Modal,
   Pressable,
   RefreshControl,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -456,56 +458,60 @@ export function ContactsScreen({ navigation }: Props) {
       </View>
 
       <Modal visible={!!aliasContact} transparent animationType="fade" onRequestClose={() => setAliasContact(null)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setAliasContact(null)}>
-          <Pressable style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Taxallus qo'yish</Text>
-            <Text style={styles.modalSubtitle}>{aliasContact?.user.displayName}</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={aliasInput}
-              onChangeText={setAliasInput}
-              placeholder={aliasContact?.user.displayName}
-              placeholderTextColor={colors.textSecondary}
-              autoFocus
-              maxLength={64}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setAliasContact(null)}>
-                <Text style={styles.modalCancelText}>Bekor qilish</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveAlias} disabled={savingAlias}>
-                {savingAlias ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setAliasContact(null)}>
+            <Pressable style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Taxallus qo'yish</Text>
+              <Text style={styles.modalSubtitle}>{aliasContact?.user.displayName}</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={aliasInput}
+                onChangeText={setAliasInput}
+                placeholder={aliasContact?.user.displayName}
+                placeholderTextColor={colors.textSecondary}
+                autoFocus
+                maxLength={64}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancelButton} onPress={() => setAliasContact(null)}>
+                  <Text style={styles.modalCancelText}>Bekor qilish</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveAlias} disabled={savingAlias}>
+                  {savingAlias ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+                </TouchableOpacity>
+              </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={!!noteContact} transparent animationType="fade" onRequestClose={() => setNoteContact(null)}>
-        <Pressable style={styles.modalBackdrop} onPress={() => setNoteContact(null)}>
-          <Pressable style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
-            <Text style={styles.modalSubtitle}>{noteContact?.alias ?? noteContact?.user.displayName}</Text>
-            <TextInput
-              style={[styles.modalInput, styles.modalNoteInput]}
-              value={noteInput}
-              onChangeText={setNoteInput}
-              placeholder="Faqat sizga ko'rinadigan eslatma..."
-              placeholderTextColor={colors.textSecondary}
-              autoFocus
-              multiline
-              maxLength={500}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteContact(null)}>
-                <Text style={styles.modalCancelText}>Bekor qilish</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
-                {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
-              </TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setNoteContact(null)}>
+            <Pressable style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
+              <Text style={styles.modalSubtitle}>{noteContact?.alias ?? noteContact?.user.displayName}</Text>
+              <TextInput
+                style={[styles.modalInput, styles.modalNoteInput]}
+                value={noteInput}
+                onChangeText={setNoteInput}
+                placeholder="Faqat sizga ko'rinadigan eslatma..."
+                placeholderTextColor={colors.textSecondary}
+                autoFocus
+                multiline
+                maxLength={500}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteContact(null)}>
+                  <Text style={styles.modalCancelText}>Bekor qilish</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
+                  {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+                </TouchableOpacity>
+              </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
