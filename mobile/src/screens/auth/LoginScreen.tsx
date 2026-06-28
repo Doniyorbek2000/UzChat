@@ -134,6 +134,7 @@ export function LoginScreen({ navigation }: Props) {
             <TextInput
               style={styles.input}
               placeholder="+998901234567"
+              placeholderTextColor={colors.textSecondary}
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
@@ -172,6 +173,7 @@ export function LoginScreen({ navigation }: Props) {
               ref={codeRef}
               style={[styles.input, styles.codeInput]}
               placeholder="000000"
+              placeholderTextColor={colors.textSecondary}
               keyboardType="number-pad"
               value={code}
               onChangeText={(text) => {
@@ -217,6 +219,7 @@ export function LoginScreen({ navigation }: Props) {
             <TextInput
               style={styles.input}
               placeholder="+998901234567"
+              placeholderTextColor={colors.textSecondary}
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
@@ -229,6 +232,7 @@ export function LoginScreen({ navigation }: Props) {
               ref={passwordRef}
               style={styles.input}
               placeholder="Parol"
+              placeholderTextColor={colors.textSecondary}
               secureTextEntry
               value={password}
               onChangeText={setPassword}

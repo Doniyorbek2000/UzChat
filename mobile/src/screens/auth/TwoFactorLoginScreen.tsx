@@ -65,6 +65,7 @@ export function TwoFactorLoginScreen({ route }: Props) {
         <TextInput
           style={[styles.input, styles.codeInput]}
           placeholder="000000"
+          placeholderTextColor={colors.textSecondary}
           keyboardType="number-pad"
           maxLength={6}
           value={code}
@@ -91,6 +92,7 @@ export function TwoFactorLoginScreen({ route }: Props) {
       <TextInput
         style={styles.input}
         placeholder="Qo'shimcha parol"
+        placeholderTextColor={colors.textSecondary}
         secureTextEntry
         value={password}
         onChangeText={setPassword}

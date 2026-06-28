@@ -63,6 +63,7 @@ export function AddContactScreen({ navigation }: Props) {
       <TextInput
         style={styles.input}
         placeholder="username yoki +998901234567"
+        placeholderTextColor={colors.textSecondary}
         value={query}
         onChangeText={setQuery}
         autoCapitalize="none"

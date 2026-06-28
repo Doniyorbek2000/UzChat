@@ -108,7 +108,7 @@ export function TwoFactorSettingsScreen({}: Props) {
       <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
 
       <Text style={styles.label}>Maslahat (ixtiyoriy)</Text>
-      <TextInput style={styles.input} value={hint} onChangeText={setHint} placeholder="Masalan, sevimli kitobim" />
+      <TextInput style={styles.input} value={hint} onChangeText={setHint} placeholder="Masalan, sevimli kitobim" placeholderTextColor={colors.textSecondary} />
 
       <TouchableOpacity style={styles.button} onPress={onEnable} disabled={saving}>
         {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Yoqish</Text>}

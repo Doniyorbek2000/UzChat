@@ -80,6 +80,7 @@ export function MarketplaceScreen({ navigation }: Props) {
       <TextInput
         style={styles.searchInput}
         placeholder="Do'kon qidirish..."
+        placeholderTextColor={colors.textSecondary}
         value={search}
         onChangeText={setSearch}
       />

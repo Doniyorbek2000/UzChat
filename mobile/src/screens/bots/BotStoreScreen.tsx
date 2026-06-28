@@ -89,7 +89,7 @@ export function BotStoreScreen({ navigation }: Props) {
         <TextInput
           style={styles.searchInput}
           placeholder="Botlarni qidirish..."
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
           returnKeyType="search"

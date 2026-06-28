@@ -64,6 +64,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
           <TextInput
             style={[styles.input, styles.codeInput]}
             placeholder="000000"
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
             maxLength={6}
             value={code}
@@ -73,6 +74,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Yangi parol"
+            placeholderTextColor={colors.textSecondary}
             secureTextEntry
             value={newPassword}
             onChangeText={setNewPassword}
@@ -80,6 +82,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Yangi parolni tasdiqlang"
+            placeholderTextColor={colors.textSecondary}
             secureTextEntry
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -106,6 +109,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
         <TextInput
           style={styles.input}
           placeholder="+998901234567"
+          placeholderTextColor={colors.textSecondary}
           keyboardType="phone-pad"
           value={phone}
           onChangeText={setPhone}

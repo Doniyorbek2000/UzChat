@@ -155,6 +155,7 @@ export function RegisterScreen({ navigation }: Props) {
               <TextInput
                 style={styles.input}
                 placeholder="+998901234567"
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="phone-pad"
                 value={phone}
                 onChangeText={setPhone}
@@ -187,6 +188,7 @@ export function RegisterScreen({ navigation }: Props) {
                 ref={codeRef}
                 style={[styles.input, styles.codeInput]}
                 placeholder="000000"
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="number-pad"
                 value={code}
                 onChangeText={(text) => setCode(text.replace(/\D/g, "").slice(0, 6))}
@@ -224,6 +226,7 @@ export function RegisterScreen({ navigation }: Props) {
               <TextInput
                 style={styles.input}
                 placeholder="Ismingiz"
+                placeholderTextColor={colors.textSecondary}
                 value={displayName}
                 onChangeText={setDisplayName}
                 returnKeyType="next"
@@ -236,6 +239,7 @@ export function RegisterScreen({ navigation }: Props) {
                   ref={usernameRef}
                   style={[styles.input, styles.usernameInput]}
                   placeholder="Username"
+                  placeholderTextColor={colors.textSecondary}
                   value={username}
                   onChangeText={setUsername}
                   autoCapitalize="none"
@@ -262,6 +266,7 @@ export function RegisterScreen({ navigation }: Props) {
                 ref={passwordRef}
                 style={styles.input}
                 placeholder="Parol (kamida 10 ta belgi, AaBb1)"
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}

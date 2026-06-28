@@ -50,22 +50,22 @@ export function AddProductScreen({ route, navigation }: Props) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.label}>Mahsulot nomi *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom" maxLength={200} />
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom" placeholderTextColor={colors.textSecondary} maxLength={200} />
 
       <Text style={styles.label}>Tavsif</Text>
-      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Tavsif" multiline maxLength={2000} />
+      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Tavsif" placeholderTextColor={colors.textSecondary} multiline maxLength={2000} />
 
       <Text style={styles.label}>SKU (ixtiyoriy)</Text>
-      <TextInput style={styles.input} value={sku} onChangeText={setSku} placeholder="Mahsulot kodi" maxLength={50} />
+      <TextInput style={styles.input} value={sku} onChangeText={setSku} placeholder="Mahsulot kodi" placeholderTextColor={colors.textSecondary} maxLength={50} />
 
       <Text style={styles.label}>Kategoriya</Text>
-      <TextInput style={styles.input} value={category} onChangeText={setCategory} placeholder="general" maxLength={50} />
+      <TextInput style={styles.input} value={category} onChangeText={setCategory} placeholder="general" placeholderTextColor={colors.textSecondary} maxLength={50} />
 
       <Text style={styles.label}>Narx (UZS) *</Text>
-      <TextInput style={styles.input} value={price} onChangeText={setPrice} placeholder="0" keyboardType="numeric" />
+      <TextInput style={styles.input} value={price} onChangeText={setPrice} placeholder="0" placeholderTextColor={colors.textSecondary} keyboardType="numeric" />
 
       <Text style={styles.label}>Zaxira</Text>
-      <TextInput style={styles.input} value={stock} onChangeText={setStock} placeholder="0" keyboardType="numeric" />
+      <TextInput style={styles.input} value={stock} onChangeText={setStock} placeholder="0" placeholderTextColor={colors.textSecondary} keyboardType="numeric" />
 
       <TouchableOpacity
         style={[styles.submitBtn, (!name.trim() || !price.trim() || submitting) && styles.submitBtnDisabled]}

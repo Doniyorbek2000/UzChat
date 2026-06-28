@@ -77,6 +77,7 @@ export function SendPaymentScreen({ navigation }: Props) {
         <TextInput
           style={styles.input}
           placeholder="Masalan: 50000"
+          placeholderTextColor={colors.textSecondary}
           keyboardType="numeric"
           value={amount}
           onChangeText={setAmount}
@@ -86,6 +87,7 @@ export function SendPaymentScreen({ navigation }: Props) {
         <TextInput
           style={[styles.input, styles.noteInput]}
           placeholder="Nima uchun?"
+          placeholderTextColor={colors.textSecondary}
           value={note}
           onChangeText={setNote}
           maxLength={200}
@@ -105,6 +107,7 @@ export function SendPaymentScreen({ navigation }: Props) {
       <TextInput
         style={styles.searchInput}
         placeholder="Kontakt qidirish..."
+        placeholderTextColor={colors.textSecondary}
         value={search}
         onChangeText={setSearch}
       />

@@ -91,7 +91,7 @@ export function NewGroupScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Guruh nomi" value={title} onChangeText={setTitle} />
+      <TextInput style={styles.input} placeholder="Guruh nomi" placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
       {contacts.length > 0 && (
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>

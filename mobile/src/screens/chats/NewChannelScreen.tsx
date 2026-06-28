@@ -78,7 +78,7 @@ export function NewChannelScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Kanal nomi" value={title} onChangeText={setTitle} />
+      <TextInput style={styles.input} placeholder="Kanal nomi" placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
       {contacts.length > 0 && (
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>

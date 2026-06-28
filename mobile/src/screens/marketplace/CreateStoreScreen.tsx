@@ -47,10 +47,10 @@ export function CreateStoreScreen({ navigation }: Props) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Do'kon nomi *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Do'kon nomini kiriting" maxLength={100} />
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Do'kon nomini kiriting" placeholderTextColor={colors.textSecondary} maxLength={100} />
 
       <Text style={styles.label}>Tavsif</Text>
-      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Do'kon haqida" multiline maxLength={500} />
+      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Do'kon haqida" placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
 
       <Text style={styles.label}>Kategoriya</Text>
       <View style={styles.categoryRow}>

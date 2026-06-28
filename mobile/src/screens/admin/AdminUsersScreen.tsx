@@ -127,6 +127,7 @@ export default function AdminUsersScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Qidirish (ism, username, telefon)..."
+          placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
           onSubmitEditing={handleSearch}

@@ -99,7 +99,7 @@ export function CreateReelScreen({ navigation }: Props) {
       <TextInput
         style={styles.input}
         placeholder="https://..."
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={videoUrl}
         onChangeText={setVideoUrl}
         autoCapitalize="none"
@@ -110,7 +110,7 @@ export function CreateReelScreen({ navigation }: Props) {
       <TextInput
         style={styles.input}
         placeholder="https://..."
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={thumbnailUrl}
         onChangeText={setThumbnailUrl}
         autoCapitalize="none"
@@ -121,7 +121,7 @@ export function CreateReelScreen({ navigation }: Props) {
       <TextInput
         style={[styles.input, styles.multiline]}
         placeholder="Reel haqida..."
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={caption}
         onChangeText={setCaption}
         multiline
@@ -132,7 +132,7 @@ export function CreateReelScreen({ navigation }: Props) {
       <TextInput
         style={styles.input}
         placeholder="Qo'shiq nomi"
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={musicTitle}
         onChangeText={setMusicTitle}
       />
@@ -141,7 +141,7 @@ export function CreateReelScreen({ navigation }: Props) {
       <TextInput
         style={styles.input}
         placeholder="uzchat, video, reel"
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={hashtags}
         onChangeText={setHashtags}
       />

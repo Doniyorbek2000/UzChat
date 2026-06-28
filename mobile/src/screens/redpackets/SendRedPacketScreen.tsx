@@ -51,6 +51,7 @@ export function SendRedPacketScreen({ navigation }: Props) {
         value={amount}
         onChangeText={setAmount}
         placeholder="10000"
+        placeholderTextColor={colors.textSecondary}
         keyboardType="numeric"
       />
 
@@ -60,6 +61,7 @@ export function SendRedPacketScreen({ navigation }: Props) {
         value={message}
         onChangeText={setMessage}
         placeholder="Bayram muborak!"
+        placeholderTextColor={colors.textSecondary}
         multiline
         maxLength={200}
       />

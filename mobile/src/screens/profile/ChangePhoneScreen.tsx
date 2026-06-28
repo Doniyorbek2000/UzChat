@@ -61,6 +61,7 @@ export function ChangePhoneScreen({ navigation }: Props) {
           <TextInput
             style={[styles.input, styles.codeInput]}
             placeholder="000000"
+            placeholderTextColor={colors.textSecondary}
             keyboardType="number-pad"
             maxLength={6}
             value={code}
@@ -89,6 +90,7 @@ export function ChangePhoneScreen({ navigation }: Props) {
         <TextInput
           style={styles.input}
           placeholder="+998901234567"
+          placeholderTextColor={colors.textSecondary}
           keyboardType="phone-pad"
           value={newPhone}
           onChangeText={setNewPhone}

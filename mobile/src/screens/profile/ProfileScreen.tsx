@@ -291,6 +291,7 @@ export function ProfileScreen({ navigation }: Props) {
         value={customStatus}
         onChangeText={setCustomStatus}
         placeholder="Masalan: 📚 Mashg'ulotda"
+        placeholderTextColor={colors.textSecondary}
         maxLength={70}
       />
       <Text style={styles.charCounter}>{customStatus.length}/70</Text>

@@ -79,6 +79,7 @@ export function VerifyOtpScreen({ route }: Props) {
         ref={inputRef}
         style={styles.input}
         placeholder="000000"
+        placeholderTextColor={colors.textSecondary}
         keyboardType="number-pad"
         maxLength={6}
         value={code}

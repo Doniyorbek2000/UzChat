@@ -53,7 +53,7 @@ export function CreateMiniAppScreen({ navigation }: Props) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.label}>Nomi *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={64} placeholder="Mini-dastur nomi" />
+      <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={64} placeholder="Mini-dastur nomi" placeholderTextColor={colors.textSecondary} />
 
       <Text style={styles.label}>URL *</Text>
       <TextInput
@@ -61,6 +61,7 @@ export function CreateMiniAppScreen({ navigation }: Props) {
         value={url}
         onChangeText={setUrl}
         placeholder="https://example.com/app"
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         keyboardType="url"
       />
@@ -72,6 +73,7 @@ export function CreateMiniAppScreen({ navigation }: Props) {
         onChangeText={setDescription}
         maxLength={256}
         placeholder="Qisqacha tavsif"
+        placeholderTextColor={colors.textSecondary}
         multiline
       />
 
@@ -81,6 +83,7 @@ export function CreateMiniAppScreen({ navigation }: Props) {
         value={iconUrl}
         onChangeText={setIconUrl}
         placeholder="https://example.com/icon.png"
+        placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         keyboardType="url"
       />

@@ -47,7 +47,7 @@ export function CreateBotScreen({ navigation }: Props) {
       <TextInput
         style={styles.input}
         placeholder="myassistantbot"
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
@@ -58,7 +58,7 @@ export function CreateBotScreen({ navigation }: Props) {
       <TextInput
         style={styles.input}
         placeholder="Bot nomi"
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={displayName}
         onChangeText={setDisplayName}
       />
@@ -67,7 +67,7 @@ export function CreateBotScreen({ navigation }: Props) {
       <TextInput
         style={[styles.input, styles.multiline]}
         placeholder="Bot nima qiladi..."
-        placeholderTextColor="#999"
+        placeholderTextColor={colors.textSecondary}
         value={description}
         onChangeText={setDescription}
         multiline

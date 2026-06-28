@@ -82,7 +82,7 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Ro'yxat nomi" value={name} onChangeText={setName} />
+      <TextInput style={styles.input} placeholder="Ro'yxat nomi" placeholderTextColor={colors.textSecondary} value={name} onChangeText={setName} />
       {contacts.length > 0 && (
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>

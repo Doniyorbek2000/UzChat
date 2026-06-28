@@ -2252,6 +2252,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               onChangeText={onChangeText}
               onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
               placeholder="Xabar yozing..."
+              placeholderTextColor={colors.textSecondary}
               multiline
             />
             {text.trim() || editingMessage ? (

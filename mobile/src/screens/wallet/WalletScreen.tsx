@@ -102,6 +102,7 @@ export function WalletScreen({ navigation }: Props) {
           <TextInput
             style={styles.topUpInput}
             placeholder="Miqdor (UZS)"
+            placeholderTextColor={colors.textSecondary}
             keyboardType="numeric"
             value={topUpAmount}
             onChangeText={setTopUpAmount}
