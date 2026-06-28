@@ -353,6 +353,7 @@ export const usersService = {
 
     const twoFactorHash = await hashPassword(twoFactorPassword);
     await prisma.user.update({ where: { id: userId }, data: { twoFactorHash, twoFactorHint: hint ?? null } });
+    logger.info("Two-factor authentication enabled", { userId });
 
     await pushService.sendToUsers([userId], {
       title: "Ikki bosqichli tekshiruv yoqildi",
@@ -373,6 +374,7 @@ export const usersService = {
     if (!valid) throw Errors.badRequest("Joriy parol noto'g'ri");
 
     await prisma.user.update({ where: { id: userId }, data: { twoFactorHash: null, twoFactorHint: null } });
+    logger.info("Two-factor authentication disabled", { userId });
 
     await pushService.sendToUsers([userId], {
       title: "Ikki bosqichli tekshiruv o'chirildi",
@@ -388,6 +390,7 @@ export const usersService = {
     const valid = await verifyPassword(currentPassword, user.passwordHash);
     if (!valid) throw Errors.badRequest("Joriy parol noto'g'ri");
 
+    logger.warn("Account self-deleted", { userId });
     return leaveGroupsAndDeleteUser(userId);
   },
 

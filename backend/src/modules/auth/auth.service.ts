@@ -41,6 +41,10 @@ import { logger } from "../../utils/logger";
 const MAX_FAILED_LOGINS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
+function maskPhone(phone: string): string {
+  return phone.slice(0, -4).replace(/\d/g, "*") + phone.slice(-4);
+}
+
 function msFromExpiresIn(expiresIn: string): number {
   const match = /^(\d+)([smhd])$/.exec(expiresIn);
   if (!match) return 30 * 24 * 60 * 60 * 1000;
@@ -180,6 +184,7 @@ export const authService = {
     });
 
     await prisma.otpCode.delete({ where: { id: otp.id } });
+    logger.info("New user registered", { userId: user.id, phone: maskPhone(phone), username });
 
     const tokens = await issueTokens(user, userAgent);
     return { user: toPublicUser(user), ...tokens };
@@ -209,7 +214,7 @@ export const authService = {
       const updateData: { failedLoginAttempts: number; lockedUntil?: Date } = { failedLoginAttempts: attempts };
       if (attempts >= MAX_FAILED_LOGINS) {
         updateData.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
-        logger.warn("Account locked due to failed login attempts", { phone: phone.slice(0, -4).replace(/./g, "*") + phone.slice(-4), attempts });
+        logger.warn("Account locked due to failed login attempts", { phone: maskPhone(phone), attempts });
       }
       await prisma.user.update({ where: { id: user.id }, data: updateData });
       await prisma.loginAttempt.create({ data: { phone, ip, userAgent, success: false, reason: "INVALID_PASSWORD" } });
@@ -500,6 +505,7 @@ export const authService = {
 
     await prisma.user.update({ where: { id: user.id }, data: { twoFactorHash: null, twoFactorHint: null, lastSeenAt: new Date() } });
     await prisma.otpCode.delete({ where: { id: otp.id } });
+    logger.warn("Two-factor authentication disabled via recovery", { userId: user.id, phone: maskPhone(user.phone) });
 
     await pushService.sendToUsers([user.id], {
       title: "Ikki bosqichli tekshiruv o'chirildi",
@@ -561,6 +567,7 @@ export const authService = {
       data: { revokedAt: new Date() },
     });
     disconnectUser(user.id);
+    logger.warn("Password reset via OTP", { userId: user.id, phone: maskPhone(phone) });
 
     await pushService.sendToUsers([user.id], {
       title: "Parol tiklandi",
