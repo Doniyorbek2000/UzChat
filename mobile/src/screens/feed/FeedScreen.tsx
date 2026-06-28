@@ -62,20 +62,28 @@ export function FeedScreen({ navigation }: Props) {
   };
 
   const toggleLike = async (post: Post) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === post.id
+          ? { ...p, isLiked: !p.isLiked, _count: { ...p._count, likes: p._count.likes + (p.isLiked ? -1 : 1) } }
+          : p
+      )
+    );
     try {
       if (post.isLiked) {
         await feedApi.unlikePost(post.id);
       } else {
         await feedApi.likePost(post.id);
       }
+    } catch {
       setPosts((prev) =>
         prev.map((p) =>
           p.id === post.id
-            ? { ...p, isLiked: !p.isLiked, _count: { ...p._count, likes: p._count.likes + (p.isLiked ? -1 : 1) } }
+            ? { ...p, isLiked: post.isLiked, _count: { ...p._count, likes: post._count.likes } }
             : p
         )
       );
-    } catch {}
+    }
   };
 
   const deletePost = (postId: string) => {
@@ -87,7 +95,9 @@ export function FeedScreen({ navigation }: Props) {
           try {
             await feedApi.deletePost(postId);
             setPosts((prev) => prev.filter((p) => p.id !== postId));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Postni o'chirib bo'lmadi");
+          }
         },
       },
     ]);
