@@ -1,27 +1,33 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { devicesApi, DeviceKey } from "../../api/devices";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "DeviceKeys">;
 
 export function DeviceKeysScreen({}: Props) {
   const [devices, setDevices] = useState<DeviceKey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  const loadDevices = async () => {
+  const loadDevices = useCallback(async () => {
+    setLoading(true);
+    setError(false);
     try {
       const data = await devicesApi.list();
       setDevices(data);
-    } catch {}
+    } catch {
+      setError(true);
+    }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     loadDevices();
-  }, []);
+  }, [loadDevices]);
 
   const onRemove = (device: DeviceKey) => {
     Alert.alert(
@@ -51,6 +57,10 @@ export function DeviceKeysScreen({}: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Qurilmalarni yuklab bo'lmadi" onRetry={loadDevices} />;
   }
 
   return (

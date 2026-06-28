@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useChatStore } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Conversation, Message, MessageType } from "../../types";
 import { chatsApi } from "../../api/chats";
@@ -31,6 +32,7 @@ export function StarredMessagesScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -39,13 +41,14 @@ export function StarredMessagesScreen({ navigation }: Props) {
     setMessages(data);
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      Promise.all([load(), loadConversations()])
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }, [load, loadConversations])
-  );
+  const loadAll = useCallback(() => {
+    setError(false);
+    Promise.all([load(), loadConversations()])
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [load, loadConversations]);
+
+  useFocusEffect(loadAll);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -135,6 +138,10 @@ export function StarredMessagesScreen({ navigation }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Yulduzli xabarlarni yuklab bo'lmadi" onRetry={loadAll} />;
   }
 
   return (

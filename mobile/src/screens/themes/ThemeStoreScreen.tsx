@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { themesApi, SharedTheme } from "../../api/themes";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ThemeStore">;
 
@@ -12,9 +13,11 @@ export function ThemeStoreScreen({ navigation }: Props) {
   const [themes, setThemes] = useState<SharedTheme[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       if (search.trim()) {
         setThemes(await themesApi.search(search.trim()));
@@ -23,7 +26,9 @@ export function ThemeStoreScreen({ navigation }: Props) {
       } else {
         setThemes(await themesApi.listPopular());
       }
-    } catch {}
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, [tab, search]);
 
@@ -91,6 +96,8 @@ export function ThemeStoreScreen({ navigation }: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Mavzularni yuklab bo'lmadi" onRetry={load} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"
