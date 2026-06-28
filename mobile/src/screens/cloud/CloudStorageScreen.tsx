@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { cloudApi, CloudFileData, CloudFolderData, CloudUsage } from "../../api/cloud";
@@ -16,6 +16,7 @@ export function CloudStorageScreen(_props: Props) {
   const [folderStack, setFolderStack] = useState<{ id: string | undefined; name: string }[]>([{ id: undefined, name: "Bulut" }]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
 
@@ -30,6 +31,15 @@ export function CloudStorageScreen(_props: Props) {
   }, [currentFolder]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    Promise.all([
+      cloudApi.listFiles(currentFolder),
+      cloudApi.listFolders(currentFolder),
+      cloudApi.getUsage(),
+    ]).then(([f, d, u]) => { setFiles(f); setFolders(d); setUsage(u); }).catch(() => {}).finally(() => setRefreshing(false));
+  }, [currentFolder]);
 
   const navigateToFolder = (folder: CloudFolderData) => {
     setFolderStack((prev) => [...prev, { id: folder.id, name: folder.name }]);
@@ -134,6 +144,7 @@ export function CloudStorageScreen(_props: Props) {
           );
         }}
         contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>☁️</Text>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, FlatList } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, FlatList, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { qrPaymentsApi, QrPayment } from "../../api/qrPayments";
@@ -15,6 +15,7 @@ export function QRPaymentScreen({ navigation }: Props) {
   const [history, setHistory] = useState<QrPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -23,6 +24,11 @@ export function QRPaymentScreen({ navigation }: Props) {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    qrPaymentsApi.listMine().then(setHistory).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const handleCreate = async () => {
     setCreating(true);
@@ -116,6 +122,7 @@ export function QRPaymentScreen({ navigation }: Props) {
           )}
           ListEmptyComponent={<Text style={styles.emptyText}>Hali QR to'lovlar yo'q</Text>}
           contentContainerStyle={{ paddingBottom: 20 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         />
       )}
     </View>

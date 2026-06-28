@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { highlightsApi, StoryHighlight } from "../../api/highlights";
@@ -15,6 +15,7 @@ export function StoryHighlightsScreen({ route }: Props) {
   const [highlights, setHighlights] = useState<StoryHighlight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const isOwner = userId === currentUserId;
 
   const loadData = useCallback(() => {
@@ -24,6 +25,11 @@ export function StoryHighlightsScreen({ route }: Props) {
   }, [userId]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    highlightsApi.listByUser(userId).then(setHighlights).catch(() => {}).finally(() => setRefreshing(false));
+  }, [userId]);
 
   const handleDelete = (highlightId: string) => {
     Alert.alert("O'chirish", "Bu highlights'ni o'chirmoqchimisiz?", [
@@ -94,6 +100,7 @@ export function StoryHighlightsScreen({ route }: Props) {
         keyExtractor={(item) => item.id}
         renderItem={renderHighlight}
         contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>💫</Text>

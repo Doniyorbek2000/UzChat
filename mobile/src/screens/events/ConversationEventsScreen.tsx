@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { eventsApi, ChatEvent } from "../../api/events";
@@ -19,6 +19,7 @@ export function ConversationEventsScreen({ route }: Props) {
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [creating, setCreating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -27,6 +28,11 @@ export function ConversationEventsScreen({ route }: Props) {
   }, [conversationId]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    eventsApi.listByConversation(conversationId).then(setEvents).catch(() => {}).finally(() => setRefreshing(false));
+  }, [conversationId]);
 
   const handleCreate = async () => {
     if (!title.trim()) return;
@@ -129,6 +135,7 @@ export function ConversationEventsScreen({ route }: Props) {
           );
         }}
         contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📅</Text>
