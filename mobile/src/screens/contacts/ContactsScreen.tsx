@@ -19,6 +19,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { Avatar } from "../../components/Avatar";
 import { EmptyState } from "../../components/EmptyState";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact, ContactRequest, ContactSuggestion, OutgoingContactRequest } from "../../types";
 import { useContactsStore } from "../../store/contactsStore";
@@ -35,6 +36,7 @@ export function ContactsScreen({ navigation }: Props) {
   const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
   const [sentSuggestionIds, setSentSuggestionIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [aliasContact, setAliasContact] = useState<Contact | null>(null);
   const [aliasInput, setAliasInput] = useState("");
@@ -109,8 +111,9 @@ export function ContactsScreen({ navigation }: Props) {
         setSuggestions(s);
         setOutgoingRequests(o);
         useContactsStore.getState().setPendingRequestCount(r.length);
+        setError(false);
       })
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -266,9 +269,13 @@ export function ContactsScreen({ navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={load} />;
   }
 
   return (

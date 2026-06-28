@@ -7,6 +7,7 @@ import { contactsApi } from "../../api/contacts";
 import { usersApi } from "../../api/users";
 import { useChatStore } from "../../store/chatStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { UpcomingBirthday } from "../../types";
 import { formatBirthday, getBirthdayWishText } from "../../utils/birthday";
@@ -22,6 +23,7 @@ function daysUntilLabel(daysUntil: number): string {
 export function BirthdaysScreen({ navigation }: Props) {
   const [birthdays, setBirthdays] = useState<UpcomingBirthday[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [congratulatingId, setCongratulatingId] = useState<string | null>(null);
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
   const setDraft = useChatStore((s) => s.setDraft);
@@ -30,8 +32,8 @@ export function BirthdaysScreen({ navigation }: Props) {
   const load = useCallback(() => {
     contactsApi
       .listUpcomingBirthdays()
-      .then(setBirthdays)
-      .catch(() => {})
+      .then((b) => { setBirthdays(b); setError(false); })
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -61,6 +63,10 @@ export function BirthdaysScreen({ navigation }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Tug'ilgan kunlarni yuklab bo'lmadi" onRetry={load} />;
   }
 
   return (

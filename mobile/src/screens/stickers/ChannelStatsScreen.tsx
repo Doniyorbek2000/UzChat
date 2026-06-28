@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions } fro
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { channelStatsApi, ChannelStatsResponse } from "../../api/channelStats";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChannelStats">;
@@ -11,16 +12,17 @@ export function ChannelStatsScreen({ route }: Props) {
   const { conversationId } = route.params;
   const [stats, setStats] = useState<ChannelStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    channelStatsApi.getStats(conversationId).then(setStats).catch(() => {}).finally(() => setLoading(false));
+    channelStatsApi.getStats(conversationId).then((s) => { setStats(s); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false));
   }, [conversationId]);
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
   }
-  if (!stats) {
-    return <Text style={styles.emptyText}>Statistika mavjud emas</Text>;
+  if (error || !stats) {
+    return <ErrorView message="Statistikani yuklab bo'lmadi" onRetry={() => { setLoading(true); channelStatsApi.getStats(conversationId).then((s) => { setStats(s); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   const maxMsg = Math.max(...stats.dailyStats.map((d) => d.messageCount), 1);
