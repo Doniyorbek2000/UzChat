@@ -10,6 +10,7 @@ import { useChatStore } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { Linkify } from "../../components/Linkify";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact, User } from "../../types";
 import { formatTime } from "../../utils/conversation";
@@ -21,6 +22,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const { userId } = route.params;
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [opening, setOpening] = useState(false);
   const [avatarViewerOpen, setAvatarViewerOpen] = useState(false);
   const [notifyOnlineRequested, setNotifyOnlineRequested] = useState(false);
@@ -42,8 +44,9 @@ export function UserProfileScreen({ route, navigation }: Props) {
       .then((p) => {
         setProfile(p);
         setNotifyOnlineRequested(!!p.notifyOnlineRequested);
+        setError(false);
       })
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [userId]);
 
@@ -152,6 +155,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Profil ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); setError(false); usersApi.getById(userId).then((p) => { setProfile(p); setNotifyOnlineRequested(!!p.notifyOnlineRequested); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   if (!profile) {

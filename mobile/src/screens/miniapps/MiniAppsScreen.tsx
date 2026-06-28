@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { miniAppsApi, MiniApp } from "../../api/miniapps";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MiniApps">;
@@ -36,6 +37,7 @@ export function MiniAppsScreen({ navigation }: Props) {
 
   const [apps, setApps] = useState<MiniApp[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
 
@@ -46,7 +48,10 @@ export function MiniAppsScreen({ navigation }: Props) {
         ? await miniAppsApi.listMine()
         : await miniAppsApi.list(category === "all" ? undefined : category);
       setApps(list);
-    } catch {}
+      setError(false);
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, [category]);
 
@@ -93,8 +98,10 @@ export function MiniAppsScreen({ navigation }: Props) {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.primary} />
         </View>
+      ) : error ? (
+        <ErrorView message="Mini-dasturlarni yuklab bo'lmadi" onRetry={loadApps} />
       ) : (
         <FlatList
           data={filtered}

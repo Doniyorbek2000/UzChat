@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { storiesApi, StoryGroup } from "../../api/stories";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
 
@@ -14,6 +15,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "Stories">;
 export function StoriesScreen({ navigation }: Props) {
   const [feed, setFeed] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [uploading, setUploading] = useState(false);
   const currentUser = useAuthStore((s) => s.user);
 
@@ -21,7 +23,10 @@ export function StoriesScreen({ navigation }: Props) {
     try {
       const data = await storiesApi.getFeed();
       setFeed(data);
-    } catch {}
+      setError(false);
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, []);
 
@@ -60,9 +65,13 @@ export function StoriesScreen({ navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Hikoyalarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadFeed(); }} />;
   }
 
   return (

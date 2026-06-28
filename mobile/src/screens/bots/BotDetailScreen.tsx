@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { botsApi, Bot } from "../../api/bots";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "BotDetail">;
@@ -11,9 +12,10 @@ export function BotDetailScreen({ route, navigation }: Props) {
   const { botId } = route.params;
   const [bot, setBot] = useState<Bot | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    botsApi.get(botId).then(setBot).catch(() => {}).finally(() => setLoading(false));
+    botsApi.get(botId).then((b) => { setBot(b); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false));
   }, [botId]);
 
   const handleToggle = async () => {
@@ -47,8 +49,8 @@ export function BotDetailScreen({ route, navigation }: Props) {
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
   }
-  if (!bot) {
-    return <Text style={styles.emptyText}>Bot topilmadi</Text>;
+  if (error || !bot) {
+    return <ErrorView message="Bot ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); botsApi.get(botId).then((b) => { setBot(b); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   return (

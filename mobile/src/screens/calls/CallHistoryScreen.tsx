@@ -6,6 +6,7 @@ import { callsApi, CallLog } from "../../api/calls";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { EmptyState } from "../../components/EmptyState";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CallHistory">;
@@ -29,6 +30,7 @@ function getStatusLabel(status: CallLog["status"], isOutgoing: boolean): string 
 export function CallHistoryScreen({ navigation }: Props) {
   const [logs, setLogs] = useState<CallLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const currentUser = useAuthStore((s) => s.user);
 
@@ -36,7 +38,10 @@ export function CallHistoryScreen({ navigation }: Props) {
     try {
       const data = await callsApi.getHistory();
       setLogs(data);
-    } catch {}
+      setError(false);
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, []);
 
@@ -53,9 +58,13 @@ export function CallHistoryScreen({ navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Qo'ng'iroqlar tarixini yuklab bo'lmadi" onRetry={() => { setLoading(true); loadHistory(); }} />;
   }
 
   return (

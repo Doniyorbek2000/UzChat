@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndi
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { liveStreamApi, LiveStream } from "../../api/livestream";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LiveStreams">;
@@ -11,13 +12,17 @@ export function LiveStreamsScreen({ navigation }: Props) {
   const [tab, setTab] = useState<"active" | "scheduled">("active");
   const [streams, setStreams] = useState<LiveStream[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = tab === "active" ? await liveStreamApi.listActive() : await liveStreamApi.listScheduled();
       setStreams(data);
-    } catch {}
+      setError(false);
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, [tab]);
 
@@ -68,6 +73,8 @@ export function LiveStreamsScreen({ navigation }: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Jonli efirlarni yuklab bo'lmadi" onRetry={load} />
       ) : (
         <FlatList
           data={streams}

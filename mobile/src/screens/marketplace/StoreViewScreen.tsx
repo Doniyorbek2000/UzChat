@@ -8,6 +8,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Store, Product } from "../../api/marketplace";
 import { useAuthStore } from "../../store/authStore";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StoreView">;
@@ -18,6 +19,7 @@ export function StoreViewScreen({ route, navigation }: Props) {
   const [store, setStore] = useState<Store | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -27,7 +29,10 @@ export function StoreViewScreen({ route, navigation }: Props) {
       ]);
       setStore(s);
       setProducts(p.products);
-    } catch {}
+      setError(false);
+    } catch {
+      setError(true);
+    }
   }, [storeId]);
 
   useFocusEffect(
@@ -47,6 +52,10 @@ export function StoreViewScreen({ route, navigation }: Props) {
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Do'kon ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); load().finally(() => setLoading(false)); }} />;
   }
 
   return (

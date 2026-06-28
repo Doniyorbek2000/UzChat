@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator }
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { voiceRoomsApi, VoiceRoom } from "../../api/voiceRooms";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VoiceRooms">;
@@ -11,13 +12,17 @@ export function VoiceRoomsScreen({ navigation }: Props) {
   const [tab, setTab] = useState<"live" | "scheduled">("live");
   const [rooms, setRooms] = useState<VoiceRoom[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = tab === "live" ? await voiceRoomsApi.listLive() : await voiceRoomsApi.listScheduled();
       setRooms(data);
-    } catch {}
+      setError(false);
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, [tab]);
 
@@ -57,6 +62,8 @@ export function VoiceRoomsScreen({ navigation }: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Ovozli xonalarni yuklab bo'lmadi" onRetry={load} />
       ) : (
         <FlatList
           data={rooms}

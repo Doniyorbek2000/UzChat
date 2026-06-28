@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { communitiesApi, Community } from "../../api/communities";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CommunityView">;
@@ -11,9 +12,10 @@ export function CommunityViewScreen({ route, navigation }: Props) {
   const { communityId } = route.params;
   const [community, setCommunity] = useState<Community | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    communitiesApi.get(communityId).then(setCommunity).catch(() => navigation.goBack()).finally(() => setLoading(false));
+    communitiesApi.get(communityId).then((c) => { setCommunity(c); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false));
   }, [communityId, navigation]);
 
   const handleRemoveGroup = (conversationId: string) => {
@@ -34,8 +36,12 @@ export function CommunityViewScreen({ route, navigation }: Props) {
     ]);
   };
 
-  if (loading || !community) {
+  if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error || !community) {
+    return <ErrorView message="Jamoa ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); communitiesApi.get(communityId).then((c) => { setCommunity(c); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   return (

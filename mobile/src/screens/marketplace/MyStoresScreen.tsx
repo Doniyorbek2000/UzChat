@@ -6,6 +6,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Store } from "../../api/marketplace";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MyStores">;
@@ -23,13 +24,14 @@ export function MyStoresScreen({ navigation }: Props) {
 
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
       marketplaceApi.getMyStores()
-        .then(setStores)
-        .catch(() => {})
+        .then((s) => { setStores(s); setError(false); })
+        .catch(() => setError(true))
         .finally(() => setLoading(false));
     }, [])
   );
@@ -37,9 +39,13 @@ export function MyStoresScreen({ navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Do'konlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); marketplaceApi.getMyStores().then((s) => { setStores(s); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   return (
