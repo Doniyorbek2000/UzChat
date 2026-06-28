@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { requireAdmin } from "../../middleware/admin.middleware";
 import { validateBody, validateQuery, uuidParamHandler } from "../../utils/validate";
+import { Errors } from "../../utils/errors";
 import { adminService } from "./admin.service";
 import { prisma } from "../../config/prisma";
 import { logger } from "../../utils/logger";
@@ -59,6 +60,7 @@ router.get("/users/:userId", async (req: Request, res: Response) => {
 });
 
 router.patch("/users/:userId/admin", validateBody(setAdminSchema), async (req: Request, res: Response) => {
+  if (req.params.userId === req.user!.sub && !req.body.isAdmin) throw Errors.badRequest("O'zingizdan admin huquqini olib tashlay olmaysiz");
   const user = await adminService.setUserAdmin(req.params.userId, req.body.isAdmin);
   auditLog(req.user!.sub, "SET_ADMIN", "user", req.params.userId, `isAdmin=${req.body.isAdmin}`, req.ip);
   res.json(user);
@@ -71,6 +73,7 @@ router.patch("/users/:userId/verify", validateBody(setVerifiedSchema), async (re
 });
 
 router.delete("/users/:userId", async (req: Request, res: Response) => {
+  if (req.params.userId === req.user!.sub) throw Errors.badRequest("O'zingizni o'chirishingiz mumkin emas");
   await adminService.deleteUser(req.params.userId);
   auditLog(req.user!.sub, "DELETE_USER", "user", req.params.userId, undefined, req.ip);
   res.status(204).send();
@@ -161,6 +164,7 @@ router.delete("/stories/:storyId", async (req: Request, res: Response) => {
 const banSchema = z.object({ reason: z.string().min(1).max(500) });
 
 router.patch("/users/:userId/ban", validateBody(banSchema), async (req: Request, res: Response) => {
+  if (req.params.userId === req.user!.sub) throw Errors.badRequest("O'zingizni bloklashingiz mumkin emas");
   const user = await adminService.banUser(req.params.userId, req.body.reason);
   auditLog(req.user!.sub, "BAN_USER", "user", req.params.userId, req.body.reason, req.ip);
   res.json(user);
