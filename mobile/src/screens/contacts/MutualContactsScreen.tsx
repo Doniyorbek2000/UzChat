@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { User } from "../../types";
 
@@ -13,14 +14,19 @@ export function MutualContactsScreen({ route, navigation }: Props) {
   const { userId } = route.params;
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
+    setError(false);
+    setLoading(true);
     contactsApi
       .listMutual(userId)
       .then(setUsers)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [userId]);
+  };
+
+  useEffect(() => { load(); }, [userId]);
 
   if (loading) {
     return (
@@ -28,6 +34,10 @@ export function MutualContactsScreen({ route, navigation }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={load} />;
   }
 
   return (

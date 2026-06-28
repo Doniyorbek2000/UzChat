@@ -18,6 +18,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
 import { broadcastsApi } from "../../api/broadcasts";
 import { useChatStore } from "../../store/chatStore";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { BroadcastList, Contact } from "../../types";
 
@@ -27,6 +28,7 @@ export function BroadcastListsScreen({ navigation }: Props) {
   const [lists, setLists] = useState<BroadcastList[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [sendTarget, setSendTarget] = useState<BroadcastList | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -34,12 +36,13 @@ export function BroadcastListsScreen({ navigation }: Props) {
   const sendTextMessage = useChatStore((s) => s.sendTextMessage);
 
   const load = useCallback(() => {
+    setError(false);
     Promise.all([broadcastsApi.list(), contactsApi.list()])
       .then(([broadcastLists, contactList]) => {
         setLists(broadcastLists);
         setContacts(contactList);
       })
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -110,6 +113,10 @@ export function BroadcastListsScreen({ navigation }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Tarqatish ro'yxatlarini yuklab bo'lmadi" onRetry={load} />;
   }
 
   return (

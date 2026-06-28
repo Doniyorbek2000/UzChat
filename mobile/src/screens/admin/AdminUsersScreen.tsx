@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     height: 40,
     fontSize: 15,
   },
-  searchBtn: { backgroundColor: "#007AFF", borderRadius: 10, paddingHorizontal: 16, justifyContent: "center" },
+  searchBtn: { backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 16, justifyContent: "center" },
   searchBtnText: { color: "#fff", fontWeight: "600" },
   userCard: {
     backgroundColor: colors.surface,
@@ -199,6 +199,6 @@ const styles = StyleSheet.create({
   actionBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   actionText: { color: "#fff", fontSize: 12, fontWeight: "600" },
   pagination: { flexDirection: "row", justifyContent: "center", alignItems: "center", padding: 16, gap: 20 },
-  pageBtn: { color: "#007AFF", fontSize: 15, fontWeight: "600" },
+  pageBtn: { color: colors.primary, fontSize: 15, fontWeight: "600" },
   pageInfo: { fontSize: 14, color: colors.textSecondary },
 });

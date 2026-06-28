@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { chatsApi } from "../../api/chats";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { GroupJoinRequest } from "../../types";
 import { useChatStore } from "../../store/chatStore";
@@ -15,13 +16,15 @@ export function JoinRequestsScreen({ route }: Props) {
   const { conversationId } = route.params;
   const [requests, setRequests] = useState<GroupJoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const joinRequestUpdatedAt = useChatStore((state) => state.joinRequestUpdates[conversationId]);
 
   const load = useCallback(() => {
+    setError(false);
     chatsApi
       .listJoinRequests(conversationId)
       .then(setRequests)
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [conversationId]);
 
@@ -59,6 +62,10 @@ export function JoinRequestsScreen({ route }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="So'rovlarni yuklab bo'lmadi" onRetry={load} />;
   }
 
   return (

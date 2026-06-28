@@ -7,6 +7,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Product } from "../../api/marketplace";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ProductView">;
@@ -15,19 +16,23 @@ export function ProductViewScreen({ route, navigation }: Props) {
   const { productId, storeId } = route.params;
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [ordering, setOrdering] = useState(false);
 
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    marketplaceApi.listProducts(storeId)
+      .then((res) => {
+        const found = res.products.find((p) => p.id === productId);
+        setProduct(found ?? null);
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [productId, storeId]);
+
   useFocusEffect(
-    useCallback(() => {
-      setLoading(true);
-      marketplaceApi.listProducts(storeId)
-        .then((res) => {
-          const found = res.products.find((p) => p.id === productId);
-          setProduct(found ?? null);
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }, [productId, storeId])
+    useCallback(() => { load(); }, [load])
   );
 
   const handleOrder = async () => {
@@ -55,12 +60,8 @@ export function ProductViewScreen({ route, navigation }: Props) {
     );
   }
 
-  if (!product) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.emptyText}>Mahsulot topilmadi</Text>
-      </View>
-    );
+  if (error || !product) {
+    return <ErrorView message={error ? "Mahsulotni yuklab bo'lmadi" : "Mahsulot topilmadi"} onRetry={load} />;
   }
 
   return (

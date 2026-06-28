@@ -12,6 +12,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { adminApi, DashboardStats, SystemHealth } from "../../api/admin";
 import type { RootStackParamList } from "../../navigation/types";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -21,9 +22,11 @@ export default function AdminDashboardScreen() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       const [s, h] = await Promise.all([
         adminApi.getDashboard(),
@@ -32,7 +35,7 @@ export default function AdminDashboardScreen() {
       setStats(s);
       setHealth(h);
     } catch {
-      // ignore
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -47,9 +50,13 @@ export default function AdminDashboardScreen() {
   if (loading && !stats) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
+  }
+
+  if (error && !stats) {
+    return <ErrorView message="Dashboard ma'lumotlarini yuklab bo'lmadi" onRetry={load} />;
   }
 
   const formatBytes = (b: number) => `${(b / 1024 / 1024).toFixed(1)} MB`;

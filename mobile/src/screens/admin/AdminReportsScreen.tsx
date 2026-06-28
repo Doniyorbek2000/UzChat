@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { adminApi, AdminReport } from "../../api/admin";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 const reasonLabels: Record<string, string> = {
@@ -32,16 +33,18 @@ export default function AdminReportsScreen() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async (p = 1) => {
     setLoading(true);
+    setError(false);
     try {
       const res = await adminApi.listReports(p);
       setReports(res.reports);
       setPage(res.page);
       setTotalPages(res.totalPages);
     } catch {
-      // ignore
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -112,9 +115,13 @@ export default function AdminReportsScreen() {
   if (loading && reports.length === 0) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
+  }
+
+  if (error && reports.length === 0) {
+    return <ErrorView message="Shikoyatlarni yuklab bo'lmadi" onRetry={() => load()} />;
   }
 
   return (
@@ -170,6 +177,6 @@ const styles = StyleSheet.create({
   actionText: { color: "#fff", fontSize: 13, fontWeight: "600" },
   empty: { textAlign: "center", marginTop: 40, color: colors.textSecondary, fontSize: 16 },
   pagination: { flexDirection: "row", justifyContent: "center", alignItems: "center", padding: 16, gap: 20 },
-  pageBtn: { color: "#007AFF", fontSize: 15, fontWeight: "600" },
+  pageBtn: { color: colors.primary, fontSize: 15, fontWeight: "600" },
   pageInfo: { fontSize: 14, color: colors.textSecondary },
 });

@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, TextInput, Image, StyleSheet, A
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { stickersApi, StickerPack } from "../../api/stickers";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StickerStore">;
@@ -12,9 +13,11 @@ export function StickerStoreScreen({ navigation }: Props) {
   const [packs, setPacks] = useState<StickerPack[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(false);
     try {
       let data: StickerPack[];
       if (search.trim()) {
@@ -27,7 +30,9 @@ export function StickerStoreScreen({ navigation }: Props) {
         data = await stickersApi.myPacks();
       }
       setPacks(data);
-    } catch {}
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, [tab, search]);
 
@@ -82,6 +87,8 @@ export function StickerStoreScreen({ navigation }: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Stikerlarni yuklab bo'lmadi" onRetry={load} />
       ) : (
         <FlatList
           data={packs}

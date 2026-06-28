@@ -4,6 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useChatStore, DecryptedMessage } from "../../store/chatStore";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { MessageType } from "../../types";
 import { formatScheduledTime, SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
@@ -31,13 +32,18 @@ export function ScheduledMessagesScreen({ route }: Props) {
   const rescheduleMessage = useChatStore((s) => s.rescheduleMessage);
   const sendScheduledMessageNow = useChatStore((s) => s.sendScheduledMessageNow);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const load = useCallback(() => {
+    setError(false);
+    setLoading(true);
+    loadScheduledMessages(conversationId)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [conversationId, loadScheduledMessages]);
 
   useFocusEffect(
-    useCallback(() => {
-      loadScheduledMessages(conversationId)
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }, [conversationId, loadScheduledMessages])
+    useCallback(() => { load(); }, [load])
   );
 
   const onCancel = (item: DecryptedMessage) => {
@@ -108,6 +114,10 @@ export function ScheduledMessagesScreen({ route }: Props) {
         <ActivityIndicator color={colors.primary} />
       </View>
     );
+  }
+
+  if (error) {
+    return <ErrorView message="Rejalashtirilgan xabarlarni yuklab bo'lmadi" onRetry={load} />;
   }
 
   return (
