@@ -281,11 +281,18 @@ export const adminService = {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw Errors.notFound("Foydalanuvchi topilmadi");
     if (user.isAdmin) throw Errors.forbidden("Admin foydalanuvchini bloklash mumkin emas");
-    return prisma.user.update({
-      where: { id: userId },
-      data: { isBanned: true, banReason: reason },
-      select: userSummarySelect,
-    });
+    const [updated] = await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: { isBanned: true, banReason: reason },
+        select: userSummarySelect,
+      }),
+      prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+    return updated;
   },
 
   async unbanUser(userId: string) {
@@ -458,6 +465,22 @@ export const adminService = {
       prisma.user.count({ where: { isBanned: true } }),
     ]);
     return { users, total, page, totalPages: Math.ceil(total / limit) };
+  },
+
+  async exportAuditLogCSV() {
+    const logs = await prisma.adminAuditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10000,
+      include: {
+        admin: { select: { username: true, displayName: true } },
+      },
+    });
+
+    const header = "id,adminUsername,adminName,action,targetType,targetId,details,ip,createdAt";
+    const rows = logs.map((l) =>
+      [l.id, l.admin.username, `"${(l.admin.displayName ?? "").replace(/"/g, '""')}"`, l.action, l.targetType ?? "", l.targetId ?? "", `"${(l.details ?? "").replace(/"/g, '""')}"`, l.ip ?? "", l.createdAt.toISOString()].join(",")
+    );
+    return [header, ...rows].join("\n");
   },
 
   async exportUsersCSV() {

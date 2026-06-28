@@ -219,4 +219,11 @@ router.get("/export/users", async (_req: Request, res: Response) => {
   res.send(csv);
 });
 
+router.get("/export/audit-log", async (_req: Request, res: Response) => {
+  const csv = await adminService.exportAuditLogCSV();
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", "attachment; filename=audit-log.csv");
+  res.send(csv);
+});
+
 export { router as adminRouter };

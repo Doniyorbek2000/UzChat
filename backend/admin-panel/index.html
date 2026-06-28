@@ -293,17 +293,11 @@ async function loadPage() {
 }
 
 async function loadDashboard(el) {
-  const [stats, health, contentStats, onlineData] = await Promise.all([api("/admin/dashboard"), api("/admin/health"), api("/admin/content-stats"), api("/admin/online-users")]);
+  const [stats, health, contentStats, onlineData, activityStats] = await Promise.all([api("/admin/dashboard"), api("/admin/health"), api("/admin/content-stats"), api("/admin/online-users"), api("/admin/activity-stats")]);
   const fmtBytes = b => (b/1024/1024).toFixed(1)+" MB";
   const fmtUp = s => { const d=Math.floor(s/86400),h=Math.floor((s%86400)/3600),m=Math.floor((s%3600)/60); return (d?d+"k ":"")+(h?h+"s ":"")+m+"d"; };
-  const days = ["Yak","Du","Se","Chor","Pay","Ju","Sha"];
-  const today = new Date().getDay();
-  const chartBars = Array.from({length:7},(_,i)=>{
-    const dayIdx = (today - 6 + i + 7) % 7;
-    const val = Math.max(1, Math.round((stats.messages.today || 1) * (0.3 + Math.random() * 0.7)));
-    return {day:days[dayIdx],val};
-  });
-  const maxVal = Math.max(...chartBars.map(b=>b.val));
+  const maxMsg = Math.max(...activityStats.days.map(d => d.messages), 1);
+  const maxUsr = Math.max(...activityStats.days.map(d => d.users), 1);
   el.innerHTML = `
     <div class="stats-grid">
       <div class="stat-card" style="border-left-color:var(--primary)"><div class="value">${stats.users.total.toLocaleString()}</div><div class="label">Foydalanuvchilar</div><div class="sub">Bugun: +${stats.users.newToday} | <span style="color:var(--success)">●</span> ${onlineData.online} onlayn</div></div>
@@ -316,18 +310,26 @@ async function loadDashboard(el) {
       <div class="stat-card" style="border-left-color:#5AC8FA"><div class="value">${contentStats.stories.toLocaleString()}</div><div class="label">Hikoyalar</div></div>
       <div class="stat-card" style="border-left-color:var(--danger)"><div class="value">${contentStats.pendingReports.toLocaleString()}</div><div class="label">Kutilayotgan shikoyatlar</div></div>
     </div>
+    <div class="quick-stats" style="margin-bottom:16px">
+      <div class="quick-stat"><div class="val">${activityStats.dau}</div><div class="lbl">DAU</div></div>
+      <div class="quick-stat"><div class="val">${activityStats.wau}</div><div class="lbl">WAU</div></div>
+      <div class="quick-stat"><div class="val">${activityStats.mau}</div><div class="lbl">MAU</div></div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="card"><h3>Haftalik xabarlar</h3>
-        <div class="chart-bar">${chartBars.map(b=>`<div class="bar" style="height:${Math.max(8,b.val/maxVal*100)}%"><span class="bar-label">${b.val}</span><span class="bar-day">${b.day}</span></div>`).join("")}</div>
+        <div class="chart-bar">${activityStats.days.map(d=>`<div class="bar" style="height:${Math.max(8,d.messages/maxMsg*100)}%"><span class="bar-label">${d.messages}</span><span class="bar-day">${d.date.slice(5)}</span></div>`).join("")}</div>
       </div>
-      <div class="card"><h3><span class="status-dot ${health.status==="ok"?"status-ok":"status-error"}"></span>Tizim holati</h3>
-        <div class="health-row"><span class="label">Holat</span><span class="value">${health.status==="ok"?"Ishlayapti":"Xatolik"}</span></div>
-        <div class="health-row"><span class="label">Ishlash vaqti</span><span class="value">${fmtUp(health.uptime)}</span></div>
-        <div class="health-row"><span class="label">Xotira (RSS)</span><span class="value">${fmtBytes(health.memory.rss)}</span></div>
-        <div class="health-row"><span class="label">Heap ishlatilgan</span><span class="value">${fmtBytes(health.memory.heapUsed)}</span></div>
-        <div class="health-row"><span class="label">DB kechikish</span><span class="value">${health.dbLatencyMs}ms</span></div>
-        <div class="health-row"><span class="label">Node.js</span><span class="value">${health.nodeVersion}</span></div>
+      <div class="card"><h3>Haftalik yangi foydalanuvchilar</h3>
+        <div class="chart-bar">${activityStats.days.map(d=>`<div class="bar" style="height:${Math.max(8,d.users/maxUsr*100)}%;background:var(--success)"><span class="bar-label">${d.users}</span><span class="bar-day">${d.date.slice(5)}</span></div>`).join("")}</div>
       </div>
+    </div>
+    <div class="card" style="margin-top:16px"><h3><span class="status-dot ${health.status==="ok"?"status-ok":"status-error"}"></span>Tizim holati</h3>
+      <div class="health-row"><span class="label">Holat</span><span class="value">${health.status==="ok"?"Ishlayapti":"Xatolik"}</span></div>
+      <div class="health-row"><span class="label">Ishlash vaqti</span><span class="value">${fmtUp(health.uptime)}</span></div>
+      <div class="health-row"><span class="label">Xotira (RSS)</span><span class="value">${fmtBytes(health.memory.rss)}</span></div>
+      <div class="health-row"><span class="label">Heap ishlatilgan</span><span class="value">${fmtBytes(health.memory.heapUsed)}</span></div>
+      <div class="health-row"><span class="label">DB kechikish</span><span class="value">${health.dbLatencyMs}ms</span></div>
+      <div class="health-row"><span class="label">Node.js</span><span class="value">${health.nodeVersion}</span></div>
     </div>`;
 }
 
@@ -521,7 +523,8 @@ window.dismissReport = async function(id) { if(!confirm("Shikoyatni rad etmoqchi
 let auditPage = 1;
 async function loadAudit(el) {
   const data = await api(`/admin/audit-log?page=${auditPage}&limit=30`);
-  el.innerHTML = `<div class="card">
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:13px;color:var(--text2)">Jami: ${data.total} ta yozuv</span><button class="btn btn-primary btn-sm" onclick="exportAuditCSV()">📥 CSV eksport</button></div>
+  <div class="card">
     <table><thead><tr><th>Admin</th><th>Amal</th><th>Maqsad</th><th>Tafsilotlar</th><th>Sana</th></tr></thead>
     <tbody>${data.logs.length?data.logs.map(l=>`<tr>
       <td>${esc(l.admin?.displayName||l.adminId)}</td>
@@ -617,7 +620,7 @@ async function loadCommunities(el) {
     <tbody>${(data.communities||[]).length?(data.communities||[]).map(c=>`<tr>
       <td><strong>${esc(c.name)}</strong></td>
       <td>${esc(c.owner?.displayName||"-")}</td>
-      <td>${c.memberCount||0}</td>
+      <td>${c._count?.groups||0} guruh</td>
       <td>${new Date(c.createdAt).toLocaleDateString("uz")}</td>
     </tr>`).join(""):'<tr><td colspan="4" class="empty">Jamiyatlar yo\'q</td></tr>'}</tbody></table>
   </div>
@@ -771,6 +774,19 @@ window.exportDashboardJSON = async function() {
     URL.revokeObjectURL(url);
     showToast("Dashboard ma'lumotlari eksport qilindi");
   } catch(e) { showToast("Eksport xatoligi: "+e.message, true); }
+};
+
+window.exportAuditCSV = async function() {
+  try {
+    const resp = await fetch(API_BASE+"/admin/export/audit-log", { headers: { "Authorization": "Bearer "+token } });
+    if (!resp.ok) throw new Error("Eksport xatoligi");
+    const csv = await resp.text();
+    const blob = new Blob(["﻿"+csv], {type: "text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "uzchat_audit_"+new Date().toISOString().slice(0,10)+".csv"; a.click();
+    URL.revokeObjectURL(url);
+    showToast("Audit log CSV eksport qilindi");
+  } catch(e) { showToast("Eksport xatoligi: "+esc(e.message), true); }
 };
 
 window.exportUsersCSV = async function() {

@@ -82,6 +82,7 @@ export const contactsService = {
       where: { targetId: userId, status: ContactStatus.PENDING },
       include: { owner: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
+      take: 200,
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
 
@@ -111,6 +112,7 @@ export const contactsService = {
       where: { ownerId: userId, status: ContactStatus.PENDING },
       include: { target: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
+      take: 200,
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(userId), getLastSeenExceptions(userId)]);
 
@@ -207,6 +209,7 @@ export const contactsService = {
       where: { ownerId },
       include: { blocked: { select: userSummarySelect } },
       orderBy: { createdAt: "desc" },
+      take: 500,
     });
     const [contactIds, exceptions] = await Promise.all([getContactIds(ownerId), getLastSeenExceptions(ownerId)]);
     return blocked.map((b) => ({
