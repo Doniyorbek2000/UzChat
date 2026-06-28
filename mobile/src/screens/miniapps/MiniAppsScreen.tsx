@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Image, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, TextInput, Image, RefreshControl, Dimensions } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
@@ -8,6 +8,26 @@ import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MiniApps">;
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const CARD_GAP = 10;
+const CARD_PADDING = 16;
+const CARD_WIDTH = (SCREEN_WIDTH - CARD_PADDING * 2 - CARD_GAP) / 2;
+
+const CATEGORY_CONFIG: Record<string, { icon: string; color: string }> = {
+  all: { icon: "🌐", color: "#007AFF" },
+  mine: { icon: "👤", color: "#5856D6" },
+  transport: { icon: "🚕", color: "#FF9500" },
+  food: { icon: "🍽️", color: "#FF3B30" },
+  health: { icon: "🏥", color: "#34C759" },
+  shopping: { icon: "🛍️", color: "#FF2D55" },
+  finance: { icon: "💰", color: "#007AFF" },
+  games: { icon: "🎮", color: "#AF52DE" },
+  news: { icon: "📰", color: "#32ADE6" },
+  entertainment: { icon: "🎬", color: "#FF9500" },
+  travel: { icon: "✈️", color: "#00C7BE" },
+  other: { icon: "📦", color: "#8E8E93" },
+};
 
 const CATEGORIES = [
   { key: "all", label: "Barchasi" },
@@ -28,8 +48,10 @@ export function MiniAppsScreen({ navigation }: Props) {
   React.useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={() => navigation.navigate("CreateMiniApp")} style={{ marginRight: 8 }}>
-          <Text style={{ color: colors.primary, fontSize: 28, fontWeight: "300" }}>+</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("CreateMiniApp")} style={styles.headerBtn}>
+          <View style={styles.headerBtnInner}>
+            <Text style={styles.headerBtnText}>+</Text>
+          </View>
         </TouchableOpacity>
       ),
     });
@@ -68,75 +90,132 @@ export function MiniAppsScreen({ navigation }: Props) {
       (a.description ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Mini-dastur qidirish..."
-        returnKeyType="search"
-        placeholderTextColor={colors.textSecondary}
-        value={search}
-        onChangeText={setSearch}
-      />
+  const renderApp = ({ item }: { item: MiniApp }) => {
+    const catConfig = CATEGORY_CONFIG[item.category ?? "other"] ?? CATEGORY_CONFIG.other;
+    return (
+      <TouchableOpacity
+        style={styles.appCard}
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate("MiniAppView", { id: item.id, name: item.name, url: item.url })}
+      >
+        {item.iconUrl ? (
+          <Image source={{ uri: item.iconUrl }} style={styles.appIcon} />
+        ) : (
+          <View style={[styles.appIcon, styles.appIconPlaceholder, { backgroundColor: catConfig.color }]}>
+            <Text style={styles.appIconText}>{item.name.charAt(0).toUpperCase()}</Text>
+          </View>
+        )}
+        <View style={styles.appInfo}>
+          <Text style={styles.appName} numberOfLines={1}>{item.name}</Text>
+          {item.description ? (
+            <Text style={styles.appDesc} numberOfLines={2}>{item.description}</Text>
+          ) : null}
+          <View style={styles.appMeta}>
+            <View style={[styles.categoryDot, { backgroundColor: catConfig.color }]} />
+            <Text style={styles.appCreator}>@{item.creator.username}</Text>
+          </View>
+        </View>
+        <View style={styles.openBtnContainer}>
+          <Text style={styles.openBtnText}>Ochish</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderHeader = () => (
+    <>
+      <View style={styles.searchContainer}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Mini-dastur qidirish..."
+          returnKeyType="search"
+          placeholderTextColor={colors.textSecondary}
+          value={search}
+          onChangeText={setSearch}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch("")} hitSlop={8}>
+            <Text style={styles.searchClear}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       <FlatList
-          keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="handled"
         horizontal
         data={CATEGORIES}
         keyExtractor={(item) => item.key}
         showsHorizontalScrollIndicator={false}
         style={styles.categoryList}
         contentContainerStyle={styles.categoryContent}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.categoryChip, category === item.key && styles.categoryChipActive]}
-            onPress={() => setCategory(item.key)}
-          >
-            <Text style={[styles.categoryText, category === item.key && styles.categoryTextActive]}>
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const active = category === item.key;
+          const config = CATEGORY_CONFIG[item.key] ?? CATEGORY_CONFIG.other;
+          return (
+            <TouchableOpacity
+              style={[styles.categoryChip, active && { backgroundColor: config.color, borderColor: config.color }]}
+              onPress={() => setCategory(item.key)}
+            >
+              <Text style={styles.categoryIcon}>{config.icon}</Text>
+              <Text style={[styles.categoryText, active && styles.categoryTextActive]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        }}
       />
 
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
+      {search.trim().length > 0 && !loading && (
+        <Text style={styles.resultCount}>{filtered.length} ta natija</Text>
+      )}
+    </>
+  );
+
+  return (
+    <View style={styles.container}>
+      {loading && apps.length === 0 ? (
+        <>
+          {renderHeader()}
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Yuklanmoqda...</Text>
+          </View>
+        </>
       ) : error ? (
-        <ErrorView message="Mini-dasturlarni yuklab bo'lmadi" onRetry={loadApps} />
+        <>
+          {renderHeader()}
+          <ErrorView message="Mini-dasturlarni yuklab bo'lmadi" onRetry={loadApps} />
+        </>
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
-          numColumns={2}
-          contentContainerStyle={styles.grid}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadApps().finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
-          columnWrapperStyle={styles.gridRow}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.appCard}
-              onPress={() => navigation.navigate("MiniAppView", { id: item.id, name: item.name, url: item.url })}
-            >
-              {item.iconUrl ? (
-                <Image source={{ uri: item.iconUrl }} style={styles.appIcon} />
-              ) : (
-                <View style={[styles.appIcon, styles.appIconPlaceholder]}>
-                  <Text style={styles.appIconText}>{item.name.charAt(0).toUpperCase()}</Text>
-                </View>
-              )}
-              <Text style={styles.appName} numberOfLines={1}>{item.name}</Text>
-              {item.description && (
-                <Text style={styles.appDesc} numberOfLines={2}>{item.description}</Text>
-              )}
-              <Text style={styles.appCreator}>@{item.creator.username}</Text>
-            </TouchableOpacity>
-          )}
+          ListHeaderComponent={renderHeader}
+          renderItem={renderApp}
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>
-                {category === "mine" ? "Siz hali mini-dastur yaratmagansiz" : "Mini-dasturlar topilmadi"}
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>{category === "mine" ? "🧩" : "🔍"}</Text>
+              <Text style={styles.emptyTitle}>
+                {category === "mine" ? "Mini-dasturlar yo'q" : "Topilmadi"}
               </Text>
+              <Text style={styles.emptyHint}>
+                {category === "mine"
+                  ? "O'zingizning mini-dasturingizni yarating"
+                  : "Boshqa kategoriya yoki kalit so'z bilan qidiring"
+                }
+              </Text>
+              {category === "mine" && (
+                <TouchableOpacity
+                  style={styles.createPromptBtn}
+                  onPress={() => navigation.navigate("CreateMiniApp")}
+                >
+                  <Text style={styles.createPromptBtnText}>+ Yaratish</Text>
+                </TouchableOpacity>
+              )}
             </View>
           }
         />
@@ -146,50 +225,85 @@ export function MiniAppsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 48 },
-  emptyText: { color: colors.textSecondary },
-  searchInput: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: colors.text,
-    fontSize: 15,
-    margin: 16,
-    marginBottom: 0,
-    borderWidth: 1,
-    borderColor: colors.border,
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 48, gap: 12 },
+  loadingText: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
+  headerBtn: { marginRight: 8 },
+  headerBtnInner: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
+  headerBtnText: { color: "#fff", fontSize: 22, fontWeight: "400", marginTop: -1 },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 14,
+    height: 44,
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  categoryList: { flexGrow: 0, marginTop: 12 },
+  searchIcon: { fontSize: 16 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
+  searchClear: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
+  resultCount: { fontSize: 13, color: colors.textSecondary, paddingHorizontal: 16, marginBottom: 8 },
+  categoryList: { flexGrow: 0, marginTop: 12, marginBottom: 12 },
   categoryContent: { paddingHorizontal: 16, gap: 8 },
   categoryChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  categoryChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  categoryText: { fontSize: 13, color: colors.textSecondary },
-  categoryTextActive: { color: "#fff", fontWeight: "600" },
-  grid: { padding: 12 },
-  gridRow: { gap: 12 },
-  appCard: {
-    flex: 1,
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+    gap: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  appIcon: { width: 56, height: 56, borderRadius: 14, marginBottom: 10 },
-  appIconPlaceholder: { backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  appIconText: { color: "#fff", fontSize: 24, fontWeight: "700" },
-  appName: { fontSize: 14, fontWeight: "600", color: colors.text, textAlign: "center" },
-  appDesc: { fontSize: 12, color: colors.textSecondary, textAlign: "center", marginTop: 4 },
-  appCreator: { fontSize: 11, color: colors.textSecondary, marginTop: 6 },
+  categoryIcon: { fontSize: 14 },
+  categoryText: { fontSize: 13, color: colors.text, fontWeight: "500" },
+  categoryTextActive: { color: "#fff", fontWeight: "600" },
+  listContent: { paddingBottom: 24 },
+  appCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  appIcon: { width: 52, height: 52, borderRadius: 14 },
+  appIconPlaceholder: { alignItems: "center", justifyContent: "center" },
+  appIconText: { color: "#fff", fontSize: 22, fontWeight: "700" },
+  appInfo: { flex: 1 },
+  appName: { fontSize: 15, fontWeight: "600", color: colors.text },
+  appDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 3, lineHeight: 16 },
+  appMeta: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
+  categoryDot: { width: 6, height: 6, borderRadius: 3 },
+  appCreator: { fontSize: 11, color: colors.textSecondary },
+  openBtnContainer: { backgroundColor: colors.primary + "15", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+  openBtnText: { fontSize: 13, fontWeight: "600", color: colors.primary },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center", lineHeight: 20 },
+  createPromptBtn: { marginTop: 20, backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
+  createPromptBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });

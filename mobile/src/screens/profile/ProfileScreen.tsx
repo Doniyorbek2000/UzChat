@@ -14,10 +14,18 @@ import { UsernameHistoryEntry } from "../../types";
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,24}$/;
-// How often a user may change their username (mirrors the backend limit).
 const USERNAME_CHANGE_COOLDOWN_DAYS = 7;
 
 type Props = MainTabScreenProps<"Profile">;
+
+type MenuItem = {
+  icon: string;
+  label: string;
+  color: string;
+  onPress: () => void;
+  badge?: string;
+  value?: string;
+};
 
 export function ProfileScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
@@ -222,325 +230,239 @@ export function ProfileScreen({ navigation }: Props) {
     );
   };
 
+  const renderMenuIcon = (icon: string, bgColor: string) => (
+    <View style={[styles.menuIconBg, { backgroundColor: bgColor + "18" }]}>
+      <Text style={styles.menuIconEmoji}>{icon}</Text>
+    </View>
+  );
+
+  const renderMenuRow = (item: MenuItem) => (
+    <TouchableOpacity key={item.label} style={styles.menuRow} onPress={item.onPress} activeOpacity={0.6}>
+      {renderMenuIcon(item.icon, item.color)}
+      <Text style={styles.menuRowText}>{item.label}</Text>
+      {item.badge && <View style={styles.menuBadge}><Text style={styles.menuBadgeText}>{item.badge}</Text></View>}
+      {item.value && <Text style={styles.menuRowValue}>{item.value}</Text>}
+      <Text style={styles.menuRowArrow}>›</Text>
+    </TouchableOpacity>
+  );
+
+  const renderMenuGroup = (title: string, items: MenuItem[]) => (
+    <View style={styles.menuGroup}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.menuCard}>
+        {items.map((item, i) => (
+          <View key={item.label}>
+            {renderMenuRow(item)}
+            {i < items.length - 1 && <View style={styles.menuDivider} />}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+
+  const personalItems: MenuItem[] = [
+    { icon: "🎂", label: "Tug'ilgan kun", color: "#FF9500", onPress: onOpenBirthdayPicker, value: formatBirthday(user.birthdayDay, user.birthdayMonth) ?? "Belgilanmagan" },
+    { icon: "🕓", label: "Oldingi usernamelar", color: "#8E8E93", onPress: onOpenUsernameHistory },
+    { icon: "📤", label: "Profilni ulashish", color: "#007AFF", onPress: onShare },
+    { icon: "⭐", label: "Saqlangan xabarlar", color: "#FF9500", onPress: () => navigation.navigate("StarredMessages") },
+    { icon: "📊", label: "Mening faolligim", color: "#5856D6", onPress: () => navigation.navigate("MyActivity") },
+    { icon: "@", label: "Eslatishlar", color: "#007AFF", onPress: () => navigation.navigate("Mentions") },
+    { icon: "⏰", label: "Yodga solinganlar", color: "#FF3B30", onPress: () => navigation.navigate("Reminders") },
+    { icon: "🚫", label: "Bloklangan foydalanuvchilar", color: "#FF3B30", onPress: () => navigation.navigate("BlockedUsers") },
+  ];
+
+  const securityItems: MenuItem[] = [
+    { icon: "🔑", label: "Parolni o'zgartirish", color: "#FF9500", onPress: () => navigation.navigate("ChangePassword") },
+    { icon: "📱", label: "Telefon raqamni o'zgartirish", color: "#34C759", onPress: () => navigation.navigate("ChangePhone") },
+    { icon: "🕒", label: "Oxirgi marta onlayn", color: "#5856D6", onPress: () => navigation.navigate("PrivacySettings") },
+    { icon: "🛡️", label: "Ikki bosqichli tekshiruv", color: "#007AFF", onPress: () => navigation.navigate("TwoFactorSettings") },
+    { icon: "💻", label: "Faol seanslar", color: "#32ADE6", onPress: () => navigation.navigate("ActiveSessions") },
+  ];
+
+  const settingsItems: MenuItem[] = [
+    { icon: "🔔", label: "Bildirishnomalar", color: "#FF3B30", onPress: () => navigation.navigate("NotificationSettings") },
+    { icon: "🔐", label: "Ilovani qulflash", color: "#FF9500", onPress: () => navigation.navigate("AppLockSettings") },
+    { icon: "🎨", label: "Mavzu", color: "#AF52DE", onPress: () => navigation.navigate("ThemeSettings") },
+    { icon: "📱", label: "QR kod", color: "#007AFF", onPress: () => navigation.navigate("QRCode") },
+    { icon: "🔑", label: "Qurilma kalitlari", color: "#8E8E93", onPress: () => navigation.navigate("DeviceKeys") },
+    { icon: "🔤", label: "Matn hajmi", color: "#34C759", onPress: () => navigation.navigate("ChatTextSize") },
+  ];
+
+  const servicesItems: MenuItem[] = [
+    { icon: "💰", label: "Hamyon", color: "#007AFF", onPress: () => navigation.navigate("Wallet") },
+    { icon: "🧩", label: "Mini-dasturlar", color: "#5856D6", onPress: () => navigation.navigate("MiniApps") },
+    { icon: "📰", label: "Yangiliklar", color: "#32ADE6", onPress: () => navigation.navigate("Feed") },
+    { icon: "🛒", label: "Bozor", color: "#34C759", onPress: () => navigation.navigate("Marketplace") },
+    { icon: "🧧", label: "Qizil konvert", color: "#FF3B30", onPress: () => navigation.navigate("SendRedPacket") },
+    { icon: "📞", label: "Qo'ng'iroqlar tarixi", color: "#32ADE6", onPress: () => navigation.navigate("CallHistory") },
+    { icon: "💬", label: "Tezkor javoblar", color: "#007AFF", onPress: () => navigation.navigate("QuickReplies") },
+    { icon: "📦", label: "Xotira va kesh", color: "#FF9500", onPress: () => navigation.navigate("StorageUsage") },
+    { icon: "🛡️", label: "Fayl xavfsizligi", color: "#FF3B30", onPress: () => navigation.navigate("FileSecurity") },
+    { icon: "📥", label: "Mening ma'lumotlarim", color: "#5856D6", onPress: () => navigation.navigate("AccountDataExport") },
+  ];
+
+  const extraItems: MenuItem[] = [
+    { icon: "💬", label: "Avtomatik javob", color: "#007AFF", onPress: () => navigation.navigate("AutoReplySettings") },
+    { icon: "💼", label: "Biznes profil", color: "#34C759", onPress: () => navigation.navigate("BusinessProfile") },
+    { icon: "☁️", label: "Bulut xotira", color: "#32ADE6", onPress: () => navigation.navigate("CloudStorage") },
+    { icon: "🎁", label: "Taklifnoma", color: "#FF9500", onPress: () => navigation.navigate("Referrals") },
+    { icon: "🏅", label: "Belgilar", color: "#FF9500", onPress: () => navigation.navigate("Badges") },
+    { icon: "🎀", label: "Sovg'alar", color: "#FF2D55", onPress: () => navigation.navigate("Gifts") },
+    { icon: "💎", label: "Sodiqlik ballari", color: "#AF52DE", onPress: () => navigation.navigate("Loyalty") },
+    { icon: "🔔", label: "Bildirishnomalar tarixi", color: "#FF3B30", onPress: () => navigation.navigate("NotificationLog") },
+    { icon: "❓", label: "Yordam markazi", color: "#8E8E93", onPress: () => navigation.navigate("Faq") },
+    { icon: "ℹ️", label: "UzChat haqida", color: "#007AFF", onPress: () => navigation.navigate("About") },
+  ];
+
   return (
-    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onChangeAvatar} disabled={uploadingAvatar}>
-          <Avatar uri={user.avatarUrl} name={user.displayName} size={72} />
-          {uploadingAvatar && (
+    <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <View style={styles.profileCard}>
+        <TouchableOpacity onPress={onChangeAvatar} disabled={uploadingAvatar} style={styles.avatarContainer}>
+          <Avatar uri={user.avatarUrl} name={user.displayName} size={80} />
+          {uploadingAvatar ? (
             <View style={styles.avatarOverlay}>
               <ActivityIndicator color="#fff" />
             </View>
+          ) : (
+            <View style={styles.avatarEditBadge}>
+              <Text style={styles.avatarEditIcon}>📷</Text>
+            </View>
           )}
         </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Text style={styles.username}>@{user.username}</Text>
-          <Text style={styles.phone}>{user.phone}</Text>
-        </View>
+        <Text style={styles.profileName}>{user.displayName}</Text>
+        <Text style={styles.profileUsername}>@{user.username}</Text>
+        {user.customStatus ? <Text style={styles.profileStatus}>{user.customStatus}</Text> : null}
+        <Text style={styles.profilePhone}>{user.phone}</Text>
       </View>
 
       <View style={styles.quickActions}>
         <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("Stories")}>
-          <Text style={styles.quickActionIcon}>📷</Text>
+          <View style={[styles.quickActionIconBg, { backgroundColor: "#FF9500" + "18" }]}>
+            <Text style={styles.quickActionIcon}>📷</Text>
+          </View>
           <Text style={styles.quickActionLabel}>Hikoyalar</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("Contacts")}>
-          <Text style={styles.quickActionIcon}>👥</Text>
+          <View style={[styles.quickActionIconBg, { backgroundColor: "#5856D6" + "18" }]}>
+            <Text style={styles.quickActionIcon}>👥</Text>
+          </View>
           <Text style={styles.quickActionLabel}>Kontaktlar</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("Wallet")}>
-          <Text style={styles.quickActionIcon}>💰</Text>
+          <View style={[styles.quickActionIconBg, { backgroundColor: "#007AFF" + "18" }]}>
+            <Text style={styles.quickActionIcon}>💰</Text>
+          </View>
           <Text style={styles.quickActionLabel}>Hamyon</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickAction} onPress={onShare}>
-          <Text style={styles.quickActionIcon}>📤</Text>
+          <View style={[styles.quickActionIconBg, { backgroundColor: "#34C759" + "18" }]}>
+            <Text style={styles.quickActionIcon}>📤</Text>
+          </View>
           <Text style={styles.quickActionLabel}>Ulashish</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.label}>Username</Text>
-      <View style={styles.usernameInputRow}>
-        <Text style={styles.usernamePrefix}>@</Text>
-        <TextInput
-          style={styles.usernameInput}
-          value={username}
-          onChangeText={(t) => setUsername(t.replace(/[^a-zA-Z0-9_]/g, ""))}
-          autoCapitalize="none"
-          autoCorrect={false}
-          maxLength={24}
-        />
-        {usernameStatus === "checking" && <ActivityIndicator size="small" color={colors.textSecondary} />}
-        {usernameStatus === "available" && <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>}
-        {usernameStatus === "taken" && <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>}
-      </View>
-      {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
-      {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
-      {usernameCooldownRemainingDays > 0 && (
-        <Text style={styles.usernameCooldownHint}>
-          Username {USERNAME_CHANGE_COOLDOWN_DAYS} kunda bir marta o'zgartiriladi. Yana {usernameCooldownRemainingDays} kundan
-          keyin o'zgartirishingiz mumkin
-        </Text>
-      )}
+      <View style={styles.editCard}>
+        <Text style={styles.editCardTitle}>Profilni tahrirlash</Text>
 
-      <Text style={styles.label}>Ism</Text>
-      <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} maxLength={64} />
-
-      <Text style={styles.label}>Holat</Text>
-      <TextInput
-        style={styles.input}
-        value={customStatus}
-        onChangeText={setCustomStatus}
-        placeholder="Masalan: 📚 Mashg'ulotda"
-        placeholderTextColor={colors.textSecondary}
-        maxLength={70}
-      />
-      <Text style={styles.charCounter}>{customStatus.length}/70</Text>
-      <TouchableOpacity style={styles.statusDurationRow} onPress={onPickCustomStatusDuration}>
-        <Text style={styles.statusDurationLabel}>Avtomatik tozalash</Text>
-        <Text style={styles.statusDurationValue}>{formatCustomStatusDuration(customStatusClearAfterSeconds)} ›</Text>
-      </TouchableOpacity>
-      {!!user?.customStatus && user?.customStatusExpiresAt && formatCustomStatusExpiry(user.customStatusExpiresAt) && (
-        <Text style={styles.charCounter}>{formatCustomStatusExpiry(user.customStatusExpiresAt)}</Text>
-      )}
-
-      <Text style={styles.label}>Bio</Text>
-      <TextInput style={[styles.input, styles.bioInput]} value={bio} onChangeText={setBio} multiline maxLength={256} />
-      <Text style={styles.charCounter}>{bio.length}/256</Text>
-
-      <TouchableOpacity style={styles.button} onPress={onSave} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Saqlash</Text>}
-      </TouchableOpacity>
-
-      <View style={styles.securityBox}>
-        <Text style={styles.securityTitle}>🔒 End-to-End shifrlash</Text>
-        <Text style={styles.securityText}>
-          Xabarlaringiz qurilmangizda shifrlanadi va faqat suhbatdoshingiz ochishi mumkin. Server hech qachon
-          xabar matnini ko'rmaydi.
-        </Text>
-      </View>
-
-      <Text style={styles.sectionTitle}>Shaxsiy</Text>
-      <TouchableOpacity style={styles.menuRow} onPress={onOpenBirthdayPicker}>
-        <Text style={styles.menuRowText}>🎂 Tug'ilgan kun</Text>
-        <View style={styles.menuRowRight}>
-          <Text style={styles.menuRowValue}>{formatBirthday(user.birthdayDay, user.birthdayMonth) ?? "Belgilanmagan"}</Text>
-          <Text style={styles.menuRowArrow}>›</Text>
+        <Text style={styles.label}>Username</Text>
+        <View style={styles.usernameInputRow}>
+          <Text style={styles.usernamePrefix}>@</Text>
+          <TextInput
+            style={styles.usernameInput}
+            value={username}
+            onChangeText={(t) => setUsername(t.replace(/[^a-zA-Z0-9_]/g, ""))}
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={24}
+          />
+          {usernameStatus === "checking" && <ActivityIndicator size="small" color={colors.textSecondary} />}
+          {usernameStatus === "available" && <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>}
+          {usernameStatus === "taken" && <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>}
         </View>
-      </TouchableOpacity>
+        {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
+        {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
+        {usernameCooldownRemainingDays > 0 && (
+          <Text style={styles.usernameCooldownHint}>
+            Username {USERNAME_CHANGE_COOLDOWN_DAYS} kunda bir marta o'zgartiriladi. Yana {usernameCooldownRemainingDays} kundan keyin o'zgartirishingiz mumkin
+          </Text>
+        )}
 
-      <TouchableOpacity style={styles.menuRow} onPress={onOpenUsernameHistory}>
-        <Text style={styles.menuRowText}>🕓 Oldingi usernamelar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Ism</Text>
+        <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} maxLength={64} />
 
-      <TouchableOpacity style={styles.menuRow} onPress={onShare}>
-        <Text style={styles.menuRowText}>📤 Profilni ulashish</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Holat</Text>
+        <TextInput
+          style={styles.input}
+          value={customStatus}
+          onChangeText={setCustomStatus}
+          placeholder="Masalan: 📚 Mashg'ulotda"
+          placeholderTextColor={colors.textSecondary}
+          maxLength={70}
+        />
+        <View style={styles.statusRow}>
+          <Text style={styles.charCounter}>{customStatus.length}/70</Text>
+          <TouchableOpacity onPress={onPickCustomStatusDuration}>
+            <Text style={styles.statusDurationValue}>{formatCustomStatusDuration(customStatusClearAfterSeconds)} ›</Text>
+          </TouchableOpacity>
+        </View>
+        {!!user?.customStatus && user?.customStatusExpiresAt && formatCustomStatusExpiry(user.customStatusExpiresAt) && (
+          <Text style={styles.statusExpiryText}>{formatCustomStatusExpiry(user.customStatusExpiresAt)}</Text>
+        )}
 
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("StarredMessages")}>
-        <Text style={styles.menuRowText}>⭐ Saqlangan xabarlar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Bio</Text>
+        <TextInput style={[styles.input, styles.bioInput]} value={bio} onChangeText={setBio} multiline maxLength={256} />
+        <Text style={styles.charCounter}>{bio.length}/256</Text>
 
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("MyActivity")}>
-        <Text style={styles.menuRowText}>📊 Mening faolligim</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.saveButton} onPress={onSave} disabled={saving} activeOpacity={0.7}>
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Saqlash</Text>}
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Mentions")}>
-        <Text style={styles.menuRowText}>@ Eslatishlar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
+      <View style={styles.securityBanner}>
+        <View style={[styles.menuIconBg, { backgroundColor: "#34C759" + "18" }]}>
+          <Text style={styles.menuIconEmoji}>🔒</Text>
+        </View>
+        <View style={styles.securityBannerText}>
+          <Text style={styles.securityTitle}>End-to-End shifrlash</Text>
+          <Text style={styles.securityDesc}>Xabarlaringiz qurilmangizda shifrlanadi va faqat suhbatdoshingiz ochishi mumkin</Text>
+        </View>
+      </View>
 
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Reminders")}>
-        <Text style={styles.menuRowText}>⏰ Yodga solinganlar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("BlockedUsers")}>
-        <Text style={styles.menuRowText}>🚫 Bloklangan foydalanuvchilar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.sectionTitle}>Xavfsizlik</Text>
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("ChangePassword")}>
-        <Text style={styles.menuRowText}>🔑 Parolni o'zgartirish</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("ChangePhone")}>
-        <Text style={styles.menuRowText}>📱 Telefon raqamni o'zgartirish</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("PrivacySettings")}>
-        <Text style={styles.menuRowText}>🕒 Oxirgi marta onlayn</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.sectionTitle}>Sozlamalar</Text>
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("NotificationSettings")}>
-        <Text style={styles.menuRowText}>🔔 Bildirishnomalar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AppLockSettings")}>
-        <Text style={styles.menuRowText}>🔐 Ilovani qulflash</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("ThemeSettings")}>
-        <Text style={styles.menuRowText}>🎨 Mavzu</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("QRCode")}>
-        <Text style={styles.menuRowText}>📱 QR kod</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("DeviceKeys")}>
-        <Text style={styles.menuRowText}>🔑 Qurilma kalitlari</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.sectionTitle}>Xizmatlar</Text>
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Wallet")}>
-        <Text style={styles.menuRowText}>💰 Hamyon</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("MiniApps")}>
-        <Text style={styles.menuRowText}>🧩 Mini-dasturlar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Feed")}>
-        <Text style={styles.menuRowText}>📰 Yangiliklar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Marketplace")}>
-        <Text style={styles.menuRowText}>🛒 Bozor</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("SendRedPacket")}>
-        <Text style={styles.menuRowText}>🧧 Qizil konvert</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("CallHistory")}>
-        <Text style={styles.menuRowText}>📞 Qo'ng'iroqlar tarixi</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("ChatTextSize")}>
-        <Text style={styles.menuRowText}>🔤 Matn hajmi</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("QuickReplies")}>
-        <Text style={styles.menuRowText}>💬 Tezkor javoblar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("StorageUsage")}>
-        <Text style={styles.menuRowText}>📦 Xotira va kesh</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("FileSecurity")}>
-        <Text style={styles.menuRowText}>🛡️ Fayl xavfsizligi</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AccountDataExport")}>
-        <Text style={styles.menuRowText}>📥 Mening ma'lumotlarim</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("TwoFactorSettings")}>
-        <Text style={styles.menuRowText}>🛡️ Ikki bosqichli tekshiruv</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("ActiveSessions")}>
-        <Text style={styles.menuRowText}>💻 Faol seanslar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
+      {renderMenuGroup("Shaxsiy", personalItems)}
+      {renderMenuGroup("Xavfsizlik", securityItems)}
+      {renderMenuGroup("Sozlamalar", settingsItems)}
+      {renderMenuGroup("Xizmatlar", servicesItems)}
+      {renderMenuGroup("Qo'shimcha", extraItems)}
 
       {user?.isAdmin && (
-        <TouchableOpacity style={[styles.menuRow, { borderLeftWidth: 3, borderLeftColor: colors.danger }]} onPress={() => navigation.navigate("AdminDashboard")}>
-          <Text style={styles.menuRowText}>🛡️ Admin panel</Text>
-          <Text style={styles.menuRowArrow}>›</Text>
-        </TouchableOpacity>
+        <View style={styles.menuGroup}>
+          <Text style={styles.sectionTitle}>Boshqaruv</Text>
+          <View style={styles.menuCard}>
+            <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AdminDashboard")} activeOpacity={0.6}>
+              <View style={[styles.menuIconBg, { backgroundColor: "#FF3B30" + "18" }]}>
+                <Text style={styles.menuIconEmoji}>🛡️</Text>
+              </View>
+              <Text style={styles.menuRowText}>Admin panel</Text>
+              <View style={styles.adminBadge}><Text style={styles.adminBadgeText}>ADMIN</Text></View>
+              <Text style={styles.menuRowArrow}>›</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       )}
 
-      <Text style={styles.sectionTitle}>Qo'shimcha</Text>
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AutoReplySettings")}>
-        <Text style={styles.menuRowText}>💬 Avtomatik javob</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("BusinessProfile")}>
-        <Text style={styles.menuRowText}>💼 Biznes profil</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("CloudStorage")}>
-        <Text style={styles.menuRowText}>☁️ Bulut xotira</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Referrals")}>
-        <Text style={styles.menuRowText}>🎁 Taklifnoma</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Badges")}>
-        <Text style={styles.menuRowText}>🏅 Belgilar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Gifts")}>
-        <Text style={styles.menuRowText}>🎀 Sovg'alar</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Loyalty")}>
-        <Text style={styles.menuRowText}>💎 Sodiqlik ballari</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("NotificationLog")}>
-        <Text style={styles.menuRowText}>🔔 Bildirishnomalar tarixi</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("Faq")}>
-        <Text style={styles.menuRowText}>❓ Yordam markazi</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("About")}>
-        <Text style={styles.menuRowText}>ℹ️ UzChat haqida</Text>
-        <Text style={styles.menuRowArrow}>›</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+      <TouchableOpacity style={styles.logoutButton} onPress={onLogout} activeOpacity={0.6}>
         <Text style={styles.logoutText}>Chiqish</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.deleteAccountButton} onPress={onDeleteAccount}>
+      <TouchableOpacity style={styles.deleteAccountButton} onPress={onDeleteAccount} activeOpacity={0.6}>
         <Text style={styles.deleteAccountText}>Hisobni o'chirish</Text>
       </TouchableOpacity>
 
       <Modal visible={birthdayModalVisible} transparent animationType="fade" onRequestClose={() => setBirthdayModalVisible(false)}>
-        <Pressable style={styles.birthdayBackdrop} onPress={() => setBirthdayModalVisible(false)}>
-          <Pressable style={styles.birthdaySheet}>
-            <Text style={styles.birthdayTitle}>Tug'ilgan kun</Text>
+        <Pressable style={styles.modalBackdrop} onPress={() => setBirthdayModalVisible(false)}>
+          <Pressable style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Tug'ilgan kun</Text>
             <View style={styles.birthdayPickerRow}>
               <FlatList
                 data={DAYS.slice(0, MAX_DAYS_IN_MONTH[pickedMonth - 1])}
@@ -581,20 +503,20 @@ export function ProfileScreen({ navigation }: Props) {
                 }}
               />
             </View>
-            <View style={styles.birthdayButtonRow}>
+            <View style={styles.modalButtonRow}>
               {(user.birthdayDay != null || user.birthdayMonth != null) && (
-                <TouchableOpacity style={styles.birthdayButton} onPress={onClearBirthday} disabled={savingBirthday}>
-                  <Text style={styles.birthdayButtonDanger}>O'chirish</Text>
+                <TouchableOpacity style={styles.modalBtn} onPress={onClearBirthday} disabled={savingBirthday}>
+                  <Text style={styles.modalBtnDanger}>O'chirish</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={styles.birthdayButton} onPress={() => setBirthdayModalVisible(false)} disabled={savingBirthday}>
-                <Text style={styles.birthdayButtonText}>Bekor qilish</Text>
+              <TouchableOpacity style={styles.modalBtn} onPress={() => setBirthdayModalVisible(false)} disabled={savingBirthday}>
+                <Text style={styles.modalBtnText}>Bekor qilish</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.birthdayButton} onPress={onSaveBirthday} disabled={savingBirthday}>
+              <TouchableOpacity style={styles.modalBtn} onPress={onSaveBirthday} disabled={savingBirthday}>
                 {savingBirthday ? (
                   <ActivityIndicator color={colors.primary} />
                 ) : (
-                  <Text style={[styles.birthdayButtonText, styles.birthdayButtonPrimary]}>Saqlash</Text>
+                  <Text style={[styles.modalBtnText, styles.modalBtnPrimary]}>Saqlash</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -608,9 +530,9 @@ export function ProfileScreen({ navigation }: Props) {
         animationType="fade"
         onRequestClose={() => setUsernameHistoryVisible(false)}
       >
-        <Pressable style={styles.birthdayBackdrop} onPress={() => setUsernameHistoryVisible(false)}>
-          <Pressable style={styles.birthdaySheet}>
-            <Text style={styles.birthdayTitle}>Oldingi usernamelar</Text>
+        <Pressable style={styles.modalBackdrop} onPress={() => setUsernameHistoryVisible(false)}>
+          <Pressable style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Oldingi usernamelar</Text>
             {loadingUsernameHistory ? (
               <ActivityIndicator color={colors.primary} style={styles.usernameHistoryLoading} />
             ) : usernameHistory.length === 0 ? (
@@ -630,8 +552,8 @@ export function ProfileScreen({ navigation }: Props) {
                 )}
               />
             )}
-            <TouchableOpacity style={styles.birthdayButton} onPress={() => setUsernameHistoryVisible(false)}>
-              <Text style={[styles.birthdayButtonText, styles.birthdayButtonPrimary]}>Yopish</Text>
+            <TouchableOpacity style={styles.modalBtn} onPress={() => setUsernameHistoryVisible(false)}>
+              <Text style={[styles.modalBtnText, styles.modalBtnPrimary]}>Yopish</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -641,60 +563,198 @@ export function ProfileScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface, padding: 16 },
-  sectionTitle: { fontSize: 13, fontWeight: "700", color: colors.textSecondary, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 20, marginBottom: 8 },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 24, gap: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  contentContainer: { paddingBottom: 40 },
+  profileCard: {
+    alignItems: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    backgroundColor: colors.surface,
+    marginBottom: 12,
+  },
+  avatarContainer: { position: "relative", marginBottom: 12 },
   avatarOverlay: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: 18,
+    ...(StyleSheet.absoluteFill as object),
+    borderRadius: 40,
     backgroundColor: "rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",
   },
-  headerInfo: { flex: 1 },
-  username: { fontSize: 18, fontWeight: "700", color: colors.text },
-  phone: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
-  quickActions: { flexDirection: "row", justifyContent: "space-around", marginBottom: 20, paddingVertical: 12, backgroundColor: colors.background, borderRadius: 12 },
-  quickAction: { alignItems: "center", gap: 4 },
-  quickActionIcon: { fontSize: 24 },
+  avatarEditBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.surface,
+  },
+  avatarEditIcon: { fontSize: 13 },
+  profileName: { fontSize: 22, fontWeight: "700", color: colors.text },
+  profileUsername: { fontSize: 15, color: colors.textSecondary, marginTop: 2 },
+  profileStatus: { fontSize: 14, color: colors.primary, marginTop: 6 },
+  profilePhone: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  quickActions: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: colors.surface,
+    marginBottom: 12,
+  },
+  quickAction: { alignItems: "center", gap: 6 },
+  quickActionIconBg: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  quickActionIcon: { fontSize: 20 },
   quickActionLabel: { fontSize: 11, color: colors.textSecondary, fontWeight: "500" },
-  label: { fontSize: 13, color: colors.textSecondary, marginBottom: 6, marginTop: 12 },
+  editCard: {
+    backgroundColor: colors.surface,
+    marginHorizontal: 16,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  editCardTitle: { fontSize: 17, fontWeight: "700", color: colors.text, marginBottom: 16 },
+  label: { fontSize: 13, color: colors.textSecondary, marginBottom: 6, marginTop: 12, fontWeight: "500" },
   input: {
     backgroundColor: colors.background,
-    borderRadius: 8,
-    paddingHorizontal: 16,
+    borderRadius: 10,
+    paddingHorizontal: 14,
     paddingVertical: 12,
     color: colors.text,
-    fontSize: 16,
+    fontSize: 15,
     borderWidth: 1,
     borderColor: colors.border,
   },
   bioInput: { minHeight: 80, textAlignVertical: "top" },
-  charCounter: { fontSize: 12, color: colors.textSecondary, textAlign: "right", marginTop: 4 },
-  statusDurationRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  statusDurationLabel: { fontSize: 14, color: colors.text },
-  statusDurationValue: { fontSize: 14, color: colors.textSecondary },
+  charCounter: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
+  statusRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
+  statusDurationValue: { fontSize: 13, color: colors.primary, fontWeight: "500" },
+  statusExpiryText: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   usernameInputRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.background,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
   },
   usernamePrefix: { fontSize: 16, color: colors.textSecondary },
-  usernameInput: { flex: 1, fontSize: 16, paddingVertical: 12, color: colors.text },
+  usernameInput: { flex: 1, fontSize: 15, paddingVertical: 12, color: colors.text },
   usernameStatusIcon: { fontSize: 18, fontWeight: "700" },
   usernameAvailable: { color: colors.online },
   usernameTaken: { color: colors.danger },
   usernameHint: { fontSize: 12, color: colors.danger, marginTop: 4, marginLeft: 4 },
   usernameCooldownHint: { fontSize: 12, color: colors.textSecondary, marginTop: 4, marginLeft: 4 },
+  saveButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  saveButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  securityBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.surface,
+    marginHorizontal: 16,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 8,
+  },
+  securityBannerText: { flex: 1 },
+  securityTitle: { fontSize: 14, fontWeight: "600", color: colors.text },
+  securityDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 3, lineHeight: 17 },
+  menuGroup: { marginTop: 8, paddingHorizontal: 16 },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  menuCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  menuRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    gap: 12,
+  },
+  menuIconBg: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  menuIconEmoji: { fontSize: 17 },
+  menuRowText: { flex: 1, fontSize: 15, color: colors.text },
+  menuRowArrow: { fontSize: 18, color: colors.textSecondary },
+  menuRowValue: { fontSize: 14, color: colors.textSecondary, marginRight: 4 },
+  menuBadge: { backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
+  menuBadgeText: { fontSize: 11, fontWeight: "600", color: "#fff" },
+  menuDivider: { height: 1, backgroundColor: colors.border, marginLeft: 60 },
+  adminBadge: { backgroundColor: colors.danger, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
+  adminBadgeText: { fontSize: 10, fontWeight: "700", color: "#fff" },
+  logoutButton: {
+    marginTop: 24,
+    marginHorizontal: 16,
+    alignItems: "center",
+    paddingVertical: 14,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+  },
+  logoutText: { color: colors.danger, fontSize: 16, fontWeight: "600" },
+  deleteAccountButton: { alignItems: "center", paddingVertical: 14, marginBottom: 16 },
+  deleteAccountText: { color: colors.textSecondary, fontSize: 13 },
+  modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
+  modalSheet: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 20,
+    width: "85%",
+    maxWidth: 340,
+  },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: colors.text, marginBottom: 16, textAlign: "center" },
+  birthdayPickerRow: { flexDirection: "row", height: 220, gap: 8 },
+  birthdayPickerColumn: { flex: 1 },
+  birthdayPickerItem: { paddingVertical: 10, alignItems: "center", borderRadius: 10 },
+  birthdayPickerItemSelected: { backgroundColor: colors.primary },
+  birthdayPickerItemText: { fontSize: 15, color: colors.text },
+  birthdayPickerItemTextSelected: { color: "#fff", fontWeight: "700" },
+  modalButtonRow: { flexDirection: "row", justifyContent: "space-around", marginTop: 16 },
+  modalBtn: { paddingVertical: 10, paddingHorizontal: 12, minWidth: 70, alignItems: "center" },
+  modalBtnText: { fontSize: 15, color: colors.text },
+  modalBtnPrimary: { color: colors.primary, fontWeight: "700" },
+  modalBtnDanger: { fontSize: 15, color: colors.danger },
   usernameHistoryLoading: { marginVertical: 20 },
   usernameHistoryEmpty: { fontSize: 14, color: colors.textSecondary, textAlign: "center", paddingVertical: 20 },
   usernameHistoryList: { maxHeight: 280 },
@@ -708,46 +768,4 @@ const styles = StyleSheet.create({
   },
   usernameHistoryName: { fontSize: 15, color: colors.text, fontWeight: "600" },
   usernameHistoryDate: { fontSize: 13, color: colors.textSecondary },
-  button: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 20 },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  securityBox: { backgroundColor: colors.background, borderRadius: 8, padding: 16, marginTop: 24 },
-  securityTitle: { fontSize: 14, fontWeight: "600", color: colors.text, marginBottom: 8 },
-  securityText: { fontSize: 13, color: colors.textSecondary, lineHeight: 18 },
-  menuRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 12,
-  },
-  menuRowText: { fontSize: 15, color: colors.text },
-  menuRowArrow: { fontSize: 18, color: colors.textSecondary },
-  menuRowRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  menuRowValue: { fontSize: 14, color: colors.textSecondary },
-  logoutButton: { marginTop: 32, alignItems: "center", paddingVertical: 14 },
-  logoutText: { color: colors.danger, fontSize: 16, fontWeight: "600" },
-  deleteAccountButton: { alignItems: "center", paddingVertical: 14, marginBottom: 16 },
-  deleteAccountText: { color: colors.textSecondary, fontSize: 13 },
-  birthdayBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
-  birthdaySheet: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    width: "80%",
-    maxWidth: 320,
-  },
-  birthdayTitle: { fontSize: 16, fontWeight: "700", color: colors.text, marginBottom: 12, textAlign: "center" },
-  birthdayPickerRow: { flexDirection: "row", height: 220, gap: 8 },
-  birthdayPickerColumn: { flex: 1 },
-  birthdayPickerItem: { paddingVertical: 10, alignItems: "center", borderRadius: 8 },
-  birthdayPickerItemSelected: { backgroundColor: colors.primary },
-  birthdayPickerItemText: { fontSize: 15, color: colors.text },
-  birthdayPickerItemTextSelected: { color: "#fff", fontWeight: "700" },
-  birthdayButtonRow: { flexDirection: "row", justifyContent: "space-around", marginTop: 16 },
-  birthdayButton: { paddingVertical: 10, paddingHorizontal: 8, minWidth: 60, alignItems: "center" },
-  birthdayButtonText: { fontSize: 15, color: colors.text },
-  birthdayButtonPrimary: { color: colors.primary, fontWeight: "700" },
-  birthdayButtonDanger: { fontSize: 15, color: colors.danger },
 });
