@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { devicesApi, DeviceKey } from "../../api/devices";
@@ -12,6 +12,7 @@ export function DeviceKeysScreen({}: Props) {
   const [devices, setDevices] = useState<DeviceKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadDevices = useCallback(async () => {
     setLoading(true);
@@ -24,6 +25,12 @@ export function DeviceKeysScreen({}: Props) {
     }
     setLoading(false);
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try { setDevices(await devicesApi.list()); } catch {}
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     loadDevices();
@@ -73,6 +80,7 @@ export function DeviceKeysScreen({}: Props) {
         data={devices}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={Separator}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         renderItem={({ item }) => (
           <View style={styles.row}>
             <View style={styles.deviceIcon}>

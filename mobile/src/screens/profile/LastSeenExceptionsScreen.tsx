@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -17,6 +17,7 @@ export function LastSeenExceptionsScreen({}: Props) {
   const [exceptions, setExceptions] = useState<LastSeenException[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
 
   const load = useCallback(() => {
@@ -31,6 +32,16 @@ export function LastSeenExceptionsScreen({}: Props) {
   }, []);
 
   useFocusEffect(load);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const [c, e] = await Promise.all([contactsApi.list(), usersApi.listLastSeenExceptions()]);
+      setContacts(c);
+      setExceptions(e);
+    } catch {}
+    setRefreshing(false);
+  };
 
   const exceptionByUserId = useMemo(() => {
     const map = new Map<string, "ALLOW" | "DENY">();
@@ -113,6 +124,7 @@ export function LastSeenExceptionsScreen({}: Props) {
         keyboardShouldPersistTaps="handled"
         data={filteredContacts}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={Separator}
         renderItem={({ item }) => {
           const mode = exceptionByUserId.get(item.user.id);

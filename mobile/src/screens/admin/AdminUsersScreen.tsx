@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { adminApi, AdminUser } from "../../api/admin";
@@ -152,6 +153,7 @@ export default function AdminUsersScreen() {
           keyExtractor={(i) => i.id}
           renderItem={renderUser}
           contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+          refreshControl={<RefreshControl refreshing={false} onRefresh={() => load(page, search)} tintColor={colors.primary} />}
           ListEmptyComponent={
             !loading ? (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 40 }}>
