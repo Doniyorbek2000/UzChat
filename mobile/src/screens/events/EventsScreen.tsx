@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator , RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { eventsApi, ChatEvent } from "../../api/events";
@@ -34,7 +34,9 @@ export function EventsScreen({ navigation }: Props) {
       await eventsApi.rsvp(eventId, status);
       const updated = await eventsApi.getUpcoming();
       setEvents(updated);
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Ishtirokni belgilab bo'lmadi");
+    }
   };
 
   const getMyRsvp = (event: ChatEvent) => event.rsvps?.find((r) => r.userId === userId);

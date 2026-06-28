@@ -62,7 +62,9 @@ export function ConversationEventsScreen({ route }: Props) {
       await eventsApi.rsvp(eventId, status);
       const updated = await eventsApi.listByConversation(conversationId);
       setEvents(updated);
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Ishtirokni belgilab bo'lmadi");
+    }
   };
 
   const handleDelete = (eventId: string) => {
@@ -75,7 +77,9 @@ export function ConversationEventsScreen({ route }: Props) {
           try {
             await eventsApi.delete(eventId);
             setEvents((prev) => prev.filter((e) => e.id !== eventId));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Tadbirni o'chirib bo'lmadi");
+          }
         },
       },
     ]);

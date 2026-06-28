@@ -54,7 +54,9 @@ export function NotesScreen(_props: Props) {
     try {
       const updated = await notesApi.update(note.id, { isPinned: !note.isPinned });
       setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Eslatmani o'zgartirib bo'lmadi");
+    }
   };
 
   const handleDelete = (note: Note) => {
@@ -67,7 +69,9 @@ export function NotesScreen(_props: Props) {
           try {
             await notesApi.delete(note.id);
             setNotes((prev) => prev.filter((n) => n.id !== note.id));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Eslatmani o'chirib bo'lmadi");
+          }
         },
       },
     ]);

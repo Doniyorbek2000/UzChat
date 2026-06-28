@@ -57,7 +57,10 @@ export function NearbyPeopleScreen({ navigation }: Props) {
     setVisible(value);
     try {
       await nearbyApi.setVisibility(value);
-    } catch {}
+    } catch {
+      setVisible(!value);
+      Alert.alert("Xatolik", "Ko'rinishni o'zgartirib bo'lmadi");
+    }
   };
 
   const formatDistance = (km: number) => {

@@ -38,7 +38,9 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
       await voiceRoomsApi.leave(roomId);
       setJoined(false);
       navigation.goBack();
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Xonadan chiqib bo'lmadi");
+    }
   };
 
   const handleEnd = () => {
@@ -51,7 +53,9 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
           try {
             await voiceRoomsApi.end(roomId);
             navigation.goBack();
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Xonani tugatib bo'lmadi");
+          }
         },
       },
     ]);
@@ -62,7 +66,9 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
       await voiceRoomsApi.toggleMute(roomId);
       const updated = await voiceRoomsApi.get(roomId);
       setRoom(updated);
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Ovozni o'zgartirib bo'lmadi");
+    }
   };
 
   if (loading || !room) {
@@ -78,7 +84,7 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.statusRow}>
-          <View style={[styles.statusDot, { backgroundColor: room.status === "LIVE" ? colors.danger : "#FF9500" }]} />
+          <View style={[styles.statusDot, { backgroundColor: room.status === "LIVE" ? colors.danger : colors.textSecondary }]} />
           <Text style={styles.statusText}>{room.status === "LIVE" ? "JONLI" : room.status}</Text>
         </View>
         <Text style={styles.title}>{room.title}</Text>
@@ -192,7 +198,7 @@ const styles = StyleSheet.create({
   muteBtnText: { fontSize: 13, fontWeight: "600", color: colors.text },
   joinBtn: { backgroundColor: colors.primary, paddingHorizontal: 30, paddingVertical: 12, borderRadius: 24 },
   joinBtnText: { fontSize: 15, fontWeight: "600", color: "#fff" },
-  leaveBtn: { backgroundColor: "#FF9500", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24 },
+  leaveBtn: { backgroundColor: colors.textSecondary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24 },
   leaveBtnText: { fontSize: 13, fontWeight: "600", color: "#fff" },
   endBtn: { backgroundColor: colors.danger, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24 },
   endBtnText: { fontSize: 13, fontWeight: "600", color: "#fff" },

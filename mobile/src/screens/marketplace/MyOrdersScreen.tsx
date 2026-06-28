@@ -60,7 +60,9 @@ export function MyOrdersScreen({ navigation }: Props) {
           try {
             const updated = await marketplaceApi.updateOrderStatus(orderId, "CANCELLED");
             setOrders((prev) => prev.map((o) => o.id === orderId ? updated : o));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Buyurtmani bekor qilib bo'lmadi");
+          }
         },
       },
     ]);

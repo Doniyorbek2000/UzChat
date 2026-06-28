@@ -30,7 +30,9 @@ export function CommunityViewScreen({ route, navigation }: Props) {
             setCommunity((prev) =>
               prev ? { ...prev, groups: prev.groups?.filter((g) => g.conversationId !== conversationId) } : prev
             );
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Guruhni olib tashlab bo'lmadi");
+          }
         },
       },
     ]);

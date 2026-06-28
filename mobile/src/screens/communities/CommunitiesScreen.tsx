@@ -37,7 +37,9 @@ export function CommunitiesScreen({ navigation }: Props) {
           try {
             await communitiesApi.delete(communityId);
             setCommunities((prev) => prev.filter((c) => c.id !== communityId));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Jamiyatni o'chirib bo'lmadi");
+          }
         },
       },
     ]);

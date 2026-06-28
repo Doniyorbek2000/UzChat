@@ -37,7 +37,9 @@ export function MySubscriptionsScreen({ navigation }: Props) {
           try {
             await subscriptionsApi.unsubscribe(sub.conversationId);
             setSubs((prev) => prev.filter((s) => s.id !== sub.id));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Obunani bekor qilib bo'lmadi");
+          }
         },
       },
     ]);

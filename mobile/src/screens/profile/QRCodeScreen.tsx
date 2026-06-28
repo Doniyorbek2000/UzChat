@@ -39,7 +39,12 @@ export function QRCodeScreen({ navigation }: Props) {
             navigation.replace("UserProfile", { userId: found.id });
             return;
           }
-        } catch {}
+        } catch {
+          Alert.alert("Xatolik", "Foydalanuvchini qidirib bo'lmadi", [
+            { text: "OK", onPress: () => setScanned(false) },
+          ]);
+          return;
+        }
         Alert.alert("Topilmadi", `@${scannedUsername} foydalanuvchi topilmadi`, [
           { text: "OK", onPress: () => setScanned(false) },
         ]);

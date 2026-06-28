@@ -49,14 +49,18 @@ export function ForumTopicsScreen({ route }: Props) {
     try {
       const updated = await forumsApi.updateTopic(conversationId, topic.id, { isPinned: !topic.isPinned });
       setTopics((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Mavzuni o'zgartirib bo'lmadi");
+    }
   };
 
   const handleToggleClose = async (topic: ForumTopic) => {
     try {
       const updated = await forumsApi.updateTopic(conversationId, topic.id, { isClosed: !topic.isClosed });
       setTopics((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Mavzuni o'zgartirib bo'lmadi");
+    }
   };
 
   const handleDelete = (topic: ForumTopic) => {
@@ -69,7 +73,9 @@ export function ForumTopicsScreen({ route }: Props) {
           try {
             await forumsApi.deleteTopic(conversationId, topic.id);
             setTopics((prev) => prev.filter((t) => t.id !== topic.id));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Mavzuni o'chirib bo'lmadi");
+          }
         },
       },
     ]);

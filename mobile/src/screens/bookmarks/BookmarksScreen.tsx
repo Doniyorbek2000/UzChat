@@ -37,7 +37,9 @@ export function BookmarksScreen({ navigation }: Props) {
           try {
             await bookmarksApi.remove(bookmark.id);
             setBookmarks((prev) => prev.filter((b) => b.id !== bookmark.id));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Xatcho'pni o'chirib bo'lmadi");
+          }
         },
       },
     ]);

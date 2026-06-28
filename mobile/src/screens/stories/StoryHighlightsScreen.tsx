@@ -41,7 +41,9 @@ export function StoryHighlightsScreen({ route }: Props) {
           try {
             await highlightsApi.delete(highlightId);
             setHighlights((prev) => prev.filter((h) => h.id !== highlightId));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Highlights o'chirib bo'lmadi");
+          }
         },
       },
     ]);

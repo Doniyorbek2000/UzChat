@@ -37,7 +37,9 @@ export function ChatExportsScreen(_props: Props) {
           try {
             await chatExportApi.delete(item.id);
             setExports((prev) => prev.filter((e) => e.id !== item.id));
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Eksportni o'chirib bo'lmadi");
+          }
         },
       },
     ]);

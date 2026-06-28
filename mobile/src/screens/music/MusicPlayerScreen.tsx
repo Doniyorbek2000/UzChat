@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { Audio } from "expo-av";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -26,7 +26,9 @@ export function MusicPlayerScreen(_props: Props) {
       } else {
         setTracks(await musicApi.getTrending());
       }
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Musiqalarni yuklab bo'lmadi");
+    }
     setLoading(false);
   }, [tab, search]);
 
@@ -79,7 +81,9 @@ export function MusicPlayerScreen(_props: Props) {
           }
         );
         soundRef.current = sound;
-      } catch {}
+      } catch {
+        setIsPlaying(false);
+      }
     }
   };
 

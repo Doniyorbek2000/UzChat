@@ -27,7 +27,9 @@ export function LiveStreamViewScreen({ route, navigation }: Props) {
       await liveStreamApi.like(streamId);
       setLiked(!liked);
       setStream((prev) => prev ? { ...prev, likeCount: prev.likeCount + (liked ? -1 : 1) } : prev);
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Like bosib bo'lmadi");
+    }
   };
 
   const handleStart = async () => {
@@ -49,7 +51,9 @@ export function LiveStreamViewScreen({ route, navigation }: Props) {
           try {
             await liveStreamApi.end(streamId);
             navigation.goBack();
-          } catch {}
+          } catch {
+            Alert.alert("Xatolik", "Efirni tugatib bo'lmadi");
+          }
         },
       },
     ]);
