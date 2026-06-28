@@ -157,7 +157,8 @@ function startAutoRefresh() {
   }
 }
 
-async function api(path, opts = {}) {
+async function api(path, methodOrOpts, body) {
+  const opts = typeof methodOrOpts === "string" ? { method: methodOrOpts, body: body ? JSON.stringify(body) : undefined } : (methodOrOpts || {});
   const res = await fetch(API_BASE + path, {
     ...opts,
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}), ...opts.headers },
@@ -362,13 +363,22 @@ window.viewUser = async function(userId) {
     modal.className = "modal-bg";
     modal.innerHTML = `<div class="modal">
       <h3>${esc(u.displayName)} (@${esc(u.username)})</h3>
-      <div class="detail-row"><span class="label">ID</span><span>${u.id}</span></div>
+      <div class="detail-row"><span class="label">ID</span><span style="font-size:11px;word-break:break-all">${u.id}</span></div>
       <div class="detail-row"><span class="label">Telefon</span><span>${esc(u.phone)}</span></div>
       <div class="detail-row"><span class="label">Bio</span><span>${esc(u.bio||"-")}</span></div>
-      <div class="detail-row"><span class="label">Admin</span><span>${u.isAdmin?"Ha":"Yo'q"}</span></div>
-      <div class="detail-row"><span class="label">Tasdiqlangan</span><span>${u.isVerified?"Ha":"Yo'q"}</span></div>
+      <div class="detail-row"><span class="label">Admin</span><span>${u.isAdmin?'<span class="badge badge-admin">Admin</span>':"Yo'q"}</span></div>
+      <div class="detail-row"><span class="label">Tasdiqlangan</span><span>${u.isVerified?'<span class="badge badge-verified">Tasdiqlangan'+(u.verifiedType?' ('+esc(u.verifiedType)+')':'')+'</span>':"Yo'q"}</span></div>
+      <div class="detail-row"><span class="label">Bloklangan</span><span>${u.isBanned?'<span class="badge badge-admin">Bloklangan</span> - '+esc(u.banReason||""):"Yo'q"}</span></div>
+      <div class="detail-row"><span class="label">Balans</span><span>${u.walletBalance!=null?Number(u.walletBalance).toLocaleString()+" UZS":"-"}</span></div>
       <div class="detail-row"><span class="label">Ro'yxatdan o'tgan</span><span>${new Date(u.createdAt).toLocaleString("uz")}</span></div>
       <div class="detail-row"><span class="label">Oxirgi faollik</span><span>${u.lastSeenAt?new Date(u.lastSeenAt).toLocaleString("uz"):"-"}</span></div>
+      ${u._count?`<div style="margin:12px 0"><div class="quick-stats">
+        <div class="quick-stat"><div class="val">${u._count.participants||0}</div><div class="lbl">Suhbatlar</div></div>
+        <div class="quick-stat"><div class="val">${u._count.messages||0}</div><div class="lbl">Xabarlar</div></div>
+        <div class="quick-stat"><div class="val">${u._count.posts||0}</div><div class="lbl">Postlar</div></div>
+        <div class="quick-stat"><div class="val">${u._count.stores||0}</div><div class="lbl">Do'konlar</div></div>
+        <div class="quick-stat"><div class="val">${u._count.orders||0}</div><div class="lbl">Buyurtmalar</div></div>
+      </div></div>`:""}
       <div class="actions">
         <button class="btn btn-sm ${u.isAdmin?"btn-danger":"btn-primary"}" onclick="toggleAdmin('${u.id}',${!u.isAdmin})">${u.isAdmin?"Admin olib tashlash":"Admin qilish"}</button>
         <button class="btn btn-sm ${u.isVerified?"btn-danger":"btn-primary"}" onclick="toggleVerify('${u.id}',${!u.isVerified})">${u.isVerified?"Tasdiqlashni olib tashlash":"Tasdiqlash"}</button>
@@ -383,22 +393,24 @@ window.viewUser = async function(userId) {
 };
 
 window.toggleAdmin = async function(id, val) {
-  try { await api(`/admin/users/${id}/admin`, { method: "PATCH", body: JSON.stringify({isAdmin:val}) }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+  if(!confirm(val?"Bu foydalanuvchini admin qilmoqchimisiz?":"Admin huquqini olib tashlamoqchimisiz?")) return;
+  try { await api(`/admin/users/${id}/admin`, "PATCH", {isAdmin:val}); document.querySelector(".modal-bg")?.remove(); showToast(val?"Admin huquqi berildi":"Admin huquqi olib tashlandi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
 };
 window.toggleVerify = async function(id, val) {
-  try { await api(`/admin/users/${id}/verify`, { method: "PATCH", body: JSON.stringify({isVerified:val}) }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+  try { await api(`/admin/users/${id}/verify`, "PATCH", {isVerified:val}); document.querySelector(".modal-bg")?.remove(); showToast(val?"Foydalanuvchi tasdiqlandi":"Tasdiqlash olib tashlandi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
 };
 window.deleteUser = async function(id) {
-  if (!confirm("Bu foydalanuvchini o'chirishni xohlaysizmi?")) return;
-  try { await api(`/admin/users/${id}`, { method: "DELETE" }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+  if (!confirm("Bu foydalanuvchini o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!")) return;
+  try { await api(`/admin/users/${id}`, "DELETE"); document.querySelector(".modal-bg")?.remove(); showToast("Foydalanuvchi o'chirildi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
 };
 window.banUser = async function(id, ban) {
   if (ban) {
     const reason = prompt("Bloklash sababi:");
     if (!reason) return;
-    try { await api(`/admin/users/${id}/ban`, { method: "PATCH", body: JSON.stringify({reason}) }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+    try { await api(`/admin/users/${id}/ban`, "PATCH", {reason}); document.querySelector(".modal-bg")?.remove(); showToast("Foydalanuvchi bloklandi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
   } else {
-    try { await api(`/admin/users/${id}/unban`, { method: "PATCH" }); document.querySelector(".modal-bg")?.remove(); loadPage(); } catch(e) { alert(e.message); }
+    if(!confirm("Foydalanuvchini blokdan chiqarmoqchimisiz?")) return;
+    try { await api(`/admin/users/${id}/unban`, "PATCH"); document.querySelector(".modal-bg")?.remove(); showToast("Blokdan chiqarildi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
   }
 };
 
@@ -427,8 +439,8 @@ async function loadPosts(el) {
   document.getElementById("postSearch").addEventListener("keydown", e => { if(e.key==="Enter"){postsPage=1;loadPage();} });
 }
 window.deletePost = async function(id) {
-  if(!confirm("Bu postni o'chirishni xohlaysizmi?")) return;
-  try { await api(`/admin/posts/${id}`,{method:"DELETE"}); loadPage(); } catch(e) { alert(e.message); }
+  if(!confirm("Bu postni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!")) return;
+  try { await api(`/admin/posts/${id}`,"DELETE"); showToast("Post o'chirildi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
 };
 
 let reelsPage = 1;
@@ -453,8 +465,8 @@ async function loadReels(el) {
   </div>`;
 }
 window.deleteReel = async function(id) {
-  if(!confirm("Bu reelni o'chirishni xohlaysizmi?")) return;
-  try { await api(`/admin/reels/${id}`,{method:"DELETE"}); loadPage(); } catch(e) { alert(e.message); }
+  if(!confirm("Bu reelni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!")) return;
+  try { await api(`/admin/reels/${id}`,"DELETE"); showToast("Reel o'chirildi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
 };
 
 let storiesPage = 1;
@@ -477,8 +489,8 @@ async function loadStories(el) {
   </div>`;
 }
 window.deleteStory = async function(id) {
-  if(!confirm("Bu hikoyani o'chirishni xohlaysizmi?")) return;
-  try { await api(`/admin/stories/${id}`,{method:"DELETE"}); loadPage(); } catch(e) { alert(e.message); }
+  if(!confirm("Bu hikoyani o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!")) return;
+  try { await api(`/admin/stories/${id}`,"DELETE"); showToast("Hikoya o'chirildi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
 };
 
 let reportsPage = 1;
