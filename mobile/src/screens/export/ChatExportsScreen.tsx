@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { chatExportApi, ChatExportData } from "../../api/chatExport";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatExports">;
 
 export function ChatExportsScreen(_props: Props) {
   const [exports, setExports] = useState<ChatExportData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    chatExportApi.list().then(setExports).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    chatExportApi.list().then(setExports).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleDelete = (item: ChatExportData) => {
     Alert.alert("O'chirish", "Bu eksportni o'chirmoqchimisiz?", [
@@ -33,6 +39,10 @@ export function ChatExportsScreen(_props: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Eksportlarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

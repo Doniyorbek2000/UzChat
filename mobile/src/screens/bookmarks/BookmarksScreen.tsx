@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { bookmarksApi, Bookmark } from "../../api/bookmarks";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Bookmarks">;
 
 export function BookmarksScreen({ navigation }: Props) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    bookmarksApi.list().then(setBookmarks).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    bookmarksApi.list().then(setBookmarks).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleRemove = (bookmark: Bookmark) => {
     Alert.alert("O'chirish", "Bu xatcho'pni o'chirmoqchimisiz?", [
@@ -33,6 +39,10 @@ export function BookmarksScreen({ navigation }: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Xatcho'plarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

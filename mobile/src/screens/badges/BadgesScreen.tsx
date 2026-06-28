@@ -1,22 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { badgesApi, BadgeData } from "../../api/badges";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Badges">;
 
 export function BadgesScreen(_props: Props) {
   const [badges, setBadges] = useState<BadgeData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    badgesApi.getMyBadges().then(setBadges).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    badgesApi.getMyBadges().then(setBadges).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Belgilarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

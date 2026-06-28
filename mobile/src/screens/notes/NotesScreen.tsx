@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { notesApi, Note } from "../../api/notes";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Notes">;
 
@@ -18,9 +19,15 @@ export function NotesScreen(_props: Props) {
   const [selectedColor, setSelectedColor] = useState(NOTE_COLORS[0]);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    notesApi.list().then(setNotes).catch(() => {}).finally(() => setLoading(false));
+  const [error, setError] = useState(false);
+
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    notesApi.list().then(setNotes).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleCreate = async () => {
     if (!title.trim() || !content.trim()) return;
@@ -62,6 +69,10 @@ export function NotesScreen(_props: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Eslatmalarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

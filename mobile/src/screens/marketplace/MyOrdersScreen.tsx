@@ -7,6 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Order } from "../../api/marketplace";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MyOrders">;
 
@@ -31,16 +32,18 @@ const STATUS_COLORS: Record<string, string> = {
 export function MyOrdersScreen({ navigation }: Props) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      setLoading(true);
-      marketplaceApi.getMyOrders()
-        .then(setOrders)
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }, [])
-  );
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    marketplaceApi.getMyOrders()
+      .then(setOrders)
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useFocusEffect(loadData);
 
   const cancelOrder = (orderId: string) => {
     Alert.alert("Bekor qilish", "Buyurtmani bekor qilmoqchimisiz?", [
@@ -59,6 +62,10 @@ export function MyOrdersScreen({ navigation }: Props) {
 
   if (loading) {
     return <View style={styles.center}><ActivityIndicator /></View>;
+  }
+
+  if (error) {
+    return <ErrorView message="Buyurtmalarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

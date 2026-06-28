@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Share } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { referralsApi, ReferralData, ReferralStats } from "../../api/referrals";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Referrals">;
 
@@ -12,14 +13,19 @@ export function ReferralsScreen(_props: Props) {
   const [referrals, setReferrals] = useState<ReferralData[]>([]);
   const [stats, setStats] = useState<ReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
     Promise.all([
       referralsApi.getCode(),
       referralsApi.getMyReferrals(),
       referralsApi.getStats(),
-    ]).then(([c, r, s]) => { setCode(c.code); setReferrals(r); setStats(s); }).catch(() => {}).finally(() => setLoading(false));
+    ]).then(([c, r, s]) => { setCode(c.code); setReferrals(r); setStats(s); }).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const shareCode = () => {
     Share.share({ message: `UzChat'ga qo'shiling! Mening taklif kodom: ${code}` }).catch(() => {});
@@ -31,6 +37,10 @@ export function ReferralsScreen(_props: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Ma'lumotlarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

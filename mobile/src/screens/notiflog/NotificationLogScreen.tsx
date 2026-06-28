@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { notifLogApi, NotifLogEntry } from "../../api/notifLog";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NotificationLog">;
 
@@ -15,14 +16,19 @@ const TYPE_ICONS: Record<string, string> = {
 export function NotificationLogScreen(_props: Props) {
   const [items, setItems] = useState<NotifLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
     notifLogApi.getAll().then((r) => {
       setItems(r.notifications);
       setNextCursor(r.nextCursor);
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const loadMore = async () => {
     if (!nextCursor) return;
@@ -40,6 +46,10 @@ export function NotificationLogScreen(_props: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Bildirishnomalarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { cloudApi, CloudFileData, CloudFolderData, CloudUsage } from "../../api/cloud";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CloudStorage">;
 
@@ -14,17 +15,21 @@ export function CloudStorageScreen(_props: Props) {
   const [currentFolder, setCurrentFolder] = useState<string | undefined>(undefined);
   const [folderStack, setFolderStack] = useState<{ id: string | undefined; name: string }[]>([{ id: undefined, name: "Bulut" }]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     setLoading(true);
+    setError(false);
     Promise.all([
       cloudApi.listFiles(currentFolder),
       cloudApi.listFolders(currentFolder),
       cloudApi.getUsage(),
-    ]).then(([f, d, u]) => { setFiles(f); setFolders(d); setUsage(u); }).catch(() => {}).finally(() => setLoading(false));
+    ]).then(([f, d, u]) => { setFiles(f); setFolders(d); setUsage(u); }).catch(() => setError(true)).finally(() => setLoading(false));
   }, [currentFolder]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const navigateToFolder = (folder: CloudFolderData) => {
     setFolderStack((prev) => [...prev, { id: folder.id, name: folder.name }]);
@@ -67,6 +72,10 @@ export function CloudStorageScreen(_props: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Bulut ma'lumotlarini yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

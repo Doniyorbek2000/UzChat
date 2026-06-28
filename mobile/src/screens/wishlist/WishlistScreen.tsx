@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { wishlistApi, WishlistItem } from "../../api/wishlist";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Wishlist">;
 
 export function WishlistScreen({ navigation }: Props) {
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    wishlistApi.getAll().then(setItems).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    wishlistApi.getAll().then(setItems).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const removeItem = (productId: string) => {
     Alert.alert("O'chirish", "Istaklar ro'yxatidan olib tashlansinmi?", [
@@ -27,6 +33,10 @@ export function WishlistScreen({ navigation }: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Istaklar ro'yxatini yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

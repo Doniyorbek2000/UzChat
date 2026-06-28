@@ -1,19 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { subscriptionsApi, ChannelSubscription } from "../../api/subscriptions";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MySubscriptions">;
 
 export function MySubscriptionsScreen({ navigation }: Props) {
   const [subs, setSubs] = useState<ChannelSubscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    subscriptionsApi.getMySubscriptions().then(setSubs).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    subscriptionsApi.getMySubscriptions().then(setSubs).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleUnsubscribe = (sub: ChannelSubscription) => {
     Alert.alert("Obunani bekor qilish", `${sub.conversation?.name} kanalidan obunani bekor qilmoqchimisiz?`, [
@@ -33,6 +39,10 @@ export function MySubscriptionsScreen({ navigation }: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Obunalarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

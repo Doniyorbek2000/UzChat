@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { loyaltyApi, LoyaltyPointsData, LoyaltyTxn, LeaderboardEntry } from "../../api/loyalty";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Loyalty">;
 
@@ -16,17 +17,21 @@ export function LoyaltyScreen(_props: Props) {
   const [history, setHistory] = useState<LoyaltyTxn[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     setLoading(true);
+    setError(false);
     if (tab === "overview") {
-      loyaltyApi.getMyPoints().then(setPoints).catch(() => {}).finally(() => setLoading(false));
+      loyaltyApi.getMyPoints().then(setPoints).catch(() => setError(true)).finally(() => setLoading(false));
     } else if (tab === "history") {
-      loyaltyApi.getHistory().then(setHistory).catch(() => {}).finally(() => setLoading(false));
+      loyaltyApi.getHistory().then(setHistory).catch(() => setError(true)).finally(() => setLoading(false));
     } else {
-      loyaltyApi.getLeaderboard().then(setLeaderboard).catch(() => {}).finally(() => setLoading(false));
+      loyaltyApi.getLeaderboard().then(setLeaderboard).catch(() => setError(true)).finally(() => setLoading(false));
     }
   }, [tab]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   return (
     <View style={styles.container}>
@@ -42,6 +47,8 @@ export function LoyaltyScreen(_props: Props) {
 
       {loading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+      ) : error ? (
+        <ErrorView message="Ma'lumotlarni yuklab bo'lmadi" onRetry={loadData} />
       ) : tab === "overview" && points ? (
         <View style={styles.overviewCard}>
           <Text style={styles.levelIcon}>{LEVEL_ICONS[points.level] ?? "🥉"}</Text>
