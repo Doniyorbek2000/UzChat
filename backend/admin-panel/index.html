@@ -794,8 +794,19 @@ async function loadSettings(el) {
     <div class="card"><h3>Ma'lumotlarni eksport qilish</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" onclick="exportUsersCSV()">👥 Foydalanuvchilar CSV</button>
+        <button class="btn btn-sm" style="background:var(--warning);color:#fff" onclick="exportAuditCSV()">📋 Audit log CSV</button>
         <button class="btn btn-sm" style="background:var(--success);color:#fff" onclick="exportDashboardJSON()">📊 Dashboard JSON</button>
       </div>
+    </div>
+    <div class="card"><h3>Xavfsizlik</h3>
+      <div class="health-row"><span class="label">Ban tekshiruvi</span><span class="value" style="color:var(--success)">Barcha endpointlarda faol</span></div>
+      <div class="health-row"><span class="label">Tezlik cheklovi (API)</span><span class="value">120 so'rov/daqiqa</span></div>
+      <div class="health-row"><span class="label">Tezlik cheklovi (Auth)</span><span class="value">20 so'rov/15 daqiqa</span></div>
+      <div class="health-row"><span class="label">Kirish cheklovi</span><span class="value">10 urinish/15 daqiqa</span></div>
+      <div class="health-row"><span class="label">Parol siyosati</span><span class="value">Min 10 belgi, katta/kichik harf, raqam, maxsus belgi</span></div>
+      <div class="health-row"><span class="label">JWT muddati</span><span class="value">Access: 15 daqiqa, Refresh: 30 kun</span></div>
+      <div class="health-row"><span class="label">Hisob blokirovkasi</span><span class="value">5 muvaffaqiyatsiz urinish = 15 daqiqa blok</span></div>
+      <div class="health-row"><span class="label">E2EE</span><span class="value" style="color:var(--success)">TweetNaCl bilan faol</span></div>
     </div>`;
 }
 
