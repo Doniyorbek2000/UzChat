@@ -175,6 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 40,
     fontSize: 15,
+    color: colors.text,
   },
   searchBtn: { backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 16, justifyContent: "center" },
   searchBtnText: { color: "#fff", fontWeight: "600" },
