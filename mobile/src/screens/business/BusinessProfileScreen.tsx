@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert , KeyboardAvoidingView, Platform} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { businessApi, BusinessProfileData } from "../../api/business";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "BusinessProfile">;
 
@@ -15,6 +16,7 @@ const CATEGORIES = [
 export function BusinessProfileScreen(_props: Props) {
   const [profile, setProfile] = useState<BusinessProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("Boshqa");
@@ -27,7 +29,9 @@ export function BusinessProfileScreen(_props: Props) {
   const [greetingMsg, setGreetingMsg] = useState("");
   const [autoReplyMsg, setAutoReplyMsg] = useState("");
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
     businessApi.getMyProfile().then((p) => {
       if (p) {
         setProfile(p);
@@ -42,8 +46,10 @@ export function BusinessProfileScreen(_props: Props) {
         setGreetingMsg(p.greetingMsg ?? "");
         setAutoReplyMsg(p.autoReplyMsg ?? "");
       }
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleSave = async () => {
     if (!businessName.trim()) {
@@ -66,7 +72,9 @@ export function BusinessProfileScreen(_props: Props) {
       });
       setProfile(updated);
       Alert.alert("Saqlandi", "Biznes profil yangilandi");
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Profilni saqlab bo'lmadi");
+    }
     setSaving(false);
   };
 
@@ -92,6 +100,10 @@ export function BusinessProfileScreen(_props: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Biznes profilni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, FlatList } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { qrPaymentsApi, QrPayment } from "../../api/qrPayments";
 import { colors } from "../../theme/colors";
-import { useEffect } from "react";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "QRPayment">;
 
@@ -14,10 +14,15 @@ export function QRPaymentScreen({ navigation }: Props) {
   const [creating, setCreating] = useState(false);
   const [history, setHistory] = useState<QrPayment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    qrPaymentsApi.listMine().then(setHistory).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    qrPaymentsApi.listMine().then(setHistory).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleCreate = async () => {
     setCreating(true);
@@ -87,6 +92,8 @@ export function QRPaymentScreen({ navigation }: Props) {
       <Text style={styles.sectionTitle}>Tarix</Text>
       {loading ? (
         <ActivityIndicator color={colors.primary} />
+      ) : error ? (
+        <ErrorView message="Tarixni yuklab bo'lmadi" onRetry={loadData} />
       ) : (
         <FlatList
           data={history}

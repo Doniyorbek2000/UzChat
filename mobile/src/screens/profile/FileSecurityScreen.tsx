@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, Switch, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, TextInput } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { fileSecurityApi, FileSecuritySettings } from "../../api/fileSecurity";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "FileSecurity">;
 
@@ -17,12 +18,17 @@ const FILE_SIZE_OPTIONS = [
 export function FileSecurityScreen({}: Props) {
   const [settings, setSettings] = useState<FileSecuritySettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [customBlockType, setCustomBlockType] = useState("");
 
-  useEffect(() => {
-    fileSecurityApi.getSettings().then(setSettings).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    fileSecurityApi.getSettings().then(setSettings).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const update = async (patch: Partial<FileSecuritySettings>) => {
     if (!settings) return;
@@ -52,8 +58,12 @@ export function FileSecurityScreen({}: Props) {
     update({ blockedFileTypes: settings.blockedFileTypes.filter((t) => t !== ext) });
   };
 
-  if (loading || !settings) {
+  if (loading || (!settings && !error)) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error || !settings) {
+    return <ErrorView message="Sozlamalarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

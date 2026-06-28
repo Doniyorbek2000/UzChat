@@ -30,7 +30,9 @@ export function GlobalSearchScreen({ navigation }: Props) {
       const type = t === "all" ? undefined : t;
       const data = await searchApi.search(q.trim(), type as any);
       setResults(data);
-    } catch {}
+    } catch {
+      setResults(null);
+    }
     setLoading(false);
   }, []);
 

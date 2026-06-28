@@ -6,6 +6,7 @@ import { paymentsApi } from "../../api/payments";
 import { contactsApi } from "../../api/contacts";
 import { Contact } from "../../types";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "SendPayment">;
@@ -13,6 +14,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "SendPayment">;
 export function SendPaymentScreen({ navigation }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -20,10 +22,14 @@ export function SendPaymentScreen({ navigation }: Props) {
   const [search, setSearch] = useState("");
 
   const loadContacts = useCallback(async () => {
+    setLoading(true);
+    setError(false);
     try {
       const list = await contactsApi.list();
       setContacts(list);
-    } catch {}
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }, []);
 
@@ -116,6 +122,8 @@ export function SendPaymentScreen({ navigation }: Props) {
         <View style={styles.center}>
           <ActivityIndicator color={colors.primary} />
         </View>
+      ) : error ? (
+        <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={loadContacts} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"

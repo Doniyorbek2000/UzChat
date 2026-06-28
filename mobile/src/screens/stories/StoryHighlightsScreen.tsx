@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { highlightsApi, StoryHighlight } from "../../api/highlights";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StoryHighlights">;
 
@@ -13,11 +14,16 @@ export function StoryHighlightsScreen({ route }: Props) {
   const currentUserId = useAuthStore((s) => s.user?.id);
   const [highlights, setHighlights] = useState<StoryHighlight[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const isOwner = userId === currentUserId;
 
-  useEffect(() => {
-    highlightsApi.listByUser(userId).then(setHighlights).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    highlightsApi.listByUser(userId).then(setHighlights).catch(() => setError(true)).finally(() => setLoading(false));
   }, [userId]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleDelete = (highlightId: string) => {
     Alert.alert("O'chirish", "Bu highlights'ni o'chirmoqchimisiz?", [
@@ -37,6 +43,10 @@ export function StoryHighlightsScreen({ route }: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Highlights yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   const renderHighlight = ({ item }: { item: StoryHighlight }) => (

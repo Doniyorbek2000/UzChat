@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { eventsApi, ChatEvent } from "../../api/events";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ConversationEvents">;
 
@@ -13,14 +14,19 @@ export function ConversationEventsScreen({ route }: Props) {
   const userId = useAuthStore((s) => s.user?.id);
   const [events, setEvents] = useState<ChatEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    eventsApi.listByConversation(conversationId).then(setEvents).catch(() => {}).finally(() => setLoading(false));
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
+    eventsApi.listByConversation(conversationId).then(setEvents).catch(() => setError(true)).finally(() => setLoading(false));
   }, [conversationId]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleCreate = async () => {
     if (!title.trim()) return;
@@ -71,6 +77,10 @@ export function ConversationEventsScreen({ route }: Props) {
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Tadbirlarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

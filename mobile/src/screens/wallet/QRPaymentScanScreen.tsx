@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   scanIcon: { fontSize: 48 },
-  scanHint: { color: "#aaa", fontSize: 13, marginTop: 12, textAlign: "center", paddingHorizontal: 40 },
+  scanHint: { color: colors.textSecondary, fontSize: 13, marginTop: 12, textAlign: "center", paddingHorizontal: 40 },
   form: { padding: 16 },
   input: {
     backgroundColor: colors.surface,

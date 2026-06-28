@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   noteCard: { width: "48%", borderRadius: 12, padding: 12, marginBottom: 8, minHeight: 120 },
   pinIcon: { fontSize: 12, position: "absolute", top: 8, right: 8 },
   noteTitle: { fontSize: 15, fontWeight: "600", color: colors.text, marginBottom: 6 },
-  noteContent: { fontSize: 12, color: "#555", flex: 1 },
+  noteContent: { fontSize: 12, color: colors.textSecondary, flex: 1 },
   noteDate: { fontSize: 10, color: colors.textSecondary, marginTop: 8 },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },

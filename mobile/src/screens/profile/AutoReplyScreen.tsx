@@ -1,21 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { autoReplyApi, AutoReplySettings } from "../../api/autoReply";
 import { colors } from "../../theme/colors";
+import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AutoReplySettings">;
 
 export function AutoReplyScreen(_props: Props) {
   const [settings, setSettings] = useState<AutoReplySettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [message, setMessage] = useState("Hozirda band. Tez orada javob beraman.");
   const [isEnabled, setIsEnabled] = useState(false);
   const [onlyStrangers, setOnlyStrangers] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(false);
     autoReplyApi.get().then((ar) => {
       if (ar) {
         setSettings(ar);
@@ -23,8 +27,10 @@ export function AutoReplyScreen(_props: Props) {
         setIsEnabled(ar.isEnabled);
         setOnlyStrangers(ar.onlyForStrangers);
       }
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch(() => setError(true)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -32,12 +38,18 @@ export function AutoReplyScreen(_props: Props) {
       const updated = await autoReplyApi.update({ isEnabled, message, onlyForStrangers: onlyStrangers });
       setSettings(updated);
       Alert.alert("Saqlandi", "Avtomatik javob sozlamalari saqlandi");
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Sozlamalarni saqlab bo'lmadi");
+    }
     setSaving(false);
   };
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Sozlamalarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
   return (

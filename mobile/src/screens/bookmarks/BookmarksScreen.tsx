@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
   senderName: { fontSize: 14, fontWeight: "600", color: colors.text },
   time: { fontSize: 11, color: colors.textSecondary },
-  messagePreview: { fontSize: 14, color: "#555", marginBottom: 6 },
+  messagePreview: { fontSize: 14, color: colors.textSecondary, marginBottom: 6 },
   label: { fontSize: 12, color: colors.primary, marginBottom: 4 },
   chatName: { fontSize: 11, color: colors.textSecondary },
   emptyContainer: { alignItems: "center", paddingTop: 60 },

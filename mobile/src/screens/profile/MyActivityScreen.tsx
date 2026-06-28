@@ -7,6 +7,7 @@ import { chatsApi } from "../../api/chats";
 import { useChatStore } from "../../store/chatStore";
 import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { ActivityStats } from "../../types";
 import { getConversationDisplay, formatJoinDate } from "../../utils/conversation";
@@ -19,15 +20,21 @@ type Props = NativeStackScreenProps<RootStackParamList, "MyActivity">;
 
 export function MyActivityScreen({ navigation }: Props) {
   const [stats, setStats] = useState<ActivityStats | null>(null);
+  const [error, setError] = useState(false);
   const conversations = useChatStore((s) => s.conversations);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const user = useAuthStore((s) => s.user);
 
-  useFocusEffect(
-    useCallback(() => {
-      chatsApi.getMyActivityStats().then(setStats).catch(() => {});
-    }, [])
-  );
+  const loadData = useCallback(() => {
+    setError(false);
+    chatsApi.getMyActivityStats().then(setStats).catch(() => setError(true));
+  }, []);
+
+  useFocusEffect(loadData);
+
+  if (error) {
+    return <ErrorView message="Faollik ma'lumotlarini yuklab bo'lmadi" onRetry={loadData} />;
+  }
 
   if (!stats || !user) {
     return (

@@ -50,7 +50,9 @@ export function CloudStorageScreen(_props: Props) {
       setFolders((prev) => [...prev, folder]);
       setNewFolderName("");
       setShowCreateFolder(false);
-    } catch {}
+    } catch {
+      Alert.alert("Xatolik", "Papka yaratib bo'lmadi");
+    }
   };
 
   const deleteFile = (file: CloudFileData) => {
