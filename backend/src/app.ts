@@ -119,7 +119,7 @@ export function createApp() {
     res.type("html").send(`<!DOCTYPE html>
 <html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>UzChat — Maxfiylik siyosati</title>
-<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}h1{color:#007AFF}h2{margin-top:32px}</style></head><body>
+<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}h1{color:#07C160}h2{margin-top:32px}</style></head><body>
 <h1>UzChat — Maxfiylik siyosati</h1>
 <p><strong>Oxirgi yangilanish:</strong> 2026-yil 21-iyun</p>
 <h2>1. Qanday ma'lumotlar yig'iladi</h2>
@@ -141,7 +141,7 @@ export function createApp() {
     res.type("html").send(`<!DOCTYPE html>
 <html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>UzChat — Foydalanish shartlari</title>
-<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}h1{color:#007AFF}h2{margin-top:32px}</style></head><body>
+<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}h1{color:#07C160}h2{margin-top:32px}</style></head><body>
 <h1>UzChat — Foydalanish shartlari</h1>
 <p><strong>Oxirgi yangilanish:</strong> 2026-yil 21-iyun</p>
 <h2>1. Xizmatdan foydalanish</h2>
