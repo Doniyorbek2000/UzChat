@@ -13,10 +13,15 @@ import {
   Modal,
   StatusBar,
   SafeAreaView,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Share,
+  Alert,
 } from "react-native";
 import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
 import { MainTabScreenProps } from "../../navigation/types";
-import { reelsApi, Reel } from "../../api/reels";
+import { reelsApi, Reel, ReelComment } from "../../api/reels";
 import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
@@ -36,6 +41,11 @@ export function ReelsFeedScreen({ navigation }: Props) {
   const [likedReels, setLikedReels] = useState<Set<string>>(new Set());
   const [activeReel, setActiveReel] = useState<Reel | null>(null);
   const [videoPaused, setVideoPaused] = useState(false);
+  const [commentReelId, setCommentReelId] = useState<string | null>(null);
+  const [comments, setComments] = useState<ReelComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [sendingComment, setSendingComment] = useState(false);
   const videoRef = useRef<Video>(null);
   const heartScales = useRef<Record<string, Animated.Value>>({});
 
@@ -122,6 +132,61 @@ export function ReelsFeedScreen({ navigation }: Props) {
     }
   };
 
+  const openComments = async (reelId: string) => {
+    setCommentReelId(reelId);
+    setCommentsLoading(true);
+    try {
+      const data = await reelsApi.getComments(reelId);
+      setComments(data);
+    } catch {
+      Alert.alert("Xatolik", "Izohlarni yuklab bo'lmadi");
+    }
+    setCommentsLoading(false);
+  };
+
+  const sendComment = async () => {
+    if (!commentText.trim() || !commentReelId) return;
+    setSendingComment(true);
+    try {
+      const comment = await reelsApi.addComment(commentReelId, { text: commentText.trim() });
+      setComments((prev) => [...prev, comment]);
+      setCommentText("");
+      setReels((prev) =>
+        prev.map((r) => r.id === commentReelId ? { ...r, commentCount: r.commentCount + 1 } : r)
+      );
+    } catch {
+      Alert.alert("Xatolik", "Izoh yozib bo'lmadi");
+    }
+    setSendingComment(false);
+  };
+
+  const deleteComment = async (commentId: string) => {
+    try {
+      await reelsApi.deleteComment(commentId);
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      if (commentReelId) {
+        setReels((prev) =>
+          prev.map((r) => r.id === commentReelId ? { ...r, commentCount: Math.max(0, r.commentCount - 1) } : r)
+        );
+      }
+    } catch {
+      Alert.alert("Xatolik", "Izohni o'chirib bo'lmadi");
+    }
+  };
+
+  const shareReel = async (reel: Reel) => {
+    try {
+      await Share.share({
+        message: reel.caption
+          ? `${reel.author.displayName}: ${reel.caption}`
+          : `${reel.author.displayName} ning reeli`,
+      });
+      setReels((prev) =>
+        prev.map((r) => r.id === reel.id ? { ...r, shareCount: r.shareCount + 1 } : r)
+      );
+    } catch {}
+  };
+
   const formatCount = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
     if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
@@ -159,12 +224,12 @@ export function ReelsFeedScreen({ navigation }: Props) {
               <Text style={styles.actionCount}>{formatCount(item.likeCount)}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => openComments(item.id)}>
               <Text style={styles.actionIcon}>💬</Text>
               <Text style={styles.actionCount}>{formatCount(item.commentCount)}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => shareReel(item)}>
               <Text style={styles.actionIcon}>📤</Text>
               <Text style={styles.actionCount}>{formatCount(item.shareCount)}</Text>
             </TouchableOpacity>
@@ -302,11 +367,11 @@ export function ReelsFeedScreen({ navigation }: Props) {
                     <Text style={styles.playerActionIcon}>{likedReels.has(activeReel.id) ? "❤️" : "🤍"}</Text>
                     <Text style={styles.playerActionCount}>{formatCount(activeReel.likeCount)}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.playerAction}>
+                  <TouchableOpacity style={styles.playerAction} onPress={() => openComments(activeReel.id)}>
                     <Text style={styles.playerActionIcon}>💬</Text>
                     <Text style={styles.playerActionCount}>{formatCount(activeReel.commentCount)}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.playerAction}>
+                  <TouchableOpacity style={styles.playerAction} onPress={() => shareReel(activeReel)}>
                     <Text style={styles.playerActionIcon}>📤</Text>
                     <Text style={styles.playerActionCount}>{formatCount(activeReel.shareCount)}</Text>
                   </TouchableOpacity>
@@ -326,6 +391,78 @@ export function ReelsFeedScreen({ navigation }: Props) {
             </>
           )}
         </SafeAreaView>
+      </Modal>
+      <Modal visible={!!commentReelId} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.commentOverlay}
+        >
+          <TouchableOpacity style={styles.commentDismiss} onPress={() => { setCommentReelId(null); setComments([]); setCommentText(""); }} />
+          <View style={styles.commentSheet}>
+            <View style={styles.commentHeader}>
+              <Text style={styles.commentHeaderTitle}>Izohlar</Text>
+              <TouchableOpacity onPress={() => { setCommentReelId(null); setComments([]); setCommentText(""); }}>
+                <Text style={styles.commentHeaderClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {commentsLoading ? (
+              <ActivityIndicator color={colors.primary} style={{ marginTop: 30 }} />
+            ) : (
+              <FlatList
+                data={comments}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.commentItem}
+                    onLongPress={() => {
+                      Alert.alert("Izoh", undefined, [
+                        { text: "O'chirish", style: "destructive", onPress: () => deleteComment(item.id) },
+                        { text: "Bekor qilish", style: "cancel" },
+                      ]);
+                    }}
+                  >
+                    <Avatar uri={item.author.avatarUrl} name={item.author.displayName} size={32} />
+                    <View style={styles.commentBody}>
+                      <Text style={styles.commentAuthor}>{item.author.displayName}</Text>
+                      <Text style={styles.commentTextContent}>{item.text}</Text>
+                      <Text style={styles.commentTime}>
+                        {new Date(item.createdAt).toLocaleDateString("uz-UZ")}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                contentContainerStyle={styles.commentList}
+                ListEmptyComponent={
+                  <Text style={styles.commentEmpty}>Hali izohlar yo'q</Text>
+                }
+              />
+            )}
+
+            <View style={styles.commentInputRow}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Izoh yozing..."
+                placeholderTextColor={colors.textSecondary}
+                value={commentText}
+                onChangeText={setCommentText}
+                maxLength={500}
+                multiline
+              />
+              <TouchableOpacity
+                style={[styles.commentSendBtn, (!commentText.trim() || sendingComment) && { opacity: 0.4 }]}
+                onPress={sendComment}
+                disabled={!commentText.trim() || sendingComment}
+              >
+                {sendingComment ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.commentSendText}>➤</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -456,4 +593,21 @@ const styles = StyleSheet.create({
   playerAuthor: { fontSize: 16, fontWeight: "700", color: "#fff", marginLeft: 8 },
   playerCaption: { fontSize: 14, color: "#eee", marginTop: 6 },
   playerMusic: { fontSize: 12, color: colors.border, marginTop: 4 },
+  commentOverlay: { flex: 1, justifyContent: "flex-end" },
+  commentDismiss: { flex: 1 },
+  commentSheet: { backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: height * 0.65, paddingBottom: Platform.OS === "ios" ? 20 : 0 },
+  commentHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border },
+  commentHeaderTitle: { fontSize: 16, fontWeight: "700", color: colors.text },
+  commentHeaderClose: { fontSize: 18, color: colors.textSecondary, fontWeight: "700" },
+  commentList: { paddingHorizontal: 16, paddingVertical: 8 },
+  commentItem: { flexDirection: "row", gap: 10, marginBottom: 14 },
+  commentBody: { flex: 1 },
+  commentAuthor: { fontSize: 13, fontWeight: "600", color: colors.text },
+  commentTextContent: { fontSize: 14, color: colors.text, marginTop: 2 },
+  commentTime: { fontSize: 11, color: colors.textSecondary, marginTop: 3 },
+  commentEmpty: { textAlign: "center", color: colors.textSecondary, paddingVertical: 30 },
+  commentInputRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border, gap: 8 },
+  commentInput: { flex: 1, backgroundColor: colors.background, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, fontSize: 14, color: colors.text, maxHeight: 80 },
+  commentSendBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
+  commentSendText: { fontSize: 16, color: "#fff" },
 });

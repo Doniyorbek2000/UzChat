@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert } from "react-native";
+import { useCallback, useEffect, useState, useRef } from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { storiesApi, StoryGroup } from "../../api/stories";
+import { chatsApi } from "../../api/chats";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 
@@ -17,9 +18,31 @@ export function StoryViewerScreen({ navigation, route }: Props) {
   const currentUser = useAuthStore((s) => s.user);
   const isOwn = userId === currentUser?.id;
   const [paused, setPaused] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
-  const onReplyToStory = () => {
-    navigation.replace("UserProfile", { userId });
+  const onReplyToStory = async () => {
+    if (!replyText.trim()) {
+      inputRef.current?.focus();
+      setPaused(true);
+      return;
+    }
+    setSendingReply(true);
+    try {
+      const conversations = await chatsApi.list();
+      const dm = conversations.find(
+        (c) => c.type === "DIRECT" && c.participants?.some((p: any) => p.userId === userId)
+      );
+      if (dm) {
+        navigation.replace("ChatRoom", { conversationId: dm.id, title: dm.title ?? group?.user.displayName ?? "" });
+      } else {
+        navigation.replace("UserProfile", { userId });
+      }
+    } catch {
+      navigation.replace("UserProfile", { userId });
+    }
+    setSendingReply(false);
   };
 
   const loadStories = useCallback(async () => {
@@ -103,45 +126,69 @@ export function StoryViewerScreen({ navigation, route }: Props) {
   ));
 
   return (
-    <TouchableOpacity
+    <KeyboardAvoidingView
       style={styles.container}
-      activeOpacity={1}
-      onPress={(e) => onTap(e.nativeEvent.locationX)}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Image source={{ uri: story.mediaUrl }} style={styles.image} resizeMode="contain" />
-      <View style={styles.overlay}>
-        <View style={styles.progressRow}>{progress}</View>
-        <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <Text style={styles.displayName}>{group.user.displayName}</Text>
-            <Text style={styles.timestamp}>
-              {new Date(story.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </Text>
+      <TouchableOpacity
+        style={styles.container}
+        activeOpacity={1}
+        onPress={(e) => onTap(e.nativeEvent.locationX)}
+      >
+        <Image source={{ uri: story.mediaUrl }} style={styles.image} resizeMode="contain" />
+        <View style={styles.overlay}>
+          <View style={styles.progressRow}>{progress}</View>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.userInfo} onPress={() => navigation.replace("UserProfile", { userId })}>
+              <Text style={styles.displayName}>{group.user.displayName}</Text>
+              <Text style={styles.timestamp}>
+                {new Date(story.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Text style={styles.closeBtnText}>✕</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.closeBtnText}>✕</Text>
-          </TouchableOpacity>
+          {story.caption && (
+            <View style={styles.captionBox}>
+              <Text style={styles.captionText}>{story.caption}</Text>
+            </View>
+          )}
+          {isOwn ? (
+            <View style={styles.footer}>
+              <TouchableOpacity onPress={onDelete} style={styles.deleteBtn}>
+                <Text style={styles.deleteBtnText}>O'chirish</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.replyRow}>
+              <TextInput
+                ref={inputRef}
+                style={styles.replyInput}
+                placeholder="Javob yozing..."
+                placeholderTextColor="rgba(255,255,255,0.5)"
+                value={replyText}
+                onChangeText={setReplyText}
+                onFocus={() => setPaused(true)}
+                onBlur={() => setPaused(false)}
+                maxLength={500}
+              />
+              <TouchableOpacity
+                onPress={onReplyToStory}
+                style={[styles.replySendBtn, sendingReply && { opacity: 0.5 }]}
+                disabled={sendingReply}
+              >
+                {sendingReply ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.replySendText}>➤</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-        {story.caption && (
-          <View style={styles.captionBox}>
-            <Text style={styles.captionText}>{story.caption}</Text>
-          </View>
-        )}
-        {isOwn ? (
-          <View style={styles.footer}>
-            <TouchableOpacity onPress={onDelete} style={styles.deleteBtn}>
-              <Text style={styles.deleteBtnText}>O'chirish</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.replyRow}>
-            <TouchableOpacity onPress={onReplyToStory} style={styles.replyBtn}>
-              <Text style={styles.replyBtnText}>Xabar yuborish</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -166,17 +213,30 @@ const styles = StyleSheet.create({
   deleteBtn: { backgroundColor: "rgba(255,0,0,0.6)", borderRadius: 20, paddingHorizontal: 20, paddingVertical: 8 },
   deleteBtnText: { color: "#fff", fontWeight: "600" },
   replyRow: {
+    flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingBottom: 40,
+    gap: 8,
   },
-  replyBtn: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 20,
-    paddingHorizontal: 24,
+  replyInput: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 24,
+    paddingHorizontal: 16,
     paddingVertical: 10,
+    fontSize: 14,
+    color: "#fff",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
+    borderColor: "rgba(255,255,255,0.2)",
   },
-  replyBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+  replySendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  replySendText: { fontSize: 18, color: "#fff" },
 });

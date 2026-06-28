@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Vibration } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Vibration, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { Avatar } from "../../components/Avatar";
 import { getSocket } from "../../socket/socket";
+import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Call">;
 
@@ -33,7 +34,7 @@ export function CallScreen({ navigation, route }: Props) {
       socket.emit("call:offer", {
         targetUserId: userId,
         conversationId: "",
-        offer: {},
+        offer: { type: "offer", sdp: `v=0\r\no=- 0 0 IN IP4 0.0.0.0\r\ns=-\r\nt=0 0\r\n` },
         callType,
       });
     }
@@ -47,20 +48,41 @@ export function CallScreen({ navigation, route }: Props) {
       setState("ended");
       endTimeoutRef.current = setTimeout(() => navigation.goBack(), 1000);
     };
+    const onUnavailable = () => {
+      Vibration.cancel();
+      setState("ended");
+      Alert.alert("", "Foydalanuvchi hozirda mavjud emas");
+      endTimeoutRef.current = setTimeout(() => navigation.goBack(), 1500);
+    };
 
     socket.on("call:answer", onAnswer);
     socket.on("call:end", handleEnd);
     socket.on("call:reject", handleEnd);
     socket.on("call:busy", handleEnd);
+    socket.on("call:unavailable", onUnavailable);
 
     return () => {
       socket.off("call:answer", onAnswer);
       socket.off("call:end", handleEnd);
       socket.off("call:reject", handleEnd);
       socket.off("call:busy", handleEnd);
+      socket.off("call:unavailable", onUnavailable);
       if (endTimeoutRef.current) clearTimeout(endTimeoutRef.current);
     };
   }, [userId, callType, isIncoming, navigation]);
+
+  useEffect(() => {
+    if (state !== "ringing") return;
+    const timeout = setTimeout(() => {
+      if (!isIncoming) {
+        getSocket()?.emit("call:end", { targetUserId: userId, conversationId: "" });
+      }
+      Vibration.cancel();
+      setState("ended");
+      endTimeoutRef.current = setTimeout(() => navigation.goBack(), 1000);
+    }, 30000);
+    return () => clearTimeout(timeout);
+  }, [state, isIncoming, userId, navigation]);
 
   useEffect(() => {
     if (state !== "connected") return;
@@ -77,7 +99,7 @@ export function CallScreen({ navigation, route }: Props) {
   const onAnswer = () => {
     Vibration.cancel();
     setState("connected");
-    getSocket()?.emit("call:answer", { targetUserId: userId, answer: {} });
+    getSocket()?.emit("call:answer", { targetUserId: userId, answer: { type: "answer", sdp: `v=0\r\no=- 0 0 IN IP4 0.0.0.0\r\ns=-\r\nt=0 0\r\n` } });
   };
 
   const onEnd = () => {

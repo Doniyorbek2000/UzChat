@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, Image } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { wishlistApi, WishlistItem } from "../../api/wishlist";
@@ -56,9 +56,13 @@ export function WishlistScreen({ navigation }: Props) {
             onPress={() => navigation.navigate("ProductView", { productId: item.productId, storeId: item.product.store.id })}
             onLongPress={() => removeItem(item.productId)}
           >
-            <View style={styles.itemImage}>
-              <Text style={styles.itemImageText}>🛍️</Text>
-            </View>
+            {item.product.imageUrls?.[0] ? (
+              <Image source={{ uri: item.product.imageUrls[0] }} style={styles.itemImage} />
+            ) : (
+              <View style={[styles.itemImage, styles.itemImagePlaceholder]}>
+                <Text style={styles.itemImageText}>🛍️</Text>
+              </View>
+            )}
             <View style={styles.itemInfo}>
               <Text style={styles.itemName} numberOfLines={1}>{item.product.name}</Text>
               <Text style={styles.itemStore}>{item.product.store.name}</Text>
@@ -84,7 +88,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   list: { padding: 12, paddingBottom: 20 },
   itemCard: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, padding: 12, marginBottom: 6, gap: 12 },
-  itemImage: { width: 56, height: 56, borderRadius: 10, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
+  itemImage: { width: 56, height: 56, borderRadius: 10, backgroundColor: colors.background },
+  itemImagePlaceholder: { alignItems: "center", justifyContent: "center" },
   itemImageText: { fontSize: 24 },
   itemInfo: { flex: 1 },
   itemName: { fontSize: 15, fontWeight: "600", color: colors.text },

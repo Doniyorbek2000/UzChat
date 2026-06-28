@@ -6,6 +6,28 @@ import { bookmarksApi, Bookmark } from "../../api/bookmarks";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
 
+const MESSAGE_TYPE_LABELS: Record<string, { icon: string; label: string }> = {
+  text: { icon: "💬", label: "Xabar" },
+  image: { icon: "📷", label: "Rasm" },
+  video: { icon: "🎬", label: "Video" },
+  audio: { icon: "🎤", label: "Ovozli xabar" },
+  voice: { icon: "🎤", label: "Ovozli xabar" },
+  file: { icon: "📎", label: "Fayl" },
+  document: { icon: "📄", label: "Hujjat" },
+  location: { icon: "📍", label: "Joylashuv" },
+  contact: { icon: "👤", label: "Kontakt" },
+  sticker: { icon: "🎨", label: "Stiker" },
+  gif: { icon: "🎞️", label: "GIF" },
+  poll: { icon: "📊", label: "So'rovnoma" },
+  reply: { icon: "↩️", label: "Javob" },
+};
+
+function getMessagePreview(msg: Bookmark["message"]): string {
+  const typeInfo = MESSAGE_TYPE_LABELS[msg.type?.toLowerCase() ?? ""];
+  if (typeInfo) return `${typeInfo.icon} ${typeInfo.label}`;
+  return "🔒 Shifrlangan xabar";
+}
+
 type Props = NativeStackScreenProps<RootStackParamList, "Bookmarks">;
 
 export function BookmarksScreen({ navigation }: Props) {
@@ -72,7 +94,7 @@ export function BookmarksScreen({ navigation }: Props) {
               <Text style={styles.senderName}>{item.message.sender.displayName}</Text>
               <Text style={styles.time}>{new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
             </View>
-            <Text style={styles.messagePreview} numberOfLines={2}>{item.message.ciphertext}</Text>
+            <Text style={styles.messagePreview} numberOfLines={2}>{getMessagePreview(item.message)}</Text>
             {item.label && <Text style={styles.label}>🏷️ {item.label}</Text>}
             <Text style={styles.chatName}>💬 {item.message.conversation?.title ?? "Suhbat"}</Text>
           </TouchableOpacity>

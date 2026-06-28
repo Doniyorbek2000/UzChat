@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Image } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { greetingsApi, SentCardData } from "../../api/greetings";
@@ -49,9 +49,13 @@ export function GreetingCardsScreen(_props: Props) {
             const person = tab === "received" ? item.sender : item.receiver;
             return (
               <View style={styles.cardItem}>
-                <View style={styles.cardPreview}>
-                  <Text style={styles.cardEmoji}>💌</Text>
-                </View>
+                {item.card.imageUrl ? (
+                  <Image source={{ uri: item.card.imageUrl }} style={styles.cardPreview} />
+                ) : (
+                  <View style={[styles.cardPreview, styles.cardPreviewPlaceholder]}>
+                    <Text style={styles.cardEmoji}>💌</Text>
+                  </View>
+                )}
                 <Text style={styles.cardTemplate}>{item.card.templateName}</Text>
                 <Text style={styles.cardPerson}>{person?.displayName ?? ""}</Text>
                 {item.message && <Text style={styles.cardMessage} numberOfLines={2}>{item.message}</Text>}
@@ -83,7 +87,8 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 8, paddingBottom: 20 },
   row: { justifyContent: "space-between", paddingHorizontal: 4 },
   cardItem: { width: "48%", backgroundColor: colors.background, borderRadius: 14, padding: 12, marginBottom: 8, alignItems: "center" },
-  cardPreview: { width: 80, height: 60, borderRadius: 10, backgroundColor: "#FFF0F5", alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  cardPreview: { width: 80, height: 60, borderRadius: 10, backgroundColor: "#FFF0F5", marginBottom: 8 },
+  cardPreviewPlaceholder: { alignItems: "center", justifyContent: "center" },
   cardEmoji: { fontSize: 28 },
   cardTemplate: { fontSize: 13, fontWeight: "600", color: colors.text, textAlign: "center" },
   cardPerson: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
