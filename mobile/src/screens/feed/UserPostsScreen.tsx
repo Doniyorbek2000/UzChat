@@ -1,11 +1,13 @@
 import React, { useCallback, useState } from "react";
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Alert,
+  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
+  Image, RefreshControl,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { feedApi, Post } from "../../api/feed";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "UserPosts">;
@@ -14,7 +16,10 @@ export function UserPostsScreen({ route, navigation }: Props) {
   const { userId } = route.params;
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const loadPosts = useCallback(async (cursor?: string) => {
     try {
@@ -25,7 +30,10 @@ export function UserPostsScreen({ route, navigation }: Props) {
         setPosts(result.posts);
       }
       setNextCursor(result.nextCursor);
-    } catch {}
+      setError(false);
+    } catch {
+      if (!cursor) setError(true);
+    }
   }, [userId]);
 
   useFocusEffect(
@@ -35,21 +43,35 @@ export function UserPostsScreen({ route, navigation }: Props) {
     }, [loadPosts])
   );
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadPosts();
+    setRefreshing(false);
+  };
+
   const toggleLike = async (post: Post) => {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === post.id
+          ? { ...p, isLiked: !p.isLiked, _count: { ...p._count, likes: p._count.likes + (p.isLiked ? -1 : 1) } }
+          : p
+      )
+    );
     try {
       if (post.isLiked) {
         await feedApi.unlikePost(post.id);
       } else {
         await feedApi.likePost(post.id);
       }
+    } catch {
       setPosts((prev) =>
         prev.map((p) =>
           p.id === post.id
-            ? { ...p, isLiked: !p.isLiked, _count: { ...p._count, likes: p._count.likes + (p.isLiked ? -1 : 1) } }
+            ? { ...p, isLiked: post.isLiked, _count: { ...p._count, likes: post._count.likes } }
             : p
         )
       );
-    } catch {}
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -68,12 +90,22 @@ export function UserPostsScreen({ route, navigation }: Props) {
     return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
   }
 
+  if (error) {
+    return <ErrorView message="Postlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
+  }
+
   return (
     <FlatList
       style={styles.container}
       data={posts}
       keyExtractor={(item) => item.id}
-      onEndReached={() => nextCursor && loadPosts(nextCursor)}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+      onEndReached={() => {
+        if (nextCursor && !loadingMore) {
+          setLoadingMore(true);
+          loadPosts(nextCursor).finally(() => setLoadingMore(false));
+        }
+      }}
       onEndReachedThreshold={0.5}
       renderItem={({ item }) => (
         <View style={styles.postCard}>
@@ -103,6 +135,7 @@ export function UserPostsScreen({ route, navigation }: Props) {
           </View>
         </View>
       )}
+      ListFooterComponent={loadingMore ? <ActivityIndicator style={{ padding: 16 }} color={colors.primary} /> : null}
       ListEmptyComponent={
         <View style={styles.center}>
           <Text style={styles.emptyText}>Postlar yo'q</Text>

@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import { RootStackParamList } from "../../navigation/types";
 import { hashtagsApi } from "../../api/hashtags";
 import { Avatar } from "../../components/Avatar";
+import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "HashtagPosts">;
@@ -12,26 +14,45 @@ export function HashtagPostsScreen({ route }: Props) {
   const { tag } = route.params;
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  useEffect(() => {
-    hashtagsApi.getPostsByTag(tag).then((r) => {
-      setPosts(r.posts);
+  const loadPosts = useCallback(async (cursor?: string) => {
+    try {
+      const r = await hashtagsApi.getPostsByTag(tag, cursor);
+      if (cursor) {
+        setPosts((prev) => [...prev, ...r.posts]);
+      } else {
+        setPosts(r.posts);
+      }
       setNextCursor(r.nextCursor);
-    }).catch(() => {}).finally(() => setLoading(false));
+      setError(false);
+    } catch {
+      if (!cursor) setError(true);
+    }
   }, [tag]);
 
-  const loadMore = async () => {
-    if (!nextCursor) return;
-    const r = await hashtagsApi.getPostsByTag(tag, nextCursor).catch(() => null);
-    if (r) {
-      setPosts((prev) => [...prev, ...r.posts]);
-      setNextCursor(r.nextCursor);
-    }
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      loadPosts().finally(() => setLoading(false));
+    }, [loadPosts])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadPosts();
+    setRefreshing(false);
   };
 
   if (loading) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+  }
+
+  if (error) {
+    return <ErrorView message="Postlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -44,6 +65,7 @@ export function HashtagPostsScreen({ route }: Props) {
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         renderItem={({ item }) => (
           <View style={styles.postCard}>
             <View style={styles.postHeader}>
@@ -60,9 +82,15 @@ export function HashtagPostsScreen({ route }: Props) {
             </View>
           </View>
         )}
-        onEndReached={loadMore}
+        onEndReached={() => {
+          if (nextCursor && !loadingMore) {
+            setLoadingMore(true);
+            loadPosts(nextCursor).finally(() => setLoadingMore(false));
+          }
+        }}
         onEndReachedThreshold={0.5}
         contentContainerStyle={styles.list}
+        ListFooterComponent={loadingMore ? <ActivityIndicator style={{ padding: 16 }} color={colors.primary} /> : null}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>#</Text>

@@ -19,6 +19,7 @@ export function NotificationLogScreen(_props: Props) {
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -37,12 +38,14 @@ export function NotificationLogScreen(_props: Props) {
   }, []);
 
   const loadMore = async () => {
-    if (!nextCursor) return;
-    const r = await notifLogApi.getAll(nextCursor).catch(() => null);
-    if (r) {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const r = await notifLogApi.getAll(nextCursor);
       setItems((prev) => [...prev, ...r.notifications]);
       setNextCursor(r.nextCursor);
-    }
+    } catch {}
+    setLoadingMore(false);
   };
 
   const markAllRead = async () => {
@@ -92,6 +95,7 @@ export function NotificationLogScreen(_props: Props) {
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
+        ListFooterComponent={loadingMore ? <ActivityIndicator style={{ padding: 16 }} color={colors.primary} /> : null}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🔔</Text>

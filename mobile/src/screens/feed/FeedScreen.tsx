@@ -32,6 +32,7 @@ export function FeedScreen({ navigation }: Props) {
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const loadPosts = useCallback(async (cursor?: string) => {
     try {
@@ -190,8 +191,14 @@ export function FeedScreen({ navigation }: Props) {
       keyExtractor={(item) => item.id}
       renderItem={renderPost}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-      onEndReached={() => nextCursor && loadPosts(nextCursor)}
+      onEndReached={() => {
+        if (nextCursor && !loadingMore) {
+          setLoadingMore(true);
+          loadPosts(nextCursor).finally(() => setLoadingMore(false));
+        }
+      }}
       onEndReachedThreshold={0.5}
+      ListFooterComponent={loadingMore ? <ActivityIndicator style={{ padding: 16 }} color={colors.primary} /> : null}
       ListEmptyComponent={
         <EmptyState
           icon="📝"
