@@ -37,26 +37,24 @@ export async function deleteOwnUploadByUrl(url: string | null | undefined) {
 const ORPHAN_AGE_MS = 24 * 60 * 60 * 1000;
 
 export async function cleanupOrphanedUploads() {
-  const [messages, users, conversations] = await Promise.all([
-    prisma.message.findMany({ where: { mediaUrl: { not: null } }, select: { mediaUrl: true } }),
-    prisma.user.findMany({ where: { avatarUrl: { not: null } }, select: { avatarUrl: true } }),
-    prisma.conversation.findMany({ where: { avatarUrl: { not: null } }, select: { avatarUrl: true } }),
-  ]);
-
-  const referenced = new Set<string>();
-  for (const { mediaUrl } of messages) if (mediaUrl) referenced.add(path.basename(mediaUrl));
-  for (const { avatarUrl } of users) if (avatarUrl) referenced.add(path.basename(avatarUrl));
-  for (const { avatarUrl } of conversations) if (avatarUrl) referenced.add(path.basename(avatarUrl));
-
   const files = await fsPromises.readdir(uploadsDir);
   const cutoff = Date.now() - ORPHAN_AGE_MS;
   let removed = 0;
 
   for (const file of files) {
-    if (referenced.has(file)) continue;
     const filePath = path.join(uploadsDir, file);
     const stat = await fsPromises.stat(filePath).catch(() => null);
     if (!stat || !stat.isFile() || stat.mtimeMs > cutoff) continue;
+
+    const basename = file;
+    const url = `%${basename}`;
+    const [msgRef, userRef, convRef] = await Promise.all([
+      prisma.message.findFirst({ where: { mediaUrl: { endsWith: basename } }, select: { id: true } }),
+      prisma.user.findFirst({ where: { avatarUrl: { endsWith: basename } }, select: { id: true } }),
+      prisma.conversation.findFirst({ where: { avatarUrl: { endsWith: basename } }, select: { id: true } }),
+    ]);
+    if (msgRef || userRef || convRef) continue;
+
     await fsPromises.unlink(filePath).catch(() => {});
     removed++;
   }
