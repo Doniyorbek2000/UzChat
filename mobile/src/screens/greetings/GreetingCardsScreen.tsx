@@ -24,19 +24,28 @@ export function GreetingCardsScreen(_props: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    const load = tab === "received" ? greetingsApi.getReceived() : greetingsApi.getSent();
+    load.then(setItems).catch(() => {}).finally(() => setRefreshing(false));
+  }, [tab]);
+
   return (
     <View style={styles.container}>
       <View style={styles.tabs}>
-        <TouchableOpacity style={[styles.tab, tab === "received" && styles.tabActive]} onPress={() => setTab("received")}>
-          <Text style={[styles.tabText, tab === "received" && styles.tabTextActive]}>Kelgan kartochkalar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.tab, tab === "sent" && styles.tabActive]} onPress={() => setTab("sent")}>
-          <Text style={[styles.tabText, tab === "sent" && styles.tabTextActive]}>Yuborilgan</Text>
-        </TouchableOpacity>
+        {(["received", "sent"] as const).map((t) => (
+          <TouchableOpacity key={t} style={[styles.tab, tab === t && styles.tabActive]} onPress={() => setTab(t)}>
+            <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
+              {t === "received" ? "💌 Kelgan" : "📤 Yuborilgan"}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       ) : error ? (
         <ErrorView message="Kartochkalarni yuklab bo'lmadi" onRetry={loadData} />
       ) : (
@@ -56,18 +65,27 @@ export function GreetingCardsScreen(_props: Props) {
                     <Text style={styles.cardEmoji}>💌</Text>
                   </View>
                 )}
-                <Text style={styles.cardTemplate}>{item.card.templateName}</Text>
-                <Text style={styles.cardPerson}>{person?.displayName ?? ""}</Text>
-                {item.message && <Text style={styles.cardMessage} numberOfLines={2}>{item.message}</Text>}
+                <Text style={styles.cardTemplate} numberOfLines={1}>{item.card.templateName}</Text>
+                <Text style={styles.cardPerson} numberOfLines={1}>
+                  {tab === "received" ? "Kimdan: " : "Kimga: "}
+                  {person?.displayName ?? ""}
+                </Text>
+                {item.message && <Text style={styles.cardMessage} numberOfLines={2}>"{item.message}"</Text>}
               </View>
             );
           }}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); const load = tab === "received" ? greetingsApi.getReceived() : greetingsApi.getSent(); load.then(setItems).catch(() => {}).finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>💌</Text>
-              <Text style={styles.emptyText}>{tab === "received" ? "Kartochkalar yo'q" : "Hali yuborilmagan"}</Text>
+              <Text style={styles.emptyTitle}>{tab === "received" ? "Kartochkalar yo'q" : "Hali yuborilmagan"}</Text>
+              <Text style={styles.emptyHint}>
+                {tab === "received"
+                  ? "Do'stlaringiz sizga tabrik kartochkasi yuborishganda bu yerda ko'rinadi"
+                  : "Do'stlaringizga bayram tabriklarini yuboring"
+                }
+              </Text>
             </View>
           }
         />
@@ -77,23 +95,36 @@ export function GreetingCardsScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  tabs: { flexDirection: "row", padding: 12, gap: 8 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.border, alignItems: "center" },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  tabs: { flexDirection: "row", padding: 12, gap: 8, backgroundColor: colors.surface },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.background, alignItems: "center" },
   tabActive: { backgroundColor: colors.primary },
   tabText: { fontSize: 14, fontWeight: "600", color: colors.textSecondary },
   tabTextActive: { color: "#fff" },
-  loader: { marginTop: 40 },
-  list: { paddingHorizontal: 8, paddingBottom: 20 },
-  row: { justifyContent: "space-between", paddingHorizontal: 4 },
-  cardItem: { width: "48%", backgroundColor: colors.background, borderRadius: 14, padding: 12, marginBottom: 8, alignItems: "center" },
-  cardPreview: { width: 80, height: 60, borderRadius: 10, backgroundColor: "#FFF0F5", marginBottom: 8 },
+  list: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 20 },
+  row: { gap: 10 },
+  cardItem: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardPreview: { width: 90, height: 68, borderRadius: 12, backgroundColor: "#FFF0F5", marginBottom: 10 },
   cardPreviewPlaceholder: { alignItems: "center", justifyContent: "center" },
-  cardEmoji: { fontSize: 28 },
+  cardEmoji: { fontSize: 30 },
   cardTemplate: { fontSize: 13, fontWeight: "600", color: colors.text, textAlign: "center" },
-  cardPerson: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-  cardMessage: { fontSize: 11, color: colors.textSecondary, marginTop: 4, textAlign: "center", fontStyle: "italic" },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
+  cardPerson: { fontSize: 11, color: colors.textSecondary, marginTop: 3 },
+  cardMessage: { fontSize: 11, color: colors.textSecondary, marginTop: 6, textAlign: "center", fontStyle: "italic", lineHeight: 16 },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center", lineHeight: 20 },
 });

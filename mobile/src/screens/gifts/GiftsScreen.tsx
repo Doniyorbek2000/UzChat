@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator , RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { giftsApi, SentGiftData } from "../../api/gifts";
@@ -33,16 +33,19 @@ export function GiftsScreen(_props: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.tabs}>
-        <TouchableOpacity style={[styles.tab, tab === "received" && styles.tabActive]} onPress={() => setTab("received")}>
-          <Text style={[styles.tabText, tab === "received" && styles.tabTextActive]}>Kelgan sovg'alar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.tab, tab === "sent" && styles.tabActive]} onPress={() => setTab("sent")}>
-          <Text style={[styles.tabText, tab === "sent" && styles.tabTextActive]}>Yuborilgan</Text>
-        </TouchableOpacity>
+        {(["received", "sent"] as const).map((t) => (
+          <TouchableOpacity key={t} style={[styles.tab, tab === t && styles.tabActive]} onPress={() => setTab(t)}>
+            <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
+              {t === "received" ? "🎁 Kelgan" : "📤 Yuborilgan"}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       ) : error ? (
         <ErrorView message="Sovg'alarni yuklab bo'lmadi" onRetry={loadData} />
       ) : (
@@ -53,11 +56,16 @@ export function GiftsScreen(_props: Props) {
             const person = tab === "received" ? item.sender : item.receiver;
             return (
               <View style={styles.giftCard}>
-                <Text style={styles.giftIcon}>{item.gift.icon}</Text>
+                <View style={styles.giftIconBg}>
+                  <Text style={styles.giftIcon}>{item.gift.icon}</Text>
+                </View>
                 <View style={styles.giftInfo}>
                   <Text style={styles.giftName}>{item.gift.name}</Text>
-                  <Text style={styles.giftPerson}>{person?.displayName ?? "Noma'lum"}</Text>
-                  {item.message && <Text style={styles.giftMessage}>{item.message}</Text>}
+                  <Text style={styles.giftPerson}>
+                    {tab === "received" ? "Kimdan: " : "Kimga: "}
+                    {person?.displayName ?? "Noma'lum"}
+                  </Text>
+                  {item.message && <Text style={styles.giftMessage}>"{item.message}"</Text>}
                 </View>
                 <Text style={styles.giftDate}>{new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
               </View>
@@ -67,8 +75,11 @@ export function GiftsScreen(_props: Props) {
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>🎁</Text>
-              <Text style={styles.emptyText}>{tab === "received" ? "Sovg'alar yo'q" : "Hali sovg'a yuborilmagan"}</Text>
+              <Text style={styles.emptyIcon}>{tab === "received" ? "🎁" : "📤"}</Text>
+              <Text style={styles.emptyTitle}>{tab === "received" ? "Sovg'alar yo'q" : "Hali sovg'a yuborilmagan"}</Text>
+              <Text style={styles.emptyHint}>
+                {tab === "received" ? "Do'stlaringizdan sovg'a olganingizda bu yerda ko'rinadi" : "Do'stlaringizga sovg'a yuborishni boshlang"}
+              </Text>
             </View>
           }
         />
@@ -78,22 +89,44 @@ export function GiftsScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  tabs: { flexDirection: "row", padding: 12, gap: 8 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.border, alignItems: "center" },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  tabs: { flexDirection: "row", padding: 12, gap: 8, backgroundColor: colors.surface },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.background, alignItems: "center" },
   tabActive: { backgroundColor: colors.primary },
   tabText: { fontSize: 14, fontWeight: "600", color: colors.textSecondary },
   tabTextActive: { color: "#fff" },
-  loader: { marginTop: 40 },
-  list: { paddingHorizontal: 12, paddingBottom: 20 },
-  giftCard: { flexDirection: "row", alignItems: "center", backgroundColor: colors.background, borderRadius: 10, padding: 12, marginBottom: 4, gap: 12 },
-  giftIcon: { fontSize: 32 },
+  list: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 },
+  giftCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  giftIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#FF2D55" + "15",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  giftIcon: { fontSize: 24 },
   giftInfo: { flex: 1 },
   giftName: { fontSize: 15, fontWeight: "600", color: colors.text },
-  giftPerson: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  giftMessage: { fontSize: 12, color: colors.textSecondary, marginTop: 4, fontStyle: "italic" },
+  giftPerson: { fontSize: 12, color: colors.textSecondary, marginTop: 3 },
+  giftMessage: { fontSize: 12, color: colors.textSecondary, marginTop: 4, fontStyle: "italic", lineHeight: 16 },
   giftDate: { fontSize: 11, color: colors.textSecondary },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center", lineHeight: 20 },
 });

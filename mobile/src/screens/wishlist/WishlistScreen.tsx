@@ -38,7 +38,11 @@ export function WishlistScreen({ navigation }: Props) {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   if (error) {
@@ -47,12 +51,19 @@ export function WishlistScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {items.length > 0 && (
+        <View style={styles.headerCard}>
+          <Text style={styles.headerIcon}>❤️</Text>
+          <Text style={styles.headerCount}>{items.length} ta mahsulot</Text>
+        </View>
+      )}
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.itemCard}
+            activeOpacity={0.7}
             onPress={() => navigation.navigate("ProductView", { productId: item.productId, storeId: item.product.store.id })}
             onLongPress={() => removeItem(item.productId)}
           >
@@ -68,6 +79,9 @@ export function WishlistScreen({ navigation }: Props) {
               <Text style={styles.itemStore}>{item.product.store.name}</Text>
               <Text style={styles.itemPrice}>{Number(item.product.price).toLocaleString()} {item.product.currency}</Text>
             </View>
+            <TouchableOpacity onPress={() => removeItem(item.productId)} hitSlop={8} style={styles.removeBtn}>
+              <Text style={styles.removeBtnText}>✕</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
         )}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
@@ -75,8 +89,11 @@ export function WishlistScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>❤️</Text>
-            <Text style={styles.emptyText}>Istaklar ro'yxati bo'sh</Text>
-            <Text style={styles.emptyHint}>Bozordan mahsulotlar qo'shing</Text>
+            <Text style={styles.emptyTitle}>Istaklar ro'yxati bo'sh</Text>
+            <Text style={styles.emptyHint}>Bozordan yoqtirgan mahsulotlarni qo'shing</Text>
+            <TouchableOpacity style={styles.browseBtn} onPress={() => navigation.navigate("Marketplace")}>
+              <Text style={styles.browseBtnText}>Bozorga o'tish</Text>
+            </TouchableOpacity>
           </View>
         }
       />
@@ -85,18 +102,47 @@ export function WishlistScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  list: { padding: 12, paddingBottom: 20 },
-  itemCard: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, padding: 12, marginBottom: 6, gap: 12 },
-  itemImage: { width: 56, height: 56, borderRadius: 10, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  headerCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    backgroundColor: colors.surface,
+    marginBottom: 8,
+  },
+  headerIcon: { fontSize: 18 },
+  headerCount: { fontSize: 15, fontWeight: "600", color: colors.text },
+  list: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 20 },
+  itemCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 8,
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  itemImage: { width: 60, height: 60, borderRadius: 12, backgroundColor: colors.background },
   itemImagePlaceholder: { alignItems: "center", justifyContent: "center" },
   itemImageText: { fontSize: 24 },
   itemInfo: { flex: 1 },
   itemName: { fontSize: 15, fontWeight: "600", color: colors.text },
-  itemStore: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  itemPrice: { fontSize: 14, fontWeight: "700", color: colors.primary, marginTop: 4 },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
-  emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  itemStore: { fontSize: 12, color: colors.textSecondary, marginTop: 3 },
+  itemPrice: { fontSize: 15, fontWeight: "700", color: colors.primary, marginTop: 4 },
+  removeBtn: { padding: 8 },
+  removeBtnText: { fontSize: 16, color: colors.textSecondary },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center", lineHeight: 20 },
+  browseBtn: { marginTop: 20, backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
+  browseBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });
