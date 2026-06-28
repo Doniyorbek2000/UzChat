@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   personName: { fontSize: 15, fontWeight: "600", color: colors.text },
   personUsername: { fontSize: 13, color: colors.textSecondary, marginTop: 1 },
   personBio: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  distanceContainer: { backgroundColor: "#F0F0F5", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  distanceContainer: { backgroundColor: colors.background, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   distanceText: { fontSize: 12, fontWeight: "600", color: colors.primary },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },

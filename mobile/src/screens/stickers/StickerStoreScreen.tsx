@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   coverImage: { width: 60, height: 60, borderRadius: 12 },
-  coverPlaceholder: { backgroundColor: "#F0F0F5", alignItems: "center", justifyContent: "center" },
+  coverPlaceholder: { backgroundColor: colors.background, alignItems: "center", justifyContent: "center" },
   coverEmoji: { fontSize: 28 },
   packInfo: { flex: 1 },
   packName: { fontSize: 16, fontWeight: "600", color: colors.text, marginBottom: 4 },
