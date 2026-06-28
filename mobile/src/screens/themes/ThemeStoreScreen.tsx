@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -15,12 +15,20 @@ export function ThemeStoreScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(debounceRef.current);
+  }, [search]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
-      if (search.trim()) {
-        setThemes(await themesApi.search(search.trim()));
+      if (debouncedSearch.trim()) {
+        setThemes(await themesApi.search(debouncedSearch.trim()));
       } else if (tab === "mine") {
         setThemes(await themesApi.listMine());
       } else {
@@ -30,7 +38,7 @@ export function ThemeStoreScreen({ navigation }: Props) {
       setError(true);
     }
     setLoading(false);
-  }, [tab, search]);
+  }, [tab, debouncedSearch]);
 
   useEffect(() => { load(); }, [load]);
 
