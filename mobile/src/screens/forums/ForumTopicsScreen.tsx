@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { forumsApi, ForumTopic } from "../../api/forums";
@@ -82,7 +82,11 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   if (error) {
@@ -91,7 +95,7 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.createBtn} onPress={() => setShowCreate(!showCreate)}>
+      <TouchableOpacity style={styles.createBtn} onPress={() => setShowCreate(!showCreate)} activeOpacity={0.7}>
         <Text style={styles.createBtnText}>{showCreate ? "Bekor qilish" : "+ Yangi mavzu"}</Text>
       </TouchableOpacity>
 
@@ -109,6 +113,7 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
             style={[styles.submitBtn, (!newTitle.trim() || creating) && styles.submitBtnDisabled]}
             onPress={handleCreate}
             disabled={!newTitle.trim() || creating}
+            activeOpacity={0.7}
           >
             {creating ? (
               <ActivityIndicator size="small" color="#fff" />
@@ -120,12 +125,13 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
       )}
 
       <FlatList
-          keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="handled"
         data={topics}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[styles.topicCard, item.isPinned && styles.pinnedCard]}
+            activeOpacity={0.7}
             onPress={() => navigation.navigate("ChatRoom", {
               conversationId,
               title: item.title,
@@ -140,19 +146,19 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
               ]);
             }}
           >
-            <View style={styles.topicHeader}>
+            <View style={styles.topicIconBg}>
               <Text style={styles.topicEmoji}>{item.iconEmoji || "💬"}</Text>
-              <View style={styles.topicInfo}>
-                <View style={styles.topicTitleRow}>
-                  <Text style={styles.topicTitle} numberOfLines={1}>{item.title}</Text>
-                  {item.isPinned && <Text style={styles.badge}>📌</Text>}
-                  {item.isClosed && <Text style={styles.badge}>🔒</Text>}
-                </View>
-                <Text style={styles.topicMeta}>
-                  {item.creator?.displayName} · {item.messageCount} xabar
-                  {item.lastMessageAt && ` · ${new Date(item.lastMessageAt).toLocaleDateString("uz-UZ")}`}
-                </Text>
+            </View>
+            <View style={styles.topicInfo}>
+              <View style={styles.topicTitleRow}>
+                <Text style={styles.topicTitle} numberOfLines={1}>{item.title}</Text>
+                {item.isPinned && <Text style={styles.badge}>📌</Text>}
+                {item.isClosed && <Text style={styles.badge}>🔒</Text>}
               </View>
+              <Text style={styles.topicMeta}>
+                {item.creator?.displayName} · {item.messageCount} xabar
+                {item.lastMessageAt && ` · ${new Date(item.lastMessageAt).toLocaleDateString("uz-UZ")}`}
+              </Text>
             </View>
           </TouchableOpacity>
         )}
@@ -161,7 +167,7 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>💬</Text>
-            <Text style={styles.emptyText}>Mavzular yo'q</Text>
+            <Text style={styles.emptyTitle}>Mavzular yo'q</Text>
             <Text style={styles.emptyHint}>Muhokama uchun birinchi mavzuni yarating</Text>
           </View>
         }
@@ -171,26 +177,67 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  createBtn: { margin: 12, backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  createBtn: {
+    margin: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: "center",
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   createBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
   createForm: { marginHorizontal: 12, marginBottom: 8, gap: 8 },
-  input: { backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text, borderWidth: 1, borderColor: colors.border },
-  submitBtn: { backgroundColor: colors.primary, borderRadius: 10, paddingVertical: 10, alignItems: "center" },
+  input: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  submitBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 12, alignItems: "center" },
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
   list: { paddingHorizontal: 12, paddingBottom: 20 },
-  topicCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 8 },
+  topicCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
   pinnedCard: { borderLeftWidth: 3, borderLeftColor: colors.primary },
-  topicHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
-  topicEmoji: { fontSize: 28 },
+  topicIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.primary + "12",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topicEmoji: { fontSize: 22 },
   topicInfo: { flex: 1 },
   topicTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   topicTitle: { fontSize: 16, fontWeight: "600", color: colors.text, flex: 1 },
   badge: { fontSize: 12 },
   topicMeta: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
-  emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
 });
