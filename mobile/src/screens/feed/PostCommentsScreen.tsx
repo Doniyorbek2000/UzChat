@@ -1,7 +1,7 @@
 import React, { useCallback, useState, useRef } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator,
-  TextInput, KeyboardAvoidingView, Platform, Alert,
+  TextInput, KeyboardAvoidingView, Platform, Alert, RefreshControl,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
@@ -20,6 +20,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
   const [comments, setComments] = useState<PostComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const inputRef = useRef<TextInput>(null);
@@ -40,6 +41,12 @@ export function PostCommentsScreen({ route, navigation }: Props) {
       loadComments().finally(() => setLoading(false));
     }, [loadComments])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try { const result = await feedApi.getComments(postId); setComments(result.comments); } catch {}
+    setRefreshing(false);
+  }, [postId]);
 
   const handleSend = async () => {
     if (!text.trim()) return;
@@ -87,6 +94,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
         <FlatList
           data={comments}
           keyExtractor={(item) => item.id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <View style={styles.commentRow}>

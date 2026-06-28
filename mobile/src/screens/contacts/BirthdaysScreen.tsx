@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -24,6 +24,7 @@ export function BirthdaysScreen({ navigation }: Props) {
   const [birthdays, setBirthdays] = useState<UpcomingBirthday[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [congratulatingId, setCongratulatingId] = useState<string | null>(null);
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
   const setDraft = useChatStore((s) => s.setDraft);
@@ -38,6 +39,11 @@ export function BirthdaysScreen({ navigation }: Props) {
   }, []);
 
   useFocusEffect(load);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    contactsApi.listUpcomingBirthdays().then(setBirthdays).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   const onCongratulate = async (item: UpcomingBirthday) => {
     if (congratulatingId) return;
@@ -74,6 +80,7 @@ export function BirthdaysScreen({ navigation }: Props) {
       <FlatList
         data={birthdays}
         keyExtractor={(item) => item.user.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("UserProfile", { userId: item.user.id })}>

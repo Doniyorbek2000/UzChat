@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -33,6 +33,7 @@ export function ScheduledMessagesScreen({ route }: Props) {
   const sendScheduledMessageNow = useChatStore((s) => s.sendScheduledMessageNow);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(() => {
     setError(false);
@@ -40,6 +41,11 @@ export function ScheduledMessagesScreen({ route }: Props) {
     loadScheduledMessages(conversationId)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+  }, [conversationId, loadScheduledMessages]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadScheduledMessages(conversationId).catch(() => {}).finally(() => setRefreshing(false));
   }, [conversationId, loadScheduledMessages]);
 
   useFocusEffect(
@@ -126,6 +132,7 @@ export function ScheduledMessagesScreen({ route }: Props) {
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.empty}>

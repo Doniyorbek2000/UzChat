@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { contactsApi } from "../../api/contacts";
@@ -15,6 +15,7 @@ export function MutualContactsScreen({ route, navigation }: Props) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = () => {
     setError(false);
@@ -24,6 +25,11 @@ export function MutualContactsScreen({ route, navigation }: Props) {
       .then(setUsers)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    contactsApi.listMutual(userId).then(setUsers).catch(() => {}).finally(() => setRefreshing(false));
   };
 
   useEffect(() => { load(); }, [userId]);
@@ -45,6 +51,7 @@ export function MutualContactsScreen({ route, navigation }: Props) {
       <FlatList
         data={users}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("UserProfile", { userId: item.id })}>

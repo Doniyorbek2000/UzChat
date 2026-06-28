@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { chatsApi } from "../../api/chats";
@@ -15,6 +15,7 @@ export function CommonGroupsScreen({ route, navigation }: Props) {
   const [groups, setGroups] = useState<CommonGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = () => {
     setError(false);
@@ -24,6 +25,11 @@ export function CommonGroupsScreen({ route, navigation }: Props) {
       .then(setGroups)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    chatsApi.listCommonGroups(userId).then(setGroups).catch(() => {}).finally(() => setRefreshing(false));
   };
 
   useEffect(() => { load(); }, [userId]);
@@ -45,6 +51,7 @@ export function CommonGroupsScreen({ route, navigation }: Props) {
       <FlatList
         data={groups}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => (
           <TouchableOpacity

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
@@ -17,6 +17,7 @@ export function JoinRequestsScreen({ route }: Props) {
   const [requests, setRequests] = useState<GroupJoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const joinRequestUpdatedAt = useChatStore((state) => state.joinRequestUpdates[conversationId]);
 
   const load = useCallback(() => {
@@ -26,6 +27,11 @@ export function JoinRequestsScreen({ route }: Props) {
       .then(setRequests)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+  }, [conversationId]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    chatsApi.listJoinRequests(conversationId).then(setRequests).catch(() => {}).finally(() => setRefreshing(false));
   }, [conversationId]);
 
   useFocusEffect(load);
@@ -73,6 +79,7 @@ export function JoinRequestsScreen({ route }: Props) {
       <FlatList
         data={requests}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => (
           <View style={styles.row}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { voiceRoomsApi, VoiceRoom } from "../../api/voiceRooms";
@@ -13,6 +13,7 @@ export function VoiceRoomsScreen({ navigation }: Props) {
   const [rooms, setRooms] = useState<VoiceRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -27,6 +28,15 @@ export function VoiceRoomsScreen({ navigation }: Props) {
   }, [tab]);
 
   useEffect(() => { load(); }, [load]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const data = tab === "live" ? await voiceRoomsApi.listLive() : await voiceRoomsApi.listScheduled();
+      setRooms(data);
+    } catch {}
+    setRefreshing(false);
+  }, [tab]);
 
   const renderRoom = ({ item }: { item: VoiceRoom }) => {
     const speakerCount = item.participants?.filter((p) => p.role === "speaker").length ?? 0;
@@ -69,6 +79,7 @@ export function VoiceRoomsScreen({ navigation }: Props) {
           data={rooms}
           keyExtractor={(item) => item.id}
           renderItem={renderRoom}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  RefreshControl,
   Modal,
   KeyboardAvoidingView,
   Platform,
@@ -29,6 +30,7 @@ export function BroadcastListsScreen({ navigation }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [sendTarget, setSendTarget] = useState<BroadcastList | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -44,6 +46,14 @@ export function BroadcastListsScreen({ navigation }: Props) {
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    Promise.all([broadcastsApi.list(), contactsApi.list()])
+      .then(([broadcastLists, contactList]) => { setLists(broadcastLists); setContacts(contactList); })
+      .catch(() => {})
+      .finally(() => setRefreshing(false));
   }, []);
 
   useFocusEffect(
@@ -124,6 +134,7 @@ export function BroadcastListsScreen({ navigation }: Props) {
       <FlatList
         data={lists}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => (
           <TouchableOpacity

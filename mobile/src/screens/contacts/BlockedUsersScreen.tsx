@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { contactsApi } from "../../api/contacts";
 import { usersApi } from "../../api/users";
@@ -12,6 +12,7 @@ export function BlockedUsersScreen() {
   const [blocked, setBlocked] = useState<BlockedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
@@ -27,6 +28,11 @@ export function BlockedUsersScreen() {
   }, []);
 
   useFocusEffect(load);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    contactsApi.listBlocked().then(setBlocked).catch(() => {}).finally(() => setRefreshing(false));
+  }, []);
 
   useEffect(() => {
     const trimmed = query.trim().replace(/^@/, "");
@@ -131,6 +137,7 @@ export function BlockedUsersScreen() {
       <FlatList
         data={blocked}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => (
           <View style={styles.row}>

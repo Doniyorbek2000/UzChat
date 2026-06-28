@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { liveStreamApi, LiveStream } from "../../api/livestream";
@@ -13,6 +13,7 @@ export function LiveStreamsScreen({ navigation }: Props) {
   const [streams, setStreams] = useState<LiveStream[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -27,6 +28,15 @@ export function LiveStreamsScreen({ navigation }: Props) {
   }, [tab]);
 
   useEffect(() => { load(); }, [load]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const data = tab === "active" ? await liveStreamApi.listActive() : await liveStreamApi.listScheduled();
+      setStreams(data);
+    } catch {}
+    setRefreshing(false);
+  }, [tab]);
 
   const renderStream = ({ item }: { item: LiveStream }) => (
     <TouchableOpacity
@@ -80,6 +90,7 @@ export function LiveStreamsScreen({ navigation }: Props) {
           data={streams}
           keyExtractor={(item) => item.id}
           renderItem={renderStream}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
