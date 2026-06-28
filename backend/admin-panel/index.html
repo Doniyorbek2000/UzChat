@@ -385,6 +385,7 @@ window.viewUser = async function(userId) {
         <button class="btn btn-sm ${u.isAdmin?"btn-danger":"btn-primary"}" onclick="toggleAdmin('${u.id}',${!u.isAdmin})">${u.isAdmin?"Admin olib tashlash":"Admin qilish"}</button>
         <button class="btn btn-sm ${u.isVerified?"btn-danger":"btn-primary"}" onclick="toggleVerify('${u.id}',${!u.isVerified})">${u.isVerified?"Tasdiqlashni olib tashlash":"Tasdiqlash"}</button>
         <button class="btn btn-sm" style="background:var(--warning);color:#fff" onclick="banUser('${u.id}',${!u.isBanned})">${u.isBanned?"Blokdan chiqarish":"Bloklash"}</button>
+        <button class="btn btn-sm" style="background:#5856D6;color:#fff" onclick="viewSessions('${u.id}')">Sessiyalar</button>
         <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">O'chirish</button>
         <button class="btn btn-sm" style="background:var(--border)" onclick="this.closest('.modal-bg').remove()">Yopish</button>
       </div>
@@ -405,6 +406,40 @@ window.deleteUser = async function(id) {
   if (!confirm("Bu foydalanuvchini o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!")) return;
   try { await api(`/admin/users/${id}`, "DELETE"); document.querySelector(".modal-bg")?.remove(); showToast("Foydalanuvchi o'chirildi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
 };
+window.viewSessions = async function(userId) {
+  try {
+    const data = await api("/admin/users/"+userId+"/sessions");
+    const sessions = data.sessions || [];
+    const modal = document.createElement("div");
+    modal.className = "modal-bg";
+    modal.innerHTML = `<div class="modal">
+      <h3>Faol sessiyalar (${sessions.length})</h3>
+      ${sessions.length === 0 ? '<p style="color:var(--text2)">Faol sessiya yo\'q</p>' : `<table style="font-size:13px"><thead><tr><th>Qurilma</th><th>Yaratilgan</th><th>Oxirgi faollik</th></tr></thead><tbody>
+        ${sessions.map(s => `<tr>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${esc(s.userAgent)}">${esc(s.userAgent||"Noma'lum qurilma")}</td>
+          <td>${new Date(s.createdAt).toLocaleDateString("uz")}</td>
+          <td>${new Date(s.lastUsedAt).toLocaleString("uz")}</td>
+        </tr>`).join("")}
+      </tbody></table>`}
+      <div class="actions">
+        ${sessions.length > 0 ? `<button class="btn btn-sm btn-danger" onclick="revokeAllSessions('${userId}')">Barcha sessiyalarni bekor qilish</button>` : ""}
+        <button class="btn btn-sm" style="background:var(--border)" onclick="this.closest('.modal-bg').remove()">Yopish</button>
+      </div>
+    </div>`;
+    modal.addEventListener("click", e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
+};
+
+window.revokeAllSessions = async function(userId) {
+  if (!confirm("Barcha sessiyalarni bekor qilmoqchimisiz? Foydalanuvchi qayta kirishi kerak bo'ladi.")) return;
+  try {
+    const result = await api("/admin/users/"+userId+"/revoke-sessions", "POST");
+    document.querySelector(".modal-bg")?.remove();
+    showToast(result.revoked + " ta sessiya bekor qilindi");
+  } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
+};
+
 window.banUser = async function(id, ban) {
   if (ban) {
     const reason = prompt("Bloklash sababi:");

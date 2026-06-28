@@ -469,6 +469,24 @@ export const adminService = {
     return { users, total, page, totalPages: Math.ceil(total / limit) };
   },
 
+  async getUserSessions(userId: string) {
+    const sessions = await prisma.refreshToken.findMany({
+      where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+      select: { id: true, userAgent: true, createdAt: true, lastUsedAt: true },
+      orderBy: { lastUsedAt: "desc" },
+    });
+    return sessions;
+  },
+
+  async revokeAllUserSessions(userId: string) {
+    const result = await prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    disconnectUser(userId);
+    return { revoked: result.count };
+  },
+
   async exportAuditLogCSV() {
     const logs = await prisma.adminAuditLog.findMany({
       orderBy: { createdAt: "desc" },

@@ -76,6 +76,17 @@ router.delete("/users/:userId", async (req: Request, res: Response) => {
   res.status(204).send();
 });
 
+router.get("/users/:userId/sessions", async (req: Request, res: Response) => {
+  const sessions = await adminService.getUserSessions(req.params.userId);
+  res.json({ sessions });
+});
+
+router.post("/users/:userId/revoke-sessions", async (req: Request, res: Response) => {
+  const result = await adminService.revokeAllUserSessions(req.params.userId);
+  auditLog(req.user!.sub, "REVOKE_SESSIONS", "user", req.params.userId, `revoked=${result.revoked}`, req.ip);
+  res.json(result);
+});
+
 router.get("/reports", validateQuery(paginationSchema), async (req: Request, res: Response) => {
   const { page } = req.query as unknown as z.infer<typeof paginationSchema>;
   const result = await adminService.listReports(page);
