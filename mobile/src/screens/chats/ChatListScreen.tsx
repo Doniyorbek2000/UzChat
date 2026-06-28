@@ -682,6 +682,10 @@ export function ChatListScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={Separator}
+        initialNumToRender={15}
+        maxToRenderPerBatch={10}
+        windowSize={7}
+        removeClippedSubviews
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           !query && archivedCount > 0 ? (

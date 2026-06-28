@@ -190,6 +190,10 @@ export function FeedScreen({ navigation }: Props) {
       data={posts}
       keyExtractor={(item) => item.id}
       renderItem={renderPost}
+      initialNumToRender={5}
+      maxToRenderPerBatch={5}
+      windowSize={5}
+      removeClippedSubviews
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       onEndReached={() => {
         if (nextCursor && !loadingMore) {
