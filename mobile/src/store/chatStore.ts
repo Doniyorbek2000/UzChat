@@ -1568,6 +1568,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     socket.on("message:deleted", (message: Message) => {
       set((state) => {
         const existing = state.messagesByConversation[message.conversationId] ?? [];
+        const conversations = state.conversations.map((c) =>
+          c.id === message.conversationId && c.lastMessage?.id === message.id
+            ? { ...c, lastMessage: { ...c.lastMessage, ...message, deletedAt: message.deletedAt ?? new Date().toISOString() } }
+            : c
+        );
         return {
           messagesByConversation: {
             ...state.messagesByConversation,
@@ -1575,6 +1580,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
               m.id === message.id ? { ...m, ...message, text: null, meta: null, contactMeta: null, decryptFailed: false } : m
             ),
           },
+          conversations,
         };
       });
     });
@@ -1588,6 +1594,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       set((state) => {
         const existing = state.messagesByConversation[message.conversationId] ?? [];
+        const conversations = state.conversations.map((c) =>
+          c.id === message.conversationId && c.lastMessage?.id === message.id
+            ? { ...c, lastMessage: message }
+            : c
+        );
         return {
           messagesByConversation: {
             ...state.messagesByConversation,
@@ -1595,6 +1606,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
               m.id === message.id ? { ...decrypted, isStarred: m.isStarred } : m
             ),
           },
+          conversations,
         };
       });
     });
