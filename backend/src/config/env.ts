@@ -26,6 +26,10 @@ export const env = {
   },
   corsOrigin: process.env.CORS_ORIGIN ?? (process.env.NODE_ENV === "production" ? "https://uzchat.app" : "*"),
   publicUrl: process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 4000}`,
+  redis: {
+    url: process.env.REDIS_URL ?? "redis://localhost:6379",
+    prefix: process.env.REDIS_PREFIX ?? "uzchat:",
+  },
 } as const;
 
 export const isProduction = env.nodeEnv === "production";

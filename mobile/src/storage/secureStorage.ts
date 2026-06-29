@@ -6,6 +6,10 @@ const KEYS = {
   privateKey: "uzchat.e2ee.privateKey",
   publicKey: "uzchat.e2ee.publicKey",
   appLockPinHash: "uzchat.appLock.pinHash",
+  signedPreKeyPrivate: "uzchat.e2ee.signedPreKey.private",
+  signedPreKeyId: "uzchat.e2ee.signedPreKey.id",
+  preKeyNextId: "uzchat.e2ee.preKey.nextId",
+  deviceId: "uzchat.e2ee.deviceId",
 } as const;
 
 export const secureStorage = {
@@ -68,5 +72,41 @@ export const secureStorage = {
 
   async clearAppLockPinHash() {
     await SecureStore.deleteItemAsync(KEYS.appLockPinHash);
+  },
+
+  async getDeviceId() {
+    return SecureStore.getItemAsync(KEYS.deviceId);
+  },
+
+  async setDeviceId(id: string) {
+    await SecureStore.setItemAsync(KEYS.deviceId, id);
+  },
+
+  async getSignedPreKeyPrivate() {
+    return SecureStore.getItemAsync(KEYS.signedPreKeyPrivate);
+  },
+
+  async setSignedPreKeyPrivate(key: string) {
+    await SecureStore.setItemAsync(KEYS.signedPreKeyPrivate, key, {
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
+  },
+
+  async getSignedPreKeyId() {
+    const val = await SecureStore.getItemAsync(KEYS.signedPreKeyId);
+    return val ? parseInt(val, 10) : 0;
+  },
+
+  async setSignedPreKeyId(id: number) {
+    await SecureStore.setItemAsync(KEYS.signedPreKeyId, id.toString());
+  },
+
+  async getNextPreKeyId() {
+    const val = await SecureStore.getItemAsync(KEYS.preKeyNextId);
+    return val ? parseInt(val, 10) : 1;
+  },
+
+  async setNextPreKeyId(id: number) {
+    await SecureStore.setItemAsync(KEYS.preKeyNextId, id.toString());
   },
 };

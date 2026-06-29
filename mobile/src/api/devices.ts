@@ -1,10 +1,33 @@
 import { apiClient } from "./client";
+import { PreKeyBundle } from "../crypto/e2ee";
 
 export interface DeviceKey {
   id: string;
   deviceId: string;
   publicKey: string;
   label: string | null;
+  createdAt: string;
+  _count?: { preKeys: number };
+  signedPreKey?: { keyId: number; publicKey: string; signature: string } | null;
+}
+
+export interface PreKeyUpload {
+  preKeys: { keyId: number; publicKey: string }[];
+  signedPreKey: { keyId: number; publicKey: string; signature: string };
+}
+
+export interface SenderKeyDistribution {
+  conversationId: string;
+  distributionId: string;
+  senderKeyData: string;
+}
+
+export interface KeyTransparencyEntry {
+  id: string;
+  userId: string;
+  deviceId: string;
+  publicKey: string;
+  action: string;
   createdAt: string;
 }
 
@@ -23,5 +46,33 @@ export const devicesApi = {
 
   remove(deviceId: string) {
     return apiClient.delete(`/devices/${deviceId}`).then((r) => r.data);
+  },
+
+  uploadPreKeys(deviceId: string, data: PreKeyUpload) {
+    return apiClient.post<{ uploaded: number }>(`/devices/${deviceId}/prekeys`, data).then((r) => r.data);
+  },
+
+  getPreKeyCount(deviceId: string) {
+    return apiClient.get<{ count: number; needsRefill: boolean }>(`/devices/${deviceId}/prekeys/count`).then((r) => r.data);
+  },
+
+  getPreKeyBundles(userId: string) {
+    return apiClient.get<PreKeyBundle[]>(`/devices/user/${userId}/bundle`).then((r) => r.data);
+  },
+
+  getPreKeyBundle(userId: string, deviceId: string) {
+    return apiClient.get<PreKeyBundle>(`/devices/user/${userId}/${deviceId}/bundle`).then((r) => r.data);
+  },
+
+  distributeSenderKey(deviceId: string, data: SenderKeyDistribution) {
+    return apiClient.post<{ distributed: boolean }>(`/devices/${deviceId}/senderkey`, data).then((r) => r.data);
+  },
+
+  getSenderKeys(conversationId: string) {
+    return apiClient.get(`/devices/senderkeys/${conversationId}`).then((r) => r.data);
+  },
+
+  getKeyTransparencyLog(userId: string) {
+    return apiClient.get<KeyTransparencyEntry[]>(`/devices/transparency/${userId}`).then((r) => r.data);
   },
 };

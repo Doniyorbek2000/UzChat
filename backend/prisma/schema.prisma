@@ -510,6 +510,23 @@ model Conversation {
   // GROUP only: when false, no one (including admins) can react to messages in this group.
   reactionsEnabled Boolean @default(true)
 
+  // GROUP only: maximum number of members allowed in this group. Default 200000
+  // (200K like Telegram). Supergroups can go up to 500000 (500K).
+  maxMembers Int @default(200000)
+
+  // Cached member count so we don't need COUNT(*) on ConversationParticipant
+  // for large groups. Updated atomically on join/leave.
+  memberCount Int @default(0)
+
+  // GROUP only: when true, this is a "supergroup" — supports up to 500K members,
+  // uses SenderKey encryption for efficient fan-out, and message history is
+  // stored server-side for new joiners.
+  isSupergroup Boolean @default(false)
+
+  // GROUP only: when true, messages use SenderKey encryption instead of per-
+  // participant key wrapping — O(1) encrypt vs O(N) for large groups.
+  useSenderKeys Boolean @default(false)
+
   participants    ConversationParticipant[]
   messages        Message[]
   joinRequests    GroupJoinRequest[]
@@ -940,8 +957,104 @@ model DeviceKey {
   label     String?
   createdAt DateTime @default(now())
 
+  preKeys         PreKey[]
+  signedPreKey    SignedPreKey?
+  senderKeys      SenderKeyStore[]
+
   @@unique([userId, deviceId])
   @@index([userId])
+}
+
+// Signal Protocol: one-time pre-keys uploaded by each device. Each key
+// is consumed exactly once during a new session setup and then deleted.
+model PreKey {
+  id          String    @id @default(uuid())
+  deviceKeyId String
+  deviceKey   DeviceKey @relation(fields: [deviceKeyId], references: [id], onDelete: Cascade)
+  keyId       Int
+  publicKey   String
+  createdAt   DateTime  @default(now())
+
+  @@unique([deviceKeyId, keyId])
+  @@index([deviceKeyId])
+}
+
+// Signal Protocol: signed pre-key rotated periodically. Signed by the
+// device's identity key so peers can verify authenticity before starting
+// a session.
+model SignedPreKey {
+  id          String    @id @default(uuid())
+  deviceKeyId String    @unique
+  deviceKey   DeviceKey @relation(fields: [deviceKeyId], references: [id], onDelete: Cascade)
+  keyId       Int
+  publicKey   String
+  signature   String
+  createdAt   DateTime  @default(now())
+}
+
+// Sender Key distribution for large groups: each device publishes a
+// sender key per conversation so all recipients decrypt with a single
+// shared secret (Signal's SenderKey protocol).
+model SenderKeyStore {
+  id             String       @id @default(uuid())
+  deviceKeyId    String
+  deviceKey      DeviceKey    @relation(fields: [deviceKeyId], references: [id], onDelete: Cascade)
+  conversationId String
+  distributionId String
+  senderKeyData  String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([deviceKeyId, conversationId])
+  @@index([conversationId])
+}
+
+// Tracks E2EE session state between two devices using the Double Ratchet
+// algorithm. The server stores opaque blobs; the real crypto state lives
+// on the client only.
+model E2eeSession {
+  id               String   @id @default(uuid())
+  ownerDeviceKeyId String
+  peerUserId       String
+  peerDeviceId     String
+  sessionData      String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([ownerDeviceKeyId, peerUserId, peerDeviceId])
+  @@index([ownerDeviceKeyId])
+}
+
+// Queued messages for offline devices. When a device is offline, encrypted
+// messages are stored here and delivered on reconnect (fan-out write).
+model MessageQueue {
+  id             String   @id @default(uuid())
+  recipientId    String
+  conversationId String
+  messageId      String
+  ciphertext     String
+  nonce          String
+  senderDeviceId String
+  priority       Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  @@index([recipientId, createdAt])
+  @@index([conversationId])
+}
+
+// Key transparency log: an append-only record of all public key changes
+// so clients can audit for MITM attacks. Each entry is signed by the server.
+model KeyTransparencyLog {
+  id            String   @id @default(uuid())
+  userId        String
+  deviceId      String
+  publicKey     String
+  action        String
+  serverSig     String
+  previousLogId String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 enum PaymentStatus {

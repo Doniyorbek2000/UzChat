@@ -2,6 +2,7 @@ import { createServer } from "http";
 import { createApp } from "./app";
 import { env } from "./config/env";
 import { prisma } from "./config/prisma";
+import { initRedis, closeRedis } from "./config/redis";
 import { initSocketServer, getIo } from "./sockets";
 import { logger } from "./utils/logger";
 import { startMessageExpiryJob } from "./jobs/messageExpiry";
@@ -25,6 +26,10 @@ const httpServer = createServer(app);
 
 httpServer.keepAliveTimeout = 65_000;
 httpServer.headersTimeout = 66_000;
+
+initRedis().catch((err) => {
+  logger.warn("Redis init failed — running without Redis", { error: String(err) });
+});
 
 initSocketServer(httpServer);
 startMessageExpiryJob();
@@ -55,6 +60,7 @@ function gracefulShutdown(signal: string) {
   logger.info("Shutting down", { signal });
   httpServer.close(() => {
     try { getIo().close(); } catch {}
+    closeRedis().catch(() => {});
     prisma.$disconnect().finally(() => process.exit(0));
   });
   setTimeout(() => process.exit(1), 10_000);

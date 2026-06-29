@@ -123,3 +123,95 @@ export function getSecurityCode(publicKeyA: string, publicKeyB: string): string 
     .join("");
   return digits.match(/.{1,5}/g)!.join("  ");
 }
+
+// ─── Signal Protocol extensions ──────────────────────────────────
+
+export interface PreKeyBundle {
+  identityKey: string;
+  deviceId: string;
+  signedPreKey: { keyId: number; publicKey: string; signature: string } | null;
+  preKey: { keyId: number; publicKey: string } | null;
+}
+
+export interface SignedPreKeyPair {
+  keyId: number;
+  publicKey: string;
+  privateKey: string;
+  signature: string;
+}
+
+export interface PreKeyPair {
+  keyId: number;
+  publicKey: string;
+  privateKey: string;
+}
+
+export function generatePreKeys(startId: number, count: number): PreKeyPair[] {
+  const keys: PreKeyPair[] = [];
+  for (let i = 0; i < count; i++) {
+    const pair = nacl.box.keyPair();
+    keys.push({
+      keyId: startId + i,
+      publicKey: encodeBase64(pair.publicKey),
+      privateKey: encodeBase64(pair.secretKey),
+    });
+  }
+  return keys;
+}
+
+export function generateSignedPreKey(identityPrivateKey: string, keyId: number): SignedPreKeyPair {
+  const pair = nacl.box.keyPair();
+  const pubBytes = pair.publicKey;
+  const sigBytes = nacl.sign.detached(pubBytes, nacl.sign.keyPair.fromSeed(decodeBase64(identityPrivateKey).slice(0, 32)).secretKey);
+  return {
+    keyId,
+    publicKey: encodeBase64(pair.publicKey),
+    privateKey: encodeBase64(pair.secretKey),
+    signature: encodeBase64(sigBytes),
+  };
+}
+
+export function deriveSharedSecret(privateKey: string, publicKey: string): string {
+  const shared = nacl.box.before(decodeBase64(publicKey), decodeBase64(privateKey));
+  return encodeBase64(shared);
+}
+
+export function generateSenderKey(): string {
+  return encodeBase64(nacl.randomBytes(32));
+}
+
+export function encryptWithSenderKey(plaintext: string, senderKey: string): EncryptedPayload {
+  const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
+  const ciphertext = nacl.secretbox(decodeUTF8(plaintext), nonce, decodeBase64(senderKey));
+  return { ciphertext: encodeBase64(ciphertext), nonce: encodeBase64(nonce) };
+}
+
+export function decryptWithSenderKey(ciphertext: string, nonce: string, senderKey: string): string {
+  const opened = nacl.secretbox.open(decodeBase64(ciphertext), decodeBase64(nonce), decodeBase64(senderKey));
+  if (!opened) throw new Error("SenderKey bilan xabarni ochib bo'lmadi");
+  return encodeUTF8(opened);
+}
+
+export function wrapSenderKeyForRecipient(
+  senderKey: string,
+  recipientPublicKey: string,
+  senderPrivateKey: string
+): WrappedKey {
+  return wrapConversationKey(senderKey, recipientPublicKey, senderPrivateKey);
+}
+
+export function computeKeyFingerprint(publicKey: string): string {
+  const hash = nacl.hash(decodeBase64(publicKey));
+  return Array.from(hash.slice(0, 16))
+    .map((b) => b.toString(16).padStart(2, "0").toUpperCase())
+    .join(":");
+}
+
+export function verifySignedPreKey(identityPublicKey: string, signedPreKeyPublic: string, signature: string): boolean {
+  try {
+    const sigPubKey = nacl.sign.keyPair.fromSeed(decodeBase64(identityPublicKey).slice(0, 32)).publicKey;
+    return nacl.sign.detached.verify(decodeBase64(signedPreKeyPublic), decodeBase64(signature), sigPubKey);
+  } catch {
+    return false;
+  }
+}

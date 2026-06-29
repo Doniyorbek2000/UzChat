@@ -5,6 +5,7 @@ export const prisma = new PrismaClient({
   log: isProduction
     ? [{ emit: "event", level: "warn" }, { emit: "event", level: "error" }]
     : [{ emit: "event", level: "warn" }, { emit: "event", level: "error" }],
+  datasourceUrl: process.env.DATABASE_URL,
 });
 
 prisma.$on("warn", (e) => {
@@ -14,3 +15,10 @@ prisma.$on("warn", (e) => {
 prisma.$on("error", (e) => {
   console.error("Prisma error:", e.message);
 });
+
+export const readReplica = isProduction && process.env.DATABASE_READ_URL
+  ? new PrismaClient({
+      datasourceUrl: process.env.DATABASE_READ_URL,
+      log: [{ emit: "event", level: "error" }],
+    })
+  : prisma;

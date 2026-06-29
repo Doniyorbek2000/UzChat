@@ -1,5 +1,6 @@
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
 import { verifyAccessToken } from "../utils/jwt";
 import { env } from "../config/env";
 import { registerChatHandlers } from "./chat.gateway";
@@ -9,6 +10,7 @@ import { pushService } from "../modules/push/push.service";
 import { messagesService } from "../modules/messages/messages.service";
 import { filterVisibleOnlineOwners, filterViewersForLastSeen } from "../utils/lastSeen";
 import { logger } from "../utils/logger";
+import { getRedis, getSubscriber } from "../config/redis";
 
 let io: Server | undefined;
 
@@ -46,7 +48,21 @@ export function initSocketServer(httpServer: HttpServer): Server {
     pingInterval: 25000,
     pingTimeout: 20000,
     maxHttpBufferSize: 1e6,
+    perMessageDeflate: { threshold: 1024 },
+    transports: ["websocket", "polling"],
+    connectionStateRecovery: {
+      maxDisconnectionDuration: 2 * 60 * 1000,
+    },
   });
+
+  try {
+    const pubClient = getRedis();
+    const subClient = getSubscriber();
+    io.adapter(createAdapter(pubClient, subClient));
+    logger.info("Socket.io Redis adapter attached for horizontal scaling");
+  } catch {
+    logger.warn("Redis not available — running Socket.io in single-node mode");
+  }
 
   io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token as string | undefined;

@@ -177,6 +177,9 @@ export const chatsService = {
         isSelf: input.type === "DIRECT" && input.participants.length === 1,
         onlyAdminsCanSend: input.type === "CHANNEL" ? true : undefined,
         disappearingSeconds: creator.defaultDisappearingSeconds,
+        memberCount: input.participants.length,
+        isSupergroup: input.participants.length > 1000,
+        useSenderKeys: input.participants.length > 100,
         participants: {
           create: input.participants.map((p) => ({
             userId: p.userId,
@@ -897,9 +900,12 @@ export const chatsService = {
     await prisma.$transaction(async (tx) => {
       const fresh = await tx.conversation.findUniqueOrThrow({
         where: { id: conversation.id },
-        select: { inviteCodeExpiresAt: true, inviteCodeMaxUses: true, inviteCodeUseCount: true },
+        select: { inviteCodeExpiresAt: true, inviteCodeMaxUses: true, inviteCodeUseCount: true, memberCount: true, maxMembers: true },
       });
       if (!isInviteLinkUsable(fresh)) throw Errors.notFound("Taklif havolasi");
+      if (fresh.memberCount >= fresh.maxMembers) {
+        throw Errors.badRequest(`Guruh a'zolar soni chegarasiga yetdi (${fresh.maxMembers.toLocaleString()})`);
+      }
 
       await tx.conversationParticipant.create({
         data: {
@@ -913,7 +919,10 @@ export const chatsService = {
       });
       await tx.conversation.update({
         where: { id: conversation.id },
-        data: { inviteCodeUseCount: { increment: 1 } },
+        data: {
+          inviteCodeUseCount: { increment: 1 },
+          memberCount: { increment: 1 },
+        },
       });
     });
 
@@ -1071,6 +1080,10 @@ export const chatsService = {
       throw Errors.forbidden();
     }
 
+    if (conversation.memberCount >= conversation.maxMembers) {
+      throw Errors.badRequest(`Guruh a'zolar soni chegarasiga yetdi (${conversation.maxMembers.toLocaleString()})`);
+    }
+
     if (conversation.participants.some((p) => p.userId === input.userId)) {
       throw Errors.conflict("Foydalanuvchi allaqachon guruh a'zosi");
     }
@@ -1087,16 +1100,22 @@ export const chatsService = {
     await chatsService.assertCanAddToGroup(userId, [target]);
 
     try {
-      await prisma.conversationParticipant.create({
-        data: {
-          conversationId,
-          userId: input.userId,
-          role: ParticipantRole.MEMBER,
-          wrappedKey: input.wrappedKey,
-          wrappedKeyNonce: input.wrappedKeyNonce,
-          keySenderPublicKey: input.keySenderPublicKey,
-        },
-      });
+      await prisma.$transaction([
+        prisma.conversationParticipant.create({
+          data: {
+            conversationId,
+            userId: input.userId,
+            role: ParticipantRole.MEMBER,
+            wrappedKey: input.wrappedKey,
+            wrappedKeyNonce: input.wrappedKeyNonce,
+            keySenderPublicKey: input.keySenderPublicKey,
+          },
+        }),
+        prisma.conversation.update({
+          where: { id: conversationId },
+          data: { memberCount: { increment: 1 } },
+        }),
+      ]);
     } catch (err: any) {
       if (err.code === "P2002") throw Errors.conflict("Foydalanuvchi allaqachon guruh a'zosi");
       throw err;
@@ -1475,14 +1494,19 @@ export const chatsService = {
       throw Errors.forbidden();
     }
 
-    await prisma.conversationParticipant.delete({ where: { id: target.id } });
-    if (ban) {
-      await prisma.groupBan.upsert({
+    await prisma.$transaction([
+      prisma.conversationParticipant.delete({ where: { id: target.id } }),
+      prisma.conversation.update({
+        where: { id: conversationId },
+        data: { memberCount: { decrement: 1 } },
+      }),
+      ...(ban ? [prisma.groupBan.upsert({
         where: { conversationId_bannedUserId: { conversationId, bannedUserId: targetUserId } },
         update: { bannedBy: userId },
         create: { conversationId, bannedUserId: targetUserId, bannedBy: userId },
-      });
-    }
+      })] : []),
+    ]);
+
     await chatsService.logGroupAction(
       conversationId,
       userId,
@@ -1622,10 +1646,20 @@ export const chatsService = {
           data: { role: ParticipantRole.OWNER },
         }),
         prisma.conversationParticipant.delete({ where: { id: self.id } }),
+        prisma.conversation.update({
+          where: { id: conversationId },
+          data: { memberCount: { decrement: 1 } },
+        }),
       ]);
       newOwnerId = successor.userId;
     } else {
-      await prisma.conversationParticipant.delete({ where: { id: self.id } });
+      await prisma.$transaction([
+        prisma.conversationParticipant.delete({ where: { id: self.id } }),
+        prisma.conversation.update({
+          where: { id: conversationId },
+          data: { memberCount: { decrement: 1 } },
+        }),
+      ]);
     }
 
     const leaver = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });

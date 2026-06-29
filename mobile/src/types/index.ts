@@ -236,6 +236,14 @@ export interface Conversation {
   hideMembersList: boolean;
   // GROUP only: when false, no one (including admins) can react to messages in this group.
   reactionsEnabled: boolean;
+  // GROUP only: maximum number of members allowed in this group.
+  maxMembers: number;
+  // Cached member count for large groups.
+  memberCount: number;
+  // GROUP only: when true, this is a supergroup (up to 500K members).
+  isSupergroup: boolean;
+  // GROUP only: when true, messages use SenderKey encryption for efficient fan-out.
+  useSenderKeys: boolean;
   // DIRECT only: a "Saved Messages" conversation with only the current user as its participant.
   isSelf: boolean;
   // Pinned messages, most-recently-pinned first.

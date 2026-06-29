@@ -60,6 +60,8 @@ export const updateConversationSchema = z
     hideHistoryForNewMembers: z.boolean().optional(),
     hideMembersList: z.boolean().optional(),
     reactionsEnabled: z.boolean().optional(),
+    maxMembers: z.number().int().min(2).max(500000).optional(),
+    isSupergroup: z.boolean().optional(),
   })
   .refine(
     (data) =>
@@ -78,7 +80,9 @@ export const updateConversationSchema = z
       data.membersCanSendPolls !== undefined ||
       data.hideHistoryForNewMembers !== undefined ||
       data.hideMembersList !== undefined ||
-      data.reactionsEnabled !== undefined,
+      data.reactionsEnabled !== undefined ||
+      data.maxMembers !== undefined ||
+      data.isSupergroup !== undefined,
     { message: "Hech narsa o'zgartirilmadi" }
   );
 
