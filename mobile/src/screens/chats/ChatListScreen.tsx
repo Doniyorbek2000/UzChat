@@ -167,15 +167,26 @@ export function ChatListScreen({ navigation }: Props) {
     if (!lastMessage) return "Xabarlar yo'q";
     if (lastMessage.type === "SYSTEM") return lastMessage.ciphertext;
     if (lastMessage.deletedAt) return "Xabar o'chirildi";
+
+    const isGroup = conversation.type === "GROUP" || conversation.type === "CHANNEL";
+    const senderPrefix = isGroup && lastMessage.senderId
+      ? (lastMessage.senderId === user?.id
+          ? "Siz"
+          : (contactAliases[lastMessage.senderId] ??
+             conversation.participants.find((p) => p.userId === lastMessage.senderId)?.user.displayName ??
+             ""))
+      : "";
+    const prefix = senderPrefix ? `${senderPrefix}: ` : "";
+
     if (lastMessage.type === "IMAGE" && lastMessage.viewOnce) {
-      return lastMessage.viewedAt ? "🔥 Ko'rilgan rasm" : "🔥 Bir martalik rasm";
+      return lastMessage.viewedAt ? `${prefix}🔥 Ko'rilgan rasm` : `${prefix}🔥 Bir martalik rasm`;
     }
-    if (lastMessage.type in MEDIA_LABELS) return MEDIA_LABELS[lastMessage.type];
+    if (lastMessage.type in MEDIA_LABELS) return `${prefix}${MEDIA_LABELS[lastMessage.type]}`;
     try {
       const key = getConversationKey(conversation);
-      return stripFormatting(decryptMessage(lastMessage.ciphertext, lastMessage.nonce, key));
+      return `${prefix}${stripFormatting(decryptMessage(lastMessage.ciphertext, lastMessage.nonce, key))}`;
     } catch {
-      return "Xabarni ochib bo'lmadi";
+      return `${prefix}Xabarni ochib bo'lmadi`;
     }
   };
 
