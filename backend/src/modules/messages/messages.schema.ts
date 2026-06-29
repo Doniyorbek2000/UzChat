@@ -105,6 +105,16 @@ export const searchMessagesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(30),
 });
 
+export const globalSearchQuerySchema = z.object({
+  type: z.enum(["TEXT", "IMAGE", "VIDEO", "AUDIO", "FILE", "CONTACT", "POLL", "LOCATION", "STICKER"]).optional(),
+  senderId: z.string().uuid().optional(),
+  after: z.string().datetime().optional(),
+  before: z.string().datetime().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+  cursor: z.string().uuid().optional(),
+});
+
+export type GlobalSearchQuery = z.infer<typeof globalSearchQuerySchema>;
 export type RescheduleMessageInput = z.infer<typeof rescheduleMessageSchema>;
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type ListMessagesQuery = z.infer<typeof listMessagesQuerySchema>;

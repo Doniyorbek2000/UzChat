@@ -426,4 +426,10 @@ export const chatsApi = {
   upgradeToSupergroup(conversationId: string) {
     return apiClient.post<Conversation>(`/conversations/${conversationId}/upgrade-supergroup`).then((r) => r.data);
   },
+
+  globalSearch(params: { type?: string; senderId?: string; after?: string; before?: string; limit?: number; cursor?: string }) {
+    return apiClient
+      .get<{ items: Message[]; nextCursor?: string }>("/conversations/global-search", { params })
+      .then((r) => r.data);
+  },
 };

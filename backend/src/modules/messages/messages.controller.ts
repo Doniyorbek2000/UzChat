@@ -4,6 +4,7 @@ import {
   sendMessageSchema,
   listMessagesQuerySchema,
   searchMessagesQuerySchema,
+  globalSearchQuerySchema,
   editMessageSchema,
   setReactionSchema,
   votePollSchema,
@@ -157,6 +158,12 @@ export const messagesController = {
   async listMentions(req: Request, res: Response) {
     const messages = await messagesService.listMentions(req.user!.sub);
     res.json(messages);
+  },
+
+  async globalSearch(req: Request, res: Response) {
+    const query = globalSearchQuerySchema.parse(req.query);
+    const result = await messagesService.globalSearch(req.user!.sub, query);
+    res.json(result);
   },
 
   async listScheduled(req: Request, res: Response) {

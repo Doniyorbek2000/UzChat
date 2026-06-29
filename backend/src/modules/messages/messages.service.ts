@@ -10,11 +10,11 @@ import { contactsService } from "../contacts/contacts.service";
 import { canRevealForwardedFrom } from "../../utils/lastSeen";
 import { isInQuietHours, isNotificationsPaused } from "../../utils/notificationPreferences";
 import { uploadsDir } from "../media/upload";
-import { EditMessageInput, ListMessagesQuery, SearchMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
+import { EditMessageInput, GlobalSearchQuery, ListMessagesQuery, SearchMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
 import { logger } from "../../utils/logger";
 import { presenceService } from "../../services/presence.service";
 
-const RECALL_WINDOW_MS = 2 * 60 * 1000;
+const RECALL_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 // Placeholder scheduledFor value for "send when online" messages: far enough in
 // the future that the scheduled-messages job never publishes it by time alone.
@@ -767,7 +767,7 @@ export const messagesService = {
     if (!isOwnMessage && !isGroupManager) throw Errors.forbidden();
 
     if (isOwnMessage && Date.now() - message.createdAt.getTime() > RECALL_WINDOW_MS) {
-      throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 2 daqiqa ichida o'chirish mumkin");
+      throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 48 soat ichida o'chirish mumkin");
     }
 
     if (!isOwnMessage && isGroupManager) {
@@ -848,7 +848,7 @@ export const messagesService = {
     if (message.senderId !== userId) throw Errors.forbidden();
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni tahrirlab bo'lmaydi");
     if (Date.now() - message.createdAt.getTime() > RECALL_WINDOW_MS) {
-      throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 2 daqiqa ichida tahrirlash mumkin");
+      throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 48 soat ichida tahrirlash mumkin");
     }
 
     const mentions = await resolveMentions(conversationId, userId, input.mentions);
@@ -1269,6 +1269,45 @@ export const messagesService = {
     });
 
     return messages.map((m) => formatMessage(m, userId));
+  },
+
+  async globalSearch(userId: string, query: GlobalSearchQuery) {
+    const participations = await prisma.conversationParticipant.findMany({
+      where: { userId },
+      select: { conversationId: true, clearedAt: true },
+    });
+    if (participations.length === 0) return { items: [], nextCursor: undefined };
+
+    const conversationIds = participations.map((p) => p.conversationId);
+
+    const where: any = {
+      conversationId: { in: conversationIds },
+      scheduledFor: null,
+      deletedAt: null,
+      NOT: { hiddenFor: { has: userId } },
+    };
+    if (query.type) where.type = query.type;
+    if (query.senderId) where.senderId = query.senderId;
+    if (query.after || query.before) {
+      where.createdAt = {};
+      if (query.after) where.createdAt.gte = new Date(query.after);
+      if (query.before) where.createdAt.lt = new Date(query.before);
+    }
+    if (query.cursor) {
+      where.id = { lt: query.cursor };
+    }
+
+    const take = query.limit;
+    const messages = await prisma.message.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: take + 1,
+      include: messageInclude(userId),
+    });
+
+    const hasMore = messages.length > take;
+    const items = (hasMore ? messages.slice(0, take) : messages).map((m) => formatMessage(m, userId));
+    return { items, nextCursor: hasMore ? messages[take - 1].id : undefined };
   },
 
   // Publishes (delivers) scheduled messages whose time has come.

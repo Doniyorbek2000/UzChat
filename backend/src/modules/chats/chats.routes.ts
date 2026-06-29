@@ -100,6 +100,7 @@ chatsRouter.get("/mentions/messages", messagesController.listMentions);
 chatsRouter.get("/reminders/messages", messagesController.listReminders);
 chatsRouter.get("/common-groups/:userId", chatsController.listCommonGroups);
 chatsRouter.get("/me/activity-stats", messagesController.getMyActivityStats);
+chatsRouter.get("/global-search", messagesController.globalSearch);
 
 chatsRouter.get("/:id/scheduled-messages", messagesController.listScheduled);
 chatsRouter.delete("/:id/scheduled-messages/:messageId", messagesController.cancelScheduled);
