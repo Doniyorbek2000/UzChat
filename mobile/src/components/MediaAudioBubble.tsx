@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { downloadAndDecryptFile, formatDuration, getCachedFileUri } from "../utils/mediaFile";
@@ -84,6 +84,16 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
   const remaining = status.playing || status.currentTime > 0 ? Math.max(duration - status.currentTime, 0) : duration;
   const progress = duration > 0 ? Math.min(status.currentTime / duration, 1) : 0;
 
+  const BAR_COUNT = 28;
+  const waveform = useMemo(() => {
+    let hash = 0;
+    for (let i = 0; i < message.id.length; i++) hash = ((hash << 5) - hash + message.id.charCodeAt(i)) | 0;
+    return Array.from({ length: BAR_COUNT }, (_, i) => {
+      const v = Math.abs(Math.sin(hash * (i + 1) * 0.1)) * 0.7 + 0.3;
+      return v;
+    });
+  }, [message.id]);
+
   return (
     <Pressable style={styles.container} onPress={onPress} disabled={!localUri && !error && !needsDownload}>
       <View style={styles.icon}>
@@ -95,8 +105,20 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
           <Text style={styles.iconText}>{status.playing ? "⏸" : "▶"}</Text>
         )}
       </View>
-      <View style={styles.track}>
-        <View style={[styles.progress, { width: `${progress * 100}%` }]} />
+      <View style={styles.waveformContainer}>
+        {waveform.map((h, i) => {
+          const barProgress = i / BAR_COUNT;
+          const isPlayed = barProgress < progress;
+          return (
+            <View
+              key={i}
+              style={[
+                styles.waveformBar,
+                { height: h * 20, backgroundColor: isPlayed ? colors.primary : colors.border },
+              ]}
+            />
+          );
+        })}
       </View>
       <Text style={styles.duration}>{formatDuration(remaining)}</Text>
       <Pressable style={styles.speedButton} onPress={cycleSpeed} hitSlop={8}>
@@ -123,16 +145,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconText: { fontSize: 14, color: "#fff" },
-  track: {
+  waveformContainer: {
     flex: 1,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    overflow: "hidden",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 1.5,
+    height: 24,
   },
-  progress: {
-    height: "100%",
-    backgroundColor: colors.primary,
+  waveformBar: {
+    width: 2.5,
+    borderRadius: 1.5,
+    minHeight: 3,
   },
   duration: { fontSize: 12, color: colors.textSecondary, minWidth: 32, textAlign: "right" },
   speedButton: {

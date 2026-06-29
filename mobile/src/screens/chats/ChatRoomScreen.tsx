@@ -60,6 +60,7 @@ import { ContactCardBubble } from "../../components/ContactCardBubble";
 import { PollBubble } from "../../components/PollBubble";
 import { Avatar } from "../../components/Avatar";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
+import { TypingIndicator } from "../../components/TypingIndicator";
 import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
 import { formatTime, formatDateSeparator, formatDateTime, getConversationDisplay } from "../../utils/conversation";
@@ -2128,7 +2129,12 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       {recordingCount > 0 ? (
         <Text style={styles.typing}>🎤 {formatActivityLabel(recordingUsers, "ovozli xabar yozmoqda...")}</Text>
       ) : (
-        typingCount > 0 && <Text style={styles.typing}>{formatActivityLabel(typingUsers, "yozmoqda...")}</Text>
+        typingCount > 0 && (
+          <View style={styles.typingRow}>
+            <Text style={styles.typing}>{formatActivityLabel(typingUsers, "yozmoqda")}</Text>
+            <TypingIndicator />
+          </View>
+        )
       )}
       {editingMessage && (
         <View style={styles.replyPreviewBar}>
@@ -3857,7 +3863,8 @@ const styles = StyleSheet.create({
   headerTitleTextContainer: { alignItems: "flex-start" },
   headerTitleText: { fontSize: 17, fontWeight: "600", color: colors.text },
   headerSubtitle: { fontSize: 12, color: colors.textSecondary },
-  typing: { paddingHorizontal: 16, paddingBottom: 4, color: colors.textSecondary, fontSize: 12 },
+  typingRow: { flexDirection: "row" as const, alignItems: "center" as const, paddingHorizontal: 16, paddingBottom: 4 },
+  typing: { color: colors.textSecondary, fontSize: 12 },
   mentionSuggestions: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
