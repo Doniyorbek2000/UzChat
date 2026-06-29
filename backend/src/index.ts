@@ -20,6 +20,7 @@ import { startStoryExpiryJob } from "./jobs/storyExpiry";
 import { startChannelStatsJob } from "./jobs/channelStats";
 import { startQrPaymentExpiryJob } from "./jobs/qrPaymentExpiry";
 import { startNearbyCleanupJob } from "./jobs/nearbyCleanup";
+import { startPreKeyCleanupJob } from "./jobs/preKeyCleanup";
 
 const app = createApp();
 const httpServer = createServer(app);
@@ -47,6 +48,7 @@ startStoryExpiryJob();
 startChannelStatsJob();
 startQrPaymentExpiryJob();
 startNearbyCleanupJob();
+startPreKeyCleanupJob();
 
 process.on("unhandledRejection", (reason) => {
   logger.error("Unhandled promise rejection", { reason: String(reason) });

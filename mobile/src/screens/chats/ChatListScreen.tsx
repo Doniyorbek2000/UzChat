@@ -489,6 +489,7 @@ export function ChatListScreen({ navigation }: Props) {
                 {display.title}
               </Text>
               {isFavorite && <Text style={styles.favoriteIcon}>⭐</Text>}
+              {!item.isSelf && <Text style={styles.encryptIcon}>🔒</Text>}
             </View>
             {item.lastMessage && (
               <View style={styles.timeRow}>
@@ -812,6 +813,7 @@ const styles = StyleSheet.create({
   titleUnread: { fontWeight: "700" },
   pinIcon: { fontSize: 12 },
   favoriteIcon: { fontSize: 12 },
+  encryptIcon: { fontSize: 10, marginLeft: 2, opacity: 0.5 },
   time: { fontSize: 12, color: colors.textSecondary, marginLeft: 8 },
   timeRow: { flexDirection: "row", alignItems: "center" },
   receipt: { fontSize: 11, color: colors.textSecondary, marginLeft: 8 },
