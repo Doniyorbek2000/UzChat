@@ -38,8 +38,10 @@ export interface SendMessageInput {
 }
 
 export const chatsApi = {
-  list() {
-    return apiClient.get<Conversation[]>("/conversations").then((r) => r.data);
+  list(params?: { limit?: number; cursor?: string }) {
+    return apiClient
+      .get<{ items: Conversation[]; nextCursor?: string }>("/conversations", { params })
+      .then((r) => r.data);
   },
 
   get(id: string) {
@@ -99,7 +101,7 @@ export const chatsApi = {
 
   reorderPinned(conversationId: string, direction: "up" | "down") {
     return apiClient
-      .post<Conversation[]>(`/conversations/${conversationId}/pinned-order`, { direction })
+      .post<{ items: Conversation[]; nextCursor?: string }>(`/conversations/${conversationId}/pinned-order`, { direction })
       .then((r) => r.data);
   },
 

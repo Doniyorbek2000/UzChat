@@ -92,8 +92,8 @@ describe("Chat integration", () => {
       .get("/conversations")
       .set("Authorization", `Bearer ${tokenA}`);
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.some((c: any) => c.id === conversationId)).toBe(true);
+    expect(Array.isArray(res.body.items)).toBe(true);
+    expect(res.body.items.some((c: any) => c.id === conversationId)).toBe(true);
   });
 
   it("GET /conversations/:id returns the conversation", async () => {

@@ -51,7 +51,9 @@ export const chatsController = {
   },
 
   async list(req: Request, res: Response) {
-    const conversations = await chatsService.listConversations(req.user!.sub);
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 50, 1), 100);
+    const cursor = req.query.cursor as string | undefined;
+    const conversations = await chatsService.listConversations(req.user!.sub, { limit, cursor });
     res.json(conversations);
   },
 

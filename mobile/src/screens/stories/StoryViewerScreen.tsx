@@ -30,8 +30,8 @@ export function StoryViewerScreen({ navigation, route }: Props) {
     }
     setSendingReply(true);
     try {
-      const conversations = await chatsApi.list();
-      const dm = conversations.find(
+      const result = await chatsApi.list();
+      const dm = result.items.find(
         (c) => c.type === "DIRECT" && c.participants?.some((p: any) => p.userId === userId)
       );
       if (dm) {

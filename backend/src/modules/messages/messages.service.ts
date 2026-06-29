@@ -389,7 +389,7 @@ async function publishScheduledMessage(m: Message) {
 
   const updated = await prisma.message.update({
     where: { id: m.id },
-    data: { scheduledFor: null, createdAt: new Date(), expiresAt },
+    data: { createdAt: new Date(), expiresAt },
     include: messageInclude(m.senderId),
   });
   await prisma.conversation.update({ where: { id: m.conversationId }, data: { updatedAt: new Date() } });
@@ -1248,6 +1248,12 @@ export const messagesService = {
     const published = [];
     for (const m of due) {
       try {
+        const claimed = await prisma.message.updateMany({
+          where: { id: m.id, scheduledFor: { not: null } },
+          data: { scheduledFor: null },
+        });
+        if (claimed.count === 0) continue;
+
         if (m.conversation.type === ConversationType.DIRECT) {
           const other = m.conversation.participants.find((p) => p.userId !== m.senderId);
           if (other && (await contactsService.isBlockedEitherWay(m.senderId, other.userId))) {

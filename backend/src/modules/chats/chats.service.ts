@@ -198,7 +198,8 @@ export const chatsService = {
     return chatsService.getConversation(userId, conversation.id);
   },
 
-  async listConversations(userId: string) {
+  async listConversations(userId: string, opts?: { limit?: number; cursor?: string }) {
+    const take = opts?.limit ?? 50;
     const [participations, blocked, contactIds, exceptions, viewer] = await Promise.all([
       prisma.conversationParticipant.findMany({
         where: { userId },
@@ -216,6 +217,8 @@ export const chatsService = {
           { pinnedAt: { sort: "desc", nulls: "last" } },
           { conversation: { updatedAt: "desc" } },
         ],
+        ...(opts?.cursor ? { cursor: { id: opts.cursor }, skip: 1 } : {}),
+        take: take + 1,
       }),
       prisma.blockedUser.findMany({ where: { ownerId: userId }, select: { blockedId: true } }),
       getContactIds(userId),
@@ -243,7 +246,10 @@ export const chatsService = {
           });
     const latestMentionByConversation = new Map(mentionRows.map((r) => [r.conversationId, r._max.createdAt]));
 
-    return participations
+    const hasMore = participations.length > take;
+    const page = hasMore ? participations.slice(0, take) : participations;
+
+    const items = page
       .filter((p) => {
         if (!p.hiddenAt) return true;
         const lastMessage = p.conversation.messages[0];
@@ -318,6 +324,9 @@ export const chatsService = {
           })(),
         };
       });
+
+    const nextCursor = hasMore ? page[page.length - 1].id : undefined;
+    return { items, nextCursor };
   },
 
   async getConversation(userId: string, conversationId: string) {
@@ -966,8 +975,16 @@ export const chatsService = {
     if (!request || request.conversationId !== conversationId) throw Errors.notFound("So'rov");
 
     try {
-      await prisma.$transaction([
-        prisma.conversationParticipant.create({
+      await prisma.$transaction(async (tx) => {
+        const fresh = await tx.conversation.findUniqueOrThrow({
+          where: { id: conversationId },
+          select: { memberCount: true, maxMembers: true },
+        });
+        if (fresh.memberCount >= fresh.maxMembers) {
+          throw Errors.badRequest(`Guruh a'zolar soni chegarasiga yetdi (${fresh.maxMembers.toLocaleString()})`);
+        }
+
+        await tx.conversationParticipant.create({
           data: {
             conversationId,
             userId: request.userId,
@@ -976,13 +993,13 @@ export const chatsService = {
             wrappedKeyNonce: request.wrappedKeyNonce,
             keySenderPublicKey: request.keySenderPublicKey,
           },
-        }),
-        prisma.conversation.update({
+        });
+        await tx.conversation.update({
           where: { id: conversationId },
-          data: { inviteCodeUseCount: { increment: 1 } },
-        }),
-        prisma.groupJoinRequest.delete({ where: { id: requestId } }),
-      ]);
+          data: { memberCount: { increment: 1 }, inviteCodeUseCount: { increment: 1 } },
+        });
+        await tx.groupJoinRequest.delete({ where: { id: requestId } });
+      });
     } catch (err: any) {
       if (err.code === "P2002") throw Errors.conflict("Foydalanuvchi allaqachon guruh a'zosi");
       if (err.code === "P2025") throw Errors.notFound("So'rov");

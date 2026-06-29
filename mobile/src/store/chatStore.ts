@@ -327,8 +327,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   keyChangeAlerts: [],
 
   loadConversations: async () => {
-    const conversations = await chatsApi.list();
-    set({ conversations });
+    const result = await chatsApi.list();
+    set({ conversations: result.items });
   },
 
   loadContactAliases: async () => {
@@ -1046,8 +1046,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   reorderPinned: async (conversationId, direction) => {
-    const conversations = await chatsApi.reorderPinned(conversationId, direction);
-    set({ conversations });
+    const result = await chatsApi.reorderPinned(conversationId, direction);
+    set({ conversations: result.items });
   },
 
   muteConversation: async (conversationId, muteFor) => {
