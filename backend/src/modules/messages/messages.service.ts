@@ -12,6 +12,7 @@ import { isInQuietHours, isNotificationsPaused } from "../../utils/notificationP
 import { uploadsDir } from "../media/upload";
 import { EditMessageInput, ListMessagesQuery, SearchMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
 import { logger } from "../../utils/logger";
+import { presenceService } from "../../services/presence.service";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
 
@@ -400,6 +401,9 @@ async function publishScheduledMessage(m: Message) {
 
 export const messagesService = {
   async sendMessage(userId: string, conversationId: string, input: SendMessageInput) {
+    const isNew = await presenceService.deduplicateNonce(conversationId, input.nonce);
+    if (!isNew) throw Errors.conflict("Bu xabar allaqachon yuborilgan (takroriy nonce)");
+
     const participant = await chatsService.assertParticipant(userId, conversationId);
 
     const conversation = await prisma.conversation.findUnique({
