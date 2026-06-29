@@ -224,7 +224,7 @@ function dropConversation<T>(record: Record<string, T>, conversationId: string):
   return next;
 }
 
-const conversationKeyCache: Record<string, string> = {};
+const conversationKeyCache: Record<string, { key: string; wrappedKey: string }> = {};
 
 export function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSnapshot): ReplyPreview {
   const base = { id: replyTo.id, senderId: replyTo.senderId, type: replyTo.type, deletedAt: replyTo.deletedAt };
@@ -404,7 +404,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   getConversationKey: (conversation) => {
-    if (conversationKeyCache[conversation.id]) return conversationKeyCache[conversation.id];
+    const cached = conversationKeyCache[conversation.id];
+    if (cached && cached.wrappedKey === conversation.wrappedKey) return cached.key;
 
     const { keyPair } = useAuthStore.getState();
     if (!keyPair) throw new Error("E2EE kalitlari topilmadi");
@@ -415,7 +416,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       conversation.keySenderPublicKey,
       keyPair.privateKey
     );
-    conversationKeyCache[conversation.id] = key;
+    conversationKeyCache[conversation.id] = { key, wrappedKey: conversation.wrappedKey };
     return key;
   },
 
@@ -922,7 +923,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       participants,
     });
 
-    conversationKeyCache[conversation.id] = conversationKey;
+    conversationKeyCache[conversation.id] = { key: conversationKey, wrappedKey: conversation.wrappedKey };
     set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
     return conversation;
   },
@@ -945,7 +946,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       participants,
     });
 
-    conversationKeyCache[conversation.id] = conversationKey;
+    conversationKeyCache[conversation.id] = { key: conversationKey, wrappedKey: conversation.wrappedKey };
     set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
     return conversation;
   },
@@ -967,7 +968,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       participants,
     });
 
-    conversationKeyCache[conversation.id] = conversationKey;
+    conversationKeyCache[conversation.id] = { key: conversationKey, wrappedKey: conversation.wrappedKey };
     set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
     return conversation;
   },
@@ -989,7 +990,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       participants,
     });
 
-    conversationKeyCache[conversation.id] = conversationKey;
+    conversationKeyCache[conversation.id] = { key: conversationKey, wrappedKey: conversation.wrappedKey };
     set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
     return conversation;
   },
