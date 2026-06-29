@@ -40,7 +40,7 @@ export function MyStoresScreen({ navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -50,59 +50,95 @@ export function MyStoresScreen({ navigation }: Props) {
   }
 
   return (
-    <FlatList
-      style={styles.container}
-      data={stores}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={styles.list}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); marketplaceApi.getMyStores().then(setStores).catch(() => {}).finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={styles.storeCard}
-          onPress={() => navigation.navigate("StoreView", { storeId: item.id })}
-        >
-          {item.avatarUrl ? (
-            <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+    <View style={styles.container}>
+      <FlatList
+        data={stores}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); marketplaceApi.getMyStores().then(setStores).catch(() => {}).finally(() => setRefreshing(false)); }} tintColor={colors.primary} />}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.storeCard}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("StoreView", { storeId: item.id })}
+          >
+            {item.avatarUrl ? (
+              <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+              </View>
+            )}
+            <View style={styles.storeInfo}>
+              <Text style={styles.storeName}>{item.name}</Text>
+              <View style={styles.metaRow}>
+                <View style={styles.metaBadge}>
+                  <Text style={styles.metaBadgeText}>{item._count?.products ?? 0} mahsulot</Text>
+                </View>
+                <View style={[styles.metaBadge, styles.metaBadgeOrders]}>
+                  <Text style={[styles.metaBadgeText, styles.metaBadgeOrdersText]}>{item._count?.orders ?? 0} buyurtma</Text>
+                </View>
+              </View>
             </View>
-          )}
-          <View style={{ flex: 1 }}>
-            <Text style={styles.storeName}>{item.name}</Text>
-            <Text style={styles.storeInfo}>
-              {item._count?.products ?? 0} mahsulot · {item._count?.orders ?? 0} buyurtma
-            </Text>
-          </View>
-        </TouchableOpacity>
-      )}
-      ListEmptyComponent={
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>Siz hali do'kon yaratmagansiz</Text>
-          <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate("CreateStore")}>
-            <Text style={styles.createBtnText}>Do'kon yaratish</Text>
           </TouchableOpacity>
-        </View>
-      }
-    />
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>🏪</Text>
+            <Text style={styles.emptyTitle}>Do'konlar yo'q</Text>
+            <Text style={styles.emptyHint}>O'z do'koningizni yarating va savdo boshlang</Text>
+            <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate("CreateStore")} activeOpacity={0.7}>
+              <Text style={styles.createBtnText}>+ Do'kon yaratish</Text>
+            </TouchableOpacity>
+          </View>
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 48 },
-  emptyText: { color: colors.textSecondary, marginBottom: 16 },
-  list: { padding: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  list: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 20 },
   storeCard: {
-    flexDirection: "row", backgroundColor: colors.background, borderRadius: 12,
-    padding: 14, marginBottom: 10, gap: 12, alignItems: "center",
-    borderWidth: 1, borderColor: colors.border,
+    flexDirection: "row",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    gap: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  avatar: { width: 50, height: 50, borderRadius: 12 },
+  avatar: { width: 52, height: 52, borderRadius: 14 },
   avatarPlaceholder: { backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#fff", fontSize: 20, fontWeight: "700" },
-  storeName: { fontSize: 15, fontWeight: "600", color: colors.text },
-  storeInfo: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
-  createBtn: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  createBtnText: { color: "#fff", fontWeight: "600" },
+  storeInfo: { flex: 1 },
+  storeName: { fontSize: 16, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  metaRow: { flexDirection: "row", gap: 6 },
+  metaBadge: { backgroundColor: "#007AFF" + "15", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  metaBadgeText: { fontSize: 10, fontWeight: "600", color: "#007AFF" },
+  metaBadgeOrders: { backgroundColor: "#34C759" + "15" },
+  metaBadgeOrdersText: { color: "#34C759" },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center", marginBottom: 20 },
+  createBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  createBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
 });

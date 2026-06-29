@@ -11,22 +11,13 @@ import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MyOrders">;
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Kutilmoqda",
-  CONFIRMED: "Tasdiqlangan",
-  SHIPPED: "Jo'natilgan",
-  DELIVERED: "Yetkazilgan",
-  CANCELLED: "Bekor qilingan",
-  REFUNDED: "Qaytarilgan",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: "#f59e0b",
-  CONFIRMED: colors.primary,
-  SHIPPED: "#3b82f6",
-  DELIVERED: "#22c55e",
-  CANCELLED: colors.danger,
-  REFUNDED: colors.textSecondary,
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
+  PENDING: { label: "Kutilmoqda", color: "#FF9500", icon: "⏳" },
+  CONFIRMED: { label: "Tasdiqlangan", color: "#007AFF", icon: "✓" },
+  SHIPPED: { label: "Jo'natilgan", color: "#5856D6", icon: "📦" },
+  DELIVERED: { label: "Yetkazilgan", color: "#34C759", icon: "✅" },
+  CANCELLED: { label: "Bekor qilingan", color: "#FF3B30", icon: "✕" },
+  REFUNDED: { label: "Qaytarilgan", color: "#8E8E93", icon: "↩" },
 };
 
 export function MyOrdersScreen({ navigation }: Props) {
@@ -69,7 +60,11 @@ export function MyOrdersScreen({ navigation }: Props) {
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   if (error) {
@@ -77,64 +72,97 @@ export function MyOrdersScreen({ navigation }: Props) {
   }
 
   return (
-    <FlatList
-      style={styles.container}
-      data={orders}
-      keyExtractor={(item) => item.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
-      contentContainerStyle={styles.list}
-      renderItem={({ item }) => (
-        <View style={styles.orderCard}>
-          <View style={styles.orderHeader}>
-            <Text style={styles.storeName}>{item.store.name}</Text>
-            <Text style={[styles.status, { color: STATUS_COLORS[item.status] }]}>
-              {STATUS_LABELS[item.status] ?? item.status}
-            </Text>
-          </View>
-
-          {item.items.map((oi) => (
-            <Text key={oi.id} style={styles.itemText}>
-              {oi.product.name} × {oi.quantity} — {oi.price.toLocaleString()} {item.currency}
-            </Text>
-          ))}
-
-          <View style={styles.orderFooter}>
-            <Text style={styles.total}>Jami: {item.totalAmount.toLocaleString()} {item.currency}</Text>
-            <Text style={styles.date}>{new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
-          </View>
-
-          {item.status === "PENDING" && (
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => cancelOrder(item.id)}>
-              <Text style={styles.cancelBtnText}>Bekor qilish</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+    <View style={styles.container}>
+      {orders.length > 0 && (
+        <Text style={styles.countText}>{orders.length} ta buyurtma</Text>
       )}
-      ListEmptyComponent={
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>Buyurtmalar yo'q</Text>
-        </View>
-      }
-    />
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        contentContainerStyle={styles.list}
+        renderItem={({ item }) => {
+          const statusCfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.PENDING;
+          return (
+            <View style={styles.orderCard}>
+              <View style={styles.orderHeader}>
+                <Text style={styles.storeName}>{item.store.name}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: statusCfg.color + "15" }]}>
+                  <Text style={[styles.statusText, { color: statusCfg.color }]}>
+                    {statusCfg.icon} {statusCfg.label}
+                  </Text>
+                </View>
+              </View>
+
+              {item.items.map((oi) => (
+                <View key={oi.id} style={styles.itemRow}>
+                  <Text style={styles.itemText} numberOfLines={1}>{oi.product.name} × {oi.quantity}</Text>
+                  <Text style={styles.itemPrice}>{oi.price.toLocaleString()} {item.currency}</Text>
+                </View>
+              ))}
+
+              <View style={styles.orderFooter}>
+                <Text style={styles.total}>Jami: {item.totalAmount.toLocaleString()} {item.currency}</Text>
+                <Text style={styles.date}>{new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
+              </View>
+
+              {item.status === "PENDING" && (
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => cancelOrder(item.id)} activeOpacity={0.7}>
+                  <Text style={styles.cancelBtnText}>Bekor qilish</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        }}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>📋</Text>
+            <Text style={styles.emptyTitle}>Buyurtmalar yo'q</Text>
+            <Text style={styles.emptyHint}>Do'konlardan xarid qiling</Text>
+          </View>
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 48 },
-  emptyText: { color: colors.textSecondary },
-  list: { padding: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  countText: { fontSize: 13, color: colors.textSecondary, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
+  list: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 20 },
   orderCard: {
-    backgroundColor: colors.background, borderRadius: 12, padding: 14,
-    marginBottom: 10, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  orderHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  orderHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   storeName: { fontSize: 15, fontWeight: "600", color: colors.text },
-  status: { fontSize: 13, fontWeight: "600" },
-  itemText: { fontSize: 13, color: colors.textSecondary, marginBottom: 2 },
-  orderFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  statusText: { fontSize: 11, fontWeight: "600" },
+  itemRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 3 },
+  itemText: { fontSize: 13, color: colors.textSecondary, flex: 1 },
+  itemPrice: { fontSize: 13, color: colors.text, fontWeight: "500" },
+  orderFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: 10, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
   total: { fontSize: 15, fontWeight: "700", color: colors.text },
   date: { fontSize: 12, color: colors.textSecondary },
-  cancelBtn: { marginTop: 10, alignSelf: "flex-end", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 6, backgroundColor: colors.danger },
-  cancelBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  cancelBtn: {
+    marginTop: 10,
+    alignSelf: "flex-end",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#FF3B30" + "15",
+  },
+  cancelBtnText: { color: "#FF3B30", fontSize: 13, fontWeight: "600" },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
 });
