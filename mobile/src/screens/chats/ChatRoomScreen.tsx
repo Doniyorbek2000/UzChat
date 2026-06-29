@@ -124,6 +124,8 @@ const SEARCH_TYPE_FILTERS: { type: MessageType | "ALL"; label: string }[] = [
   { type: "AUDIO", label: "🎤 Ovozli" },
   { type: "FILE", label: "📄 Fayl" },
   { type: "POLL", label: "📊 So'rovnoma" },
+  { type: "LOCATION", label: "📍 Joylashuv" },
+  { type: "STICKER", label: "🏷 Stiker" },
 ];
 
 const MORE_REACTIONS = [
@@ -2470,7 +2472,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           {actionMessage &&
             actionMessage.type === "POLL" &&
-            actionMessage.senderId === user?.id &&
+            (actionMessage.senderId === user?.id || myRole === "OWNER" || myRole === "ADMIN") &&
             !actionMessage.pollClosedAt &&
             !actionMessage.deletedAt && (
               <TouchableOpacity

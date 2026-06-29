@@ -8,6 +8,8 @@ export const REPLY_TYPE_LABELS: Partial<Record<MessageType, string>> = {
   FILE: "📄 Fayl",
   CONTACT: "👤 Kontakt",
   POLL: "📊 So'rovnoma",
+  LOCATION: "📍 Joylashuv",
+  STICKER: "🏷 Stiker",
 };
 
 export function getPreviewLabel(item: { type: MessageType; text: string | null; deletedAt: string | null }) {
