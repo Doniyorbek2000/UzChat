@@ -62,9 +62,17 @@ export function isConversationUnread(conversation: Conversation, currentUserId: 
 export function formatTime(iso: string): string {
   const date = new Date(iso);
   const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  if (isToday) {
+  if (date.toDateString() === now.toDateString()) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return "Kecha";
+  }
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (86400 * 1000));
+  if (diffDays < 7) {
+    return date.toLocaleDateString("uz-UZ", { weekday: "short" });
   }
   return date.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
 }
