@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { subscriptionsApi, ChannelSubscription } from "../../api/subscriptions";
@@ -7,6 +7,12 @@ import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MySubscriptions">;
+
+const TIER_CONFIG = {
+  vip: { icon: "👑", label: "VIP", color: "#FF9500", bg: "#FF9500" + "15" },
+  premium: { icon: "⭐", label: "Premium", color: "#AF52DE", bg: "#AF52DE" + "15" },
+  basic: { icon: "✓", label: "Oddiy", color: "#34C759", bg: "#34C759" + "15" },
+};
 
 export function MySubscriptionsScreen({ navigation }: Props) {
   const [subs, setSubs] = useState<ChannelSubscription[]>([]);
@@ -46,7 +52,11 @@ export function MySubscriptionsScreen({ navigation }: Props) {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   if (error) {
@@ -55,40 +65,42 @@ export function MySubscriptionsScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {subs.length > 0 && (
+        <Text style={styles.countText}>{subs.length} ta obuna</Text>
+      )}
       <FlatList
         data={subs}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.subCard}
-            onPress={() => navigation.navigate("ChatRoom", { conversationId: item.conversationId, title: item.conversation?.name ?? "Kanal" })}
-            onLongPress={() => handleUnsubscribe(item)}
-          >
-            <View style={styles.subAvatar}>
-              <Text style={styles.subAvatarText}>{(item.conversation?.name ?? "K").charAt(0).toUpperCase()}</Text>
-            </View>
-            <View style={styles.subInfo}>
-              <Text style={styles.subName}>{item.conversation?.name ?? "Kanal"}</Text>
-              <Text style={styles.subTier}>
-                {item.tier === "vip" ? "VIP" : item.tier === "premium" ? "Premium" : "Oddiy"} obuna
-              </Text>
-              <Text style={styles.subDate}>
-                {new Date(item.startedAt).toLocaleDateString("uz-UZ")} dan beri
-              </Text>
-            </View>
-            <View style={styles.tierBadge}>
-              <Text style={styles.tierBadgeText}>
-                {item.tier === "vip" ? "👑" : item.tier === "premium" ? "⭐" : "✓"}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const tier = TIER_CONFIG[item.tier as keyof typeof TIER_CONFIG] ?? TIER_CONFIG.basic;
+          return (
+            <TouchableOpacity
+              style={styles.subCard}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate("ChatRoom", { conversationId: item.conversationId, title: item.conversation?.name ?? "Kanal" })}
+              onLongPress={() => handleUnsubscribe(item)}
+            >
+              <View style={styles.subAvatar}>
+                <Text style={styles.subAvatarText}>{(item.conversation?.name ?? "K").charAt(0).toUpperCase()}</Text>
+              </View>
+              <View style={styles.subInfo}>
+                <Text style={styles.subName}>{item.conversation?.name ?? "Kanal"}</Text>
+                <View style={[styles.tierBadge, { backgroundColor: tier.bg }]}>
+                  <Text style={[styles.tierBadgeText, { color: tier.color }]}>{tier.icon} {tier.label}</Text>
+                </View>
+                <Text style={styles.subDate}>
+                  {new Date(item.startedAt).toLocaleDateString("uz-UZ")} dan beri
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📢</Text>
-            <Text style={styles.emptyText}>Obunalar yo'q</Text>
+            <Text style={styles.emptyTitle}>Obunalar yo'q</Text>
             <Text style={styles.emptyHint}>Kanallarga obuna bo'ling va maxsus kontent oling</Text>
           </View>
         }
@@ -98,19 +110,40 @@ export function MySubscriptionsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  list: { padding: 12, paddingBottom: 20 },
-  subCard: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 8, alignItems: "center", gap: 12 },
-  subAvatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.warning, alignItems: "center", justifyContent: "center" },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  countText: { fontSize: 13, color: colors.textSecondary, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
+  list: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 20 },
+  subCard: {
+    flexDirection: "row",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    alignItems: "center",
+    gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  subAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   subAvatarText: { fontSize: 20, fontWeight: "700", color: "#fff" },
   subInfo: { flex: 1 },
-  subName: { fontSize: 15, fontWeight: "600", color: colors.text },
-  subTier: { fontSize: 12, color: colors.primary, marginTop: 2 },
-  subDate: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
-  tierBadge: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#FFF3E0", alignItems: "center", justifyContent: "center" },
-  tierBadgeText: { fontSize: 18 },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
-  emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  subName: { fontSize: 15, fontWeight: "600", color: colors.text, marginBottom: 4 },
+  tierBadge: { alignSelf: "flex-start", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 4 },
+  tierBadgeText: { fontSize: 11, fontWeight: "600" },
+  subDate: { fontSize: 11, color: colors.textSecondary },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
 });

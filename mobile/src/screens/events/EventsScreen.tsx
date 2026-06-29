@@ -47,17 +47,34 @@ export function EventsScreen({ navigation }: Props) {
     const goingCount = item.rsvps?.filter((r) => r.status === "going").length ?? 0;
 
     return (
-      <View style={[styles.eventCard, { borderLeftColor: item.color }]}>
-        <View style={styles.dateColumn}>
-          <Text style={styles.dateMonth}>{date.toLocaleDateString("uz-UZ", { month: "short" }).toUpperCase()}</Text>
+      <View style={styles.eventCard}>
+        <View style={[styles.dateColumn, { backgroundColor: (item.color || colors.primary) + "15" }]}>
+          <Text style={[styles.dateMonth, { color: item.color || colors.danger }]}>
+            {date.toLocaleDateString("uz-UZ", { month: "short" }).toUpperCase()}
+          </Text>
           <Text style={styles.dateDay}>{date.getDate()}</Text>
-          <Text style={styles.dateTime}>{item.isAllDay ? "Kun bo'yi" : date.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}</Text>
+          <Text style={styles.dateTime}>
+            {item.isAllDay ? "Kun bo'yi" : date.toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })}
+          </Text>
         </View>
         <View style={styles.eventInfo}>
           <Text style={styles.eventTitle}>{item.title}</Text>
-          {item.location && <Text style={styles.eventLocation}>📍 {item.location}</Text>}
-          {item.conversation && <Text style={styles.eventGroup}>💬 {item.conversation.name}</Text>}
-          <Text style={styles.eventCreator}>{item.creator.displayName} · {goingCount} boruvchi</Text>
+          {item.location && (
+            <View style={styles.eventDetailRow}>
+              <Text style={styles.eventDetailIcon}>📍</Text>
+              <Text style={styles.eventDetailText}>{item.location}</Text>
+            </View>
+          )}
+          {item.conversation && (
+            <View style={styles.eventDetailRow}>
+              <Text style={styles.eventDetailIcon}>💬</Text>
+              <Text style={styles.eventDetailText}>{item.conversation.name}</Text>
+            </View>
+          )}
+          <View style={styles.eventDetailRow}>
+            <Text style={styles.eventDetailIcon}>👤</Text>
+            <Text style={styles.eventDetailText}>{item.creator.displayName} · {goingCount} boruvchi</Text>
+          </View>
 
           <View style={styles.rsvpRow}>
             {(["going", "maybe", "not_going"] as const).map((status) => (
@@ -65,9 +82,10 @@ export function EventsScreen({ navigation }: Props) {
                 key={status}
                 style={[styles.rsvpBtn, myRsvp?.status === status && styles.rsvpBtnActive]}
                 onPress={() => handleRsvp(item.id, status)}
+                activeOpacity={0.7}
               >
                 <Text style={[styles.rsvpBtnText, myRsvp?.status === status && styles.rsvpBtnTextActive]}>
-                  {status === "going" ? "Boraman" : status === "maybe" ? "Balki" : "Bormayman"}
+                  {status === "going" ? "✓ Boraman" : status === "maybe" ? "? Balki" : "✕ Yo'q"}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -78,7 +96,11 @@ export function EventsScreen({ navigation }: Props) {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   if (error) {
@@ -96,7 +118,7 @@ export function EventsScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📅</Text>
-            <Text style={styles.emptyText}>Kelgusi tadbirlar yo'q</Text>
+            <Text style={styles.emptyTitle}>Kelgusi tadbirlar yo'q</Text>
             <Text style={styles.emptyHint}>Guruh yoki kanaldagi tadbirlar shu yerda ko'rinadi</Text>
           </View>
         }
@@ -106,25 +128,49 @@ export function EventsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  list: { padding: 12, paddingBottom: 20 },
-  eventCard: { flexDirection: "row", backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 10, borderLeftWidth: 4, gap: 14 },
-  dateColumn: { alignItems: "center", width: 50 },
-  dateMonth: { fontSize: 10, fontWeight: "700", color: colors.danger, letterSpacing: 0.5 },
-  dateDay: { fontSize: 28, fontWeight: "700", color: colors.text },
-  dateTime: { fontSize: 10, color: colors.textSecondary },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  list: { padding: 16, paddingBottom: 20 },
+  eventCard: {
+    flexDirection: "row",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    gap: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  dateColumn: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+  },
+  dateMonth: { fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
+  dateDay: { fontSize: 22, fontWeight: "700", color: colors.text },
+  dateTime: { fontSize: 9, color: colors.textSecondary },
   eventInfo: { flex: 1 },
   eventTitle: { fontSize: 16, fontWeight: "600", color: colors.text, marginBottom: 4 },
-  eventLocation: { fontSize: 12, color: colors.textSecondary, marginBottom: 2 },
-  eventGroup: { fontSize: 12, color: colors.textSecondary, marginBottom: 2 },
-  eventCreator: { fontSize: 11, color: colors.textSecondary, marginBottom: 8 },
-  rsvpRow: { flexDirection: "row", gap: 6 },
-  rsvpBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 14, backgroundColor: colors.surface },
+  eventDetailRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 2 },
+  eventDetailIcon: { fontSize: 11 },
+  eventDetailText: { fontSize: 12, color: colors.textSecondary },
+  rsvpRow: { flexDirection: "row", gap: 6, marginTop: 8 },
+  rsvpBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: colors.background,
+  },
   rsvpBtnActive: { backgroundColor: colors.primary },
   rsvpBtnText: { fontSize: 11, fontWeight: "600", color: colors.textSecondary },
   rsvpBtnTextActive: { color: "#fff" },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
-  emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
 });

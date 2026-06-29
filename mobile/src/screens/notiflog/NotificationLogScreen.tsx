@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator , RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { notifLogApi, NotifLogEntry } from "../../api/notifLog";
@@ -8,9 +8,15 @@ import { ErrorView } from "../../components";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NotificationLog">;
 
-const TYPE_ICONS: Record<string, string> = {
-  message: "💬", payment: "💰", call: "📞", system: "🔔",
-  gift: "🎁", badge: "🏅", referral: "👥", default: "📩",
+const TYPE_CONFIG: Record<string, { icon: string; color: string }> = {
+  message: { icon: "💬", color: "#007AFF" },
+  payment: { icon: "💰", color: "#34C759" },
+  call: { icon: "📞", color: "#5856D6" },
+  system: { icon: "🔔", color: "#FF9500" },
+  gift: { icon: "🎁", color: "#FF2D55" },
+  badge: { icon: "🏅", color: "#AF52DE" },
+  referral: { icon: "👥", color: "#00C7BE" },
+  default: { icon: "📩", color: "#8E8E93" },
 };
 
 export function NotificationLogScreen(_props: Props) {
@@ -54,43 +60,55 @@ export function NotificationLogScreen(_props: Props) {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   if (error) {
     return <ErrorView message="Bildirishnomalarni yuklab bo'lmadi" onRetry={loadData} />;
   }
 
+  const unreadCount = items.filter((i) => !i.isRead).length;
+
   return (
     <View style={styles.container}>
-      {items.some((i) => !i.isRead) && (
-        <TouchableOpacity style={styles.markAllBtn} onPress={markAllRead}>
-          <Text style={styles.markAllText}>Barchasini o'qilgan deb belgilash</Text>
+      {unreadCount > 0 && (
+        <TouchableOpacity style={styles.markAllBtn} onPress={markAllRead} activeOpacity={0.7}>
+          <Text style={styles.markAllText}>✓ Barchasini o'qilgan deb belgilash ({unreadCount})</Text>
         </TouchableOpacity>
       )}
 
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.notifCard, !item.isRead && styles.unread]}
-            onPress={async () => {
-              if (!item.isRead) {
-                await notifLogApi.markAsRead(item.id).catch(() => {});
-                setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, isRead: true } : i));
-              }
-            }}
-          >
-            <Text style={styles.notifIcon}>{TYPE_ICONS[item.type] ?? TYPE_ICONS.default}</Text>
-            <View style={styles.notifInfo}>
-              <Text style={styles.notifTitle}>{item.title}</Text>
-              <Text style={styles.notifBody} numberOfLines={2}>{item.body}</Text>
-              <Text style={styles.notifDate}>{new Date(item.createdAt).toLocaleString("uz-UZ")}</Text>
-            </View>
-            {!item.isRead && <View style={styles.unreadDot} />}
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const config = TYPE_CONFIG[item.type] ?? TYPE_CONFIG.default;
+          return (
+            <TouchableOpacity
+              style={[styles.notifCard, !item.isRead && styles.unread]}
+              activeOpacity={0.7}
+              onPress={async () => {
+                if (!item.isRead) {
+                  await notifLogApi.markAsRead(item.id).catch(() => {});
+                  setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, isRead: true } : i));
+                }
+              }}
+            >
+              <View style={[styles.notifIconContainer, { backgroundColor: config.color + "15" }]}>
+                <Text style={styles.notifIcon}>{config.icon}</Text>
+              </View>
+              <View style={styles.notifInfo}>
+                <Text style={styles.notifTitle}>{item.title}</Text>
+                <Text style={styles.notifBody} numberOfLines={2}>{item.body}</Text>
+                <Text style={styles.notifDate}>{new Date(item.createdAt).toLocaleString("uz-UZ")}</Text>
+              </View>
+              {!item.isRead && <View style={styles.unreadDot} />}
+            </TouchableOpacity>
+          );
+        }}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
@@ -99,7 +117,8 @@ export function NotificationLogScreen(_props: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🔔</Text>
-            <Text style={styles.emptyText}>Bildirishnomalar yo'q</Text>
+            <Text style={styles.emptyTitle}>Bildirishnomalar yo'q</Text>
+            <Text style={styles.emptyHint}>Yangi bildirishnomalar shu yerda ko'rinadi</Text>
           </View>
         }
       />
@@ -108,19 +127,47 @@ export function NotificationLogScreen(_props: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  markAllBtn: { padding: 12, alignItems: "center" },
-  markAllText: { fontSize: 14, fontWeight: "600", color: colors.primary },
-  list: { paddingHorizontal: 12, paddingBottom: 20 },
-  notifCard: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 10, padding: 12, marginBottom: 4, gap: 10 },
-  unread: { backgroundColor: "#F0F4FF" },
-  notifIcon: { fontSize: 24 },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  markAllBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: colors.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  markAllText: { fontSize: 14, fontWeight: "600", color: colors.primary, textAlign: "center" },
+  list: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 },
+  notifCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 6,
+    gap: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  unread: { backgroundColor: "#007AFF" + "08" },
+  notifIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notifIcon: { fontSize: 18 },
   notifInfo: { flex: 1 },
   notifTitle: { fontSize: 14, fontWeight: "600", color: colors.text },
-  notifBody: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+  notifBody: { fontSize: 13, color: colors.textSecondary, marginTop: 2, lineHeight: 18 },
   notifDate: { fontSize: 11, color: colors.textSecondary, marginTop: 4 },
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
 });

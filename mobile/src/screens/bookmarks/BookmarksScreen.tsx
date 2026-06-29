@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert , RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { bookmarksApi, Bookmark } from "../../api/bookmarks";
@@ -68,7 +68,11 @@ export function BookmarksScreen({ navigation }: Props) {
   };
 
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
   }
 
   if (error) {
@@ -77,12 +81,16 @@ export function BookmarksScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {bookmarks.length > 0 && (
+        <Text style={styles.countText}>{bookmarks.length} ta xatcho'p</Text>
+      )}
       <FlatList
         data={bookmarks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
+            activeOpacity={0.7}
             onPress={() => navigation.navigate("ChatRoom", {
               conversationId: item.message.conversationId,
               title: item.message.conversation?.title ?? "",
@@ -91,12 +99,23 @@ export function BookmarksScreen({ navigation }: Props) {
             onLongPress={() => handleRemove(item)}
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.senderName}>{item.message.sender.displayName}</Text>
+              <View style={styles.senderRow}>
+                <View style={styles.senderAvatar}>
+                  <Text style={styles.senderAvatarText}>{item.message.sender.displayName.charAt(0).toUpperCase()}</Text>
+                </View>
+                <Text style={styles.senderName}>{item.message.sender.displayName}</Text>
+              </View>
               <Text style={styles.time}>{new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
             </View>
             <Text style={styles.messagePreview} numberOfLines={2}>{getMessagePreview(item.message)}</Text>
-            {item.label && <Text style={styles.label}>🏷️ {item.label}</Text>}
-            <Text style={styles.chatName}>💬 {item.message.conversation?.title ?? "Suhbat"}</Text>
+            <View style={styles.cardFooter}>
+              {item.label && (
+                <View style={styles.labelBadge}>
+                  <Text style={styles.labelText}>🏷️ {item.label}</Text>
+                </View>
+              )}
+              <Text style={styles.chatName}>💬 {item.message.conversation?.title ?? "Suhbat"}</Text>
+            </View>
           </TouchableOpacity>
         )}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
@@ -104,7 +123,7 @@ export function BookmarksScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🔖</Text>
-            <Text style={styles.emptyText}>Xatcho'plar yo'q</Text>
+            <Text style={styles.emptyTitle}>Xatcho'plar yo'q</Text>
             <Text style={styles.emptyHint}>Xabarlarni xatcho'plash uchun ularni bosib ushlab turing</Text>
           </View>
         }
@@ -114,17 +133,41 @@ export function BookmarksScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  list: { padding: 12, paddingBottom: 20 },
-  card: { backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 8 },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  countText: { fontSize: 13, color: colors.textSecondary, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
+  list: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 20 },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  senderRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  senderAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  senderAvatarText: { fontSize: 12, fontWeight: "700", color: "#fff" },
   senderName: { fontSize: 14, fontWeight: "600", color: colors.text },
   time: { fontSize: 11, color: colors.textSecondary },
-  messagePreview: { fontSize: 14, color: colors.textSecondary, marginBottom: 6 },
-  label: { fontSize: 12, color: colors.primary, marginBottom: 4 },
+  messagePreview: { fontSize: 14, color: colors.text, marginBottom: 8, lineHeight: 20 },
+  cardFooter: { flexDirection: "row", alignItems: "center", gap: 8 },
+  labelBadge: { backgroundColor: colors.primary + "15", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
+  labelText: { fontSize: 11, color: colors.primary, fontWeight: "500" },
   chatName: { fontSize: 11, color: colors.textSecondary },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
-  emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
 });

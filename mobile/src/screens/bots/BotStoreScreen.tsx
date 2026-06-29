@@ -48,6 +48,7 @@ export function BotStoreScreen({ navigation }: Props) {
   const renderBot = ({ item }: { item: Bot }) => (
     <TouchableOpacity
       style={styles.botCard}
+      activeOpacity={0.7}
       onPress={() => navigation.navigate("BotDetail", { botId: item.id })}
     >
       <View style={styles.avatar}>
@@ -60,8 +61,16 @@ export function BotStoreScreen({ navigation }: Props) {
           <Text style={styles.botDesc} numberOfLines={2}>{item.description}</Text>
         )}
         <View style={styles.badgeRow}>
-          {item.isInline && <Text style={styles.badge}>Inline</Text>}
-          {!item.isActive && <Text style={[styles.badge, styles.badgeInactive]}>Nofaol</Text>}
+          {item.isInline && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Inline</Text>
+            </View>
+          )}
+          {!item.isActive && (
+            <View style={[styles.badge, styles.badgeInactive]}>
+              <Text style={[styles.badgeText, styles.badgeInactiveText]}>Nofaol</Text>
+            </View>
+          )}
           <Text style={styles.cmdCount}>{item.commands.length} buyruq</Text>
         </View>
       </View>
@@ -71,39 +80,44 @@ export function BotStoreScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, tab === "search" && styles.tabActive]}
-          onPress={() => setTab("search")}
-        >
-          <Text style={[styles.tabText, tab === "search" && styles.tabTextActive]}>Botlar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, tab === "mine" && styles.tabActive]}
-          onPress={() => setTab("mine")}
-        >
-          <Text style={[styles.tabText, tab === "mine" && styles.tabTextActive]}>Mening botlarim</Text>
-        </TouchableOpacity>
+        {(["search", "mine"] as const).map((t) => (
+          <TouchableOpacity key={t} style={[styles.tab, tab === t && styles.tabActive]} onPress={() => setTab(t)}>
+            <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
+              {t === "search" ? "🤖 Botlar" : "👤 Mening"}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {tab === "search" && (
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Botlarni qidirish..."
-          placeholderTextColor={colors.textSecondary}
-          value={search}
-          onChangeText={setSearch}
-          returnKeyType="search"
-        />
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Botlarni qidirish..."
+            placeholderTextColor={colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch("")} hitSlop={8}>
+              <Text style={styles.searchClear}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )}
 
       {tab === "mine" && (
-        <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate("CreateBot")}>
+        <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate("CreateBot")} activeOpacity={0.7}>
           <Text style={styles.createBtnText}>+ Yangi bot yaratish</Text>
         </TouchableOpacity>
       )}
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       ) : error ? (
         <ErrorView message="Botlarni yuklab bo'lmadi" onRetry={load} />
       ) : (
@@ -114,7 +128,15 @@ export function BotStoreScreen({ navigation }: Props) {
           renderItem={renderBot}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={<Text style={styles.emptyText}>Bot topilmadi</Text>}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyIcon}>{tab === "mine" ? "🤖" : "🔍"}</Text>
+              <Text style={styles.emptyTitle}>{tab === "mine" ? "Botlar yo'q" : "Topilmadi"}</Text>
+              <Text style={styles.emptyHint}>
+                {tab === "mine" ? "O'zingizning botingizni yarating" : "Boshqa kalit so'z bilan qidiring"}
+              </Text>
+            </View>
+          }
         />
       )}
     </View>
@@ -122,48 +144,66 @@ export function BotStoreScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  tabs: { flexDirection: "row", padding: 12, gap: 8 },
-  tab: { flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: colors.background, alignItems: "center" },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  tabs: { flexDirection: "row", padding: 12, gap: 8, backgroundColor: colors.surface },
+  tab: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.background, alignItems: "center" },
   tabActive: { backgroundColor: colors.primary },
-  tabText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
+  tabText: { fontSize: 14, fontWeight: "600", color: colors.textSecondary },
   tabTextActive: { color: "#fff" },
-  searchInput: {
-    marginHorizontal: 12,
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: colors.text,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  createBtn: {
-    marginHorizontal: 12,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 10,
+  searchContainer: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 14,
+    height: 44,
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  createBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
-  loader: { marginTop: 40 },
-  list: { paddingHorizontal: 12, paddingBottom: 20 },
+  searchIcon: { fontSize: 16 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 },
+  searchClear: { fontSize: 16, color: colors.textSecondary, paddingHorizontal: 4 },
+  createBtn: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  createBtnText: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  list: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 20 },
   botCard: {
     flexDirection: "row",
     backgroundColor: colors.surface,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     marginBottom: 8,
     gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   avatar: {
     width: 50,
     height: 50,
-    borderRadius: 25,
-    backgroundColor: "#E8F5E9",
+    borderRadius: 14,
+    backgroundColor: "#34C759" + "15",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -171,10 +211,15 @@ const styles = StyleSheet.create({
   botInfo: { flex: 1 },
   botName: { fontSize: 16, fontWeight: "600", color: colors.text },
   botUsername: { fontSize: 13, color: colors.textSecondary, marginTop: 1 },
-  botDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
+  botDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 4, lineHeight: 17 },
   badgeRow: { flexDirection: "row", gap: 6, marginTop: 6, alignItems: "center" },
-  badge: { fontSize: 10, fontWeight: "600", color: colors.primary, backgroundColor: "#E3F2FD", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  badgeInactive: { color: colors.warning, backgroundColor: "#FFF3E0" },
+  badge: { backgroundColor: "#007AFF" + "15", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeText: { fontSize: 10, fontWeight: "600", color: "#007AFF" },
+  badgeInactive: { backgroundColor: "#FF9500" + "15" },
+  badgeInactiveText: { color: "#FF9500" },
   cmdCount: { fontSize: 11, color: colors.textSecondary },
-  emptyText: { textAlign: "center", color: colors.textSecondary, fontSize: 15, padding: 40 },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
 });
