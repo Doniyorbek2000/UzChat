@@ -11,7 +11,9 @@ export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
       const { conversationId, ...rest } = payload ?? {};
       const input = sendMessageSchema.parse(rest);
       const message = await messagesService.sendMessage(socket.userId, conversationId, input);
-      io.to(`conversation:${conversationId}`).emit("message:new", message);
+      if (!message.scheduledFor) {
+        io.to(`conversation:${conversationId}`).emit("message:new", message);
+      }
       ack?.({ ok: true, message });
     } catch (err) {
       ack?.({ ok: false, error: err instanceof Error ? err.message : "UNKNOWN_ERROR" });

@@ -1265,7 +1265,7 @@ export const messagesService = {
       if (query.before) where.createdAt.lt = new Date(query.before);
     }
     if (query.starred) {
-      where.starredBy = { has: userId };
+      where.stars = { some: { userId } };
     }
 
     const messages = await prisma.message.findMany({
