@@ -45,3 +45,23 @@ export const apiRateLimiter = rateLimit({
   store: isTest ? undefined : makeRedisStore("api"),
   message: { error: { code: "RATE_LIMITED", message: "Juda ko'p so'rov, keyinroq urinib ko'ring" } },
 });
+
+export const sendMessageRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: isTest ? 10000 : 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: isTest ? undefined : makeRedisStore("msg"),
+  keyGenerator: (req) => (req as any).user?.sub ?? req.ip,
+  message: { error: { code: "RATE_LIMITED", message: "Juda ko'p xabar yuborildi, biroz kutib turing" } },
+});
+
+export const mediaUploadRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: isTest ? 10000 : 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: isTest ? undefined : makeRedisStore("upload"),
+  keyGenerator: (req) => (req as any).user?.sub ?? req.ip,
+  message: { error: { code: "RATE_LIMITED", message: "Juda ko'p fayl yuklandi, biroz kutib turing" } },
+});

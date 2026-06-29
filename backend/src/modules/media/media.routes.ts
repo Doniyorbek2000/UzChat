@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
+import { mediaUploadRateLimiter } from "../../middleware/rateLimit.middleware";
 import { validateBody } from "../../utils/validate";
 import { mediaController } from "./media.controller";
 import { upload } from "./upload";
@@ -10,7 +11,7 @@ export const mediaRouter = Router();
 
 mediaRouter.use(requireAuth);
 
-mediaRouter.post("/upload", upload.single("file"), async (req: Request, res: Response) => {
+mediaRouter.post("/upload", mediaUploadRateLimiter, upload.single("file"), async (req: Request, res: Response) => {
   if (!req.file) {
     res.status(400).json({ error: { code: "BAD_REQUEST", message: "Fayl yuborilmadi" } });
     return;
