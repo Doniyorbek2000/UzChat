@@ -153,6 +153,7 @@ interface ChatState {
     hideSender?: boolean
   ) => Promise<void>;
   createDirectConversation: (target: User) => Promise<Conversation>;
+  createSecretChat: (target: User) => Promise<Conversation>;
   getOrCreateSavedMessages: () => Promise<Conversation>;
   createGroupConversation: (title: string, members: User[]) => Promise<Conversation>;
   createChannelConversation: (title: string, members: User[]) => Promise<Conversation>;
@@ -943,6 +944,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     conversationKeyCache[conversation.id] = { key: conversationKey, wrappedKey: conversation.wrappedKey };
     set((state) => ({ conversations: upsertConversation(state.conversations, conversation) }));
     return conversation;
+  },
+
+  createSecretChat: async (target) => {
+    const conversation = await get().createDirectConversation(target);
+    await chatsApi.setDisappearingMessages(conversation.id, 86400);
+    await chatsApi.setNoForwards(conversation.id, true);
+    const updated = { ...conversation, disappearingSeconds: 86400, noForwards: true };
+    set((state) => ({ conversations: upsertConversation(state.conversations, updated) }));
+    return updated;
   },
 
   getOrCreateSavedMessages: async () => {

@@ -37,6 +37,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const contactAliases = useChatStore((s) => s.contactAliases);
   const createDirectConversation = useChatStore((s) => s.createDirectConversation);
+  const createSecretChat = useChatStore((s) => s.createSecretChat);
 
   useEffect(() => {
     usersApi
@@ -72,6 +73,22 @@ export function UserProfileScreen({ route, navigation }: Props) {
       });
     } catch {
       Alert.alert("Xatolik", "Suhbat ochib bo'lmadi");
+    } finally {
+      setOpening(false);
+    }
+  };
+
+  const onSecretChat = async () => {
+    if (!profile || opening) return;
+    setOpening(true);
+    try {
+      const conversation = await createSecretChat(profile);
+      navigation.navigate("ChatRoom", {
+        conversationId: conversation.id,
+        title: `🔒 ${contactAliases[profile.id] ?? profile.displayName}`,
+      });
+    } catch {
+      Alert.alert("Xatolik", "Maxfiy suhbat ochib bo'lmadi");
     } finally {
       setOpening(false);
     }
@@ -228,6 +245,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
           <Text style={styles.actionIcon}>💬</Text>
           <Text style={styles.actionText}>Xabar yozish</Text>
           {opening && <ActivityIndicator color={colors.primary} size="small" />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionRow} onPress={onSecretChat} disabled={opening}>
+          <Text style={styles.actionIcon}>🔒</Text>
+          <Text style={styles.actionText}>Maxfiy suhbat</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("UserPosts", { userId: profile.id })}>
           <Text style={styles.actionIcon}>📰</Text>
