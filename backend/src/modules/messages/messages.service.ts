@@ -508,7 +508,13 @@ export const messagesService = {
       }
     }
 
-    if (conversation?.noForwards && (forwardedFromName || forwardedFromUserId || (input.forwardCount ?? 0) > 0)) {
+    const forwardCount = input.forwardCount ?? 0;
+    if (forwardCount >= 5) {
+      forwardedFromName = null;
+      forwardedFromUserId = null;
+    }
+
+    if (conversation?.noForwards && (forwardedFromName || forwardedFromUserId || forwardCount > 0)) {
       throw Errors.forbidden("Bu suhbatda xabar yo'naltirish taqiqlangan");
     }
 
@@ -525,7 +531,7 @@ export const messagesService = {
           mentions,
           forwardedFromName,
           forwardedFromUserId,
-          forwardCount: input.forwardCount ?? 0,
+          forwardCount,
           expiresAt,
           scheduledFor: sendWhenOnline ? SEND_WHEN_ONLINE_DATE : input.scheduledFor ? new Date(input.scheduledFor) : null,
           sendWhenOnline,

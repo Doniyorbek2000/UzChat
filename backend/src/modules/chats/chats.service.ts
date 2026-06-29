@@ -614,6 +614,11 @@ export const chatsService = {
       where: { conversationId_messageId: { conversationId, messageId } },
     });
 
+    if (!alreadyPinned) {
+      const pinCount = await prisma.pinnedMessage.count({ where: { conversationId } });
+      if (pinCount >= 100) throw Errors.badRequest("Eng ko'p 100 ta xabar qadab qo'yish mumkin");
+    }
+
     const expiresAt = input.expiresInSeconds ? new Date(Date.now() + input.expiresInSeconds * 1000) : null;
 
     await prisma.pinnedMessage.upsert({
