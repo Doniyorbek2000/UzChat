@@ -1667,7 +1667,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     const last = lastTapRef.current;
     if (last && last.id === item.id && now - last.time < 300) {
       lastTapRef.current = null;
-      if (conversation?.reactionsEnabled !== false) {
+      if (conversation?.reactionsEnabled !== false && !item.viewOnce) {
         toggleReaction(conversationId, item.id, quickReactionEmoji).catch(() => {});
       }
       return;
@@ -2312,7 +2312,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     <Modal visible={!!actionMessage} transparent animationType="fade" onRequestClose={() => setActionMessage(null)}>
       <Pressable style={styles.actionBackdrop} onPress={() => setActionMessage(null)}>
         <Pressable style={styles.actionSheet}>
-          {conversation?.reactionsEnabled !== false && (
+          {conversation?.reactionsEnabled !== false && !actionMessage?.viewOnce && (
             <>
               <View style={styles.reactionPickerRow}>
                 {recentEmojis.map((emoji) => (
@@ -2493,7 +2493,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.actionButtonText}>🔒 So'rovnomani yopish</Text>
               </TouchableOpacity>
             )}
-          {actionMessage && !actionMessage.deletedAt && (
+          {actionMessage && !actionMessage.deletedAt && !actionMessage.viewOnce && (
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => {
@@ -2509,6 +2509,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           {actionMessage &&
             !actionMessage.deletedAt &&
+            !actionMessage.viewOnce &&
             canManagePins && (
               <TouchableOpacity
                 style={styles.actionButton}
@@ -2546,7 +2547,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 </Text>
               </TouchableOpacity>
             )}
-          {actionMessage && !actionMessage.deletedAt && (
+          {actionMessage && !actionMessage.deletedAt && !actionMessage.viewOnce && (
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => {
