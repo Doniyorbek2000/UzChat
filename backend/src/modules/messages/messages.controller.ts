@@ -12,6 +12,7 @@ import {
   rescheduleMessageSchema,
 } from "./messages.schema";
 import { markReadSchema } from "../chats/chats.schema";
+import { chatsService } from "../chats/chats.service";
 import { getIo } from "../../sockets";
 
 export const messagesController = {
@@ -54,7 +55,14 @@ export const messagesController = {
 
   async markRead(req: Request, res: Response) {
     const { upToMessageId } = markReadSchema.parse(req.body);
-    await messagesService.markRead(req.user!.sub, req.params.id, upToMessageId);
+    const userId = req.user!.sub;
+    const conversationId = req.params.id;
+    await messagesService.markRead(userId, conversationId, upToMessageId);
+    const viewerIds = await chatsService.getReadReceiptViewers(conversationId, userId);
+    const event = { conversationId, userId, at: new Date().toISOString() };
+    for (const viewerId of viewerIds) {
+      getIo().to(`user:${viewerId}`).emit("message:read", event);
+    }
     res.status(204).send();
   },
 
