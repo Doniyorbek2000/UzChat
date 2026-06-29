@@ -7,6 +7,7 @@ import { generateKeyPair, KeyPair } from "../crypto/e2ee";
 import { connectSocket, disconnectSocket, setForceLogoutHandler } from "../socket/socket";
 import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from "../utils/pushNotifications";
 import { useAppLockStore } from "./appLockStore";
+import { keyManager } from "../crypto/keyManager";
 import { AuthUser } from "../types";
 
 interface AuthState {
@@ -46,6 +47,14 @@ async function ensureKeyPair(): Promise<KeyPair> {
   return generated;
 }
 
+async function initEncryptionKeys(): Promise<void> {
+  try {
+    await keyManager.registerDevice();
+  } catch {
+    // non-blocking: prekeys will be uploaded on next app launch
+  }
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   keyPair: null,
@@ -77,6 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       connectSocket();
       set({ user, keyPair, isAuthenticated: true, isLoading: false });
       registerForPushNotificationsAsync().catch(() => {});
+      initEncryptionKeys();
     } catch {
       set({ isLoading: false, keyPair });
     }
@@ -96,6 +106,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
+    initEncryptionKeys();
   },
 
   login: async (phone, password) => {
@@ -109,6 +120,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
+    initEncryptionKeys();
     return { requires2FA: false };
   },
 
@@ -123,6 +135,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
+    initEncryptionKeys();
   },
 
   completeTwoFactorLogin: async (pendingToken, password) => {
@@ -132,6 +145,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
+    initEncryptionKeys();
   },
 
   requestTwoFactorRecovery: async (pendingToken) => {
@@ -145,6 +159,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
+    initEncryptionKeys();
   },
 
   logout: async () => {
@@ -159,6 +174,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     await secureStorage.clearTokens();
     await useAppLockStore.getState().reset();
+    keyManager.clearCache();
     disconnectSocket();
     set({ user: null, isAuthenticated: false });
   },
@@ -169,6 +185,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await secureStorage.clearTokens();
     await secureStorage.clearKeyPair();
     await useAppLockStore.getState().reset();
+    keyManager.clearCache();
     disconnectSocket();
     set({ user: null, keyPair: null, isAuthenticated: false });
   },

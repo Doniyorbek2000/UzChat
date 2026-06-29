@@ -1,5 +1,6 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
+import { getIo } from "../../sockets";
 import { RegisterDeviceInput, UploadPreKeysInput, DistributeSenderKeyInput } from "./devices.schema";
 import { logger } from "../../utils/logger";
 
@@ -7,6 +8,13 @@ const MIN_PREKEY_COUNT = 20;
 
 export const devicesService = {
   async registerDevice(userId: string, input: RegisterDeviceInput) {
+    const existing = await prisma.deviceKey.findUnique({
+      where: { userId_deviceId: { userId, deviceId: input.deviceId } },
+      select: { publicKey: true },
+    });
+
+    const keyChanged = existing && existing.publicKey !== input.publicKey;
+
     const device = await prisma.deviceKey.upsert({
       where: { userId_deviceId: { userId, deviceId: input.deviceId } },
       create: {
@@ -26,10 +34,14 @@ export const devicesService = {
         userId,
         deviceId: input.deviceId,
         publicKey: input.publicKey,
-        action: "REGISTER",
+        action: keyChanged ? "KEY_CHANGE" : "REGISTER",
         serverSig: "",
       },
     });
+
+    if (keyChanged) {
+      this.notifyKeyChange(userId, input.deviceId).catch(() => {});
+    }
 
     return device;
   },
@@ -210,5 +222,32 @@ export const devicesService = {
       orderBy: { createdAt: "desc" },
       take: limit,
     });
+  },
+
+  async notifyKeyChange(userId: string, deviceId: string) {
+    const conversations = await prisma.conversationParticipant.findMany({
+      where: { userId },
+      select: { conversationId: true, conversation: { select: { type: true } } },
+      take: 500,
+    });
+
+    const directConvs = conversations.filter((c) => c.conversation.type === "DIRECT");
+
+    for (const conv of directConvs) {
+      const otherParticipant = await prisma.conversationParticipant.findFirst({
+        where: { conversationId: conv.conversationId, userId: { not: userId } },
+        select: { userId: true },
+      });
+
+      if (otherParticipant) {
+        try {
+          getIo().to(`user:${otherParticipant.userId}`).emit("key:changed", {
+            userId,
+            deviceId,
+            conversationId: conv.conversationId,
+          });
+        } catch {}
+      }
+    }
   },
 };

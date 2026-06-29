@@ -640,6 +640,63 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         </View>
       )}
 
+      <View style={styles.encryptionSection}>
+        <View style={styles.encryptionHeader}>
+          <View style={styles.encryptionIconBox}>
+            <Text style={styles.encryptionIconText}>🔐</Text>
+          </View>
+          <View style={styles.encryptionHeaderInfo}>
+            <Text style={styles.encryptionTitle}>End-to-end shifrlash</Text>
+            <Text style={styles.encryptionStatus}>
+              {conversation.useSenderKeys ? "SenderKey protokoli (katta guruhlar)" : "Signal Protocol"}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.encryptionDetails}>
+          <View style={styles.encryptionDetailRow}>
+            <Text style={styles.encryptionDetailIcon}>🛡️</Text>
+            <Text style={styles.encryptionDetailText}>
+              {conversation.isSupergroup ? "Superguruh" : "Oddiy guruh"} — {conversation.maxMembers?.toLocaleString() ?? "200,000"} gacha a'zo
+            </Text>
+          </View>
+          <View style={styles.encryptionDetailRow}>
+            <Text style={styles.encryptionDetailIcon}>🔒</Text>
+            <Text style={styles.encryptionDetailText}>Xabarlar server tomonidan o'qilmaydi</Text>
+          </View>
+          <View style={styles.encryptionDetailRow}>
+            <Text style={styles.encryptionDetailIcon}>🔑</Text>
+            <Text style={styles.encryptionDetailText}>
+              {conversation.useSenderKeys
+                ? "Har bir a'zo uchun alohida sender key"
+                : "Har bir xabar uchun alohida kalit juftligi"}
+            </Text>
+          </View>
+        </View>
+        {isOwner && !conversation.isSupergroup && (
+          <TouchableOpacity
+            style={styles.upgradeButton}
+            onPress={() => {
+              Alert.alert(
+                "Superguruhga aylantirish",
+                "Superguruh 500,000 gacha a'zo qo'shish imkonini beradi va SenderKey shifrlash ishlatiladi. Bu amalni bekor qilib bo'lmaydi.",
+                [
+                  { text: "Bekor qilish", style: "cancel" },
+                  {
+                    text: "Aylantirish",
+                    onPress: () =>
+                      chatsApi.upgradeToSupergroup(conversationId).catch(() => {
+                        Alert.alert("Xatolik", "Superguruhga aylantirib bo'lmadi");
+                      }),
+                  },
+                ]
+              );
+            }}
+          >
+            <Text style={styles.upgradeButtonText}>Superguruhga aylantirish</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       {stats && (
         <View style={styles.statsSection}>
           <View style={styles.statBox}>
@@ -1016,6 +1073,47 @@ const styles = StyleSheet.create({
   descriptionLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4, fontWeight: "600" },
   descriptionText: { fontSize: 15, color: colors.text, lineHeight: 20 },
   descriptionInput: { fontSize: 15, color: colors.text, lineHeight: 20, padding: 0 },
+  encryptionSection: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    padding: 16,
+  },
+  encryptionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 12,
+  },
+  encryptionIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.primary + "18",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  encryptionIconText: { fontSize: 22 },
+  encryptionHeaderInfo: { flex: 1 },
+  encryptionTitle: { fontSize: 15, fontWeight: "700", color: colors.text },
+  encryptionStatus: { fontSize: 13, color: colors.primary, marginTop: 2, fontWeight: "500" },
+  encryptionDetails: {
+    backgroundColor: colors.primary + "08",
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+  },
+  encryptionDetailRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  encryptionDetailIcon: { fontSize: 16, width: 24 },
+  encryptionDetailText: { fontSize: 13, color: colors.text, flex: 1, lineHeight: 18 },
+  upgradeButton: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    alignSelf: "center",
+  },
+  upgradeButtonText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   statsSection: {
     flexDirection: "row",
     paddingVertical: 12,

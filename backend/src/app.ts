@@ -63,6 +63,7 @@ import { notifLogRouter } from "./modules/notiflog/notiflog.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 import { requestIdMiddleware } from "./middleware/requestId.middleware";
+import { privacyHeaders, stripSensitiveFields } from "./middleware/privacy.middleware";
 
 export function createApp() {
   const app = express();
@@ -71,6 +72,8 @@ export function createApp() {
   app.disable("x-powered-by");
 
   app.use(requestIdMiddleware);
+  app.use(privacyHeaders);
+  app.use(stripSensitiveFields);
   app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     contentSecurityPolicy: env.nodeEnv === "production" ? {

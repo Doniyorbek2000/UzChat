@@ -81,6 +81,7 @@ interface ChatState {
   folders: ChatFolder[];
   reminders: MessageReminderInfo[];
   joinRequestUpdates: Record<string, number>;
+  keyChangeAlerts: { userId: string; conversationId: string; timestamp: string }[];
 
   loadConversations: () => Promise<void>;
   loadContactAliases: () => Promise<void>;
@@ -323,6 +324,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   folders: [],
   reminders: [],
   joinRequestUpdates: {},
+  keyChangeAlerts: [],
 
   loadConversations: async () => {
     const conversations = await chatsApi.list();
@@ -1788,6 +1790,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
           })),
         };
       });
+    });
+
+    socket.on("key:changed", ({ userId, conversationId }: { userId: string; deviceId: string; conversationId: string }) => {
+      set((state) => ({
+        keyChangeAlerts: [...state.keyChangeAlerts, { userId, conversationId, timestamp: new Date().toISOString() }],
+      }));
     });
 
     set({ listenersRegistered: true });
