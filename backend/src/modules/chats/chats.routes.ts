@@ -118,6 +118,7 @@ chatsRouter.get("/:id/stats/channel", async (req, res) => {
 });
 
 chatsRouter.get("/:id/messages", messagesController.list);
+chatsRouter.get("/:id/messages/search", messagesController.searchMessages);
 chatsRouter.get("/:id/media", messagesController.listMedia);
 chatsRouter.get("/:id/stats", messagesController.getStats);
 chatsRouter.post("/:id/messages", validateBody(sendMessageSchema), messagesController.send);

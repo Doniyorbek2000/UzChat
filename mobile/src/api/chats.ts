@@ -247,6 +247,12 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
+  searchMessages(conversationId: string, params: { type?: string; senderId?: string; after?: string; before?: string; starred?: boolean; limit?: number }) {
+    return apiClient
+      .get<Message[]>(`/conversations/${conversationId}/messages/search`, { params })
+      .then((r) => r.data);
+  },
+
   listMedia(conversationId: string, before?: string, limit = 30) {
     return apiClient
       .get<Message[]>(`/conversations/${conversationId}/media`, { params: { before, limit } })

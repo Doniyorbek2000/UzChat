@@ -3,6 +3,7 @@ import { messagesService } from "./messages.service";
 import {
   sendMessageSchema,
   listMessagesQuerySchema,
+  searchMessagesQuerySchema,
   editMessageSchema,
   setReactionSchema,
   votePollSchema,
@@ -25,6 +26,12 @@ export const messagesController = {
   async list(req: Request, res: Response) {
     const query = listMessagesQuerySchema.parse(req.query);
     const messages = await messagesService.listMessages(req.user!.sub, req.params.id, query);
+    res.json(messages);
+  },
+
+  async searchMessages(req: Request, res: Response) {
+    const query = searchMessagesQuerySchema.parse(req.query);
+    const messages = await messagesService.searchMessages(req.user!.sub, req.params.id, query);
     res.json(messages);
   },
 

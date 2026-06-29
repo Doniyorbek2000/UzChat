@@ -96,9 +96,19 @@ export const setReminderSchema = z.object({
   remindInSeconds: z.number().int().positive().max(MAX_REMINDER_SECONDS),
 });
 
+export const searchMessagesQuerySchema = z.object({
+  type: z.enum(["TEXT", "IMAGE", "VIDEO", "AUDIO", "FILE", "CONTACT", "POLL", "LOCATION", "STICKER"]).optional(),
+  senderId: z.string().uuid().optional(),
+  after: z.string().datetime().optional(),
+  before: z.string().datetime().optional(),
+  starred: z.coerce.boolean().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
+});
+
 export type RescheduleMessageInput = z.infer<typeof rescheduleMessageSchema>;
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type ListMessagesQuery = z.infer<typeof listMessagesQuerySchema>;
+export type SearchMessagesQuery = z.infer<typeof searchMessagesQuerySchema>;
 export type SetReactionInput = z.infer<typeof setReactionSchema>;
 export type EditMessageInput = z.infer<typeof editMessageSchema>;
 export type VotePollInput = z.infer<typeof votePollSchema>;

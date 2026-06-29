@@ -10,7 +10,7 @@ import { contactsService } from "../contacts/contacts.service";
 import { canRevealForwardedFrom } from "../../utils/lastSeen";
 import { isInQuietHours, isNotificationsPaused } from "../../utils/notificationPreferences";
 import { uploadsDir } from "../media/upload";
-import { EditMessageInput, ListMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
+import { EditMessageInput, ListMessagesQuery, SearchMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
 import { logger } from "../../utils/logger";
 
 const RECALL_WINDOW_MS = 2 * 60 * 1000;
@@ -1235,6 +1235,36 @@ export const messagesService = {
     if (message.senderId !== userId) throw Errors.forbidden();
 
     return publishScheduledMessage(message);
+  },
+
+  async searchMessages(userId: string, conversationId: string, query: SearchMessagesQuery) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const where: any = {
+      conversationId,
+      scheduledFor: null,
+      deletedAt: null,
+      NOT: { hiddenFor: { has: userId } },
+    };
+    if (query.type) where.type = query.type;
+    if (query.senderId) where.senderId = query.senderId;
+    if (query.after || query.before) {
+      where.createdAt = {};
+      if (query.after) where.createdAt.gte = new Date(query.after);
+      if (query.before) where.createdAt.lt = new Date(query.before);
+    }
+    if (query.starred) {
+      where.starredBy = { has: userId };
+    }
+
+    const messages = await prisma.message.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: query.limit,
+      include: messageInclude(userId),
+    });
+
+    return messages.map((m) => formatMessage(m, userId));
   },
 
   // Publishes (delivers) scheduled messages whose time has come.
