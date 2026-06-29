@@ -566,6 +566,7 @@ export const messagesService = {
 
     const gtCandidates: Date[] = [];
     if (participant.clearedAt) gtCandidates.push(participant.clearedAt);
+    if (query.after) gtCandidates.push(new Date(query.after));
 
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },

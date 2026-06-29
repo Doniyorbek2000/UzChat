@@ -241,9 +241,9 @@ export const chatsApi = {
       .then((r) => r.data);
   },
 
-  listMessages(conversationId: string, before?: string, limit = 30) {
+  listMessages(conversationId: string, before?: string, limit = 30, after?: string) {
     return apiClient
-      .get<Message[]>(`/conversations/${conversationId}/messages`, { params: { before, limit } })
+      .get<Message[]>(`/conversations/${conversationId}/messages`, { params: { before, limit, after } })
       .then((r) => r.data);
   },
 

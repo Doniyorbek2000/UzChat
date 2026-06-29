@@ -77,6 +77,7 @@ export const rescheduleMessageSchema = z
 
 export const listMessagesQuerySchema = z.object({
   before: z.string().datetime().optional(),
+  after: z.string().datetime().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(30),
 });
 
