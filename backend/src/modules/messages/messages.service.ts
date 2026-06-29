@@ -496,9 +496,16 @@ export const messagesService = {
 
     let forwardedFromName: string | null = input.forwardedFromName ?? null;
     let forwardedFromUserId: string | null = input.forwardedFromUserId ?? null;
-    if (forwardedFromUserId && !(await canRevealForwardedFrom(userId, forwardedFromUserId))) {
-      forwardedFromName = null;
-      forwardedFromUserId = null;
+
+    if (forwardedFromUserId) {
+      if (!(await canRevealForwardedFrom(userId, forwardedFromUserId))) {
+        forwardedFromName = null;
+        forwardedFromUserId = null;
+      }
+    }
+
+    if (conversation?.noForwards && (forwardedFromName || forwardedFromUserId || (input.forwardCount ?? 0) > 0)) {
+      throw Errors.forbidden("Bu suhbatda xabar yo'naltirish taqiqlangan");
     }
 
     const message = await prisma.$transaction(async (tx) => {

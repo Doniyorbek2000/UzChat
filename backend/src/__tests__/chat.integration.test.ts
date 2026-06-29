@@ -108,7 +108,7 @@ describe("Chat integration", () => {
     const res = await request(app)
       .post(`/conversations/${conversationId}/messages`)
       .set("Authorization", `Bearer ${tokenA}`)
-      .send({ type: "TEXT", ciphertext: "dGVzdCBtZXNzYWdl", nonce: "dGVzdG5vbmNl" });
+      .send({ type: "TEXT", ciphertext: "dGVzdCBtZXNzYWdl", nonce: "dGVzdG5vbmNlMTIzNDU2Nzg5MDEyMzQ1" });
     expect(res.status).toBe(201);
     expect(res.body.type).toBe("TEXT");
     expect(res.body.senderId).toBe(userAId);
