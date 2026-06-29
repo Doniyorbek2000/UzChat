@@ -856,6 +856,8 @@ export const messagesService = {
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
     if (message.senderId !== userId) throw Errors.forbidden();
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni tahrirlab bo'lmaydi");
+    const nonEditableTypes: MessageType[] = [MessageType.POLL, MessageType.CONTACT, MessageType.LOCATION, MessageType.STICKER, MessageType.SYSTEM];
+    if (nonEditableTypes.includes(message.type)) throw Errors.badRequest("Bu turdagi xabarni tahrirlab bo'lmaydi");
     if (Date.now() - message.createdAt.getTime() > RECALL_WINDOW_MS) {
       throw Errors.badRequest("Xabarni faqat yuborilgandan keyin 48 soat ichida tahrirlash mumkin");
     }
