@@ -29,6 +29,9 @@ const MEDIA_LABELS: Record<string, string> = {
   AUDIO: "🎵 Ovozli xabar",
   FILE: "📄 Fayl",
   CONTACT: "👤 Kontakt",
+  POLL: "📊 So'rovnoma",
+  LOCATION: "📍 Joylashuv",
+  STICKER: "🏷 Stiker",
 };
 
 export function ChatListScreen({ navigation }: Props) {

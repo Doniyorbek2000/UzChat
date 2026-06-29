@@ -47,6 +47,8 @@ const MEDIA_LABELS: Partial<Record<Message["type"], string>> = {
   FILE: "📄 Fayl",
   CONTACT: "👤 Kontakt",
   POLL: "📊 So'rovnoma",
+  LOCATION: "📍 Joylashuv",
+  STICKER: "🏷 Stiker",
 };
 
 function messageInclude(userId: string) {

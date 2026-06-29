@@ -29,6 +29,8 @@ const MEDIA_PREVIEW_LABELS: Record<string, string> = {
   FILE: "📄 Fayl",
   CONTACT: "👤 Kontakt",
   POLL: "📊 So'rovnoma",
+  LOCATION: "📍 Joylashuv",
+  STICKER: "🏷 Stiker",
 };
 
 /** Short preview text for a decrypted message, suitable for chat list previews and notification toasts. */
