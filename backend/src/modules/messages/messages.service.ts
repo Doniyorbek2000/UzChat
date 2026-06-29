@@ -936,6 +936,7 @@ export const messagesService = {
     const message = await prisma.message.findUnique({ where: { id: messageId } });
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarga reaksiya qo'yib bo'lmaydi");
+    if (message.viewOnce) throw Errors.badRequest("Bir martalik xabarga reaksiya qo'yib bo'lmaydi");
 
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
@@ -1031,6 +1032,7 @@ export const messagesService = {
     const message = await prisma.message.findUnique({ where: { id: messageId } });
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabarni saqlab bo'lmaydi");
+    if (message.viewOnce) throw Errors.badRequest("Bir martalik xabarni saqlab bo'lmaydi");
 
     const existing = await prisma.messageStar.findUnique({
       where: { messageId_userId: { messageId, userId } },
@@ -1067,6 +1069,7 @@ export const messagesService = {
     const message = await prisma.message.findUnique({ where: { id: messageId } });
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
     if (message.deletedAt) throw Errors.badRequest("O'chirilgan xabar uchun eslatma qo'yib bo'lmaydi");
+    if (message.viewOnce) throw Errors.badRequest("Bir martalik xabar uchun eslatma qo'yib bo'lmaydi");
 
     const remindAt = new Date(Date.now() + input.remindInSeconds * 1000);
     await prisma.messageReminder.upsert({
