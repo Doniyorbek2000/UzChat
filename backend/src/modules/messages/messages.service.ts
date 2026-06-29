@@ -1005,12 +1005,13 @@ export const messagesService = {
   },
 
   async closePoll(userId: string, conversationId: string, messageId: string) {
-    await chatsService.assertParticipant(userId, conversationId);
+    const participant = await chatsService.assertParticipant(userId, conversationId);
 
     const message = await prisma.message.findUnique({ where: { id: messageId } });
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
     if (message.type !== MessageType.POLL) throw Errors.badRequest("Bu xabar so'rovnoma emas");
-    if (message.senderId !== userId) throw Errors.forbidden("Faqat so'rovnoma muallifi uni yopa oladi");
+    const isManager = participant.role === ParticipantRole.OWNER || participant.role === ParticipantRole.ADMIN;
+    if (message.senderId !== userId && !isManager) throw Errors.forbidden("Faqat so'rovnoma muallifi yoki admin uni yopa oladi");
     if (message.pollClosedAt) throw Errors.badRequest("So'rovnoma allaqachon yopilgan");
 
     const updated = await prisma.message.update({

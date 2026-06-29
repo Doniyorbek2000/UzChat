@@ -1941,7 +1941,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </Text>
             </TouchableOpacity>
           )}
-          {item.forwardedFromName && !item.deletedAt && (
+          {(item.forwardedFromName || item.forwardCount > 0) && !item.deletedAt && (
             <Text
               style={styles.forwardedLabel}
               onPress={
@@ -1950,7 +1950,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   : undefined
               }
             >
-              {item.forwardCount > 1 ? "↪ Ko'p marta yo'naltirilgan" : `↪ Yo'naltirilgan: ${item.forwardedFromName}`}
+              {item.forwardCount > 1 || !item.forwardedFromName
+                ? "↪ Ko'p marta yo'naltirilgan"
+                : `↪ Yo'naltirilgan: ${item.forwardedFromName}`}
             </Text>
           )}
           {item.replyPreview && (

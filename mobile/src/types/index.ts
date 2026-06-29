@@ -73,7 +73,7 @@ export type LoginResult = ({ requires2FA?: false } & { user: AuthUser } & AuthTo
 
 export type ConversationType = "DIRECT" | "GROUP" | "CHANNEL";
 export type ParticipantRole = "OWNER" | "ADMIN" | "MEMBER";
-export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "CONTACT" | "POLL" | "SYSTEM" | "LOCATION";
+export type MessageType = "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | "CONTACT" | "POLL" | "SYSTEM" | "LOCATION" | "STICKER";
 
 export interface ConversationParticipant {
   userId: string;

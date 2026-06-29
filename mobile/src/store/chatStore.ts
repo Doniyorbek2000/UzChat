@@ -906,6 +906,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     } else if (message.type === "POLL" && message.pollMeta) {
       const { ciphertext, nonce } = encryptMessage(JSON.stringify(message.pollMeta), targetKey);
       sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "POLL", ciphertext, nonce, forwardedFromName, forwardedFromUserId, forwardCount });
+    } else if (message.type === "LOCATION" && message.latitude != null && message.longitude != null) {
+      const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "LOCATION", ciphertext, nonce, latitude: message.latitude, longitude: message.longitude, forwardedFromName, forwardedFromUserId, forwardCount });
+    } else if (message.type === "STICKER") {
+      const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
+      sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "STICKER", ciphertext, nonce, forwardedFromName, forwardedFromUserId, forwardCount });
     } else {
       const { ciphertext, nonce } = encryptMessage(message.text ?? "", targetKey);
       sentMessage = await chatsApi.sendMessage(targetConversationId, { type: "TEXT", ciphertext, nonce, forwardedFromName, forwardedFromUserId, forwardCount });
