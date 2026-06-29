@@ -61,6 +61,7 @@ import { PollBubble } from "../../components/PollBubble";
 import { Avatar } from "../../components/Avatar";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 import { TypingIndicator } from "../../components/TypingIndicator";
+import { SwipeableMessageRow } from "../../components/SwipeableMessageRow";
 import { extractFirstUrl } from "../../utils/linkPreview";
 import { formatDuration } from "../../utils/mediaFile";
 import { formatTime, formatDateSeparator, formatDateTime, getConversationDisplay } from "../../utils/conversation";
@@ -1908,6 +1909,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       <>
         {dateSeparator}
         {unreadSeparator}
+        <SwipeableMessageRow
+          enabled={!selectionMode && !item.deletedAt}
+          onSwipeReply={() => setReplyingTo(item)}
+        >
         <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => onPressMessage(item)}
@@ -2016,6 +2021,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           </View>
         </View>
         </TouchableOpacity>
+        </SwipeableMessageRow>
       </>
     );
   };
