@@ -58,7 +58,7 @@ export function CallHistoryScreen({ navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -69,11 +69,15 @@ export function CallHistoryScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {logs.length > 0 && (
+        <Text style={styles.countText}>{logs.length} ta qo'ng'iroq</Text>
+      )}
       <FlatList
         data={logs}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={Separator}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        contentContainerStyle={styles.list}
         renderItem={({ item }) => {
           const isOutgoing = item.caller.id === currentUser?.id;
           const otherUser = isOutgoing ? item.receiver : item.caller;
@@ -82,6 +86,7 @@ export function CallHistoryScreen({ navigation }: Props) {
           return (
             <TouchableOpacity
               style={styles.row}
+              activeOpacity={0.7}
               onPress={() =>
                 navigation.navigate("Call", {
                   userId: otherUser.id,
@@ -92,11 +97,15 @@ export function CallHistoryScreen({ navigation }: Props) {
                 })
               }
             >
-              <Avatar uri={otherUser.avatarUrl} name={otherUser.displayName} size={44} />
+              <Avatar uri={otherUser.avatarUrl} name={otherUser.displayName} size={46} />
               <View style={styles.info}>
                 <Text style={[styles.name, isMissed && styles.missedName]}>{otherUser.displayName}</Text>
                 <View style={styles.detailRow}>
-                  <Text style={styles.direction}>{isOutgoing ? "↗" : "↙"}</Text>
+                  <View style={[styles.directionBadge, { backgroundColor: isOutgoing ? "#007AFF" + "15" : "#34C759" + "15" }]}>
+                    <Text style={[styles.directionText, { color: isOutgoing ? "#007AFF" : "#34C759" }]}>
+                      {isOutgoing ? "↗" : "↙"}
+                    </Text>
+                  </View>
                   <Text style={[styles.statusText, isMissed && styles.missedText]}>
                     {getStatusLabel(item.status, isOutgoing)}
                   </Text>
@@ -106,9 +115,11 @@ export function CallHistoryScreen({ navigation }: Props) {
                 </View>
               </View>
               <View style={styles.rightCol}>
-                <Text style={styles.callTypeIcon}>{item.callType === "video" ? "📹" : "📞"}</Text>
+                <View style={[styles.callTypeIcon, { backgroundColor: item.callType === "video" ? "#5856D6" + "15" : "#007AFF" + "15" }]}>
+                  <Text style={styles.callTypeEmoji}>{item.callType === "video" ? "📹" : "📞"}</Text>
+                </View>
                 <Text style={styles.dateText}>
-                  {new Date(item.startedAt).toLocaleDateString()}
+                  {new Date(item.startedAt).toLocaleDateString("uz-UZ", { day: "numeric", month: "short" })}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -125,20 +136,23 @@ export function CallHistoryScreen({ navigation }: Props) {
 const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 48 },
-  emptyText: { color: colors.textSecondary, fontSize: 15 },
-  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 68 },
-  row: { flexDirection: "row", alignItems: "center", padding: 14, gap: 12 },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  countText: { fontSize: 13, color: colors.textSecondary, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
+  list: { paddingBottom: 20 },
+  separator: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 76 },
+  row: { flexDirection: "row", alignItems: "center", paddingVertical: 12, paddingHorizontal: 16, gap: 12 },
   info: { flex: 1 },
-  name: { fontSize: 15, fontWeight: "500", color: colors.text },
+  name: { fontSize: 15, fontWeight: "600", color: colors.text },
   missedName: { color: colors.danger },
-  detailRow: { flexDirection: "row", alignItems: "center", marginTop: 3 },
-  direction: { fontSize: 14, marginRight: 4 },
+  detailRow: { flexDirection: "row", alignItems: "center", marginTop: 4, gap: 6 },
+  directionBadge: { width: 20, height: 20, borderRadius: 6, alignItems: "center", justifyContent: "center" },
+  directionText: { fontSize: 12, fontWeight: "700" },
   statusText: { fontSize: 13, color: colors.textSecondary },
   missedText: { color: colors.danger },
   durationText: { fontSize: 13, color: colors.textSecondary },
-  rightCol: { alignItems: "flex-end" },
-  callTypeIcon: { fontSize: 20 },
-  dateText: { fontSize: 11, color: colors.textSecondary, marginTop: 4 },
+  rightCol: { alignItems: "center", gap: 6 },
+  callTypeIcon: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  callTypeEmoji: { fontSize: 16 },
+  dateText: { fontSize: 11, color: colors.textSecondary },
 });

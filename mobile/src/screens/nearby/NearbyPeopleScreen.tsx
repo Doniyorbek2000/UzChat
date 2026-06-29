@@ -72,20 +72,24 @@ export function NearbyPeopleScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.controls}>
         <View style={styles.visibilityRow}>
-          <Text style={styles.controlLabel}>Meni ko'rsatish</Text>
+          <View style={styles.visibilityLabel}>
+            <Text style={styles.controlIcon}>👁</Text>
+            <Text style={styles.controlLabelText}>Meni ko'rsatish</Text>
+          </View>
           <Switch value={visible} onValueChange={handleVisibilityToggle} trackColor={{ true: colors.primary }} />
         </View>
 
-        <View style={styles.radiusRow}>
-          <Text style={styles.controlLabel}>Radius: {radius} km</Text>
+        <View style={styles.radiusSection}>
+          <Text style={styles.radiusLabel}>📍 Radius: {radius} km</Text>
           <View style={styles.radiusBtns}>
             {[1, 5, 10, 25].map((r) => (
               <TouchableOpacity
                 key={r}
                 style={[styles.radiusBtn, radius === r && styles.radiusBtnActive]}
                 onPress={() => setRadius(r)}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.radiusBtnText, radius === r && styles.radiusBtnTextActive]}>{r}</Text>
+                <Text style={[styles.radiusBtnText, radius === r && styles.radiusBtnTextActive]}>{r} km</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -95,14 +99,16 @@ export function NearbyPeopleScreen({ navigation }: Props) {
       {locationError && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>📍 {locationError}</Text>
-          <TouchableOpacity onPress={search}>
+          <TouchableOpacity onPress={search} activeOpacity={0.7}>
             <Text style={styles.retryText}>Qayta urinish</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       ) : (
         <FlatList
           data={people}
@@ -110,6 +116,7 @@ export function NearbyPeopleScreen({ navigation }: Props) {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.personCard}
+              activeOpacity={0.7}
               onPress={() => navigation.navigate("UserProfile", { userId: item.user.id })}
             >
               <Avatar uri={item.user.avatarUrl} name={item.user.displayName} size={48} />
@@ -124,10 +131,15 @@ export function NearbyPeopleScreen({ navigation }: Props) {
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.list}
+          ListHeaderComponent={
+            people.length > 0 ? (
+              <Text style={styles.resultCount}>{people.length} kishi yaqinda</Text>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>📍</Text>
-              <Text style={styles.emptyText}>Yaqinda hech kim topilmadi</Text>
+              <Text style={styles.emptyTitle}>Yaqinda hech kim topilmadi</Text>
               <Text style={styles.emptyHint}>Radiusni oshirib ko'ring</Text>
             </View>
           }
@@ -138,38 +150,65 @@ export function NearbyPeopleScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.surface },
-  controls: { backgroundColor: colors.surface, padding: 16, marginBottom: 8 },
-  visibilityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  controlLabel: { fontSize: 15, fontWeight: "600", color: colors.text },
-  radiusRow: { gap: 8 },
-  radiusBtns: { flexDirection: "row", gap: 8, marginTop: 8 },
-  radiusBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 8, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  controls: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    marginBottom: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  visibilityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  visibilityLabel: { flexDirection: "row", alignItems: "center", gap: 8 },
+  controlIcon: { fontSize: 18 },
+  controlLabelText: { fontSize: 15, fontWeight: "600", color: colors.text },
+  radiusSection: { gap: 8 },
+  radiusLabel: { fontSize: 14, fontWeight: "500", color: colors.text },
+  radiusBtns: { flexDirection: "row", gap: 8 },
+  radiusBtn: { flex: 1, paddingVertical: 8, borderRadius: 10, backgroundColor: colors.background, alignItems: "center" },
   radiusBtnActive: { backgroundColor: colors.primary },
   radiusBtnText: { fontSize: 13, fontWeight: "600", color: colors.textSecondary },
   radiusBtnTextActive: { color: "#fff" },
-  errorBanner: { backgroundColor: "#FFF3CD", padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginHorizontal: 12, borderRadius: 8, marginBottom: 8 },
+  errorBanner: {
+    backgroundColor: "#FFF3CD",
+    padding: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 16,
+    borderRadius: 10,
+    marginTop: 8,
+  },
   errorText: { fontSize: 13, color: "#856404", flex: 1 },
   retryText: { fontSize: 13, color: colors.primary, fontWeight: "600", marginLeft: 12 },
-  loader: { marginTop: 40 },
-  list: { paddingHorizontal: 12, paddingBottom: 20 },
+  list: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 20 },
+  resultCount: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, marginTop: 8 },
   personCard: {
     flexDirection: "row",
     backgroundColor: colors.surface,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     marginBottom: 6,
     alignItems: "center",
     gap: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   personInfo: { flex: 1 },
   personName: { fontSize: 15, fontWeight: "600", color: colors.text },
   personUsername: { fontSize: 13, color: colors.textSecondary, marginTop: 1 },
   personBio: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
-  distanceContainer: { backgroundColor: colors.background, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  distanceContainer: { backgroundColor: colors.primary + "15", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   distanceText: { fontSize: 12, fontWeight: "600", color: colors.primary },
-  emptyContainer: { alignItems: "center", paddingTop: 60 },
-  emptyIcon: { fontSize: 48 },
-  emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },
-  emptyHint: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  emptyContainer: { alignItems: "center", paddingTop: 60, paddingHorizontal: 32 },
+  emptyIcon: { fontSize: 56, marginBottom: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 6 },
+  emptyHint: { fontSize: 14, color: colors.textSecondary, textAlign: "center" },
 });
