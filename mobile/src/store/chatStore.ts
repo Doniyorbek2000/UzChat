@@ -15,6 +15,7 @@ import {
 } from "../crypto/e2ee";
 import { downloadAndDecryptFile, encryptAndUploadFile, extensionFromName } from "../utils/mediaFile";
 import { draftStorage } from "../storage/draftStorage";
+import { draftsApi } from "../api/drafts";
 import { getConversationDisplay, isConversationUnread, messagePreviewText } from "../utils/conversation";
 import { getActiveConversationId } from "../utils/pushNotifications";
 import { useToastStore } from "./toastStore";
@@ -388,8 +389,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   loadDrafts: async () => {
-    const drafts = await draftStorage.getAll();
-    set({ drafts });
+    const local = await draftStorage.getAll();
+    set({ drafts: local });
+    try {
+      const remote = await draftsApi.list();
+      const merged = { ...local };
+      for (const d of remote) {
+        if (!merged[d.conversationId]) merged[d.conversationId] = d.content;
+      }
+      set({ drafts: merged });
+      await draftStorage.setAll(merged);
+    } catch {}
   },
 
   setDraft: async (conversationId, text) => {
@@ -401,6 +411,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
     set({ drafts });
     await draftStorage.setAll(drafts);
+    try {
+      if (text.trim()) {
+        draftsApi.save(conversationId, text).catch(() => {});
+      } else {
+        draftsApi.delete(conversationId).catch(() => {});
+      }
+    } catch {}
   },
 
   getConversationKey: (conversation) => {

@@ -1872,16 +1872,26 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     } else if (item.type === "POLL") {
       content = <PollBubble message={item} conversationId={conversationId} onShowVotes={() => setPollVotesMessage(item)} />;
     } else if (item.type === "LOCATION" && item.latitude != null && item.longitude != null) {
+      const mapUrl = `https://tile.openstreetmap.org/${15}/${Math.floor(((item.longitude + 180) / 360) * Math.pow(2, 15))}/${Math.floor((1 - Math.log(Math.tan((item.latitude * Math.PI) / 180) + 1 / Math.cos((item.latitude * Math.PI) / 180)) / Math.PI) / 2 * Math.pow(2, 15))}.png`;
       content = (
-        <View style={{ padding: 4 }}>
-          <Text style={{ fontSize: 24, textAlign: "center" }}>📍</Text>
-          <Text style={{ fontSize: 13, color: isOwn ? "#fff" : colors.text, textAlign: "center", marginTop: 2 }}>
-            {item.text || "Joylashuv"}
-          </Text>
-          <Text style={{ fontSize: 11, color: isOwn ? "rgba(255,255,255,0.7)" : colors.textSecondary, textAlign: "center" }}>
-            {item.latitude.toFixed(6)}, {item.longitude.toFixed(6)}
-          </Text>
-        </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => Linking.openURL(`https://www.openstreetmap.org/?mlat=${item.latitude}&mlon=${item.longitude}#map=16/${item.latitude}/${item.longitude}`)}
+          style={styles.locationBubble}
+        >
+          <Image source={{ uri: mapUrl }} style={styles.locationMap} resizeMode="cover" />
+          <View style={styles.locationPin}>
+            <Text style={{ fontSize: 22 }}>📍</Text>
+          </View>
+          <View style={styles.locationInfo}>
+            <Text style={[styles.locationLabel, isOwn && { color: "#fff" }]} numberOfLines={1}>
+              {item.text || "Joylashuv"}
+            </Text>
+            <Text style={[styles.locationCoords, isOwn && { color: "rgba(255,255,255,0.7)" }]}>
+              {item.latitude.toFixed(6)}, {item.longitude.toFixed(6)}
+            </Text>
+          </View>
+        </TouchableOpacity>
       );
     } else if (isSticker) {
       content = <Text style={styles.stickerText}>{item.text}</Text>;
@@ -3937,6 +3947,12 @@ const styles = StyleSheet.create({
   },
   blockedText: { flex: 1, fontSize: 13, color: colors.textSecondary },
   blockedAction: { fontSize: 13, fontWeight: "600", color: colors.primary },
+  locationBubble: { width: 200, borderRadius: 8, overflow: "hidden" },
+  locationMap: { width: 200, height: 120, backgroundColor: colors.border },
+  locationPin: { position: "absolute", top: 40, left: 85, width: 30, height: 30, alignItems: "center", justifyContent: "center" },
+  locationInfo: { padding: 8 },
+  locationLabel: { fontSize: 13, fontWeight: "600", color: colors.text },
+  locationCoords: { fontSize: 11, color: colors.textSecondary, marginTop: 2 },
   slowModeBar: {
     paddingHorizontal: 12,
     paddingVertical: 6,
