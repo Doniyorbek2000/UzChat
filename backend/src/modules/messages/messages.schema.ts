@@ -55,7 +55,16 @@ export const sendMessageSchema = z
   .refine((data) => !data.pollClosesInSeconds || data.type === "POLL", {
     message: "Yopilish vaqti faqat so'rovnomalar uchun mavjud",
     path: ["pollClosesInSeconds"],
-  });
+  })
+  .refine((data) => data.type !== "LOCATION" || (data.latitude != null && data.longitude != null), {
+    message: "Joylashuv xabari uchun latitude va longitude talab qilinadi",
+    path: ["latitude"],
+  })
+  .refine(
+    (data) =>
+      !["IMAGE", "VIDEO", "AUDIO", "FILE"].includes(data.type) || data.mediaUrl,
+    { message: "Media xabar uchun mediaUrl talab qilinadi", path: ["mediaUrl"] }
+  );
 
 export const rescheduleMessageSchema = z
   .object({
