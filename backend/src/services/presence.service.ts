@@ -192,4 +192,17 @@ export const presenceService = {
       await r.sRem(`${PREFIX}active-devices:${userId}`, deviceId);
     } catch {}
   },
+
+  async checkSocketRateLimit(userId: string, action: string, maxPerMinute: number): Promise<boolean> {
+    const r = redis();
+    if (!r) return true;
+    try {
+      const key = `${PREFIX}srl:${action}:${userId}`;
+      const count = await r.incr(key);
+      if (count === 1) await r.expire(key, 60);
+      return count <= maxPerMinute;
+    } catch {
+      return true;
+    }
+  },
 };

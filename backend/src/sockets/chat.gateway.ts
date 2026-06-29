@@ -4,10 +4,16 @@ import { messagesService } from "../modules/messages/messages.service";
 import { sendMessageSchema } from "../modules/messages/messages.schema";
 import { chatsService } from "../modules/chats/chats.service";
 import { contactsService } from "../modules/contacts/contacts.service";
+import { presenceService } from "../services/presence.service";
 
 export function registerChatHandlers(io: Server, socket: AuthenticatedSocket) {
   socket.on("message:send", async (payload, ack?: (response: unknown) => void) => {
     try {
+      const allowed = await presenceService.checkSocketRateLimit(socket.userId, "msg", 30);
+      if (!allowed) {
+        ack?.({ ok: false, error: "Juda ko'p xabar yuborildi, biroz kutib turing" });
+        return;
+      }
       const { conversationId, ...rest } = payload ?? {};
       const input = sendMessageSchema.parse(rest);
       const message = await messagesService.sendMessage(socket.userId, conversationId, input);
