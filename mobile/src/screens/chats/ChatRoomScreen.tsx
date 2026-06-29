@@ -94,7 +94,7 @@ interface PendingMediaItem {
   isUncompressedImage?: boolean;
 }
 
-const RECALL_WINDOW_MS = 2 * 60 * 1000;
+const RECALL_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 function isMessageRead(message: { createdAt: string }, participant: ConversationParticipant) {
   return !!participant.lastReadAt && new Date(participant.lastReadAt) >= new Date(message.createdAt);
