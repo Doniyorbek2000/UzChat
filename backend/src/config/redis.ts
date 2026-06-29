@@ -18,11 +18,27 @@ export function getSubscriber(): RedisClient {
 }
 
 export async function initRedis(): Promise<void> {
-  client = createClient({ url: env.redis.url });
+  client = createClient({
+    url: env.redis.url,
+    socket: {
+      reconnectStrategy: (retries: number) => {
+        if (retries > 10) return new Error("Redis max retries reached");
+        return Math.min(retries * 500, 10000);
+      },
+    },
+  });
   subscriber = client.duplicate();
 
-  client.on("error", (err) => logger.error("Redis client error", { error: String(err) }));
-  subscriber.on("error", (err) => logger.error("Redis subscriber error", { error: String(err) }));
+  let errorLogged = false;
+  const onError = (label: string) => (err: Error) => {
+    if (!errorLogged) {
+      logger.warn(`Redis ${label} error (suppressing subsequent)`, { error: String(err) });
+      errorLogged = true;
+      setTimeout(() => { errorLogged = false; }, 30000);
+    }
+  };
+  client.on("error", onError("client"));
+  subscriber.on("error", onError("subscriber"));
 
   await Promise.all([client.connect(), subscriber.connect()]);
   logger.info("Redis connected", { url: env.redis.url });

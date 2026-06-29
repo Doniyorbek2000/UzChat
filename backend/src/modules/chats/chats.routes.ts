@@ -91,6 +91,9 @@ chatsRouter.post("/:id/join-requests/:requestId/decline", chatsController.declin
 chatsRouter.get("/join-requests/mine", chatsController.listMyJoinRequests);
 chatsRouter.delete("/join-requests/mine/:requestId", chatsController.cancelMyJoinRequest);
 chatsRouter.get("/:id/audit-log", chatsController.getAuditLog);
+chatsRouter.get("/:id/members", chatsController.listMembers);
+chatsRouter.get("/:id/group-stats", chatsController.getGroupStats);
+chatsRouter.post("/:id/upgrade-supergroup", chatsController.upgradeToSupergroup);
 
 chatsRouter.get("/starred/messages", messagesController.listStarred);
 chatsRouter.get("/mentions/messages", messagesController.listMentions);

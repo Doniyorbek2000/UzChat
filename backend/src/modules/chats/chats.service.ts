@@ -1849,4 +1849,138 @@ export const chatsService = {
 
     return createSystemMessage(conversationId, userId, text);
   },
+
+  async listMembersPaginated(userId: string, conversationId: string, page: number, limit: number, search?: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: { hideMembersList: true, memberCount: true },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+
+    if (conversation.hideMembersList) {
+      const self = await prisma.conversationParticipant.findUnique({
+        where: { conversationId_userId: { conversationId, userId } },
+        select: { role: true },
+      });
+      if (self?.role === ParticipantRole.MEMBER) {
+        return { members: [], total: conversation.memberCount, page, totalPages: 0 };
+      }
+    }
+
+    const where: any = { conversationId };
+    if (search) {
+      where.user = {
+        OR: [
+          { displayName: { contains: search, mode: "insensitive" } },
+          { username: { contains: search, mode: "insensitive" } },
+        ],
+      };
+    }
+
+    const [members, total] = await Promise.all([
+      prisma.conversationParticipant.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              displayName: true,
+              avatarUrl: true,
+              publicKey: true,
+              lastSeenAt: true,
+              lastSeenPrivacy: true,
+              avatarPrivacy: true,
+            },
+          },
+        },
+        orderBy: [{ role: "asc" }, { joinedAt: "asc" }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      search ? prisma.conversationParticipant.count({ where }) : conversation.memberCount,
+    ]);
+
+    return {
+      members: members.map((m) => ({
+        id: m.id,
+        userId: m.userId,
+        role: m.role,
+        customTitle: m.customTitle,
+        joinedAt: m.joinedAt,
+        restrictedUntil: m.restrictedUntil,
+        user: m.user,
+      })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  },
+
+  async getGroupStats(userId: string, conversationId: string) {
+    await chatsService.assertParticipant(userId, conversationId);
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: {
+        type: true,
+        memberCount: true,
+        maxMembers: true,
+        isSupergroup: true,
+        useSenderKeys: true,
+        createdAt: true,
+      },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+
+    const [messageCount, mediaCount, adminCount, onlineEstimate] = await Promise.all([
+      prisma.message.count({ where: { conversationId, deletedAt: null } }),
+      prisma.message.count({ where: { conversationId, deletedAt: null, type: { in: ["IMAGE", "VIDEO", "AUDIO", "FILE"] } } }),
+      prisma.conversationParticipant.count({ where: { conversationId, role: { in: [ParticipantRole.OWNER, ParticipantRole.ADMIN] } } }),
+      prisma.conversationParticipant.count({
+        where: {
+          conversationId,
+          user: { lastSeenAt: { gte: new Date(Date.now() - 5 * 60 * 1000) } },
+        },
+      }),
+    ]);
+
+    return {
+      memberCount: conversation.memberCount,
+      maxMembers: conversation.maxMembers,
+      isSupergroup: conversation.isSupergroup,
+      useSenderKeys: conversation.useSenderKeys,
+      messageCount,
+      mediaCount,
+      adminCount,
+      onlineEstimate,
+      createdAt: conversation.createdAt,
+      capacityPercent: Math.round((conversation.memberCount / conversation.maxMembers) * 100),
+    };
+  },
+
+  async upgradeToSupergroup(userId: string, conversationId: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { participants: { where: { userId }, select: { role: true } } },
+    });
+    if (!conversation) throw Errors.notFound("Suhbat");
+    if (conversation.type !== ConversationType.GROUP) throw Errors.badRequest("Faqat guruhni superguruhga aylantirish mumkin");
+    if (conversation.participants[0]?.role !== ParticipantRole.OWNER) throw Errors.forbidden();
+    if (conversation.isSupergroup) throw Errors.conflict("Guruh allaqachon superguruh");
+
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        isSupergroup: true,
+        maxMembers: 500000,
+        useSenderKeys: true,
+      },
+    });
+
+    await createSystemMessage(conversationId, userId, "Guruh superguruhga aylantirildi. Endi 500,000 gacha a'zo qo'shish mumkin.");
+    return chatsService.getConversation(userId, conversationId);
+  },
 };

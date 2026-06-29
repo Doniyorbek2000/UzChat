@@ -127,50 +127,30 @@ function shouldHidePreview(
   return globalHideNotificationContent;
 }
 
+const NOTIFICATION_BATCH_SIZE = 500;
+
 async function notifyParticipants(senderId: string, conversationId: string, message: Message, silent: boolean) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
-    include: {
-      participants: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              displayName: true,
-              notifyPrivateChats: true,
-              notifyGroupChats: true,
-              notifyMentions: true,
-              hideNotificationContent: true,
-              quietHoursEnabled: true,
-              quietHoursStart: true,
-              quietHoursEnd: true,
-              quietHoursTimezoneOffset: true,
-              notificationsPaused: true,
-              notificationsPausedUntil: true,
-            },
-          },
-        },
-      },
+    select: {
+      type: true,
+      title: true,
+      memberCount: true,
     },
   });
   if (!conversation) return;
 
-  const sender = conversation.participants.find((p) => p.userId === senderId)?.user;
-  if (!sender) return;
+  const isGroupOrChannel = conversation.type === "GROUP" || conversation.type === "CHANNEL";
+  const isLargeGroup = conversation.memberCount > 1000;
 
-  const recipients = conversation.participants.filter(
-    (p) =>
-      p.userId !== senderId &&
-      !p.mutedSenderIds.includes(senderId) &&
-      !isUserOnline(p.userId) &&
-      !isInQuietHours(p.user) &&
-      !isNotificationsPaused(p.user)
-  );
-  if (recipients.length === 0) return;
+  const senderUser = await prisma.user.findUnique({
+    where: { id: senderId },
+    select: { displayName: true },
+  });
+  if (!senderUser) return;
 
   const contentLabel = MEDIA_LABELS[message.type] ?? "Yangi xabar";
-  const isGroupOrChannel = conversation.type === "GROUP" || conversation.type === "CHANNEL";
-  const title = isGroupOrChannel ? conversation.title ?? "Guruh" : sender.displayName;
+  const title = isGroupOrChannel ? conversation.title ?? "Guruh" : senderUser.displayName;
 
   let repliedToSenderId: string | null = null;
   if (message.replyToId) {
@@ -178,47 +158,94 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
     repliedToSenderId = repliedTo?.senderId ?? null;
   }
 
-  // Muted conversations are silenced, except for messages that @-mention the recipient
-  // (unless that recipient turned off notifyMentions, in which case they're treated
-  // like a regular message).
-  const mentioned = recipients.filter((p) => message.mentions.includes(p.userId) && p.user.notifyMentions);
-  const replied = recipients.filter(
-    (p) => p.userId === repliedToSenderId && !mentioned.includes(p) && !isParticipantMuted(p)
-  );
-  const regular = recipients.filter(
-    (p) =>
-      !mentioned.includes(p) &&
-      p.userId !== repliedToSenderId &&
-      !isParticipantMuted(p) &&
-      (isGroupOrChannel ? p.user.notifyGroupChats : p.user.notifyPrivateChats)
-  );
+  const mentionedUserIds = new Set(message.mentions);
 
-  const send = async (participants: typeof recipients, body: string, type: string) => {
-    const visible = participants
-      .filter((p) => !shouldHidePreview(p.notificationPreview, p.user.hideNotificationContent))
-      .map((p) => p.userId);
-    const hidden = participants
-      .filter((p) => shouldHidePreview(p.notificationPreview, p.user.hideNotificationContent))
-      .map((p) => p.userId);
-    const data = { conversationId, messageId: message.id, type };
-    if (visible.length > 0) {
-      await pushService.sendToUsers(visible, { title, body, data, silent });
+  const processBatch = async (skip: number) => {
+    const participants = await prisma.conversationParticipant.findMany({
+      where: { conversationId, userId: { not: senderId } },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            notifyPrivateChats: true,
+            notifyGroupChats: true,
+            notifyMentions: true,
+            hideNotificationContent: true,
+            quietHoursEnabled: true,
+            quietHoursStart: true,
+            quietHoursEnd: true,
+            quietHoursTimezoneOffset: true,
+            notificationsPaused: true,
+            notificationsPausedUntil: true,
+          },
+        },
+      },
+      skip,
+      take: NOTIFICATION_BATCH_SIZE,
+    });
+    if (participants.length === 0) return false;
+
+    const recipients = participants.filter(
+      (p) =>
+        !p.mutedSenderIds.includes(senderId) &&
+        !isUserOnline(p.userId) &&
+        !isInQuietHours(p.user) &&
+        !isNotificationsPaused(p.user)
+    );
+
+    const mentioned = recipients.filter((p) => mentionedUserIds.has(p.userId) && p.user.notifyMentions);
+    const replied = recipients.filter(
+      (p) => p.userId === repliedToSenderId && !mentioned.includes(p) && !isParticipantMuted(p)
+    );
+    const regular = recipients.filter(
+      (p) =>
+        !mentioned.includes(p) &&
+        p.userId !== repliedToSenderId &&
+        !isParticipantMuted(p) &&
+        (isGroupOrChannel ? p.user.notifyGroupChats : p.user.notifyPrivateChats)
+    );
+
+    const send = async (batch: typeof recipients, body: string, type: string) => {
+      const visible = batch
+        .filter((p) => !shouldHidePreview(p.notificationPreview, p.user.hideNotificationContent))
+        .map((p) => p.userId);
+      const hidden = batch
+        .filter((p) => shouldHidePreview(p.notificationPreview, p.user.hideNotificationContent))
+        .map((p) => p.userId);
+      const data = { conversationId, messageId: message.id, type };
+      if (visible.length > 0) {
+        await pushService.sendToUsers(visible, { title, body, data, silent });
+      }
+      if (hidden.length > 0) {
+        await pushService.sendToUsers(hidden, { title: HIDDEN_TITLE, body: HIDDEN_BODY, data, silent });
+      }
+    };
+
+    const promises: Promise<void>[] = [];
+    if (mentioned.length > 0) {
+      promises.push(send(mentioned, `${senderUser.displayName} sizni eslatib o'tdi`, "mention"));
     }
-    if (hidden.length > 0) {
-      await pushService.sendToUsers(hidden, { title: HIDDEN_TITLE, body: HIDDEN_BODY, data, silent });
+    if (replied.length > 0) {
+      promises.push(send(replied, `${senderUser.displayName} sizning xabaringizga javob berdi`, "reply"));
     }
+    if (regular.length > 0) {
+      promises.push(send(regular, isGroupOrChannel ? `${senderUser.displayName}: ${contentLabel}` : contentLabel, "message"));
+    }
+    await Promise.all(promises);
+
+    return participants.length === NOTIFICATION_BATCH_SIZE;
   };
 
-  if (mentioned.length > 0) {
-    await send(mentioned, `${sender.displayName} sizni eslatib o'tdi`, "mention");
-  }
-
-  if (replied.length > 0) {
-    await send(replied, `${sender.displayName} sizning xabaringizga javob berdi`, "reply");
-  }
-
-  if (regular.length > 0) {
-    await send(regular, isGroupOrChannel ? `${sender.displayName}: ${contentLabel}` : contentLabel, "message");
+  if (isLargeGroup) {
+    let skip = 0;
+    let hasMore = true;
+    while (hasMore) {
+      hasMore = (await processBatch(skip)) === true;
+      skip += NOTIFICATION_BATCH_SIZE;
+    }
+  } else {
+    await processBatch(0);
   }
 }
 

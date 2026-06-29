@@ -105,27 +105,39 @@ async function handleConnection(socket: AuthenticatedSocket) {
     where: { userId: authed.userId },
     include: {
       conversation: {
-        include: {
-          participants: { select: { userId: true } },
+        select: {
+          id: true,
+          type: true,
+          memberCount: true,
           messages: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
         },
       },
     },
   });
 
-  // Only broadcast "online" if this is the user's first active connection -
-  // with multiple devices, the others are already aware they're online.
   const wasOnline = isUserOnline(authed.userId);
 
-  const relatedUserIds = new Set<string>();
+  const smallGroupIds: string[] = [];
   for (const p of participations) {
     socket.join(`conversation:${p.conversationId}`);
-    for (const cp of p.conversation.participants) {
-      if (cp.userId !== authed.userId) relatedUserIds.add(cp.userId);
+    if (p.conversation.memberCount <= 500) {
+      smallGroupIds.push(p.conversationId);
     }
   }
   socket.join(`user:${authed.userId}`);
   socket.join(`session:${authed.sid}`);
+
+  const relatedUserIds = new Set<string>();
+  if (smallGroupIds.length > 0) {
+    const relatedParticipants = await prisma.conversationParticipant.findMany({
+      where: { conversationId: { in: smallGroupIds }, userId: { not: authed.userId } },
+      select: { userId: true },
+      distinct: ["userId"],
+    });
+    for (const rp of relatedParticipants) {
+      relatedUserIds.add(rp.userId);
+    }
+  }
 
   const undeliveredConversationIds = participations
     .filter((p) => p.conversation.messages.length > 0 && (!p.lastDeliveredAt || p.lastDeliveredAt < p.conversation.messages[0].createdAt))
@@ -202,19 +214,27 @@ async function handleConnection(socket: AuthenticatedSocket) {
     try {
       await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
       if (!isUserOnline(authed.userId)) {
-        const currentParticipations = await prisma.conversationParticipant.findMany({
+        const smallConvs = await prisma.conversationParticipant.findMany({
           where: { userId: authed.userId },
-          select: { conversation: { select: { participants: { select: { userId: true } } } } },
+          include: {
+            conversation: { select: { memberCount: true } },
+          },
         });
-        const currentRelatedUserIds = new Set<string>();
-        for (const p of currentParticipations) {
-          for (const cp of p.conversation.participants) {
-            if (cp.userId !== authed.userId) currentRelatedUserIds.add(cp.userId);
+        const smallConvIds = smallConvs
+          .filter((p) => p.conversation.memberCount <= 500)
+          .map((p) => p.conversationId);
+
+        if (smallConvIds.length > 0) {
+          const relatedPeers = await prisma.conversationParticipant.findMany({
+            where: { conversationId: { in: smallConvIds }, userId: { not: authed.userId } },
+            select: { userId: true },
+            distinct: ["userId"],
+          });
+          const currentRelatedUserIds = relatedPeers.map((r) => r.userId);
+          const viewerIds = await filterViewersForLastSeen(authed.userId, currentRelatedUserIds);
+          for (const viewerId of viewerIds) {
+            io!.to(`user:${viewerId}`).emit("presence:update", { userId: authed.userId, online: false });
           }
-        }
-        const viewerIds = await filterViewersForLastSeen(authed.userId, [...currentRelatedUserIds]);
-        for (const viewerId of viewerIds) {
-          io!.to(`user:${viewerId}`).emit("presence:update", { userId: authed.userId, online: false });
         }
       }
     } catch (err) {

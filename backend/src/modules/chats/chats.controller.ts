@@ -370,4 +370,24 @@ export const chatsController = {
     getIo().to(`conversation:${req.params.id}`).emit("message:new", systemMessage);
     res.status(201).json(systemMessage);
   },
+
+  async listMembers(req: Request, res: Response) {
+    const { id } = req.params;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const search = (req.query.search as string) || undefined;
+    const result = await chatsService.listMembersPaginated(req.user!.sub, id, page, limit, search);
+    res.json(result);
+  },
+
+  async getGroupStats(req: Request, res: Response) {
+    const stats = await chatsService.getGroupStats(req.user!.sub, req.params.id);
+    res.json(stats);
+  },
+
+  async upgradeToSupergroup(req: Request, res: Response) {
+    const conversation = await chatsService.upgradeToSupergroup(req.user!.sub, req.params.id);
+    getIo().to(`conversation:${req.params.id}`).emit("conversation:updated", conversation);
+    res.json(conversation);
+  },
 };

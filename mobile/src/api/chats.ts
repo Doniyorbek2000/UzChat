@@ -376,4 +376,46 @@ export const chatsApi = {
   getMyActivityStats() {
     return apiClient.get<ActivityStats>("/conversations/me/activity-stats").then((r) => r.data);
   },
+
+  listMembers(conversationId: string, page = 1, limit = 50, search?: string) {
+    const params: Record<string, string> = { page: String(page), limit: String(limit) };
+    if (search) params.search = search;
+    return apiClient
+      .get<{
+        members: Array<{
+          id: string;
+          userId: string;
+          role: ParticipantRole;
+          customTitle: string | null;
+          joinedAt: string;
+          restrictedUntil: string | null;
+          user: { id: string; username: string; displayName: string; avatarUrl: string | null; publicKey: string };
+        }>;
+        total: number;
+        page: number;
+        totalPages: number;
+      }>(`/conversations/${conversationId}/members`, { params })
+      .then((r) => r.data);
+  },
+
+  getGroupStats(conversationId: string) {
+    return apiClient
+      .get<{
+        memberCount: number;
+        maxMembers: number;
+        isSupergroup: boolean;
+        useSenderKeys: boolean;
+        messageCount: number;
+        mediaCount: number;
+        adminCount: number;
+        onlineEstimate: number;
+        createdAt: string;
+        capacityPercent: number;
+      }>(`/conversations/${conversationId}/group-stats`)
+      .then((r) => r.data);
+  },
+
+  upgradeToSupergroup(conversationId: string) {
+    return apiClient.post<Conversation>(`/conversations/${conversationId}/upgrade-supergroup`).then((r) => r.data);
+  },
 };
