@@ -328,6 +328,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const recordingUsers = useChatStore((s) => s.recordingUsers[conversationId]);
   const getConversationKey = useChatStore((s) => s.getConversationKey);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
+  const keyChangeAlerts = useChatStore((s) => s.keyChangeAlerts.filter((a) => a.conversationId === conversationId));
   const loadDrafts = useChatStore((s) => s.loadDrafts);
   const setDraft = useChatStore((s) => s.setDraft);
   const quickReplies = useQuickRepliesStore((s) => s.quickReplies);
@@ -419,7 +420,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const verifiedSecurityCodes = useVerifiedContactsStore((s) => s.verified);
   const currentSecurityCode = otherUser && user ? getSecurityCode(user.publicKey, otherUser.publicKey) : null;
   const verifiedSecurityCode = otherUser ? verifiedSecurityCodes[otherUser.id] : undefined;
-  const securityCodeChanged = !!verifiedSecurityCode && !!currentSecurityCode && verifiedSecurityCode !== currentSecurityCode;
+  const securityCodeChanged = (!!verifiedSecurityCode && !!currentSecurityCode && verifiedSecurityCode !== currentSecurityCode) || keyChangeAlerts.length > 0;
   const [keyChangeBannerDismissed, setKeyChangeBannerDismissed] = useState(false);
   const otherUserDisplayName = otherUser ? (contactAliases[otherUser.id] ?? otherUser.displayName) : "";
   const isOtherOnline = otherUser ? onlineUsers.has(otherUser.id) : false;

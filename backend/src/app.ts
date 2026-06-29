@@ -116,13 +116,31 @@ export function createApp() {
     const start = Date.now();
     try {
       await prisma.$queryRaw`SELECT 1`;
+      const dbLatency = Date.now() - start;
+
+      let redisStatus = "not_configured";
+      let redisLatency: number | undefined;
+      try {
+        const { getRedis } = require("./config/redis");
+        const r = getRedis();
+        const redisStart = Date.now();
+        await r.ping();
+        redisLatency = Date.now() - redisStart;
+        redisStatus = "connected";
+      } catch {
+        redisStatus = "unavailable";
+      }
+
       res.json({
         status: "ok",
         version: "1.0.0",
         minAppVersion: "1.0.0",
         uptime: Math.floor(process.uptime()),
-        dbLatency: Date.now() - start,
+        dbLatency,
+        redisStatus,
+        redisLatency,
         memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
+        encryption: "e2ee_signal_protocol",
       });
     } catch {
       res.status(503).json({ status: "degraded", db: "unreachable" });
