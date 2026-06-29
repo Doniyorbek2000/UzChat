@@ -135,4 +135,61 @@ export const presenceService = {
       return null;
     }
   },
+
+  async deduplicateNonce(conversationId: string, nonce: string): Promise<boolean> {
+    const r = redis();
+    if (!r) return true;
+    try {
+      const key = `${PREFIX}nonce:${conversationId}:${nonce}`;
+      const result = await r.set(key, "1", { NX: true, EX: 3600 });
+      return result !== null;
+    } catch {
+      return true;
+    }
+  },
+
+  async cacheSessionInfo(userId: string, deviceId: string, info: string): Promise<void> {
+    const r = redis();
+    if (!r) return;
+    try {
+      await r.set(`${PREFIX}session:${userId}:${deviceId}`, info, { EX: 86400 });
+    } catch {}
+  },
+
+  async getCachedSessionInfo(userId: string, deviceId: string): Promise<string | null> {
+    const r = redis();
+    if (!r) return null;
+    try {
+      return await r.get(`${PREFIX}session:${userId}:${deviceId}`);
+    } catch {
+      return null;
+    }
+  },
+
+  async trackActiveDevices(userId: string, deviceId: string): Promise<void> {
+    const r = redis();
+    if (!r) return;
+    try {
+      await r.sAdd(`${PREFIX}active-devices:${userId}`, deviceId);
+      await r.expire(`${PREFIX}active-devices:${userId}`, 86400);
+    } catch {}
+  },
+
+  async getActiveDevices(userId: string): Promise<string[]> {
+    const r = redis();
+    if (!r) return [];
+    try {
+      return await r.sMembers(`${PREFIX}active-devices:${userId}`);
+    } catch {
+      return [];
+    }
+  },
+
+  async removeActiveDevice(userId: string, deviceId: string): Promise<void> {
+    const r = redis();
+    if (!r) return;
+    try {
+      await r.sRem(`${PREFIX}active-devices:${userId}`, deviceId);
+    } catch {}
+  },
 };

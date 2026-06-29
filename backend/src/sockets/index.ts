@@ -9,6 +9,7 @@ import { prisma } from "../config/prisma";
 import { pushService } from "../modules/push/push.service";
 import { messagesService } from "../modules/messages/messages.service";
 import { filterVisibleOnlineOwners, filterViewersForLastSeen } from "../utils/lastSeen";
+import { presenceService } from "../services/presence.service";
 import { logger } from "../utils/logger";
 import { getRedis, getSubscriber } from "../config/redis";
 
@@ -161,6 +162,8 @@ async function handleConnection(socket: AuthenticatedSocket) {
   const visibleOnlineUserIds = await filterVisibleOnlineOwners(authed.userId, onlineUserIds);
   socket.emit("presence:initial", { userIds: [...visibleOnlineUserIds] });
 
+  presenceService.setOnline(authed.userId).catch(() => {});
+
   if (!wasOnline) {
     const viewerIds = await filterViewersForLastSeen(authed.userId, [...relatedUserIds]);
     for (const viewerId of viewerIds) {
@@ -213,6 +216,7 @@ async function handleConnection(socket: AuthenticatedSocket) {
   socket.on("disconnect", async () => {
     try {
       await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
+      presenceService.setOffline(authed.userId).catch(() => {});
       if (!isUserOnline(authed.userId)) {
         const smallConvs = await prisma.conversationParticipant.findMany({
           where: { userId: authed.userId },
