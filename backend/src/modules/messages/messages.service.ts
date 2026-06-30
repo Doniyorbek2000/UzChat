@@ -815,14 +815,15 @@ export const messagesService = {
     });
   },
 
-  // Marks a "view once" IMAGE/AUDIO message as viewed and deletes its media file
+  // Marks a "view once" IMAGE/AUDIO/VIDEO message as viewed and deletes its media file
   // server-side, so it can never be downloaded again. Idempotent.
   async viewMessage(userId: string, conversationId: string, messageId: string) {
     await chatsService.assertParticipant(userId, conversationId);
 
     const message = await prisma.message.findUnique({ where: { id: messageId } });
     if (!message || message.conversationId !== conversationId) throw Errors.notFound("Xabar");
-    if ((message.type !== MessageType.IMAGE && message.type !== MessageType.AUDIO) || !message.viewOnce) {
+    const viewOnceTypes: MessageType[] = [MessageType.IMAGE, MessageType.AUDIO, MessageType.VIDEO];
+    if (!viewOnceTypes.includes(message.type) || !message.viewOnce) {
       throw Errors.badRequest("Bu xabar bir martalik emas");
     }
 

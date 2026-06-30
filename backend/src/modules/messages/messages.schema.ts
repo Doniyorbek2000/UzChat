@@ -18,7 +18,7 @@ export const sendMessageSchema = z
     scheduledFor: z.string().datetime().optional(),
     // DIRECT only: hold the message until the recipient comes online, instead of a fixed time.
     sendWhenOnline: z.boolean().optional(),
-    // "View once": media is deleted after the recipient views/plays it (IMAGE/AUDIO only).
+    // "View once": media is deleted after the recipient views/plays it (IMAGE/AUDIO/VIDEO only).
     viewOnce: z.boolean().optional(),
     // Media sent with a blur overlay; recipient taps to reveal (IMAGE/VIDEO only).
     isSpoiler: z.boolean().optional(),
@@ -40,8 +40,8 @@ export const sendMessageSchema = z
     message: "Vaqt belgilash va onlayn bo'lganda yuborishni birga tanlab bo'lmaydi",
     path: ["sendWhenOnline"],
   })
-  .refine((data) => !data.viewOnce || data.type === "IMAGE" || data.type === "AUDIO", {
-    message: "Bir martalik ko'rish faqat rasm va ovozli xabarlar uchun mavjud",
+  .refine((data) => !data.viewOnce || data.type === "IMAGE" || data.type === "AUDIO" || data.type === "VIDEO", {
+    message: "Bir martalik ko'rish faqat rasm, video va ovozli xabarlar uchun mavjud",
     path: ["viewOnce"],
   })
   .refine((data) => !data.isSpoiler || data.type === "IMAGE" || data.type === "VIDEO", {

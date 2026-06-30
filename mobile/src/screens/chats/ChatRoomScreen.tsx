@@ -54,7 +54,9 @@ import { MediaImageBubble } from "../../components/MediaImageBubble";
 import { ImageGalleryViewer } from "../../components/ImageGalleryViewer";
 import { ViewOnceImageBubble } from "../../components/ViewOnceImageBubble";
 import { ViewOnceAudioBubble } from "../../components/ViewOnceAudioBubble";
+import { ViewOnceVideoBubble } from "../../components/ViewOnceVideoBubble";
 import { MediaFileBubble } from "../../components/MediaFileBubble";
+import { MediaVideoBubble } from "../../components/MediaVideoBubble";
 import { MediaAudioBubble } from "../../components/MediaAudioBubble";
 import { ContactCardBubble } from "../../components/ContactCardBubble";
 import { PollBubble } from "../../components/PollBubble";
@@ -88,7 +90,8 @@ interface PendingMediaItem {
   mimeType: string;
   width?: number;
   height?: number;
-  type: "IMAGE" | "FILE";
+  duration?: number;
+  type: "IMAGE" | "FILE" | "VIDEO";
   // True when this is an image picked to be sent uncompressed as a document
   // (type is "FILE" on send, but the preview still shows the image thumbnail).
   isUncompressedImage?: boolean;
@@ -1318,6 +1321,62 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPendingMediaTotal(items.length);
   };
 
+  const pickVideo = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Ruxsat kerak", "Video yuborish uchun galereyaga ruxsat bering");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["videos"],
+      quality: 0.7,
+      allowsMultipleSelection: true,
+      selectionLimit: 5,
+    });
+    if (result.canceled || result.assets.length === 0) return;
+
+    const items: PendingMediaItem[] = result.assets.map((asset, i) => ({
+      uri: asset.uri,
+      name: asset.fileName ?? `video-${Date.now()}-${i}.mp4`,
+      mimeType: asset.mimeType ?? "video/mp4",
+      width: asset.width,
+      height: asset.height,
+      duration: asset.duration ?? undefined,
+      type: "VIDEO",
+    }));
+
+    setMediaCaption("");
+    setPendingMedia(items[0]);
+    setPendingMediaQueue(items.slice(1));
+    setPendingMediaTotal(items.length);
+  };
+
+  const takePhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Ruxsat kerak", "Rasm olish uchun kameraga ruxsat bering");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      quality: 0.6,
+    });
+    if (result.canceled || result.assets.length === 0) return;
+    const asset = result.assets[0];
+
+    setPendingMedia({
+      uri: asset.uri,
+      name: asset.fileName ?? `camera-${Date.now()}.jpg`,
+      mimeType: asset.mimeType ?? "image/jpeg",
+      width: asset.width,
+      height: asset.height,
+      type: "IMAGE",
+    });
+    setPendingMediaQueue([]);
+    setPendingMediaTotal(1);
+    setMediaCaption("");
+  };
+
   const pickFile = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: "*/*", copyToCacheDirectory: true, multiple: true });
     if (result.canceled || result.assets.length === 0) return;
@@ -1425,7 +1484,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       return;
     }
     Alert.alert("Yuborish", "Nimani yubormoqchisiz?", [
+      { text: "📷 Kameradan rasm", onPress: takePhoto },
       { text: "🖼 Rasm", onPress: pickImage },
+      { text: "🎬 Video", onPress: pickVideo },
       { text: "🖼 Rasm (siqilmagan, fayl sifatida)", onPress: pickImageAsFile },
       { text: "📄 Fayl", onPress: pickFile },
       { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
@@ -1868,7 +1929,19 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       );
     } else if (item.type === "AUDIO" && conversationKey) {
       content = <MediaAudioBubble message={item} conversationKey={conversationKey} />;
-    } else if ((item.type === "FILE" || item.type === "VIDEO") && conversationKey) {
+    } else if (item.type === "VIDEO" && item.viewOnce && conversationKey) {
+      content = (
+        <ViewOnceVideoBubble
+          message={item}
+          conversationKey={conversationKey}
+          conversationId={conversationId}
+          isOwn={isOwn}
+          canView={!item.viewedAt && (!isOwn || !!conversation?.isSelf)}
+        />
+      );
+    } else if (item.type === "VIDEO" && conversationKey) {
+      content = <MediaVideoBubble message={item} conversationKey={conversationKey} />;
+    } else if (item.type === "FILE" && conversationKey) {
       content = <MediaFileBubble message={item} conversationKey={conversationKey} />;
     } else if (item.type === "CONTACT") {
       content = <ContactCardBubble message={item} navigation={navigation} />;
@@ -3428,7 +3501,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <Image source={{ uri: pendingMedia.uri }} style={styles.mediaPreviewImage} resizeMode="contain" />
           ) : (
             <View style={styles.mediaPreviewFile}>
-              <Text style={styles.mediaPreviewFileIcon}>📄</Text>
+              <Text style={styles.mediaPreviewFileIcon}>{pendingMedia?.type === "VIDEO" ? "🎬" : "📄"}</Text>
               <Text style={styles.mediaPreviewFileName} numberOfLines={2}>
                 {pendingMedia?.name}
               </Text>
@@ -3449,7 +3522,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <TouchableOpacity style={styles.mediaPreviewCancel} onPress={cancelPendingMedia} disabled={sending}>
               <Text style={styles.mediaPreviewCancelText}>Bekor qilish</Text>
             </TouchableOpacity>
-            {pendingMedia?.type === "IMAGE" && (
+            {(pendingMedia?.type === "IMAGE" || pendingMedia?.type === "VIDEO") && (
               <TouchableOpacity
                 style={[styles.mediaPreviewSpoiler, mediaSpoiler && styles.mediaPreviewSpoilerActive]}
                 onPress={() => setMediaSpoiler((v) => !v)}
@@ -3458,7 +3531,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.mediaPreviewSpoilerText}>🙈</Text>
               </TouchableOpacity>
             )}
-            {pendingMedia?.type === "IMAGE" && (
+            {(pendingMedia?.type === "IMAGE" || pendingMedia?.type === "VIDEO") && (
               <TouchableOpacity
                 style={styles.mediaPreviewViewOnce}
                 onPress={() => sendPendingMedia(true)}
