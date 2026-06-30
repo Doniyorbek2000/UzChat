@@ -15,23 +15,48 @@ interface UploadResponse {
 }
 
 /** Uploads a local file as-is (e.g. a profile avatar), without E2EE. */
-export async function uploadPlainFile(uri: string, mimeType: string): Promise<UploadResponse> {
+export async function uploadPlainFile(
+  uri: string,
+  mimeType: string,
+  onProgress?: (fraction: number) => void
+): Promise<UploadResponse> {
   const headers = await authHeaders();
-  const result = await FileSystem.uploadAsync(`${API_URL}/media/upload`, uri, {
-    httpMethod: "POST",
-    uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-    fieldName: "file",
-    mimeType,
-    headers,
-  });
-  if (result.status >= 400) throw new Error("Faylni yuklab bo'lmadi");
+  if (!onProgress) {
+    const result = await FileSystem.uploadAsync(`${API_URL}/media/upload`, uri, {
+      httpMethod: "POST",
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: "file",
+      mimeType,
+      headers,
+    });
+    if (result.status >= 400) throw new Error("Faylni yuklab bo'lmadi");
+    return JSON.parse(result.body) as UploadResponse;
+  }
+
+  const task = FileSystem.createUploadTask(
+    `${API_URL}/media/upload`,
+    uri,
+    {
+      httpMethod: "POST",
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: "file",
+      mimeType,
+      headers,
+    },
+    ({ totalBytesSent, totalBytesExpectedToSend }) => {
+      if (totalBytesExpectedToSend > 0) onProgress(totalBytesSent / totalBytesExpectedToSend);
+    }
+  );
+  const result = await task.uploadAsync();
+  if (!result || result.status >= 400) throw new Error("Faylni yuklab bo'lmadi");
   return JSON.parse(result.body) as UploadResponse;
 }
 
 /** Encrypts a local file with the conversation key and uploads the ciphertext. */
 export async function encryptAndUploadFile(
   uri: string,
-  conversationKey: string
+  conversationKey: string,
+  onProgress?: (fraction: number) => void
 ): Promise<{ url: string; size: number; fileNonce: string }> {
   const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
   const bytes = decodeBase64(base64);
@@ -41,7 +66,7 @@ export async function encryptAndUploadFile(
   await FileSystem.writeAsStringAsync(tmpUri, encodeBase64(ciphertext), { encoding: FileSystem.EncodingType.Base64 });
 
   try {
-    const { url, size } = await uploadPlainFile(tmpUri, "application/octet-stream");
+    const { url, size } = await uploadPlainFile(tmpUri, "application/octet-stream", onProgress);
     return { url, size, fileNonce: nonce };
   } finally {
     await FileSystem.deleteAsync(tmpUri, { idempotent: true });

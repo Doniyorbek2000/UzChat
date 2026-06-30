@@ -124,7 +124,8 @@ interface ChatState {
     replyToId?: string,
     viewOnce?: boolean,
     caption?: string,
-    isSpoiler?: boolean
+    isSpoiler?: boolean,
+    onProgress?: (fraction: number) => void
   ) => Promise<void>;
   viewOnceMedia: (conversationId: string, messageId: string) => Promise<void>;
   sendContactMessage: (conversationId: string, contact: User, replyToId?: string) => Promise<void>;
@@ -621,12 +622,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }));
   },
 
-  sendMediaMessage: async (conversationId, asset, type, replyToId, viewOnce, caption, isSpoiler) => {
+  sendMediaMessage: async (conversationId, asset, type, replyToId, viewOnce, caption, isSpoiler, onProgress) => {
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) throw new Error("Suhbat topilmadi");
 
     const key = get().getConversationKey(conversation);
-    const { url, size, fileNonce } = await encryptAndUploadFile(asset.uri, key);
+    const { url, size, fileNonce } = await encryptAndUploadFile(asset.uri, key, onProgress);
 
     const meta: MediaMeta = {
       name: asset.name,

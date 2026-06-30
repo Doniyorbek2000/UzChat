@@ -405,6 +405,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const [pendingMediaTotal, setPendingMediaTotal] = useState(0);
   const [mediaCaption, setMediaCaption] = useState("");
   const [mediaSpoiler, setMediaSpoiler] = useState(false);
+  const [mediaUploadProgress, setMediaUploadProgress] = useState<number | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const listRef = useRef<FlatList<DecryptedMessage>>(null);
@@ -1425,6 +1426,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setPendingMediaQueue([]);
     setPendingMediaTotal(0);
     setMediaSpoiler(false);
+    setMediaUploadProgress(null);
   };
 
   const sendPendingMedia = async (viewOnce: boolean) => {
@@ -1438,8 +1440,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setMediaCaption("");
     setMediaSpoiler(false);
     setSending(true);
+    setMediaUploadProgress(0);
     try {
-      await sendMediaMessage(conversationId, asset, type, replyToId, viewOnce, caption || undefined, isSpoiler);
+      await sendMediaMessage(
+        conversationId,
+        asset,
+        type,
+        replyToId,
+        viewOnce,
+        caption || undefined,
+        isSpoiler,
+        setMediaUploadProgress
+      );
       scrollToLatest();
       if (queue.length > 0) {
         setPendingMedia(queue[0]);
@@ -1456,6 +1468,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       );
     } finally {
       setSending(false);
+      setMediaUploadProgress(null);
     }
   };
 
@@ -3541,7 +3554,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.mediaPreviewSend} onPress={() => sendPendingMedia(false)} disabled={sending}>
-              {sending ? <ActivityIndicator color="#fff" /> : <Text style={styles.mediaPreviewSendText}>Yuborish</Text>}
+              {sending ? (
+                mediaUploadProgress != null && mediaUploadProgress > 0 ? (
+                  <Text style={styles.mediaPreviewSendText}>{Math.round(mediaUploadProgress * 100)}%</Text>
+                ) : (
+                  <ActivityIndicator color="#fff" />
+                )
+              ) : (
+                <Text style={styles.mediaPreviewSendText}>Yuborish</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
