@@ -863,7 +863,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!sourceConversation || !targetConversation) throw new Error("Suhbat topilmadi");
 
     const message = (get().messagesByConversation[sourceConversationId] ?? []).find((m) => m.id === messageId);
-    if (!message || message.deletedAt || message.decryptFailed) throw new Error("Xabarni yo'naltirib bo'lmadi");
+    if (!message || message.deletedAt || message.decryptFailed || message.viewOnce) {
+      throw new Error("Xabarni yo'naltirib bo'lmadi");
+    }
 
     const sourceKey = get().getConversationKey(sourceConversation);
     const targetKey = get().getConversationKey(targetConversation);
