@@ -2293,9 +2293,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <TouchableOpacity style={styles.recordingCancel} onPress={cancelRecording} accessibilityLabel="Yozishni bekor qilish" accessibilityRole="button">
             <Text style={styles.recordingCancelText}>Bekor qilish</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.mediaPreviewViewOnce} onPress={() => sendRecording(true)} accessibilityLabel="Bir martalik ovozli xabar" accessibilityRole="button">
-            <Text style={styles.mediaPreviewViewOnceText}>🔥</Text>
-          </TouchableOpacity>
+          {conversation?.type !== "CHANNEL" && (
+            <TouchableOpacity style={styles.mediaPreviewViewOnce} onPress={() => sendRecording(true)} accessibilityLabel="Bir martalik ovozli xabar" accessibilityRole="button">
+              <Text style={styles.mediaPreviewViewOnceText}>🔥</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.sendButton} onPress={() => sendRecording(false)} accessibilityLabel="Ovozli xabar yuborish" accessibilityRole="button">
             <Text style={styles.sendText}>Yuborish</Text>
           </TouchableOpacity>
@@ -3545,7 +3547,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 <Text style={styles.mediaPreviewSpoilerText}>🙈</Text>
               </TouchableOpacity>
             )}
-            {(pendingMedia?.type === "IMAGE" || pendingMedia?.type === "VIDEO") && (
+            {(pendingMedia?.type === "IMAGE" || pendingMedia?.type === "VIDEO") && conversation?.type !== "CHANNEL" && (
               <TouchableOpacity
                 style={styles.mediaPreviewViewOnce}
                 onPress={() => sendPendingMedia(true)}

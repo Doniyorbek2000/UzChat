@@ -459,6 +459,10 @@ export const messagesService = {
       throw Errors.badRequest("Bu funksiya faqat shaxsiy suhbatlarda mavjud");
     }
 
+    if (input.viewOnce && conversation?.type === ConversationType.CHANNEL) {
+      throw Errors.badRequest("Kanallarda bir martalik xabar yuborib bo'lmaydi");
+    }
+
     const isScheduled = !!input.scheduledFor || sendWhenOnline;
 
     if (
