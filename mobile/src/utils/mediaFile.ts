@@ -85,7 +85,8 @@ export async function downloadAndDecryptFile(
   url: string,
   fileNonce: string,
   conversationKey: string,
-  cacheKey: string
+  cacheKey: string,
+  onProgress?: (fraction: number) => void
 ): Promise<string> {
   const destUri = `${FileSystem.cacheDirectory}uzchat-${cacheKey}`;
   const info = await FileSystem.getInfoAsync(destUri);
@@ -93,7 +94,14 @@ export async function downloadAndDecryptFile(
 
   const encUri = `${FileSystem.cacheDirectory}uzchat-enc-${cacheKey}`;
   const headers = await authHeaders();
-  await FileSystem.downloadAsync(url, encUri, { headers });
+  if (onProgress) {
+    const resumable = FileSystem.createDownloadResumable(url, encUri, { headers }, ({ totalBytesWritten, totalBytesExpectedToWrite }) => {
+      if (totalBytesExpectedToWrite > 0) onProgress(totalBytesWritten / totalBytesExpectedToWrite);
+    });
+    await resumable.downloadAsync();
+  } else {
+    await FileSystem.downloadAsync(url, encUri, { headers });
+  }
 
   try {
     const encBase64 = await FileSystem.readAsStringAsync(encUri, { encoding: FileSystem.EncodingType.Base64 });

@@ -16,6 +16,7 @@ interface Props {
 /** Inline-playable VIDEO message bubble: shows a thumbnail placeholder until tapped, then plays fullscreen. */
 export function MediaVideoBubble({ message, conversationKey }: Props) {
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState(false);
   const [uri, setUri] = useState<string | null>(null);
   const [playerOpen, setPlayerOpen] = useState(false);
@@ -36,12 +37,14 @@ export function MediaVideoBubble({ message, conversationKey }: Props) {
       return;
     }
     setLoading(true);
+    setProgress(0);
     try {
       const localUri = await downloadAndDecryptFile(
         message.mediaUrl,
         meta.fileNonce,
         conversationKey,
-        `${message.id}${extensionFromName(meta.name) || ".mp4"}`
+        `${message.id}${extensionFromName(meta.name) || ".mp4"}`,
+        setProgress
       );
       setUri(localUri);
       setPlayerOpen(true);
@@ -66,7 +69,11 @@ export function MediaVideoBubble({ message, conversationKey }: Props) {
     <>
       <Pressable style={[styles.box, { width, height }]} onPress={onPress} disabled={loading}>
         {loading ? (
-          <ActivityIndicator color={colors.primary} />
+          progress > 0 ? (
+            <Text style={styles.duration}>{Math.round(progress * 100)}%</Text>
+          ) : (
+            <ActivityIndicator color={colors.primary} />
+          )
         ) : (
           <>
             <Text style={styles.playIcon}>▶️</Text>
