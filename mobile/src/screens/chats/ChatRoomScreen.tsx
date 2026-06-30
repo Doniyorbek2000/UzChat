@@ -2530,6 +2530,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             (actionMessage.type === "TEXT" ||
               actionMessage.type === "IMAGE" ||
               actionMessage.type === "VIDEO" ||
+              actionMessage.type === "AUDIO" ||
               actionMessage.type === "FILE") &&
             !actionMessage.decryptFailed &&
             Date.now() - new Date(actionMessage.createdAt).getTime() <= RECALL_WINDOW_MS && (
