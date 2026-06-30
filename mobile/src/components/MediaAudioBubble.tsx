@@ -71,6 +71,11 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
       download();
       return;
     }
+    if (error) {
+      setError(false);
+      download();
+      return;
+    }
     if (!localUri) return;
     if (status.playing) {
       player.pause();
@@ -99,7 +104,9 @@ export function MediaAudioBubble({ message, conversationKey }: Props) {
       <View style={styles.icon}>
         {needsDownload ? (
           <Text style={styles.iconText}>⬇️</Text>
-        ) : !localUri && !error ? (
+        ) : error ? (
+          <Text style={styles.iconText}>⚠️</Text>
+        ) : !localUri ? (
           <ActivityIndicator color="#fff" size="small" />
         ) : (
           <Text style={styles.iconText}>{status.playing ? "⏸" : "▶"}</Text>

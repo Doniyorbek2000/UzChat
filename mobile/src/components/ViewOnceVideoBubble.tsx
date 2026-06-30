@@ -20,6 +20,7 @@ interface Props {
 /** WhatsApp-style "view once" VIDEO message: shown as a placeholder until tapped, then deleted everywhere. */
 export function ViewOnceVideoBubble({ message, conversationKey, conversationId, isOwn, canView }: Props) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [viewerUri, setViewerUri] = useState<string | null>(null);
   const viewOnceMedia = useChatStore((s) => s.viewOnceMedia);
   const meta = message.meta;
@@ -35,6 +36,7 @@ export function ViewOnceVideoBubble({ message, conversationKey, conversationId, 
   const onPress = async () => {
     if (!canView || loading || !message.mediaUrl || !meta) return;
     setLoading(true);
+    setError(false);
     try {
       const localUri = await downloadAndDecryptFile(
         message.mediaUrl,
@@ -44,6 +46,8 @@ export function ViewOnceVideoBubble({ message, conversationKey, conversationId, 
       );
       setViewerUri(localUri);
       await viewOnceMedia(conversationId, message.id).catch(() => {});
+    } catch {
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -55,7 +59,9 @@ export function ViewOnceVideoBubble({ message, conversationKey, conversationId, 
   };
 
   let label: string;
-  if (message.viewedAt) {
+  if (error) {
+    label = "⚠️ Yuklab bo'lmadi. Qayta urinish uchun bosing";
+  } else if (message.viewedAt) {
     label = "🔥 Ko'rilgan video";
   } else if (isOwn) {
     label = "🔥 Bir martalik video yuborildi";

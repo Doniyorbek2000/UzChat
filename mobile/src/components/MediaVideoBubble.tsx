@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import { downloadAndDecryptFile, extensionFromName, formatDuration } from "../utils/mediaFile";
 import { DecryptedMessage } from "../store/chatStore";
@@ -38,6 +38,7 @@ export function MediaVideoBubble({ message, conversationKey }: Props) {
     }
     setLoading(true);
     setProgress(0);
+    setError(false);
     try {
       const localUri = await downloadAndDecryptFile(
         message.mediaUrl,
@@ -59,9 +60,10 @@ export function MediaVideoBubble({ message, conversationKey }: Props) {
 
   if (error) {
     return (
-      <View style={[styles.box, { width, height }]}>
+      <Pressable style={[styles.box, { width, height }]} onPress={onPress}>
         <Text style={styles.errorText}>⚠️ Yuklab bo'lmadi</Text>
-      </View>
+        <Text style={styles.duration}>Qayta urinish uchun bosing</Text>
+      </Pressable>
     );
   }
 

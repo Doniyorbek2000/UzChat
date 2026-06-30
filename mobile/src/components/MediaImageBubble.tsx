@@ -72,9 +72,10 @@ export function MediaImageBubble({ message, conversationKey, onOpenViewer }: Pro
 
   if (error) {
     return (
-      <View style={[styles.box, { width, height }]}>
+      <Pressable style={[styles.box, { width, height }]} onPress={() => { setError(false); download(); }}>
         <Text style={styles.errorText}>⚠️ Yuklab bo'lmadi</Text>
-      </View>
+        <Text style={styles.downloadText}>Qayta urinish uchun bosing</Text>
+      </Pressable>
     );
   }
 
