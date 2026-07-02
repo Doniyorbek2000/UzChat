@@ -3,6 +3,9 @@ import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, Activity
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { searchApi, SearchResult, SearchHistoryItem } from "../../api/search";
+import { useChatStore, DecryptedMessage } from "../../store/chatStore";
+import { useAuthStore } from "../../store/authStore";
+import { getConversationDisplay } from "../../utils/conversation";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 
@@ -13,10 +16,15 @@ export function GlobalSearchScreen({ navigation }: Props) {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<SearchTab>("all");
   const [results, setResults] = useState<SearchResult | null>(null);
+  const [messageResults, setMessageResults] = useState<{ conversationId: string; message: DecryptedMessage }[]>([]);
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchAllMessages = useChatStore((st) => st.searchAllMessages);
+  const conversations = useChatStore((st) => st.conversations);
+  const contactAliases = useChatStore((st) => st.contactAliases);
+  const user = useAuthStore((st) => st.user);
 
   useEffect(() => {
     searchApi.getHistory().then(setHistory).catch(() => {});
@@ -27,14 +35,26 @@ export function GlobalSearchScreen({ navigation }: Props) {
     setLoading(true);
     setShowHistory(false);
     try {
-      const type = t === "all" ? undefined : t;
-      const data = await searchApi.search(q.trim(), type as any);
+      // Message text is E2EE — the server can't search it, so messages are
+      // searched locally over decrypted history instead.
+      const serverPromise =
+        t === "messages"
+          ? Promise.resolve(null)
+          : searchApi.search(q.trim(), (t === "all" ? undefined : t) as any);
+      const messagesPromise =
+        t === "all" || t === "messages" ? searchAllMessages(q.trim()) : Promise.resolve([]);
+      const [data, localMessages] = await Promise.all([
+        serverPromise.catch(() => null),
+        messagesPromise.catch(() => []),
+      ]);
       setResults(data);
+      setMessageResults(localMessages);
     } catch {
       setResults(null);
+      setMessageResults([]);
     }
     setLoading(false);
-  }, []);
+  }, [searchAllMessages]);
 
   const handleSearch = useCallback(() => {
     doSearch(query, tab);
@@ -49,9 +69,7 @@ export function GlobalSearchScreen({ navigation }: Props) {
 
   const handleHistoryPress = (q: string) => {
     setQuery(q);
-    setShowHistory(false);
-    setLoading(true);
-    searchApi.search(q).then(setResults).catch(() => {}).finally(() => setLoading(false));
+    doSearch(q, tab);
   };
 
   const clearHistory = async () => {
@@ -72,7 +90,12 @@ export function GlobalSearchScreen({ navigation }: Props) {
     if (results.users?.length) allResults.push({ type: "header", title: "Foydalanuvchilar" }, ...results.users.map((u) => ({ ...u, type: "user" as const })));
     if (results.groups?.length) allResults.push({ type: "header", title: "Guruhlar" }, ...results.groups.map((g) => ({ ...g, type: "group" as const })));
     if (results.channels?.length) allResults.push({ type: "header", title: "Kanallar" }, ...results.channels.map((c) => ({ ...c, type: "channel" as const })));
-    if (results.messages?.length) allResults.push({ type: "header", title: "Xabarlar" }, ...results.messages.map((m) => ({ ...m, type: "message" as const })));
+  }
+  if (messageResults.length) {
+    allResults.push(
+      { type: "header", title: "Xabarlar" },
+      ...messageResults.map((r) => ({ ...r.message, type: "message" as const, conversationId: r.conversationId }))
+    );
   }
 
   return (
@@ -149,12 +172,14 @@ export function GlobalSearchScreen({ navigation }: Props) {
               );
             }
             if (item.type === "message") {
+              const conversation = conversations.find((c) => c.id === item.conversationId);
+              const display = conversation && user ? getConversationDisplay(conversation, user.id, contactAliases) : null;
               return (
-                <TouchableOpacity style={styles.resultRow} onPress={() => navigation.navigate("ChatRoom", { conversationId: item.conversationId, title: item.conversation?.title ?? "", highlightMessageId: item.id })}>
-                  <Avatar uri={item.sender?.avatarUrl} name={item.sender?.displayName ?? "?"} size={40} />
+                <TouchableOpacity style={styles.resultRow} onPress={() => navigation.navigate("ChatRoom", { conversationId: item.conversationId, title: display?.title ?? "", highlightMessageId: item.id })}>
+                  <Avatar uri={display?.avatarUrl} name={display?.title ?? "?"} size={40} />
                   <View style={styles.resultInfo}>
-                    <Text style={styles.resultName}>{item.sender?.displayName}</Text>
-                    <Text style={styles.resultSub} numberOfLines={1}>{item.conversation?.title} · {new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
+                    <Text style={styles.resultName}>{display?.title ?? "Suhbat"}</Text>
+                    <Text style={styles.resultSub} numberOfLines={1}>{item.text ?? ""} · {new Date(item.createdAt).toLocaleDateString("uz-UZ")}</Text>
                   </View>
                 </TouchableOpacity>
               );

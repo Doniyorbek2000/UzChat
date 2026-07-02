@@ -138,7 +138,9 @@ export function createApp() {
         redisStatus,
         redisLatency,
         memoryMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
-        encryption: "e2ee_signal_protocol",
+        // Honest label: static per-conversation NaCl keys (XSalsa20-Poly1305),
+        // wrapped per participant with X25519 — not the Signal double ratchet.
+        encryption: "e2ee_nacl_xsalsa20_poly1305",
       });
     } catch {
       res.status(503).json({ status: "degraded", db: "unreachable" });

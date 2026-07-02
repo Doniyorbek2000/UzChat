@@ -42,32 +42,6 @@ export const searchService = {
     });
   },
 
-  async searchMessages(userId: string, query: string, conversationId: string | undefined, limit: number, offset: number) {
-    const participantConvs = await prisma.conversationParticipant.findMany({
-      where: { userId },
-      select: { conversationId: true },
-    });
-    const allowedConvIds = participantConvs.map((p) => p.conversationId);
-
-    const where: any = {
-      conversationId: conversationId ? { in: allowedConvIds.includes(conversationId) ? [conversationId] : [] } : { in: allowedConvIds },
-      ciphertext: { contains: query, mode: "insensitive" },
-      deletedAt: null,
-    };
-
-    return prisma.message.findMany({
-      where,
-      select: {
-        id: true, conversationId: true, type: true, ciphertext: true, nonce: true,
-        createdAt: true, sender: { select: userSelect },
-        conversation: { select: { id: true, title: true, type: true } },
-      },
-      take: limit,
-      skip: offset,
-      orderBy: { createdAt: "desc" },
-    });
-  },
-
   async saveSearchHistory(userId: string, query: string, type: string) {
     await prisma.searchHistory.create({
       data: { userId, query, type },

@@ -7,8 +7,11 @@ import { searchService } from "./search.service";
 const router = Router();
 router.use(requireAuth);
 
+// Message content search is intentionally absent: messages are E2EE
+// ciphertext, so the server has nothing meaningful to match against.
+// Clients search message text locally over decrypted history.
 router.get("/", validateQuery(searchQuerySchema), async (req: Request, res: Response) => {
-  const { q, type, conversationId, limit = 20, offset = 0 } = req.query as any;
+  const { q, type, limit = 20, offset = 0 } = req.query as any;
   const userId = req.user!.sub;
 
   const results: any = {};
@@ -21,9 +24,6 @@ router.get("/", validateQuery(searchQuerySchema), async (req: Request, res: Resp
   }
   if (!type || type === "channels") {
     results.channels = await searchService.searchChannels(q, limit, offset);
-  }
-  if (!type || type === "messages") {
-    results.messages = await searchService.searchMessages(userId, q, conversationId, limit, offset);
   }
 
   await searchService.saveSearchHistory(userId, q, type ?? "all");
