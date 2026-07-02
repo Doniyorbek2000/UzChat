@@ -109,6 +109,9 @@ model User {
   // Base64 X25519 public key used by clients for end-to-end encryption.
   // The matching private key never leaves the user's device.
   publicKey    String
+  // Stable invite code shown on the referral screen; new users enter it to
+  // credit the referrer.
+  referralCode String?  @unique
   lastSeenAt   DateTime @default(now())
   // Who can see this user's lastSeenAt timestamp.
   lastSeenPrivacy LastSeenPrivacy @default(EVERYONE)
