@@ -1705,6 +1705,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onLongPress = (item: DecryptedMessage) => {
     if (item.deletedAt) return;
     if (selectionMode) return;
+    // Unconfirmed (pending/failed) messages only exist locally — server-backed
+    // actions (reply, star, pin, ...) would 404 on their local id.
+    if (item.sendStatus) return;
     setActionMessage(item);
   };
 
@@ -1744,7 +1747,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       if (!item.deletedAt) toggleSelected(item.id);
       return;
     }
-    if (item.deletedAt || item.type === "SYSTEM") return;
+    if (item.deletedAt || item.type === "SYSTEM" || item.sendStatus) return;
 
     const now = Date.now();
     const last = lastTapRef.current;
