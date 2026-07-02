@@ -75,6 +75,7 @@ export type RootStackParamList = {
   NotificationSettings: undefined;
   About: undefined;
   ThemeSettings: undefined;
+  LanguageSettings: undefined;
   Stories: undefined;
   StoryViewer: { userId: string };
   QRCode: undefined;

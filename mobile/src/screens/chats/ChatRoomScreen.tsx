@@ -1197,13 +1197,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     setEditHistoryEntries([]);
     if (!conversationKey) return;
     setLoadingEditHistory(true);
+    // Local retention ("keep edit history" setting) works even offline and
+    // for versions the server no longer has; merge it with the server copy.
+    const local = (item.editHistory ?? []).filter((h): h is { text: string; editedAt: string } => h.text !== null);
     try {
       const history = await chatsApi.getEditHistory(conversationId, item.id);
-      setEditHistoryEntries(
-        history.map((h) => ({ text: decryptMessage(h.ciphertext, h.nonce, conversationKey), editedAt: h.editedAt }))
+      const server = history.map((h) => ({
+        text: decryptMessage(h.ciphertext, h.nonce, conversationKey),
+        editedAt: h.editedAt,
+      }));
+      const seen = new Set(server.map((h) => h.editedAt));
+      const merged = [...server, ...local.filter((h) => !seen.has(h.editedAt))].sort(
+        (a, b) => new Date(a.editedAt).getTime() - new Date(b.editedAt).getTime()
       );
+      setEditHistoryEntries(merged);
     } catch {
-      setEditHistoryEntries([]);
+      setEditHistoryEntries(local);
     } finally {
       setLoadingEditHistory(false);
     }
@@ -1924,7 +1933,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       item.type === "TEXT" && !item.deletedAt && !item.decryptFailed && isEmojiOnlyMessage(item.text ?? "");
 
     let content;
-    if (item.deletedAt) {
+    if (item.deletedAt && item.locallyKept && item.text) {
+      // "Keep deleted messages" setting: show the original content with a
+      // deleted badge instead of the tombstone (this device only).
+      content = (
+        <View>
+          <Text style={[styles.messageText, { fontSize: 16 * fontScale }]}>{item.text}</Text>
+          <Text style={styles.keptDeletedLabel}>🚫 O'chirilgan — siz saqlab qoldingiz</Text>
+        </View>
+      );
+    } else if (item.deletedAt) {
       content = <Text style={styles.deletedText}>🚫 Xabar o'chirildi</Text>;
     } else if (item.decryptFailed) {
       content = <Text style={styles.messageText}>🔒 Xabarni ochib bo'lmadi</Text>;
@@ -3878,6 +3896,7 @@ const styles = StyleSheet.create({
   editHistoryTime: { fontSize: 11, color: colors.textSecondary, marginBottom: 4 },
   editHistoryText: { fontSize: 15, color: colors.text, lineHeight: 20 },
   deletedText: { fontSize: 14, color: colors.textSecondary, fontStyle: "italic" },
+  keptDeletedLabel: { fontSize: 11, color: colors.danger, fontStyle: "italic", marginTop: 4 },
   messageFooter: { flexDirection: "row", alignSelf: "flex-end", alignItems: "center", marginTop: 4, gap: 4 },
   messageTime: { fontSize: 10, color: colors.textSecondary },
   editedLabel: { fontSize: 10, color: colors.textSecondary, fontStyle: "italic" },

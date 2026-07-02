@@ -21,6 +21,7 @@ import { getConversationDisplay, isConversationUnread, messagePreviewText } from
 import { getActiveConversationId } from "../utils/pushNotifications";
 import { maybeAutoReply } from "../utils/autoReply";
 import { useToastStore } from "./toastStore";
+import { useChatSettingsStore } from "./chatSettingsStore";
 import {
   ChatFolder,
   Conversation,
@@ -52,6 +53,11 @@ export interface DecryptedMessage extends Message {
   // Optimistic sending: "pending" while the POST is in flight, "failed" when
   // it errored (tap to retry). Absent on server-confirmed messages.
   sendStatus?: "pending" | "failed";
+  // Local retention (opt-in settings): the message was deleted by its sender
+  // but this device kept the original content...
+  locallyKept?: boolean;
+  // ...and previous versions of an edited message (oldest first).
+  editHistory?: { text: string | null; editedAt: string }[];
 }
 
 export interface ReplyPreview {
@@ -258,6 +264,69 @@ export function decryptReplyPreview(conversationKey: string, replyTo: ReplyToSna
   } catch {
     return { ...base, text: null };
   }
+}
+
+// Messages can be deleted/edited while this device is offline — the socket
+// events are missed and the change first shows up in a fetched page. Before
+// the fetched copies overwrite the cache, snapshot the cached originals for
+// the retention settings.
+async function snapshotRetentionFromFetch(messages: Message[]) {
+  const { keepDeletedMessages, keepEditHistory } = useChatSettingsStore.getState();
+  if (!keepDeletedMessages && !keepEditHistory) return;
+  const currentUserId = useAuthStore.getState().user?.id;
+  for (const m of messages) {
+    if (keepDeletedMessages && m.deletedAt && m.senderId !== currentUserId) {
+      await messageCache.keepDeletedOriginal(m.id, m.deletedAt).catch(() => {});
+    }
+    if (keepEditHistory && m.editedAt && !m.deletedAt) {
+      await messageCache.keepEditVersion(m.id, m.editedAt).catch(() => {});
+    }
+  }
+}
+
+// Applies the opt-in "keep deleted messages" / "keep edit history" settings
+// to a freshly decrypted list: restores kept originals of deleted messages
+// and attaches stored previous versions of edited ones (from SQLite, where
+// they live as ciphertext).
+async function applyLocalRetention(
+  conversationId: string,
+  key: string,
+  list: DecryptedMessage[]
+): Promise<DecryptedMessage[]> {
+  const { keepDeletedMessages, keepEditHistory } = useChatSettingsStore.getState();
+  if (!keepDeletedMessages && !keepEditHistory) return list;
+
+  const [kept, history] = await Promise.all([
+    keepDeletedMessages
+      ? messageCache.getKeptDeleted(conversationId)
+      : Promise.resolve(new Map<string, { deletedAt: string; message: Message }>()),
+    keepEditHistory
+      ? messageCache.getEditHistory(conversationId)
+      : Promise.resolve(new Map<string, { editedAt: string; message: Message }[]>()),
+  ]);
+  if (kept.size === 0 && history.size === 0) return list;
+
+  return list.map((m) => {
+    let next = m;
+    const keptEntry = kept.get(m.id);
+    if (m.deletedAt && keptEntry) {
+      const original = decryptToMessage(key, keptEntry.message);
+      if (!original.decryptFailed && (original.text || original.meta)) {
+        next = { ...original, deletedAt: m.deletedAt, locallyKept: true };
+      }
+    }
+    const versions = history.get(m.id);
+    if (versions && versions.length > 0) {
+      const editHistory = versions
+        .map((v) => {
+          const d = decryptToMessage(key, v.message);
+          return { text: d.text, editedAt: v.editedAt };
+        })
+        .filter((v) => v.text !== null);
+      if (editHistory.length > 0) next = { ...next, editHistory };
+    }
+    return next;
+  });
 }
 
 export function decryptToMessage(conversationKey: string, message: Message): DecryptedMessage {
@@ -473,7 +542,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if ((get().messagesByConversation[conversationId] ?? []).length === 0) {
       const cachedRaw = await messageCache.getMessages(conversationId, PAGE_SIZE);
       if (cachedRaw.length > 0 && (get().messagesByConversation[conversationId] ?? []).length === 0) {
-        const cachedDecrypted = cachedRaw.map((m) => decryptToMessage(key, m));
+        const cachedDecrypted = await applyLocalRetention(
+          conversationId,
+          key,
+          cachedRaw.map((m) => decryptToMessage(key, m))
+        );
         set((state) => ({
           messagesByConversation: { ...state.messagesByConversation, [conversationId]: cachedDecrypted },
         }));
@@ -488,7 +561,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       if ((get().messagesByConversation[conversationId] ?? []).length > 0) return;
       throw err;
     }
-    const decrypted = messages.map((m) => decryptToMessage(key, m));
+    await snapshotRetentionFromFetch(messages);
+    const decrypted = await applyLocalRetention(
+      conversationId,
+      key,
+      messages.map((m) => decryptToMessage(key, m))
+    );
     messageCache.saveMessages(conversationId, messages).catch(() => {});
 
     set((state) => {
@@ -511,7 +589,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     const key = get().getConversationKey(conversation);
     const older = await chatsApi.listMessages(conversationId, existing[0].createdAt, PAGE_SIZE);
-    const decryptedOlder = older.map((m) => decryptToMessage(key, m));
+    await snapshotRetentionFromFetch(older);
+    const decryptedOlder = await applyLocalRetention(
+      conversationId,
+      key,
+      older.map((m) => decryptToMessage(key, m))
+    );
     messageCache.saveMessages(conversationId, older).catch(() => {});
 
     set((state) => ({
@@ -1751,20 +1834,37 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     socket.on("message:deleted", (message: Message) => {
-      messageCache.saveMessages(message.conversationId, [message]).catch(() => {});
+      const currentUserId = useAuthStore.getState().user?.id;
+      const keepDeleted =
+        useChatSettingsStore.getState().keepDeletedMessages && message.senderId !== currentUserId;
+      const deletedAt = message.deletedAt ?? new Date().toISOString();
+
+      // Snapshot the cached original BEFORE the tombstone overwrites it.
+      const snapshot = keepDeleted
+        ? messageCache.keepDeletedOriginal(message.id, deletedAt).catch(() => {})
+        : Promise.resolve();
+      snapshot.then(() => {
+        messageCache.saveMessages(message.conversationId, [message]).catch(() => {});
+      });
+
       set((state) => {
         const existing = state.messagesByConversation[message.conversationId] ?? [];
         const conversations = state.conversations.map((c) =>
           c.id === message.conversationId && c.lastMessage?.id === message.id
-            ? { ...c, lastMessage: { ...c.lastMessage, ...message, deletedAt: message.deletedAt ?? new Date().toISOString() } }
+            ? { ...c, lastMessage: { ...c.lastMessage, ...message, deletedAt } }
             : c
         );
         return {
           messagesByConversation: {
             ...state.messagesByConversation,
-            [message.conversationId]: existing.map((m) =>
-              m.id === message.id ? { ...m, ...message, text: null, meta: null, contactMeta: null, decryptFailed: false } : m
-            ),
+            [message.conversationId]: existing.map((m) => {
+              if (m.id !== message.id) return m;
+              // Retention on: keep the readable content, just mark it deleted.
+              if (keepDeleted && !m.decryptFailed && (m.text || m.meta)) {
+                return { ...m, deletedAt, locallyKept: true };
+              }
+              return { ...m, ...message, text: null, meta: null, contactMeta: null, decryptFailed: false };
+            }),
           },
           conversations,
         };
@@ -1775,7 +1875,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const conversation = get().conversations.find((c) => c.id === message.conversationId);
       if (!conversation) return;
 
-      messageCache.saveMessages(message.conversationId, [message]).catch(() => {});
+      const keepHistory = useChatSettingsStore.getState().keepEditHistory;
+      const editedAt = message.editedAt ?? new Date().toISOString();
+
+      // Snapshot the cached pre-edit version BEFORE the new one overwrites it.
+      const snapshot = keepHistory
+        ? messageCache.keepEditVersion(message.id, editedAt).catch(() => {})
+        : Promise.resolve();
+      snapshot.then(() => {
+        messageCache.saveMessages(message.conversationId, [message]).catch(() => {});
+      });
+
       const key = get().getConversationKey(conversation);
       const decrypted = decryptToMessage(key, message);
 
@@ -1789,9 +1899,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         return {
           messagesByConversation: {
             ...state.messagesByConversation,
-            [message.conversationId]: existing.map((m) =>
-              m.id === message.id ? { ...decrypted, isStarred: m.isStarred } : m
-            ),
+            [message.conversationId]: existing.map((m) => {
+              if (m.id !== message.id) return m;
+              const editHistory =
+                keepHistory && m.text !== null && m.text !== decrypted.text
+                  ? [...(m.editHistory ?? []), { text: m.text, editedAt }]
+                  : m.editHistory;
+              return { ...decrypted, isStarred: m.isStarred, editHistory };
+            }),
           },
           conversations,
         };

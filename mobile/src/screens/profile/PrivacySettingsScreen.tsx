@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Swi
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
+import { useChatSettingsStore } from "../../store/chatSettingsStore";
 import { usersApi } from "../../api/users";
 import { colors } from "../../theme/colors";
 import { GroupAddPrivacy, LastSeenPrivacy, MessagePrivacy } from "../../types";
@@ -69,6 +70,10 @@ export function PrivacySettingsScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const [saving, setSaving] = useState<string | null>(null);
+  const keepDeletedMessages = useChatSettingsStore((s) => s.keepDeletedMessages);
+  const keepEditHistory = useChatSettingsStore((s) => s.keepEditHistory);
+  const setKeepDeletedMessages = useChatSettingsStore((s) => s.setKeepDeletedMessages);
+  const setKeepEditHistory = useChatSettingsStore((s) => s.setKeepEditHistory);
 
   if (!user) return null;
 
@@ -454,6 +459,36 @@ export function PrivacySettingsScreen({ navigation }: Props) {
             trackColor={{ true: colors.primary }}
           />
         )}
+      </View>
+
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Xabarlarni saqlab qolish</Text>
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>O'chirilgan xabarlarni saqlash</Text>
+          <Text style={styles.rowDescription}>
+            Suhbatdosh o'chirgan xabarlarning nusxasi faqat shu qurilmada saqlanib qoladi va "o'chirilgan"
+            belgisi bilan ko'rinadi. Suhbatdoshga bu haqda hech narsa yuborilmaydi
+          </Text>
+        </View>
+        <Switch
+          value={keepDeletedMessages}
+          onValueChange={(v) => setKeepDeletedMessages(v)}
+          trackColor={{ true: colors.primary }}
+        />
+      </View>
+      <View style={styles.row}>
+        <View style={styles.rowText}>
+          <Text style={styles.rowLabel}>Tahrir tarixini saqlash</Text>
+          <Text style={styles.rowDescription}>
+            Xabar tahrirlanganda avvalgi matn shu qurilmada saqlanadi — "Tahrirlash tarixi" bo'limida
+            barcha eski versiyalarni ko'rasiz
+          </Text>
+        </View>
+        <Switch
+          value={keepEditHistory}
+          onValueChange={(v) => setKeepEditHistory(v)}
+          trackColor={{ true: colors.primary }}
+        />
       </View>
 
       <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Yangi suhbatlar uchun o'chiriladigan xabarlar</Text>

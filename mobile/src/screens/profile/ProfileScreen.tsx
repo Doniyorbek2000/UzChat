@@ -6,6 +6,7 @@ import { usersApi } from "../../api/users";
 import { authApi } from "../../api/auth";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
+import { useT } from "../../i18n";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { formatBirthday, MAX_DAYS_IN_MONTH, UZ_MONTHS } from "../../utils/birthday";
 import { CUSTOM_STATUS_DURATION_OPTIONS, formatCustomStatusDuration, formatCustomStatusExpiry } from "../../utils/customStatusDuration";
@@ -28,6 +29,7 @@ type MenuItem = {
 };
 
 export function ProfileScreen({ navigation }: Props) {
+  const t = useT();
   const user = useAuthStore((s) => s.user);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
   const logout = useAuthStore((s) => s.logout);
@@ -283,6 +285,7 @@ export function ProfileScreen({ navigation }: Props) {
     { icon: "🔔", label: "Bildirishnomalar", color: "#FF3B30", onPress: () => navigation.navigate("NotificationSettings") },
     { icon: "🔐", label: "Ilovani qulflash", color: "#FF9500", onPress: () => navigation.navigate("AppLockSettings") },
     { icon: "🎨", label: "Mavzu", color: "#AF52DE", onPress: () => navigation.navigate("ThemeSettings") },
+    { icon: "🌐", label: t("language"), color: "#32ADE6", onPress: () => navigation.navigate("LanguageSettings") },
     { icon: "📱", label: "QR kod", color: "#007AFF", onPress: () => navigation.navigate("QRCode") },
     { icon: "🔑", label: "Qurilma kalitlari", color: "#8E8E93", onPress: () => navigation.navigate("DeviceKeys") },
     { icon: "🔤", label: "Matn hajmi", color: "#34C759", onPress: () => navigation.navigate("ChatTextSize") },

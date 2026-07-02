@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useI18nStore } from "../i18n";
 import { ActivityIndicator, AppState, StatusBar, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -53,6 +54,7 @@ import { NotificationSettingsScreen } from "../screens/profile/NotificationSetti
 import { ActiveSessionsScreen } from "../screens/profile/ActiveSessionsScreen";
 import { AboutScreen } from "../screens/profile/AboutScreen";
 import { ThemeSettingsScreen } from "../screens/profile/ThemeSettingsScreen";
+import { LanguageSettingsScreen } from "../screens/profile/LanguageSettingsScreen";
 import { QRCodeScreen } from "../screens/profile/QRCodeScreen";
 import { DeviceKeysScreen } from "../screens/profile/DeviceKeysScreen";
 import { CallScreen } from "../screens/calls/CallScreen";
@@ -234,6 +236,7 @@ export function RootNavigator() {
   const verifiedContactsBootstrap = useVerifiedContactsStore((s) => s.bootstrap);
   const quickRepliesBootstrap = useQuickRepliesStore((s) => s.bootstrap);
   const themeBootstrap = useThemeStore((s) => s.bootstrap);
+  const i18nBootstrap = useI18nStore((s) => s.bootstrap);
 
   useEffect(() => {
     bootstrap();
@@ -244,6 +247,7 @@ export function RootNavigator() {
     verifiedContactsBootstrap();
     quickRepliesBootstrap();
     themeBootstrap();
+    i18nBootstrap();
   }, [
     bootstrap,
     wallpaperBootstrap,
@@ -445,6 +449,7 @@ export function RootNavigator() {
             <Stack.Screen name="ActiveSessions" component={ActiveSessionsScreen} options={{ title: "Faol seanslar" }} />
             <Stack.Screen name="About" component={AboutScreen} options={{ title: "UzChat haqida" }} />
             <Stack.Screen name="ThemeSettings" component={ThemeSettingsScreen} options={{ title: "Mavzu" }} />
+            <Stack.Screen name="LanguageSettings" component={LanguageSettingsScreen} options={{ title: "Til / Language" }} />
             <Stack.Screen name="Stories" component={StoriesScreen} options={{ title: "Hikoyalar" }} />
             <Stack.Screen name="QRCode" component={QRCodeScreen} options={{ title: "QR kod" }} />
             <Stack.Screen name="DeviceKeys" component={DeviceKeysScreen} options={{ title: "Qurilma kalitlari" }} />

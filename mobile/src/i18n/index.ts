@@ -1,0 +1,73 @@
+import { create } from "zustand";
+import * as FileSystem from "expo-file-system/legacy";
+import { DICTIONARIES, SUPPORTED_LOCALES, TranslationKey, uz } from "./translations";
+
+export { SUPPORTED_LOCALES };
+export type { TranslationKey };
+
+// App-wide localization: 23 locales with Uzbek (Latin) as the base/fallback.
+// Components call useT() for a reactive translator; non-component code can
+// use the plain t() which reads the current store state.
+
+const LOCALE_FILE = `${FileSystem.documentDirectory}locale.json`;
+
+function detectDeviceLocale(): string {
+  try {
+    const device = Intl.DateTimeFormat().resolvedOptions().locale ?? "";
+    const lang = device.split("-")[0].toLowerCase();
+    if (DICTIONARIES[device]) return device;
+    if (DICTIONARIES[lang]) return lang;
+  } catch {}
+  return "uz";
+}
+
+interface I18nState {
+  locale: string;
+  isRtl: boolean;
+  bootstrap: () => Promise<void>;
+  setLocale: (locale: string) => Promise<void>;
+}
+
+function rtlFor(locale: string): boolean {
+  return SUPPORTED_LOCALES.find((l) => l.code === locale)?.rtl === true;
+}
+
+export const useI18nStore = create<I18nState>((set) => ({
+  locale: "uz",
+  isRtl: false,
+
+  bootstrap: async () => {
+    try {
+      const info = await FileSystem.getInfoAsync(LOCALE_FILE);
+      if (info.exists) {
+        const saved = JSON.parse(await FileSystem.readAsStringAsync(LOCALE_FILE)) as { locale?: string };
+        if (saved.locale && DICTIONARIES[saved.locale]) {
+          set({ locale: saved.locale, isRtl: rtlFor(saved.locale) });
+          return;
+        }
+      }
+    } catch {}
+    const detected = detectDeviceLocale();
+    set({ locale: detected, isRtl: rtlFor(detected) });
+  },
+
+  setLocale: async (locale) => {
+    if (!DICTIONARIES[locale]) return;
+    set({ locale, isRtl: rtlFor(locale) });
+    try {
+      await FileSystem.writeAsStringAsync(LOCALE_FILE, JSON.stringify({ locale }));
+    } catch {}
+  },
+}));
+
+/** Non-reactive translate — for navigation options, utils, alerts. */
+export function t(key: TranslationKey): string {
+  const { locale } = useI18nStore.getState();
+  return DICTIONARIES[locale]?.[key] ?? uz[key];
+}
+
+/** Reactive translate hook — re-renders the component when the locale changes. */
+export function useT(): (key: TranslationKey) => string {
+  const locale = useI18nStore((s) => s.locale);
+  return (key) => DICTIONARIES[locale]?.[key] ?? uz[key];
+}

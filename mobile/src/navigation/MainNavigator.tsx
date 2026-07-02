@@ -9,6 +9,7 @@ import { useChatStore } from "../store/chatStore";
 import { useAuthStore } from "../store/authStore";
 import { isConversationUnread } from "../utils/conversation";
 import { colors } from "../theme/colors";
+import { useT } from "../i18n";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -55,6 +56,8 @@ export function MainNavigator() {
     ? conversations.filter((c) => !c.isArchived && isConversationUnread(c, user.id)).length
     : 0;
 
+  const t = useT();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -67,10 +70,10 @@ export function MainNavigator() {
         ),
       })}
     >
-      <Tab.Screen name="Chats" component={ChatListScreen} options={{ title: "Suhbatlar" }} />
-      <Tab.Screen name="Reels" component={ReelsFeedScreen} options={{ title: "Reels" }} />
-      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: "Kashfiyotlar" }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: "Profil" }} />
+      <Tab.Screen name="Chats" component={ChatListScreen} options={{ title: t("tabChats") }} />
+      <Tab.Screen name="Reels" component={ReelsFeedScreen} options={{ title: t("tabReels") }} />
+      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: t("tabDiscover") }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t("tabProfile") }} />
     </Tab.Navigator>
   );
 }

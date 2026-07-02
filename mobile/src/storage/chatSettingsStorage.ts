@@ -46,4 +46,25 @@ export const chatSettingsStorage = {
   async setQuickReactionEmoji(quickReactionEmoji: string): Promise<void> {
     await writeSettings({ quickReactionEmoji });
   },
+
+  // Telegram-style local retention: keep a local copy of messages others
+  // delete, and the previous versions of messages they edit. Purely
+  // client-side — the server (and the other side) is unaffected.
+  async getKeepDeletedMessages(): Promise<boolean> {
+    const data = await readSettings();
+    return data.keepDeletedMessages === true;
+  },
+
+  async setKeepDeletedMessages(keepDeletedMessages: boolean): Promise<void> {
+    await writeSettings({ keepDeletedMessages });
+  },
+
+  async getKeepEditHistory(): Promise<boolean> {
+    const data = await readSettings();
+    return data.keepEditHistory === true;
+  },
+
+  async setKeepEditHistory(keepEditHistory: boolean): Promise<void> {
+    await writeSettings({ keepEditHistory });
+  },
 };

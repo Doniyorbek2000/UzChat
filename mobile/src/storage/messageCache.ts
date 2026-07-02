@@ -46,6 +46,24 @@ function getDb(): Promise<SQLite.SQLiteDatabase> {
           mentions TEXT NOT NULL,
           createdAt TEXT NOT NULL
         );
+        -- Telegram-style local retention (opt-in): the original ciphertext of
+        -- messages the other side deleted, and previous versions of edited
+        -- messages. Content stays encrypted at rest like the main cache.
+        CREATE TABLE IF NOT EXISTS kept_deleted (
+          id TEXT PRIMARY KEY,
+          conversationId TEXT NOT NULL,
+          deletedAt TEXT NOT NULL,
+          json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_kept_deleted_conv ON kept_deleted(conversationId);
+        CREATE TABLE IF NOT EXISTS edit_history (
+          messageId TEXT NOT NULL,
+          conversationId TEXT NOT NULL,
+          editedAt TEXT NOT NULL,
+          json TEXT NOT NULL,
+          PRIMARY KEY (messageId, editedAt)
+        );
+        CREATE INDEX IF NOT EXISTS idx_edit_history_conv ON edit_history(conversationId);
       `);
       return db;
     })();
@@ -138,6 +156,8 @@ export const messageCache = {
       await db.runAsync("DELETE FROM messages WHERE conversationId = ?", conversationId);
       await db.runAsync("DELETE FROM conversations WHERE id = ?", conversationId);
       await db.runAsync("DELETE FROM outbox WHERE conversationId = ?", conversationId);
+      await db.runAsync("DELETE FROM kept_deleted WHERE conversationId = ?", conversationId);
+      await db.runAsync("DELETE FROM edit_history WHERE conversationId = ?", conversationId);
     });
   },
 
@@ -175,10 +195,85 @@ export const messageCache = {
     });
   },
 
+  /**
+   * Snapshots the cached original of a message that just got deleted, so the
+   * "keep deleted messages" setting can still show it. No-op when the
+   * original was never cached or had no content.
+   */
+  async keepDeletedOriginal(messageId: string, deletedAt: string): Promise<void> {
+    await safe(undefined, async (db) => {
+      const row = await db.getFirstAsync<{ conversationId: string; json: string }>(
+        "SELECT conversationId, json FROM messages WHERE id = ?",
+        messageId
+      );
+      if (!row) return;
+      const original = JSON.parse(row.json) as Message;
+      if (!original.ciphertext || original.deletedAt) return;
+      await db.runAsync(
+        "INSERT OR IGNORE INTO kept_deleted (id, conversationId, deletedAt, json) VALUES (?, ?, ?, ?)",
+        messageId,
+        row.conversationId,
+        deletedAt,
+        row.json
+      );
+    });
+  },
+
+  /** Kept originals of deleted messages for a conversation, keyed by message id. */
+  async getKeptDeleted(conversationId: string): Promise<Map<string, { deletedAt: string; message: Message }>> {
+    return safe(new Map(), async (db) => {
+      const rows = await db.getAllAsync<{ id: string; deletedAt: string; json: string }>(
+        "SELECT id, deletedAt, json FROM kept_deleted WHERE conversationId = ?",
+        conversationId
+      );
+      return new Map(rows.map((r) => [r.id, { deletedAt: r.deletedAt, message: JSON.parse(r.json) as Message }]));
+    });
+  },
+
+  /** Snapshots the pre-edit version of a message for the edit-history setting. */
+  async keepEditVersion(messageId: string, editedAt: string): Promise<void> {
+    await safe(undefined, async (db) => {
+      const row = await db.getFirstAsync<{ conversationId: string; json: string }>(
+        "SELECT conversationId, json FROM messages WHERE id = ?",
+        messageId
+      );
+      if (!row) return;
+      const original = JSON.parse(row.json) as Message;
+      // Nothing older to keep if the cache already holds this very version.
+      if (!original.ciphertext || original.deletedAt || original.editedAt === editedAt) return;
+      await db.runAsync(
+        "INSERT OR IGNORE INTO edit_history (messageId, conversationId, editedAt, json) VALUES (?, ?, ?, ?)",
+        messageId,
+        row.conversationId,
+        editedAt,
+        row.json
+      );
+    });
+  },
+
+  /** All stored previous versions for a conversation, grouped by message id (oldest first). */
+  async getEditHistory(conversationId: string): Promise<Map<string, { editedAt: string; message: Message }[]>> {
+    return safe(new Map(), async (db) => {
+      const rows = await db.getAllAsync<{ messageId: string; editedAt: string; json: string }>(
+        "SELECT messageId, editedAt, json FROM edit_history WHERE conversationId = ? ORDER BY editedAt ASC",
+        conversationId
+      );
+      const grouped = new Map<string, { editedAt: string; message: Message }[]>();
+      for (const r of rows) {
+        const list = grouped.get(r.messageId) ?? [];
+        list.push({ editedAt: r.editedAt, message: JSON.parse(r.json) as Message });
+        grouped.set(r.messageId, list);
+      }
+      return grouped;
+    });
+  },
+
   /** Wipes everything — called on logout so no ciphertext or metadata lingers. */
   async clearAll(): Promise<void> {
     await safe(undefined, async (db) => {
-      await db.execAsync("DELETE FROM messages; DELETE FROM conversations; DELETE FROM outbox;");
+      await db.execAsync(
+        "DELETE FROM messages; DELETE FROM conversations; DELETE FROM outbox; DELETE FROM kept_deleted; DELETE FROM edit_history;"
+      );
     });
   },
 };
