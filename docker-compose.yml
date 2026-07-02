@@ -18,6 +18,18 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -25,6 +37,8 @@ services:
     restart: unless-stopped
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     environment:
       NODE_ENV: production
@@ -41,6 +55,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-https://uzchat.app}
       PUBLIC_URL: ${PUBLIC_URL:-https://uzchat.app}
       PAYMENTS_TOPUP_ENABLED: ${PAYMENTS_TOPUP_ENABLED:-false}
+      REDIS_URL: redis://redis:6379
     volumes:
       - uploads:/app/uploads
     expose:
@@ -66,4 +81,5 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
   uploads:
