@@ -4,6 +4,8 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
 import { contactsApi } from "../../api/contacts";
+import { reelsApi, Reel } from "../../api/reels";
+import { Video, ResizeMode } from "expo-av";
 import { reportsApi } from "../../api/reports";
 import { REPORT_REASONS } from "../../utils/reportReasons";
 import { useChatStore } from "../../store/chatStore";
@@ -34,6 +36,8 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const [savingNote, setSavingNote] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
+  const [reels, setReels] = useState<Reel[]>([]);
+  const [activeReel, setActiveReel] = useState<Reel | null>(null);
   const currentUser = useAuthStore((s) => s.user);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const contactAliases = useChatStore((s) => s.contactAliases);
@@ -58,6 +62,16 @@ export function UserProfileScreen({ route, navigation }: Props) {
       .then((contacts) => setContact(contacts.find((c) => c.user.id === userId) ?? null))
       .catch(() => {});
   }, [userId]);
+
+  // Instagram-style profile: the user's public reels, if any.
+  useEffect(() => {
+    reelsApi.getByUser(userId).then(setReels).catch(() => {});
+  }, [userId]);
+
+  // Views are deduplicated server-side per viewer.
+  useEffect(() => {
+    if (activeReel) reelsApi.view(activeReel.id).catch(() => {});
+  }, [activeReel?.id]);
 
   useEffect(() => {
     if (profile) navigation.setOptions({ title: contactAliases[profile.id] ?? profile.displayName });
@@ -242,6 +256,26 @@ export function UserProfileScreen({ route, navigation }: Props) {
       )}
 
       <View style={styles.actions}>
+        {reels.length > 0 && (
+          <View style={styles.reelsSection}>
+            <Text style={styles.reelsTitle}>🎬 Reels ({reels.length})</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.reelsRow}>
+              {reels.map((reel) => (
+                <TouchableOpacity key={reel.id} style={styles.reelThumbWrap} onPress={() => setActiveReel(reel)} activeOpacity={0.85}>
+                  {reel.thumbnailUrl ? (
+                    <Image source={{ uri: reel.thumbnailUrl }} style={styles.reelThumb} />
+                  ) : (
+                    <View style={[styles.reelThumb, styles.reelThumbPlaceholder]}>
+                      <Text style={styles.reelThumbPlay}>▶</Text>
+                    </View>
+                  )}
+                  <Text style={styles.reelThumbViews}>▶ {reel.viewCount}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         <TouchableOpacity style={styles.actionRow} onPress={onMessage} disabled={opening}>
           <Text style={styles.actionIcon}>💬</Text>
           <Text style={styles.actionText}>{tr("Xabar yozish")}</Text>
@@ -306,6 +340,25 @@ export function UserProfileScreen({ route, navigation }: Props) {
         <Pressable style={styles.viewerOverlay} onPress={() => setAvatarViewerOpen(false)}>
           {profile.avatarUrl && <Image source={{ uri: profile.avatarUrl }} style={styles.viewerImage} resizeMode="contain" />}
         </Pressable>
+      </Modal>
+
+      <Modal visible={!!activeReel} animationType="fade" onRequestClose={() => setActiveReel(null)}>
+        <View style={styles.reelViewer}>
+          <TouchableOpacity style={styles.reelViewerClose} onPress={() => setActiveReel(null)} hitSlop={12}>
+            <Text style={styles.reelViewerCloseText}>✕</Text>
+          </TouchableOpacity>
+          {activeReel && (
+            <Video
+              source={{ uri: activeReel.videoUrl }}
+              style={styles.reelViewerVideo}
+              resizeMode={ResizeMode.CONTAIN}
+              shouldPlay
+              isLooping
+              useNativeControls={false}
+            />
+          )}
+          {activeReel?.caption ? <Text style={styles.reelViewerCaption}>{activeReel.caption}</Text> : null}
+        </View>
       </Modal>
 
       <Modal visible={noteModalOpen} transparent animationType="fade" onRequestClose={() => setNoteModalOpen(false)}>
@@ -373,6 +426,19 @@ const styles = StyleSheet.create({
   actionIcon: { fontSize: 18 },
   actionText: { fontSize: 15, color: colors.text, flex: 1 },
   dangerText: { color: colors.danger },
+  reelsSection: { marginTop: 12 },
+  reelsTitle: { fontSize: 14, fontWeight: "700", color: colors.text, paddingHorizontal: 16, marginBottom: 8 },
+  reelsRow: { gap: 8, paddingHorizontal: 16 },
+  reelThumbWrap: { width: 92 },
+  reelThumb: { width: 92, height: 140, borderRadius: 10, backgroundColor: colors.border },
+  reelThumbPlaceholder: { alignItems: "center", justifyContent: "center" },
+  reelThumbPlay: { fontSize: 24, color: colors.textSecondary },
+  reelThumbViews: { position: "absolute", bottom: 6, left: 6, color: "#fff", fontSize: 11, fontWeight: "600", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 3 },
+  reelViewer: { flex: 1, backgroundColor: "#000", justifyContent: "center" },
+  reelViewerVideo: { width: "100%", height: "100%" },
+  reelViewerClose: { position: "absolute", top: 48, right: 20, zIndex: 10 },
+  reelViewerCloseText: { color: "#fff", fontSize: 22, fontWeight: "600" },
+  reelViewerCaption: { position: "absolute", bottom: 40, left: 16, right: 16, color: "#fff", fontSize: 14, textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 4 },
   viewerOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.9)",
