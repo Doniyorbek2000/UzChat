@@ -104,7 +104,6 @@ import { CommunityViewScreen } from "../screens/communities/CommunityViewScreen"
 import { CreateCommunityScreen } from "../screens/communities/CreateCommunityScreen";
 import { BookmarksScreen } from "../screens/bookmarks/BookmarksScreen";
 import { NotesScreen } from "../screens/notes/NotesScreen";
-import { ChatExportsScreen } from "../screens/export/ChatExportsScreen";
 import { EventsScreen } from "../screens/events/EventsScreen";
 import { ConversationEventsScreen } from "../screens/events/ConversationEventsScreen";
 import { GlobalSearchScreen } from "../screens/search/GlobalSearchScreen";
@@ -497,7 +496,6 @@ export function RootNavigator() {
             <Stack.Screen name="MySubscriptions" component={MySubscriptionsScreen} options={{ title: "Obunalarim" }} />
             <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ title: "Xatcho'plar" }} />
             <Stack.Screen name="Notes" component={NotesScreen} options={{ title: "Eslatmalar" }} />
-            <Stack.Screen name="ChatExports" component={ChatExportsScreen} options={{ title: "Eksportlar" }} />
             <Stack.Screen name="MusicPlayer" component={MusicPlayerScreen} options={{ title: "Musiqa", headerStyle: { backgroundColor: "#111" }, headerTintColor: "#fff" }} />
             <Stack.Screen name="GameCenter" component={GameCenterScreen} options={{ title: "O'yinlar" }} />
             <Stack.Screen name="GameView" component={GameViewScreen} options={{ headerShown: false }} />

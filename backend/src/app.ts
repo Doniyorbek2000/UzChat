@@ -41,7 +41,6 @@ import { subscriptionsRouter } from "./modules/subscriptions/subscriptions.contr
 import { bookmarksRouter } from "./modules/bookmarks/bookmarks.controller";
 import { notesRouter } from "./modules/notes/notes.controller";
 import { locationRouter } from "./modules/location/location.controller";
-import { exportRouter } from "./modules/export/export.controller";
 import { draftsRouter } from "./modules/drafts/drafts.controller";
 import { autoReplyRouter } from "./modules/autoreply/autoreply.controller";
 import { musicRouter } from "./modules/music/music.controller";
@@ -224,7 +223,6 @@ export function createApp() {
   app.use("/bookmarks", apiRateLimiter, bookmarksRouter);
   app.use("/notes", apiRateLimiter, notesRouter);
   app.use("/location", apiRateLimiter, locationRouter);
-  app.use("/chat-export", apiRateLimiter, exportRouter);
   app.use("/drafts", apiRateLimiter, draftsRouter);
   app.use("/auto-reply", apiRateLimiter, autoReplyRouter);
   app.use("/music", apiRateLimiter, musicRouter);

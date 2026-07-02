@@ -37,7 +37,6 @@ export { subscriptionsApi } from "./subscriptions";
 export { bookmarksApi } from "./bookmarks";
 export { notesApi } from "./notes";
 export { locationSharingApi } from "./locationSharing";
-export { chatExportApi } from "./chatExport";
 export { draftsApi } from "./drafts";
 export { autoReplyApi } from "./autoReply";
 export { musicApi } from "./music";

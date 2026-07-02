@@ -66,7 +66,6 @@ const QUICK_ACTIONS = [
   { key: "reminders", icon: "⏰", label: "Yodga solinganlar", screen: "Reminders" as const },
   { key: "bookmarks", icon: "🔖", label: "Xatcho'plar", screen: "Bookmarks" as const },
   { key: "notes", icon: "📝", label: "Eslatmalar", screen: "Notes" as const },
-  { key: "exports", icon: "📤", label: "Eksportlar", screen: "ChatExports" as const },
   { key: "notiflog", icon: "🔔", label: "Bildirishnomalar tarixi", screen: "NotificationLog" as const },
 ];
 

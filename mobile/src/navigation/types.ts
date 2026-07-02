@@ -131,7 +131,6 @@ export type RootStackParamList = {
   MySubscriptions: undefined;
   Bookmarks: undefined;
   Notes: undefined;
-  ChatExports: undefined;
   MusicPlayer: undefined;
   GameCenter: undefined;
   GameView: { gameId: string; url: string; title: string };
