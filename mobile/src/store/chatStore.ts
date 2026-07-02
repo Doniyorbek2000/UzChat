@@ -15,6 +15,7 @@ import {
 } from "../crypto/e2ee";
 import { downloadAndDecryptFile, encryptAndUploadFile, extensionFromName } from "../utils/mediaFile";
 import { draftStorage } from "../storage/draftStorage";
+import { messageCache } from "../storage/messageCache";
 import { draftsApi } from "../api/drafts";
 import { getConversationDisplay, isConversationUnread, messagePreviewText } from "../utils/conversation";
 import { getActiveConversationId } from "../utils/pushNotifications";
@@ -336,8 +337,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
   keyChangeAlerts: [],
 
   loadConversations: async () => {
-    const result = await chatsApi.list();
-    set({ conversations: result.items });
+    // Cache-first: paint the chat list instantly from SQLite, then reconcile
+    // with the server. If the network is down, the cached list stands.
+    if (get().conversations.length === 0) {
+      const cached = await messageCache.getConversations();
+      if (cached.length > 0 && get().conversations.length === 0) {
+        set({ conversations: cached });
+      }
+    }
+    try {
+      const result = await chatsApi.list();
+      set({ conversations: result.items });
+      messageCache.saveConversations(result.items).catch(() => {});
+    } catch (err) {
+      if (get().conversations.length === 0) throw err;
+    }
   },
 
   loadContactAliases: async () => {
@@ -453,8 +467,29 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
 
     const key = get().getConversationKey(conversation);
-    const messages = await chatsApi.listMessages(conversationId, undefined, PAGE_SIZE);
+
+    // Cache-first: show cached history immediately (works fully offline),
+    // then replace it with the fresh server page when the fetch lands.
+    if ((get().messagesByConversation[conversationId] ?? []).length === 0) {
+      const cachedRaw = await messageCache.getMessages(conversationId, PAGE_SIZE);
+      if (cachedRaw.length > 0 && (get().messagesByConversation[conversationId] ?? []).length === 0) {
+        const cachedDecrypted = cachedRaw.map((m) => decryptToMessage(key, m));
+        set((state) => ({
+          messagesByConversation: { ...state.messagesByConversation, [conversationId]: cachedDecrypted },
+        }));
+      }
+    }
+
+    let messages;
+    try {
+      messages = await chatsApi.listMessages(conversationId, undefined, PAGE_SIZE);
+    } catch (err) {
+      // Offline: whatever the cache produced above stays on screen.
+      if ((get().messagesByConversation[conversationId] ?? []).length > 0) return;
+      throw err;
+    }
     const decrypted = messages.map((m) => decryptToMessage(key, m));
+    messageCache.saveMessages(conversationId, messages).catch(() => {});
 
     set((state) => {
       // Keep optimistic (pending/failed) messages that only exist locally —
@@ -477,6 +512,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const key = get().getConversationKey(conversation);
     const older = await chatsApi.listMessages(conversationId, existing[0].createdAt, PAGE_SIZE);
     const decryptedOlder = older.map((m) => decryptToMessage(key, m));
+    messageCache.saveMessages(conversationId, older).catch(() => {});
 
     set((state) => ({
       messagesByConversation: {
@@ -589,6 +625,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       const message = await chatsApi.sendMessage(conversationId, input);
       const decrypted = decryptToMessage(key, message);
+      messageCache.saveMessages(conversationId, [message]).catch(() => {});
       set((state) => {
         const existing = state.messagesByConversation[conversationId] ?? [];
         const withoutLocal = existing.filter((m) => m.id !== localId);
@@ -601,7 +638,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
           ),
         };
       });
-    } catch (err) {
+    } catch (err: any) {
+      // Network failures (no server response) go to the persistent outbox and
+      // are re-sent automatically on reconnect; server rejections stay as
+      // tap-to-retry so a permission error can't loop forever.
+      if (!err?.response) {
+        messageCache
+          .addToOutbox({
+            localId,
+            conversationId,
+            text,
+            replyToId: replyToId ?? null,
+            mentions: mentions ?? [],
+            createdAt: new Date().toISOString(),
+          })
+          .catch(() => {});
+      }
       set((state) => ({
         messagesByConversation: {
           ...state.messagesByConversation,
@@ -629,6 +681,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   discardFailedMessage: (conversationId, localId) => {
+    messageCache.removeFromOutbox(localId).catch(() => {});
     set((state) => ({
       messagesByConversation: {
         ...state.messagesByConversation,
@@ -1263,6 +1316,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const conversation = get().conversations.find((c) => c.id === conversationId);
     if (!conversation) return;
     await chatsApi.clearHistory(conversationId, olderThanDays);
+    messageCache.deleteConversation(conversationId).catch(() => {});
 
     if (olderThanDays === undefined) {
       set((state) => ({
@@ -1291,6 +1345,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   deleteConversation: async (conversationId) => {
     await chatsApi.deleteConversation(conversationId);
+    messageCache.deleteConversation(conversationId).catch(() => {});
     set((state) => ({
       conversations: state.conversations.filter((c) => c.id !== conversationId),
       messagesByConversation: dropConversation(state.messagesByConversation, conversationId),
@@ -1300,6 +1355,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   deleteConversationForEveryone: async (conversationId) => {
     await chatsApi.deleteConversationForEveryone(conversationId);
+    messageCache.deleteConversation(conversationId).catch(() => {});
     delete conversationKeyCache[conversationId];
     set((state) => ({
       conversations: state.conversations.filter((c) => c.id !== conversationId),
@@ -1600,6 +1656,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (activeConversationId) get().loadMessages(activeConversationId).catch(() => {});
       }
       hasConnectedBefore = true;
+
+      // Flush the persistent outbox: messages written while offline (even
+      // across app restarts) go out automatically once we're back online.
+      messageCache
+        .getOutbox()
+        .then(async (entries) => {
+          for (const entry of entries) {
+            await messageCache.removeFromOutbox(entry.localId);
+            get().discardFailedMessage(entry.conversationId, entry.localId);
+            try {
+              await get().sendTextMessage(
+                entry.conversationId,
+                entry.text,
+                entry.replyToId ?? undefined,
+                entry.mentions.length > 0 ? entry.mentions : undefined
+              );
+            } catch {
+              // sendTextMessage re-queues network failures itself.
+            }
+          }
+        })
+        .catch(() => {});
     });
     socket.on("disconnect", () => set({ isConnected: false }));
 
@@ -1614,6 +1692,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       const key = get().getConversationKey(conversation);
       const decrypted = decryptToMessage(key, message);
+      messageCache.saveMessages(message.conversationId, [message]).catch(() => {});
 
       if (message.senderId !== currentUser?.id && currentUser) {
         maybeAutoReply(conversation, message, currentUser.id, (cid, text) =>
@@ -1672,6 +1751,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     socket.on("message:deleted", (message: Message) => {
+      messageCache.saveMessages(message.conversationId, [message]).catch(() => {});
       set((state) => {
         const existing = state.messagesByConversation[message.conversationId] ?? [];
         const conversations = state.conversations.map((c) =>
@@ -1695,6 +1775,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const conversation = get().conversations.find((c) => c.id === message.conversationId);
       if (!conversation) return;
 
+      messageCache.saveMessages(message.conversationId, [message]).catch(() => {});
       const key = get().getConversationKey(conversation);
       const decrypted = decryptToMessage(key, message);
 

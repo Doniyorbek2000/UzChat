@@ -21,6 +21,7 @@
     "expo-notifications": "~56.0.16",
     "expo-secure-store": "^56.0.4",
     "expo-sharing": "^56.0.16",
+    "expo-sqlite": "~56.0.5",
     "expo-status-bar": "~56.0.4",
     "react": "19.2.3",
     "react-native": "0.85.3",

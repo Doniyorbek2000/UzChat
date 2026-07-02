@@ -3,7 +3,7 @@ import { requireAuth } from "../../middleware/auth.middleware";
 import { mediaUploadRateLimiter } from "../../middleware/rateLimit.middleware";
 import { validateBody } from "../../utils/validate";
 import { mediaController } from "./media.controller";
-import { upload } from "./upload";
+import { upload, finalizeUpload } from "./upload";
 import { fileSecurityService } from "./fileSecurity.service";
 import { updateFileSecuritySchema, checkFileSchema } from "./fileSecurity.schema";
 
@@ -23,10 +23,8 @@ mediaRouter.post("/upload", mediaUploadRateLimiter, upload.single("file"), async
     req.file.mimetype
   );
 
-  const response: Record<string, unknown> = {
-    url: `${require("../../config/env").env.publicUrl}/media/${req.file.filename}`,
-    size: req.file.size,
-  };
+  const stored = await finalizeUpload(req.file);
+  const response: Record<string, unknown> = { url: stored.url, size: stored.size };
 
   if (check.warning) {
     response.warning = check.warning;

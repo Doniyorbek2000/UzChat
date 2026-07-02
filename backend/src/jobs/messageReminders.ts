@@ -2,11 +2,12 @@ import { messagesService } from "../modules/messages/messages.service";
 import { getIo } from "../sockets";
 import { pushService } from "../modules/push/push.service";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const CHECK_INTERVAL_MS = 30 * 1000;
 
 export function startMessageRemindersJob() {
-  setInterval(async () => {
+  scheduleExclusiveJob("message-reminders", CHECK_INTERVAL_MS, async () => {
     try {
       const due = await messagesService.sendDueReminders();
       for (const { userId, conversationId, messageId } of due) {
@@ -24,5 +25,5 @@ export function startMessageRemindersJob() {
     } catch (err) {
       logger.error("Message reminders job failed", { error: String(err) });
     }
-  }, CHECK_INTERVAL_MS);
+  });
 }

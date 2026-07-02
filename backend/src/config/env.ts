@@ -36,6 +36,27 @@ export const env = {
     // arrived — otherwise any user could mint unlimited balance.
     topUpEnabled: process.env.PAYMENTS_TOPUP_ENABLED === "true",
   },
+  storage: {
+    // "local" keeps files on disk (single-node only); "s3" stores them in any
+    // S3-compatible object store (MinIO/R2/AWS) so multiple backend replicas
+    // and a CDN can serve the same media.
+    driver: (process.env.STORAGE_DRIVER ?? "local") as "local" | "s3",
+    s3: {
+      endpoint: process.env.S3_ENDPOINT ?? "",
+      region: process.env.S3_REGION ?? "us-east-1",
+      bucket: process.env.S3_BUCKET ?? "uzchat-media",
+      accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
+      forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== "false",
+      // Base URL clients download from (CDN or the object store itself).
+      // Falls back to routing downloads through /media/:filename.
+      publicUrl: process.env.S3_PUBLIC_URL ?? "",
+    },
+  },
+  metrics: {
+    // Bearer token required to scrape /metrics; empty disables the endpoint.
+    token: process.env.METRICS_TOKEN ?? "",
+  },
 } as const;
 
 export const isProduction = env.nodeEnv === "production";

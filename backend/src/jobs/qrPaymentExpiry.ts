@@ -1,6 +1,7 @@
 import { QrPaymentStatus } from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const INTERVAL_MS = 5 * 60 * 1000;
 
@@ -18,6 +19,5 @@ export function startQrPaymentExpiryJob() {
       logger.error("QR payment expiry job failed", { error: String(err) });
     }
   };
-  run();
-  setInterval(run, INTERVAL_MS);
+  scheduleExclusiveJob("qr-payment-expiry", INTERVAL_MS, run, { immediate: true });
 }

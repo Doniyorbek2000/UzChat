@@ -33,8 +33,14 @@ export interface ReelComment {
 }
 
 export const reelsApi = {
+  // Ranked "For you" feed; cursor is a numeric offset (pass String(loadedCount)).
   getFeed(cursor?: string) {
     return api.get<Reel[]>("/reels/feed", { params: { cursor } }).then((r) => r.data);
+  },
+
+  // Chronological feed; cursor is the last reel id.
+  getLatest(cursor?: string) {
+    return api.get<Reel[]>("/reels/latest", { params: { cursor } }).then((r) => r.data);
   },
 
   getTrending() {
@@ -63,6 +69,10 @@ export const reelsApi = {
 
   view(reelId: string) {
     return api.post(`/reels/${reelId}/view`);
+  },
+
+  share(reelId: string) {
+    return api.post<{ id: string; shareCount: number }>(`/reels/${reelId}/share`).then((r) => r.data);
   },
 
   toggleLike(reelId: string) {

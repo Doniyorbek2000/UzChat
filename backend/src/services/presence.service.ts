@@ -32,6 +32,49 @@ const PREFIX = "uzchat:";
 const PRESENCE_TTL = 300;
 
 export const presenceService = {
+  // Cluster-wide connection counting: each socket connection INCRs, each
+  // disconnect DECRs. The "online" key only goes away when the last
+  // connection across ALL nodes is gone, so multi-device and multi-node
+  // presence stays correct.
+  async addConnection(userId: string): Promise<void> {
+    const r = redis();
+    if (!r) return;
+    try {
+      const key = `${PREFIX}conn:${userId}`;
+      await r.incr(key);
+      await r.expire(key, PRESENCE_TTL);
+      await r.set(`${PREFIX}online:${userId}`, "1", { EX: PRESENCE_TTL });
+    } catch (err) {
+      logger.error("Redis presence addConnection failed", { error: String(err) });
+    }
+  },
+
+  async removeConnection(userId: string): Promise<boolean> {
+    const r = redis();
+    if (!r) return true;
+    try {
+      const key = `${PREFIX}conn:${userId}`;
+      const remaining = await r.decr(key);
+      if (remaining <= 0) {
+        await r.del([key, `${PREFIX}online:${userId}`]);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      logger.error("Redis presence removeConnection failed", { error: String(err) });
+      return true;
+    }
+  },
+
+  async refreshConnection(userId: string): Promise<void> {
+    const r = redis();
+    if (!r) return;
+    try {
+      await r.expire(`${PREFIX}conn:${userId}`, PRESENCE_TTL);
+      await r.set(`${PREFIX}online:${userId}`, "1", { EX: PRESENCE_TTL });
+    } catch {}
+  },
+
   async setOnline(userId: string): Promise<void> {
     const r = redis();
     if (!r) return;
@@ -104,6 +147,18 @@ export const presenceService = {
       return val ? parseInt(val, 10) : null;
     } catch {
       return null;
+    }
+  },
+
+  /** Generic once-per-TTL guard (e.g. reel view counting). Returns true on first call. */
+  async deduplicateAction(key: string, ttlSeconds: number): Promise<boolean> {
+    const r = redis();
+    if (!r) return true;
+    try {
+      const result = await r.set(`${PREFIX}${key}`, "1", { NX: true, EX: ttlSeconds });
+      return result !== null;
+    } catch {
+      return true;
     }
   },
 

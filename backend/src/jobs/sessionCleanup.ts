@@ -1,6 +1,7 @@
 import { prisma } from "../config/prisma";
 import { OTP_TTL_MS } from "../utils/otp";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const INTERVAL_MS = 6 * 60 * 60 * 1000;
 
@@ -51,6 +52,5 @@ export function startSessionCleanupJob() {
       logger.error("Session cleanup job failed", { error: String(err) });
     }
   };
-  run();
-  setInterval(run, INTERVAL_MS);
+  scheduleExclusiveJob("session-cleanup", INTERVAL_MS, run, { immediate: true });
 }

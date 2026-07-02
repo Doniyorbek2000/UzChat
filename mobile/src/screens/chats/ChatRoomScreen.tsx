@@ -2145,8 +2145,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const typingCount = typingUsers?.size ?? 0;
   const recordingCount = recordingUsers?.size ?? 0;
-  const invertedData = [...messages].reverse();
-  const galleryImages = messages.filter((m) => m.type === "IMAGE" && !m.viewOnce && !m.deletedAt && !m.decryptFailed);
+  // Rebuilding these on every keystroke/typing-indicator render makes the
+  // FlatList re-diff the whole history in long chats; only recompute when
+  // the message list itself changes.
+  const invertedData = useMemo(() => [...messages].reverse(), [messages]);
+  const galleryImages = useMemo(
+    () => messages.filter((m) => m.type === "IMAGE" && !m.viewOnce && !m.deletedAt && !m.decryptFailed),
+    [messages]
+  );
 
   return (
     <>

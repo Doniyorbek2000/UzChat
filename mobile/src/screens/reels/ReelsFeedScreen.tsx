@@ -41,6 +41,8 @@ export function ReelsFeedScreen({ navigation }: Props) {
   const [likedReels, setLikedReels] = useState<Set<string>>(new Set());
   const [activeReel, setActiveReel] = useState<Reel | null>(null);
   const [videoPaused, setVideoPaused] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [commentReelId, setCommentReelId] = useState<string | null>(null);
   const [comments, setComments] = useState<ReelComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -62,6 +64,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
     try {
       const data = tab === "trending" ? await reelsApi.getTrending() : await reelsApi.getFeed();
       setReels(data);
+      setHasMore(tab === "feed" && data.length >= 20);
       const liked = new Set<string>();
       data.forEach((r) => {
         if (r.likes && r.likes.length > 0) liked.add(r.id);
@@ -76,6 +79,34 @@ export function ReelsFeedScreen({ navigation }: Props) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Ranked feed pagination: the cursor is simply how many items we've loaded.
+  const loadMore = useCallback(async () => {
+    if (tab !== "feed" || loadingMore || !hasMore || loading) return;
+    setLoadingMore(true);
+    try {
+      const data = await reelsApi.getFeed(String(reels.length));
+      setHasMore(data.length >= 20);
+      setReels((prev) => {
+        const seen = new Set(prev.map((r) => r.id));
+        return [...prev, ...data.filter((r) => !seen.has(r.id))];
+      });
+      setLikedReels((prev) => {
+        const next = new Set(prev);
+        data.forEach((r) => {
+          if (r.likes && r.likes.length > 0) next.add(r.id);
+        });
+        return next;
+      });
+    } catch {}
+    setLoadingMore(false);
+  }, [tab, loadingMore, hasMore, loading, reels.length]);
+
+  // Registers a (server-side deduplicated) view once the player opens.
+  useEffect(() => {
+    if (!activeReel) return;
+    reelsApi.view(activeReel.id).catch(() => {});
+  }, [activeReel?.id]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -181,8 +212,11 @@ export function ReelsFeedScreen({ navigation }: Props) {
           ? `${reel.author.displayName}: ${reel.caption}`
           : `${reel.author.displayName} ning reeli`,
       });
+      const result = await reelsApi.share(reel.id).catch(() => null);
       setReels((prev) =>
-        prev.map((r) => r.id === reel.id ? { ...r, shareCount: r.shareCount + 1 } : r)
+        prev.map((r) =>
+          r.id === reel.id ? { ...r, shareCount: result?.shareCount ?? r.shareCount + 1 } : r
+        )
       );
     } catch {}
   };
@@ -272,7 +306,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
             style={[styles.tab, tab === "feed" && styles.tabActive]}
             onPress={() => setTab("feed")}
           >
-            <Text style={[styles.tabText, tab === "feed" && styles.tabTextActive]}>Yangilar</Text>
+            <Text style={[styles.tabText, tab === "feed" && styles.tabTextActive]}>Siz uchun</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, tab === "trending" && styles.tabActive]}
@@ -306,6 +340,11 @@ export function ReelsFeedScreen({ navigation }: Props) {
           maxToRenderPerBatch={6}
           windowSize={5}
           removeClippedSubviews
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? <ActivityIndicator color={colors.primary} style={{ paddingVertical: 16 }} /> : null
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

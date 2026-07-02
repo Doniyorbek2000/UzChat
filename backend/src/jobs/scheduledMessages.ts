@@ -1,11 +1,12 @@
 import { messagesService } from "../modules/messages/messages.service";
 import { getIo } from "../sockets";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const CHECK_INTERVAL_MS = 10 * 1000;
 
 export function startScheduledMessagesJob() {
-  setInterval(async () => {
+  scheduleExclusiveJob("scheduled-messages", CHECK_INTERVAL_MS, async () => {
     try {
       const published = await messagesService.publishDueScheduledMessages();
       for (const message of published) {
@@ -14,5 +15,5 @@ export function startScheduledMessagesJob() {
     } catch (err) {
       logger.error("Scheduled messages job failed", { error: String(err) });
     }
-  }, CHECK_INTERVAL_MS);
+  });
 }
