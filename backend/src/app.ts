@@ -36,7 +36,6 @@ import { communitiesRouter } from "./modules/communities/communities.controller"
 import { forumsRouter } from "./modules/forums/forums.controller";
 import { voiceRoomsRouter } from "./modules/voicerooms/voicerooms.controller";
 import { eventsRouter } from "./modules/events/events.controller";
-import { translateRouter } from "./modules/translate/translate.controller";
 import { searchRouter } from "./modules/search/search.controller";
 import { subscriptionsRouter } from "./modules/subscriptions/subscriptions.controller";
 import { bookmarksRouter } from "./modules/bookmarks/bookmarks.controller";
@@ -220,7 +219,6 @@ export function createApp() {
   app.use("/forums", apiRateLimiter, forumsRouter);
   app.use("/voice-rooms", apiRateLimiter, voiceRoomsRouter);
   app.use("/events", apiRateLimiter, eventsRouter);
-  app.use("/translate", apiRateLimiter, translateRouter);
   app.use("/search", apiRateLimiter, searchRouter);
   app.use("/subscriptions", apiRateLimiter, subscriptionsRouter);
   app.use("/bookmarks", apiRateLimiter, bookmarksRouter);

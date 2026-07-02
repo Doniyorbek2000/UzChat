@@ -3,7 +3,6 @@ import { createPostSchema, createCommentSchema, paginationQuery } from "../modul
 import { createStoreSchema, createProductSchema, createOrderSchema, updateOrderStatusSchema } from "../modules/marketplace/marketplace.schema";
 import { createRedPacketSchema } from "../modules/redpackets/redpackets.schema";
 import { sendPaymentSchema, topUpSchema } from "../modules/payments/payments.schema";
-import { translateSchema } from "../modules/translate/translate.schema";
 import { sendGiftSchema, createGiftSchema, listGiftsQuery } from "../modules/gifts/gifts.controller";
 import { sendCardSchema, createCardSchema } from "../modules/greetings/greetings.controller";
 import { spendPointsSchema } from "../modules/loyalty/loyalty.controller";
@@ -236,21 +235,6 @@ describe("Payment schemas", () => {
     it("rejects negative amount", () => {
       expect(topUpSchema.safeParse({ amount: -1 }).success).toBe(false);
     });
-  });
-});
-
-describe("Translate schema", () => {
-  it("accepts valid translate request", () => {
-    const result = translateSchema.safeParse({
-      messageId: "550e8400-e29b-41d4-a716-446655440000",
-      toLang: "uz",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects missing messageId", () => {
-    const result = translateSchema.safeParse({ toLang: "uz" });
-    expect(result.success).toBe(false);
   });
 });
 
