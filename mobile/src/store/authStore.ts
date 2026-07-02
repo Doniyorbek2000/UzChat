@@ -4,6 +4,8 @@ import { usersApi } from "../api/users";
 import { setUnauthorizedHandler } from "../api/client";
 import { secureStorage } from "../storage/secureStorage";
 import { generateKeyPair, KeyPair } from "../crypto/e2ee";
+import { decryptKeyBackup, encryptKeyBackup } from "../crypto/keyBackup";
+import { devicesApi } from "../api/devices";
 import { connectSocket, disconnectSocket, setForceLogoutHandler } from "../socket/socket";
 import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from "../utils/pushNotifications";
 import { useAppLockStore } from "./appLockStore";
@@ -44,6 +46,61 @@ async function ensureKeyPair(): Promise<KeyPair> {
   if (existing) return existing;
   const generated = generateKeyPair();
   await secureStorage.setKeyPair(generated.publicKey, generated.privateKey);
+  return generated;
+}
+
+// Account password from the first login step, kept only until the 2FA step
+// completes so the restored/rotated keys can be backed up.
+let pendingLoginPassword: string | null = null;
+
+/** Encrypts the keypair with the account password and uploads it (best-effort). */
+export function uploadKeyBackup(keyPair: KeyPair, password: string): void {
+  try {
+    const payload = encryptKeyBackup(keyPair, password);
+    devicesApi.saveKeyBackup(payload).catch(() => {});
+  } catch {
+    // backup failure must never block auth
+  }
+}
+
+// After login, make sure this device holds a usable account keypair:
+// 1) a local keypair wins (re-pointing the account key at it if it drifted);
+// 2) otherwise restore from the password-encrypted server backup;
+// 3) otherwise start fresh and rotate the account public key so new
+//    conversations become readable on this device (old history stays locked).
+async function resolveKeysAfterLogin(
+  serverPublicKey: string | undefined,
+  password: string | null
+): Promise<KeyPair> {
+  const local = await secureStorage.getKeyPair();
+  if (local) {
+    if (serverPublicKey && serverPublicKey !== local.publicKey) {
+      await devicesApi.rotatePublicKey(local.publicKey).catch(() => {});
+      if (password) uploadKeyBackup(local, password);
+    }
+    return local;
+  }
+
+  if (password) {
+    try {
+      const backup = await devicesApi.getKeyBackup();
+      if (backup) {
+        const restored = decryptKeyBackup(backup, password);
+        await secureStorage.setKeyPair(restored.publicKey, restored.privateKey);
+        if (serverPublicKey && serverPublicKey !== restored.publicKey) {
+          await devicesApi.rotatePublicKey(restored.publicKey).catch(() => {});
+        }
+        return restored;
+      }
+    } catch {
+      // no backup, wrong password, or network failure — fall through
+    }
+  }
+
+  const generated = generateKeyPair();
+  await secureStorage.setKeyPair(generated.publicKey, generated.privateKey);
+  await devicesApi.rotatePublicKey(generated.publicKey).catch(() => {});
+  if (password) uploadKeyBackup(generated, password);
   return generated;
 }
 
@@ -107,20 +164,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
     initEncryptionKeys();
+    uploadKeyBackup(keyPair, input.password);
   },
 
   login: async (phone, password) => {
-    const keyPair = await ensureKeyPair();
     const result = await authApi.login(phone, password);
     if (result.requires2FA) {
+      pendingLoginPassword = password;
       return { requires2FA: true, pendingToken: result.pendingToken, hint: result.hint };
     }
     const { user, accessToken, refreshToken } = result;
     await secureStorage.setTokens(accessToken, refreshToken);
+    const keyPair = await resolveKeysAfterLogin(user.publicKey, password);
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
     initEncryptionKeys();
+    // Refresh the backup under the current password (covers password resets
+    // done while this backup was encrypted with an older password). Deferred
+    // so the KDF doesn't block the login transition.
+    setTimeout(() => uploadKeyBackup(keyPair, password), 0);
     return { requires2FA: false };
   },
 
@@ -129,9 +192,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   verifyLoginOtp: async (phone, code) => {
-    const keyPair = await ensureKeyPair();
     const { user, accessToken, refreshToken } = await authApi.verifyLoginOtp(phone, code);
     await secureStorage.setTokens(accessToken, refreshToken);
+    // OTP login carries no password, so a fresh device can't open the backup —
+    // resolveKeysAfterLogin falls back to rotating in a new keypair.
+    const keyPair = await resolveKeysAfterLogin(user.publicKey, null);
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
@@ -139,13 +204,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   completeTwoFactorLogin: async (pendingToken, password) => {
-    const keyPair = await ensureKeyPair();
     const { user, accessToken, refreshToken } = await authApi.verifyTwoFactor(pendingToken, password);
     await secureStorage.setTokens(accessToken, refreshToken);
+    const keyPair = await resolveKeysAfterLogin(user.publicKey, pendingLoginPassword);
+    const loginPassword = pendingLoginPassword;
+    pendingLoginPassword = null;
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});
     initEncryptionKeys();
+    if (loginPassword) setTimeout(() => uploadKeyBackup(keyPair, loginPassword), 0);
   },
 
   requestTwoFactorRecovery: async (pendingToken) => {
@@ -153,9 +221,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   recoverTwoFactorLogin: async (pendingToken, code) => {
-    const keyPair = await ensureKeyPair();
     const { user, accessToken, refreshToken } = await authApi.recoverTwoFactor(pendingToken, code);
     await secureStorage.setTokens(accessToken, refreshToken);
+    const keyPair = await resolveKeysAfterLogin(user.publicKey, pendingLoginPassword);
+    pendingLoginPassword = null;
     connectSocket();
     set({ user, keyPair, isAuthenticated: true });
     registerForPushNotificationsAsync().catch(() => {});

@@ -182,6 +182,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   refreshTokens    RefreshToken[]
+  keyBackup        EncryptedKeyBackup?
   participants     ConversationParticipant[]
   messages         Message[]
   reactions        MessageReaction[]
@@ -291,6 +292,21 @@ model User {
   @@index([phone])
   @@index([customStatusExpiresAt])
   @@index([lastSeenAt])
+}
+
+// The user's E2EE keypair, encrypted on-device with a key derived from
+// their password (NaCl secretbox + iterated-hash KDF). Lets a new device
+// restore the same keypair and keep reading existing conversations. The
+// server only ever sees ciphertext — it cannot decrypt the backup.
+model EncryptedKeyBackup {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ciphertext String
+  nonce      String
+  salt       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 }
 
 // A user-submitted report about another user (optionally about a specific

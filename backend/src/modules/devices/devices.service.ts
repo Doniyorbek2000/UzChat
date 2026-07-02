@@ -1,7 +1,7 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { getIo } from "../../sockets";
-import { RegisterDeviceInput, UploadPreKeysInput, DistributeSenderKeyInput } from "./devices.schema";
+import { KeyBackupInput, RegisterDeviceInput, UploadPreKeysInput, DistributeSenderKeyInput } from "./devices.schema";
 import { logger } from "../../utils/logger";
 
 const MIN_PREKEY_COUNT = 20;
@@ -214,6 +214,37 @@ export const devicesService = {
         deviceKey: { select: { userId: true, deviceId: true, publicKey: true } },
       },
     });
+  },
+
+  // Password-encrypted keypair backup: opaque to the server, restorable on a
+  // new device with the account password.
+  async saveKeyBackup(userId: string, input: KeyBackupInput) {
+    await prisma.encryptedKeyBackup.upsert({
+      where: { userId },
+      create: { userId, ciphertext: input.ciphertext, nonce: input.nonce, salt: input.salt },
+      update: { ciphertext: input.ciphertext, nonce: input.nonce, salt: input.salt },
+    });
+    return { saved: true };
+  },
+
+  async getKeyBackup(userId: string) {
+    const backup = await prisma.encryptedKeyBackup.findUnique({
+      where: { userId },
+      select: { ciphertext: true, nonce: true, salt: true, updatedAt: true },
+    });
+    if (!backup) throw Errors.notFound("Kalit zaxirasi");
+    return backup;
+  },
+
+  // A new device without a restorable backup starts a fresh keypair. Old
+  // wrapped conversation keys stay unreadable, but rotating the account
+  // public key lets peers wrap NEW conversation keys the device can open.
+  async rotatePublicKey(userId: string, publicKey: string) {
+    await prisma.user.update({ where: { id: userId }, data: { publicKey } });
+    await prisma.keyTransparencyLog.create({
+      data: { userId, deviceId: "account", action: "PUBLIC_KEY_ROTATED", publicKey, serverSig: "" },
+    }).catch(() => {});
+    return { rotated: true };
   },
 
   async getKeyTransparencyLog(userId: string, limit = 50) {

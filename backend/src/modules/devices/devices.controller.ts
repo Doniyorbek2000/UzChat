@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { requireAuth } from "../../middleware/auth.middleware";
 import { validateBody, uuidParamHandler } from "../../utils/validate";
-import { registerDeviceSchema, uploadPreKeysSchema, distributeSenderKeySchema } from "./devices.schema";
+import { registerDeviceSchema, uploadPreKeysSchema, distributeSenderKeySchema, keyBackupSchema, rotatePublicKeySchema } from "./devices.schema";
 import { devicesService } from "./devices.service";
 
 const router = Router();
@@ -28,6 +28,21 @@ router.get("/user/:userId", async (req: Request, res: Response) => {
 router.delete("/:deviceId", async (req: Request, res: Response) => {
   await devicesService.removeDevice(req.user!.sub, req.params.deviceId);
   res.status(204).send();
+});
+
+router.put("/key-backup", validateBody(keyBackupSchema), async (req: Request, res: Response) => {
+  const result = await devicesService.saveKeyBackup(req.user!.sub, req.body);
+  res.json(result);
+});
+
+router.get("/key-backup", async (req: Request, res: Response) => {
+  const backup = await devicesService.getKeyBackup(req.user!.sub);
+  res.json(backup);
+});
+
+router.post("/rotate-public-key", validateBody(rotatePublicKeySchema), async (req: Request, res: Response) => {
+  const result = await devicesService.rotatePublicKey(req.user!.sub, req.body.publicKey);
+  res.json(result);
 });
 
 router.post("/:deviceId/prekeys", validateBody(uploadPreKeysSchema), async (req: Request, res: Response) => {

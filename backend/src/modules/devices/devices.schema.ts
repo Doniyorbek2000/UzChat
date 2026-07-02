@@ -31,3 +31,19 @@ export const distributeSenderKeySchema = z.object({
 });
 
 export type DistributeSenderKeyInput = z.infer<typeof distributeSenderKeySchema>;
+
+// Password-encrypted E2EE keypair backup — the server stores opaque ciphertext.
+export const keyBackupSchema = z.object({
+  ciphertext: z.string().min(1).max(4096),
+  nonce: z.string().min(1).max(128),
+  salt: z.string().min(1).max(128),
+});
+
+export type KeyBackupInput = z.infer<typeof keyBackupSchema>;
+
+// Rotating the account public key (new device without a restorable backup).
+export const rotatePublicKeySchema = z.object({
+  publicKey: z.string().min(32).max(128),
+});
+
+export type RotatePublicKeyInput = z.infer<typeof rotatePublicKeySchema>;

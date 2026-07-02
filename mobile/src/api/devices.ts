@@ -75,4 +75,23 @@ export const devicesApi = {
   getKeyTransparencyLog(userId: string) {
     return apiClient.get<KeyTransparencyEntry[]>(`/devices/transparency/${userId}`).then((r) => r.data);
   },
+
+  saveKeyBackup(payload: { ciphertext: string; nonce: string; salt: string }) {
+    return apiClient.put<{ saved: boolean }>("/devices/key-backup", payload).then((r) => r.data);
+  },
+
+  /** Returns null when no backup exists yet. */
+  getKeyBackup() {
+    return apiClient
+      .get<{ ciphertext: string; nonce: string; salt: string; updatedAt: string }>("/devices/key-backup")
+      .then((r) => r.data)
+      .catch((err) => {
+        if (err?.response?.status === 404) return null;
+        throw err;
+      });
+  },
+
+  rotatePublicKey(publicKey: string) {
+    return apiClient.post<{ rotated: boolean }>("/devices/rotate-public-key", { publicKey }).then((r) => r.data);
+  },
 };

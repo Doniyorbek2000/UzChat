@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
+import { secureStorage } from "../../storage/secureStorage";
+import { uploadKeyBackup } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChangePassword">;
@@ -25,6 +27,10 @@ export function ChangePasswordScreen({ navigation }: Props) {
     setSaving(true);
     try {
       await usersApi.changePassword(currentPassword, newPassword);
+      // Re-encrypt the E2EE key backup under the new password so a future
+      // device restore keeps working.
+      const keyPair = await secureStorage.getKeyPair();
+      if (keyPair) uploadKeyBackup(keyPair, newPassword);
       Alert.alert(
         "Saqlandi",
         "Parol muvaffaqiyatli o'zgartirildi. Boshqa qurilmalardagi seanslar tugatildi",
