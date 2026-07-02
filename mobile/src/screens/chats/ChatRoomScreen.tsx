@@ -310,6 +310,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const deleteMessage = useChatStore((s) => s.deleteMessage);
   const hideMessageForMe = useChatStore((s) => s.hideMessageForMe);
   const editMessage = useChatStore((s) => s.editMessage);
+  const retryFailedMessage = useChatStore((s) => s.retryFailedMessage);
+  const discardFailedMessage = useChatStore((s) => s.discardFailedMessage);
   const toggleReaction = useChatStore((s) => s.toggleReaction);
   const toggleStar = useChatStore((s) => s.toggleStar);
   const closePoll = useChatStore((s) => s.closePoll);
@@ -1143,9 +1145,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         scrollToLatest();
       }
     } catch (err: any) {
-      setText(trimmed);
       const message = err?.response?.data?.error?.message;
-      Alert.alert("Xatolik", message ?? "Xabar yuborilmadi. Internet aloqasini tekshiring");
+      if (scheduledFor || sendWhenOnline) {
+        // Scheduled sends have no optimistic bubble — restore the input.
+        setText(trimmed);
+        Alert.alert("Xatolik", message ?? "Xabar yuborilmadi. Internet aloqasini tekshiring");
+      } else if (message) {
+        // Server rejected it for a concrete reason (ban, slow mode, ...);
+        // the failed bubble handles retry, the alert explains why.
+        Alert.alert("Xatolik", message);
+      }
     }
   };
 
@@ -2103,12 +2112,27 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <Text style={styles.messageTime}>
               {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </Text>
-            {isOwn && otherParticipant && (
+            {isOwn && item.sendStatus === "pending" && <Text style={styles.receipt}>🕓</Text>}
+            {isOwn && !item.sendStatus && otherParticipant && (
               <Text style={[styles.receipt, isMessageRead(item, otherParticipant) && styles.receiptRead]}>
                 {isMessageRead(item, otherParticipant) || isMessageDelivered(item, otherParticipant) ? "✓✓" : "✓"}
               </Text>
             )}
           </View>
+          {isOwn && item.sendStatus === "failed" && (
+            <TouchableOpacity
+              style={styles.sendFailedRow}
+              onPress={() =>
+                Alert.alert("Xabar yuborilmadi", undefined, [
+                  { text: "O'chirish", style: "destructive", onPress: () => discardFailedMessage(conversationId, item.id) },
+                  { text: "Qayta yuborish", onPress: () => retryFailedMessage(conversationId, item.id).catch(() => {}) },
+                  { text: "Bekor qilish", style: "cancel" },
+                ])
+              }
+            >
+              <Text style={styles.sendFailedText}>⚠️ Yuborilmadi — qayta urinish uchun bosing</Text>
+            </TouchableOpacity>
+          )}
         </View>
         </TouchableOpacity>
         </SwipeableMessageRow>
@@ -3851,6 +3875,8 @@ const styles = StyleSheet.create({
   starIcon: { fontSize: 10 },
   receipt: { fontSize: 11, color: colors.textSecondary },
   receiptRead: { color: colors.primary },
+  sendFailedRow: { marginTop: 4 },
+  sendFailedText: { fontSize: 12, color: colors.danger },
   reactionsRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 6, gap: 6 },
   reactionBadge: {
     flexDirection: "row",

@@ -48,6 +48,9 @@ export interface DecryptedMessage extends Message {
   pollMeta?: PollMeta | null;
   decryptFailed: boolean;
   replyPreview?: ReplyPreview | null;
+  // Optimistic sending: "pending" while the POST is in flight, "failed" when
+  // it errored (tap to retry). Absent on server-confirmed messages.
+  sendStatus?: "pending" | "failed";
 }
 
 export interface ReplyPreview {
@@ -113,6 +116,8 @@ interface ChatState {
     silent?: boolean,
     sendWhenOnline?: boolean
   ) => Promise<void>;
+  retryFailedMessage: (conversationId: string, localId: string) => Promise<void>;
+  discardFailedMessage: (conversationId: string, localId: string) => void;
   sendLocationMessage: (conversationId: string, latitude: number, longitude: number, label: string, replyToId?: string) => Promise<void>;
   loadScheduledMessages: (conversationId: string) => Promise<void>;
   cancelScheduledMessage: (conversationId: string, messageId: string) => Promise<void>;
@@ -451,10 +456,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const messages = await chatsApi.listMessages(conversationId, undefined, PAGE_SIZE);
     const decrypted = messages.map((m) => decryptToMessage(key, m));
 
-    set((state) => ({
-      messagesByConversation: { ...state.messagesByConversation, [conversationId]: decrypted },
-      hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: messages.length === PAGE_SIZE },
-    }));
+    set((state) => {
+      // Keep optimistic (pending/failed) messages that only exist locally —
+      // a refetch must not silently drop an unsent message.
+      const unconfirmed = (state.messagesByConversation[conversationId] ?? []).filter((m) => m.sendStatus);
+      return {
+        messagesByConversation: { ...state.messagesByConversation, [conversationId]: [...decrypted, ...unconfirmed] },
+        hasMoreByConversation: { ...state.hasMoreByConversation, [conversationId]: messages.length === PAGE_SIZE },
+      };
+    });
   },
 
   loadOlderMessages: async (conversationId) => {
@@ -511,20 +521,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     const key = get().getConversationKey(conversation);
     const { ciphertext, nonce } = encryptMessage(text, key);
+    const input = { type: "TEXT" as const, ciphertext, nonce, replyToId, mentions, scheduledFor, silent, sendWhenOnline };
 
-    const message = await chatsApi.sendMessage(conversationId, {
-      type: "TEXT",
-      ciphertext,
-      nonce,
-      replyToId,
-      mentions,
-      scheduledFor,
-      silent,
-      sendWhenOnline,
-    });
-    const decrypted = decryptToMessage(key, message);
-
-    if (message.scheduledFor) {
+    // Scheduled sends skip the optimistic path — they land in the separate
+    // scheduled list, not the visible timeline.
+    if (scheduledFor || sendWhenOnline) {
+      const message = await chatsApi.sendMessage(conversationId, input);
+      const decrypted = decryptToMessage(key, message);
       set((state) => ({
         scheduledMessagesByConversation: {
           ...state.scheduledMessagesByConversation,
@@ -534,17 +537,104 @@ export const useChatStore = create<ChatState>((set, get) => ({
       return;
     }
 
-    set((state) => {
-      const existing = state.messagesByConversation[conversationId] ?? [];
-      if (existing.some((m) => m.id === decrypted.id)) return state;
-      return {
-        messagesByConversation: { ...state.messagesByConversation, [conversationId]: [...existing, decrypted] },
-        conversations: upsertConversation(
-          state.conversations,
-          { ...conversation, lastMessage: message, updatedAt: message.createdAt }
-        ),
-      };
-    });
+    // Optimistic: show the message immediately with a pending mark, then
+    // reconcile with the server copy (or flag it failed for tap-to-retry).
+    const currentUserId = useAuthStore.getState().user?.id ?? "";
+    const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const replySource = replyToId
+      ? (get().messagesByConversation[conversationId] ?? []).find((m) => m.id === replyToId)
+      : undefined;
+    const optimistic: DecryptedMessage = {
+      id: localId,
+      conversationId,
+      senderId: currentUserId,
+      type: "TEXT",
+      ciphertext,
+      nonce,
+      mediaUrl: null,
+      replyToId: replyToId ?? null,
+      reactions: [],
+      pollVotes: [],
+      mentions: mentions ?? [],
+      forwardedFromName: null,
+      forwardedFromUserId: null,
+      forwardCount: 0,
+      isStarred: false,
+      createdAt: new Date().toISOString(),
+      editedAt: null,
+      deletedAt: null,
+      scheduledFor: null,
+      sendWhenOnline: false,
+      viewOnce: false,
+      viewedAt: null,
+      isSpoiler: false,
+      pollClosedAt: null,
+      pollClosesAt: null,
+      text,
+      meta: null,
+      contactMeta: null,
+      decryptFailed: false,
+      replyPreview: replySource
+        ? { id: replySource.id, senderId: replySource.senderId, type: replySource.type, text: replySource.text, deletedAt: replySource.deletedAt }
+        : null,
+      sendStatus: "pending",
+    };
+    set((state) => ({
+      messagesByConversation: {
+        ...state.messagesByConversation,
+        [conversationId]: [...(state.messagesByConversation[conversationId] ?? []), optimistic],
+      },
+    }));
+
+    try {
+      const message = await chatsApi.sendMessage(conversationId, input);
+      const decrypted = decryptToMessage(key, message);
+      set((state) => {
+        const existing = state.messagesByConversation[conversationId] ?? [];
+        const withoutLocal = existing.filter((m) => m.id !== localId);
+        const next = withoutLocal.some((m) => m.id === decrypted.id) ? withoutLocal : [...withoutLocal, decrypted];
+        return {
+          messagesByConversation: { ...state.messagesByConversation, [conversationId]: next },
+          conversations: upsertConversation(
+            state.conversations,
+            { ...conversation, lastMessage: message, updatedAt: message.createdAt }
+          ),
+        };
+      });
+    } catch (err) {
+      set((state) => ({
+        messagesByConversation: {
+          ...state.messagesByConversation,
+          [conversationId]: (state.messagesByConversation[conversationId] ?? []).map((m) =>
+            m.id === localId ? { ...m, sendStatus: "failed" as const } : m
+          ),
+        },
+      }));
+      throw err;
+    }
+  },
+
+  retryFailedMessage: async (conversationId, localId) => {
+    const failed = (get().messagesByConversation[conversationId] ?? []).find(
+      (m) => m.id === localId && m.sendStatus === "failed"
+    );
+    if (!failed || !failed.text) return;
+    get().discardFailedMessage(conversationId, localId);
+    await get().sendTextMessage(
+      conversationId,
+      failed.text,
+      failed.replyToId ?? undefined,
+      failed.mentions.length > 0 ? failed.mentions : undefined
+    );
+  },
+
+  discardFailedMessage: (conversationId, localId) => {
+    set((state) => ({
+      messagesByConversation: {
+        ...state.messagesByConversation,
+        [conversationId]: (state.messagesByConversation[conversationId] ?? []).filter((m) => m.id !== localId),
+      },
+    }));
   },
 
   sendLocationMessage: async (conversationId, latitude, longitude, label, replyToId) => {
