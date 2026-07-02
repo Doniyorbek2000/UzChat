@@ -109,6 +109,23 @@ export const adminService = {
     });
   },
 
+  // Manual wallet crediting for support/ops while self-service top-up is
+  // disabled (no payment provider connected yet). Negative amounts reverse
+  // mistaken credits but never take the balance below zero.
+  async creditUserWallet(userId: string, amount: number) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { walletBalance: true } });
+    if (!user) throw Errors.notFound("Foydalanuvchi topilmadi");
+    if (amount < 0 && Number(user.walletBalance) + amount < 0) {
+      throw Errors.badRequest("Balans manfiy bo'lib qolmaydi");
+    }
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { walletBalance: { increment: amount } },
+      select: { id: true, walletBalance: true },
+    });
+    return { userId: updated.id, balance: updated.walletBalance, currency: "UZS" };
+  },
+
   async setUserVerified(userId: string, isVerified: boolean, verifiedType: string | null) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw Errors.notFound("Foydalanuvchi topilmadi");

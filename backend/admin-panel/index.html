@@ -386,6 +386,7 @@ window.viewUser = async function(userId) {
         <button class="btn btn-sm ${u.isVerified?"btn-danger":"btn-primary"}" onclick="toggleVerify('${u.id}',${!u.isVerified})">${u.isVerified?"Tasdiqlashni olib tashlash":"Tasdiqlash"}</button>
         <button class="btn btn-sm" style="background:var(--warning);color:#fff" onclick="banUser('${u.id}',${!u.isBanned})">${u.isBanned?"Blokdan chiqarish":"Bloklash"}</button>
         <button class="btn btn-sm" style="background:#5856D6;color:#fff" onclick="viewSessions('${u.id}')">Sessiyalar</button>
+        <button class="btn btn-sm" style="background:var(--success);color:#fff" onclick="creditWallet('${u.id}')">Hisob to'ldirish</button>
         <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">O'chirish</button>
         <button class="btn btn-sm" style="background:var(--border)" onclick="this.closest('.modal-bg').remove()">Yopish</button>
       </div>
@@ -401,6 +402,14 @@ window.toggleAdmin = async function(id, val) {
 };
 window.toggleVerify = async function(id, val) {
   try { await api(`/admin/users/${id}/verify`, "PATCH", {isVerified:val}); document.querySelector(".modal-bg")?.remove(); showToast(val?"Foydalanuvchi tasdiqlandi":"Tasdiqlash olib tashlandi"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
+};
+window.creditWallet = async function(id) {
+  const raw = prompt("Qo'shiladigan miqdor (UZS). Xato kreditni qaytarish uchun manfiy son kiriting:");
+  if (raw === null) return;
+  const amount = Math.trunc(Number(raw));
+  if (!amount || Number.isNaN(amount)) { showToast("Noto'g'ri miqdor", true); return; }
+  if (!confirm(`${amount.toLocaleString()} UZS ${amount > 0 ? "qo'shilsinmi" : "qaytarilsinmi"}?`)) return;
+  try { const r = await api(`/admin/users/${id}/wallet-credit`, "POST", {amount}); document.querySelector(".modal-bg")?.remove(); showToast("Yangi balans: "+Number(r.balance).toLocaleString()+" UZS"); loadPage(); } catch(e) { showToast("Xatolik: "+esc(e.message), true); }
 };
 window.deleteUser = async function(id) {
   if (!confirm("Bu foydalanuvchini o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!")) return;

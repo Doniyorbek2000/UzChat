@@ -25,6 +25,9 @@ const paginationSchema = z.object({
 });
 
 const setAdminSchema = z.object({ isAdmin: z.boolean() });
+const walletCreditSchema = z.object({
+  amount: z.number().int().min(-50_000_000).max(50_000_000).refine((v) => v !== 0, { message: "Miqdor 0 bo'lmasligi kerak" }),
+});
 const setVerifiedSchema = z.object({
   isVerified: z.boolean(),
   verifiedType: z.string().max(50).nullable().optional(),
@@ -64,6 +67,12 @@ router.patch("/users/:userId/admin", validateBody(setAdminSchema), async (req: R
   const user = await adminService.setUserAdmin(req.params.userId, req.body.isAdmin);
   auditLog(req.user!.sub, "SET_ADMIN", "user", req.params.userId, `isAdmin=${req.body.isAdmin}`, req.ip);
   res.json(user);
+});
+
+router.post("/users/:userId/wallet-credit", validateBody(walletCreditSchema), async (req: Request, res: Response) => {
+  const result = await adminService.creditUserWallet(req.params.userId, req.body.amount);
+  auditLog(req.user!.sub, "WALLET_CREDIT", "user", req.params.userId, `amount=${req.body.amount}`, req.ip);
+  res.json(result);
 });
 
 router.patch("/users/:userId/verify", validateBody(setVerifiedSchema), async (req: Request, res: Response) => {

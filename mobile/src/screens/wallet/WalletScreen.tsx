@@ -63,8 +63,9 @@ export function WalletScreen({ navigation }: Props) {
       setTopUpVisible(false);
       Alert.alert("Muvaffaqiyat", `${formatAmount(amount, "UZS")} hisobga qo'shildi`);
       loadData();
-    } catch {
-      Alert.alert("Xatolik", "Hisobni to'ldirib bo'lmadi");
+    } catch (err: any) {
+      const message = err?.response?.data?.error?.message;
+      Alert.alert("Xatolik", message ?? "Hisobni to'ldirib bo'lmadi");
     }
   };
 

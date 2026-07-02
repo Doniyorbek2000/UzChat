@@ -30,6 +30,12 @@ export const env = {
     url: process.env.REDIS_URL ?? "redis://localhost:6379",
     prefix: process.env.REDIS_PREFIX ?? "uzchat:",
   },
+  payments: {
+    // Self-service wallet top-up stays disabled until a real payment
+    // provider (Payme/Click/Uzum) webhook verifies the money actually
+    // arrived — otherwise any user could mint unlimited balance.
+    topUpEnabled: process.env.PAYMENTS_TOPUP_ENABLED === "true",
+  },
 } as const;
 
 export const isProduction = env.nodeEnv === "production";

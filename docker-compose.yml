@@ -40,6 +40,7 @@ services:
       ESKIZ_FROM: ${ESKIZ_FROM:-4546}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://uzchat.app}
       PUBLIC_URL: ${PUBLIC_URL:-https://uzchat.app}
+      PAYMENTS_TOPUP_ENABLED: ${PAYMENTS_TOPUP_ENABLED:-false}
     volumes:
       - uploads:/app/uploads
     expose:

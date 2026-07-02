@@ -1,4 +1,5 @@
 import { PaymentStatus, Prisma } from "@prisma/client";
+import { env } from "../../config/env";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { SendPaymentInput, TopUpInput } from "./payments.schema";
@@ -20,6 +21,11 @@ export const paymentsService = {
   },
 
   async topUp(userId: string, input: TopUpInput) {
+    if (!env.payments.topUpEnabled) {
+      throw Errors.forbidden(
+        "Hisobni to'ldirish hozircha mavjud emas — to'lov tizimi tez orada ulanadi"
+      );
+    }
     const user = await prisma.user.update({
       where: { id: userId },
       data: { walletBalance: { increment: input.amount } },
