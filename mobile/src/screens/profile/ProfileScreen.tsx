@@ -35,6 +35,7 @@ export function ProfileScreen({ navigation }: Props) {
   const logout = useAuthStore((s) => s.logout);
   const deleteAccount = useAuthStore((s) => s.deleteAccount);
   const [username, setUsername] = useState(user?.username ?? "");
+  const [settingsQuery, setSettingsQuery] = useState("");
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [bio, setBio] = useState(user?.bio ?? "");
   const [customStatus, setCustomStatus] = useState(user?.customStatus ?? "");
@@ -428,11 +429,43 @@ export function ProfileScreen({ navigation }: Props) {
         </View>
       </View>
 
-      {renderMenuGroup("Shaxsiy", personalItems)}
-      {renderMenuGroup("Xavfsizlik", securityItems)}
-      {renderMenuGroup("Sozlamalar", settingsItems)}
-      {renderMenuGroup("Xizmatlar", servicesItems)}
-      {renderMenuGroup("Qo'shimcha", extraItems)}
+      <View style={styles.settingsSearchBox}>
+        <Text style={styles.settingsSearchIcon}>🔍</Text>
+        <TextInput
+          style={styles.settingsSearchInput}
+          placeholder={tr("Sozlamalardan qidirish...")}
+          placeholderTextColor={colors.textSecondary}
+          value={settingsQuery}
+          onChangeText={setSettingsQuery}
+        />
+        {settingsQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSettingsQuery("")} hitSlop={8}>
+            <Text style={styles.settingsSearchClear}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {settingsQuery.trim() ? (
+        (() => {
+          const q = settingsQuery.trim().toLowerCase();
+          const matched = [...personalItems, ...securityItems, ...settingsItems, ...servicesItems, ...extraItems].filter(
+            (i) => i.label.toLowerCase().includes(q)
+          );
+          return matched.length > 0 ? (
+            renderMenuGroup(tr("Qidiruv natijalari"), matched)
+          ) : (
+            <Text style={styles.settingsSearchEmpty}>{tr("Hech narsa topilmadi")}</Text>
+          );
+        })()
+      ) : (
+        <>
+          {renderMenuGroup("Shaxsiy", personalItems)}
+          {renderMenuGroup("Xavfsizlik", securityItems)}
+          {renderMenuGroup("Sozlamalar", settingsItems)}
+          {renderMenuGroup("Xizmatlar", servicesItems)}
+          {renderMenuGroup("Qo'shimcha", extraItems)}
+        </>
+      )}
 
       {user?.isAdmin && (
         <View style={styles.menuGroup}>
@@ -700,6 +733,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
+  settingsSearchBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.surface, borderRadius: 12, marginHorizontal: 16, marginTop: 4, marginBottom: 4, paddingHorizontal: 14, height: 42 },
+  settingsSearchIcon: { fontSize: 14 },
+  settingsSearchInput: { flex: 1, fontSize: 14, color: colors.text, height: "100%", padding: 0 },
+  settingsSearchClear: { fontSize: 15, color: colors.textSecondary, paddingHorizontal: 4 },
+  settingsSearchEmpty: { textAlign: "center", color: colors.textSecondary, fontSize: 13, paddingVertical: 24 },
   menuRow: {
     flexDirection: "row",
     alignItems: "center",

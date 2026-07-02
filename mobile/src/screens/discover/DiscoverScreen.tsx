@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, RefreshControl } from "react-native";
 import { MainTabScreenProps } from "../../navigation/types";
 import { colors } from "../../theme/colors";
+import { recentServicesStorage } from "../../storage/recentServicesStorage";
 import { tr } from "../../i18n";
 
 type Props = MainTabScreenProps<"Discover">;
@@ -80,6 +81,11 @@ const FEATURED = [
 export function DiscoverScreen({ navigation }: Props) {
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [recentKeys, setRecentKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    recentServicesStorage.getRecent().then(setRecentKeys).catch(() => {});
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -96,7 +102,15 @@ export function DiscoverScreen({ navigation }: Props) {
     ? allItems.filter((i) => i.label.toLowerCase().includes(search.toLowerCase()))
     : null;
 
+  // Personalised recents: identified by target screen (unique across
+  // sections), resolved back to the first matching catalog item.
+  const recentItems = recentKeys
+    .map((id) => allItems.find((i) => ((i as { screen?: string }).screen ?? i.key) === id))
+    .filter((i): i is (typeof allItems)[number] => !!i);
+
   const handlePress = (item: { screen?: string; key: string }) => {
+    const id = item.screen ?? item.key;
+    recentServicesStorage.recordUse(id).then(setRecentKeys).catch(() => {});
     if (item.screen) {
       if (item.screen === "ClaimRedPacket") {
         navigation.navigate("ClaimRedPacket", {});
@@ -132,6 +146,13 @@ export function DiscoverScreen({ navigation }: Props) {
 
       {filtered ? (
         <View style={styles.searchResults}>
+          <TouchableOpacity style={styles.globalSearchRow} onPress={() => navigation.navigate("GlobalSearch")}>
+            <Text style={styles.globalSearchIcon}>🌐</Text>
+            <Text style={styles.globalSearchText}>
+              {tr("Odamlar, xabarlar va kanallardan izlash")}
+            </Text>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
           <Text style={styles.searchResultCount}>{filtered.length} ta natija</Text>
           <View style={styles.grid}>
             {filtered.map((s) => (
@@ -157,12 +178,28 @@ export function DiscoverScreen({ navigation }: Props) {
         </View>
       ) : (
         <>
+          {recentItems.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>{tr("Oxirgi ishlatilganlar")}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentRow}>
+                {recentItems.map((s) => (
+                  <TouchableOpacity key={(s as { screen?: string }).screen ?? s.key} style={styles.recentCard} onPress={() => handlePress(s)}>
+                    <View style={styles.serviceIconBg}>
+                      <Text style={styles.serviceIcon}>{s.icon}</Text>
+                    </View>
+                    <Text style={styles.serviceLabel} numberOfLines={1}>{s.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          )}
+
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuredScroll} contentContainerStyle={styles.featuredContainer}>
             {FEATURED.map((f) => (
               <TouchableOpacity
                 key={f.key}
                 style={[styles.featuredCard, { backgroundColor: f.color }]}
-                onPress={() => navigation.navigate(f.screen as any)}
+                onPress={() => handlePress(f)}
               >
                 <Text style={styles.featuredIcon}>{f.icon}</Text>
                 <Text style={styles.featuredTitle}>{f.title}</Text>
@@ -176,7 +213,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <TouchableOpacity
                 key={s.key}
                 style={styles.essentialCard}
-                onPress={() => navigation.navigate(s.screen as any)}
+                onPress={() => handlePress(s)}
               >
                 <View style={[styles.essentialIconBg, { backgroundColor: s.color + "18" }]}>
                   <Text style={styles.essentialIcon}>{s.icon}</Text>
@@ -192,7 +229,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <TouchableOpacity
                 key={s.key}
                 style={styles.serviceCard}
-                onPress={() => navigation.navigate(s.screen as any)}
+                onPress={() => handlePress(s)}
               >
                 <View style={styles.serviceIconBg}>
                   <Text style={styles.serviceIcon}>{s.icon}</Text>
@@ -208,7 +245,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <TouchableOpacity
                 key={s.key}
                 style={styles.serviceCard}
-                onPress={() => navigation.navigate(s.screen as any)}
+                onPress={() => handlePress(s)}
               >
                 <View style={styles.serviceIconBg}>
                   <Text style={styles.serviceIcon}>{s.icon}</Text>
@@ -224,7 +261,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <TouchableOpacity
                 key={s.key}
                 style={styles.serviceCard}
-                onPress={() => navigation.navigate(s.screen as any)}
+                onPress={() => handlePress(s)}
               >
                 <View style={styles.serviceIconBg}>
                   <Text style={styles.serviceIcon}>{s.icon}</Text>
@@ -241,7 +278,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <TouchableOpacity
                 key={s.key}
                 style={styles.serviceCard}
-                onPress={() => navigation.navigate("MiniApps")}
+                onPress={() => handlePress(s)}
               >
                 <View style={styles.serviceIconBg}>
                   <Text style={styles.serviceIcon}>{s.icon}</Text>
@@ -348,6 +385,11 @@ const styles = StyleSheet.create({
   menuIcon: { fontSize: 18 },
   menuLabel: { flex: 1, fontSize: 15, color: colors.text, fontWeight: "500" },
   menuArrow: { fontSize: 18, color: colors.textSecondary },
+  recentRow: { gap: 10, paddingHorizontal: 16, paddingBottom: 12, marginTop: 8 },
+  recentCard: { width: 76, backgroundColor: colors.surface, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 4, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
+  globalSearchRow: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 10 },
+  globalSearchIcon: { fontSize: 16 },
+  globalSearchText: { flex: 1, fontSize: 14, color: colors.text, fontWeight: "500" },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },

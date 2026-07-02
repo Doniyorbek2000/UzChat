@@ -612,11 +612,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     const results: { conversationId: string; message: DecryptedMessage }[] = [];
 
+    // Cache-first: the SQLite cache holds up to 300 messages per chat, so
+    // most searches complete instantly and fully offline. Only chats with an
+    // empty cache fall back to one small server page.
     await Promise.all(
       get().conversations.map(async (conversation) => {
         try {
           const key = get().getConversationKey(conversation);
-          const messages = await chatsApi.listMessages(conversation.id, undefined, 50);
+          let messages = await messageCache.getMessages(conversation.id, 300);
+          if (messages.length === 0) {
+            messages = await chatsApi.listMessages(conversation.id, undefined, 50);
+            messageCache.saveMessages(conversation.id, messages).catch(() => {});
+          }
           for (const m of messages) {
             if (m.type !== "TEXT" || m.deletedAt) continue;
             const decrypted = decryptToMessage(key, m);
