@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { colors } from "../../theme/colors";
-import { SUPPORTED_LOCALES, useI18nStore, useT } from "../../i18n";
+import { SUPPORTED_LOCALES, tr, useI18nStore, useT } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LanguageSettings">;
 
@@ -14,6 +14,9 @@ export function LanguageSettingsScreen(_props: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.hint}>{t("languageDesc")}</Text>
+      <Text style={styles.subHint}>
+        {tr("Interfeys darhol yangilanadi; ayrim matnlar ilova qayta ochilganda to'liq qo'llanadi")}
+      </Text>
       <FlatList
         data={SUPPORTED_LOCALES}
         keyExtractor={(item) => item.code}
@@ -42,7 +45,8 @@ export function LanguageSettingsScreen(_props: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  hint: { fontSize: 13, color: colors.textSecondary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
+  hint: { fontSize: 13, color: colors.textSecondary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 2 },
+  subHint: { fontSize: 11, color: colors.textSecondary, paddingHorizontal: 16, paddingBottom: 8 },
   list: { paddingHorizontal: 16, paddingBottom: 24 },
   row: {
     flexDirection: "row",

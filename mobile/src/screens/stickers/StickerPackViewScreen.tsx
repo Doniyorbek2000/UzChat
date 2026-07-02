@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { stickersApi, StickerPack, Sticker } from "../../api/stickers";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StickerPackView">;
 
@@ -27,9 +28,9 @@ export function StickerPackViewScreen({ route }: Props) {
     setInstalling(true);
     try {
       await stickersApi.install(packId);
-      Alert.alert("Muvaffaqiyat", "Stiker to'plami o'rnatildi");
+      Alert.alert(tr("Muvaffaqiyat"), tr("Stiker to'plami o'rnatildi"));
     } catch {
-      Alert.alert("Xatolik", "O'rnatib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("O'rnatib bo'lmadi"));
     }
     setInstalling(false);
   };
@@ -38,9 +39,9 @@ export function StickerPackViewScreen({ route }: Props) {
     setInstalling(true);
     try {
       await stickersApi.uninstall(packId);
-      Alert.alert("Muvaffaqiyat", "Stiker to'plami olib tashlandi");
+      Alert.alert(tr("Muvaffaqiyat"), tr("Stiker to'plami olib tashlandi"));
     } catch {
-      Alert.alert("Xatolik", "Olib tashlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Olib tashlab bo'lmadi"));
     }
     setInstalling(false);
   };
@@ -49,10 +50,10 @@ export function StickerPackViewScreen({ route }: Props) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
   }
   if (error) {
-    return <ErrorView message="Stiker to'plamini yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Stiker to'plamini yuklab bo'lmadi")} onRetry={loadData} />;
   }
   if (!pack) {
-    return <Text style={styles.emptyText}>To'plam topilmadi</Text>;
+    return <Text style={styles.emptyText}>{tr("To'plam topilmadi")}</Text>;
   }
 
   const renderSticker = ({ item }: { item: Sticker }) => (
@@ -80,7 +81,7 @@ export function StickerPackViewScreen({ route }: Props) {
           <Text style={styles.installBtnText}>{installing ? "..." : "O'rnatish"}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.removeBtn} onPress={handleUninstall} disabled={installing}>
-          <Text style={styles.removeBtnText}>Olib tashlash</Text>
+          <Text style={styles.removeBtnText}>{tr("Olib tashlash")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -91,7 +92,7 @@ export function StickerPackViewScreen({ route }: Props) {
         numColumns={4}
         contentContainerStyle={styles.grid}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Bu to'plamda stikerlar yo'q</Text>
+          <Text style={styles.emptyText}>{tr("Bu to'plamda stikerlar yo'q")}</Text>
         }
       />
     </View>

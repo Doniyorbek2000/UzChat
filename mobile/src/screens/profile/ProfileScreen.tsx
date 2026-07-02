@@ -6,7 +6,7 @@ import { usersApi } from "../../api/users";
 import { authApi } from "../../api/auth";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
-import { useT } from "../../i18n";
+import { useT, tr } from "../../i18n";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { formatBirthday, MAX_DAYS_IN_MONTH, UZ_MONTHS } from "../../utils/birthday";
 import { CUSTOM_STATUS_DURATION_OPTIONS, formatCustomStatusDuration, formatCustomStatusExpiry } from "../../utils/customStatusDuration";
@@ -94,11 +94,11 @@ export function ProfileScreen({ navigation }: Props) {
   const onSave = async () => {
     const trimmedUsername = username.trim();
     if (trimmedUsername.length < 3 || trimmedUsername.length > 24 || !/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
-      Alert.alert("Xatolik", "Username 3-24 ta belgidan iborat bo'lib, faqat harf, raqam va '_' belgisini o'z ichiga olishi mumkin");
+      Alert.alert(tr("Xatolik"), tr("Username 3-24 ta belgidan iborat bo'lib, faqat harf, raqam va '_' belgisini o'z ichiga olishi mumkin"));
       return;
     }
     if (usernameStatus === "taken") {
-      Alert.alert("Xatolik", "Bu username band");
+      Alert.alert(tr("Xatolik"), tr("Bu username band"));
       return;
     }
     setSaving(true);
@@ -114,18 +114,16 @@ export function ProfileScreen({ navigation }: Props) {
           : {}),
       });
       await refreshProfile();
-      Alert.alert("Saqlandi", "Profil yangilandi");
+      Alert.alert(tr("Saqlandi"), tr("Profil yangilandi"));
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
     } finally {
       setSaving(false);
     }
   };
 
   const onPickCustomStatusDuration = () => {
-    Alert.alert(
-      "Holatni tozalash vaqti",
-      "Holat avtomatik tozalanadigan vaqtni tanlang",
+    Alert.alert(tr("Holatni tozalash vaqti"), tr("Holat avtomatik tozalanadigan vaqtni tanlang"),
       CUSTOM_STATUS_DURATION_OPTIONS.map((option) => ({
         text: option.label,
         onPress: () => setCustomStatusClearAfterSeconds(option.value),
@@ -136,7 +134,7 @@ export function ProfileScreen({ navigation }: Props) {
   const onChangeAvatar = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Ruxsat kerak", "Avatar tanlash uchun galereyaga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Avatar tanlash uchun galereyaga ruxsat bering"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -154,7 +152,7 @@ export function ProfileScreen({ navigation }: Props) {
       await usersApi.updateMe({ avatarUrl: url });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Avatarni yangilab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Avatarni yangilab bo'lmadi"));
     } finally {
       setUploadingAvatar(false);
     }
@@ -177,7 +175,7 @@ export function ProfileScreen({ navigation }: Props) {
       await refreshProfile();
       setBirthdayModalVisible(false);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
     } finally {
       setSavingBirthday(false);
     }
@@ -190,27 +188,25 @@ export function ProfileScreen({ navigation }: Props) {
       await refreshProfile();
       setBirthdayModalVisible(false);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "O'chirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "O'chirib bo'lmadi");
     } finally {
       setSavingBirthday(false);
     }
   };
 
   const onLogout = () => {
-    Alert.alert("Chiqish", "Hisobdan chiqishni xohlaysizmi?", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "Chiqish", style: "destructive", onPress: () => logout() },
+    Alert.alert(tr("Chiqish"), tr("Hisobdan chiqishni xohlaysizmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("Chiqish"), style: "destructive", onPress: () => logout() },
     ]);
   };
 
   const onDeleteAccount = () => {
-    Alert.alert(
-      "Hisobni o'chirish",
-      "Hisobingiz, suhbatlaringiz va barcha xabarlaringiz butunlay o'chiriladi. Bu amalni ortga qaytarib bo'lmaydi.",
+    Alert.alert(tr("Hisobni o'chirish"), tr("Hisobingiz, suhbatlaringiz va barcha xabarlaringiz butunlay o'chiriladi. Bu amalni ortga qaytarib bo'lmaydi."),
       [
-        { text: "Bekor qilish", style: "cancel" },
+        { text: tr("Bekor qilish"), style: "cancel" },
         {
-          text: "Davom etish",
+          text: tr("Davom etish"),
           style: "destructive",
           onPress: () => {
             Alert.prompt(
@@ -221,7 +217,7 @@ export function ProfileScreen({ navigation }: Props) {
                 try {
                   await deleteAccount(password);
                 } catch (err: any) {
-                  Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Hisobni o'chirib bo'lmadi");
+                  Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Hisobni o'chirib bo'lmadi");
                 }
               },
               "secure-text"
@@ -263,58 +259,58 @@ export function ProfileScreen({ navigation }: Props) {
   );
 
   const personalItems: MenuItem[] = [
-    { icon: "🎂", label: "Tug'ilgan kun", color: "#FF9500", onPress: onOpenBirthdayPicker, value: formatBirthday(user.birthdayDay, user.birthdayMonth) ?? "Belgilanmagan" },
-    { icon: "🕓", label: "Oldingi usernamelar", color: "#8E8E93", onPress: onOpenUsernameHistory },
-    { icon: "📤", label: "Profilni ulashish", color: "#007AFF", onPress: onShare },
-    { icon: "⭐", label: "Saqlangan xabarlar", color: "#FF9500", onPress: () => navigation.navigate("StarredMessages") },
-    { icon: "📊", label: "Mening faolligim", color: "#5856D6", onPress: () => navigation.navigate("MyActivity") },
-    { icon: "@", label: "Eslatishlar", color: "#007AFF", onPress: () => navigation.navigate("Mentions") },
-    { icon: "⏰", label: "Yodga solinganlar", color: "#FF3B30", onPress: () => navigation.navigate("Reminders") },
-    { icon: "🚫", label: "Bloklangan foydalanuvchilar", color: "#FF3B30", onPress: () => navigation.navigate("BlockedUsers") },
+    { icon: "🎂", label: tr("Tug'ilgan kun"), color: "#FF9500", onPress: onOpenBirthdayPicker, value: formatBirthday(user.birthdayDay, user.birthdayMonth) ?? "Belgilanmagan" },
+    { icon: "🕓", label: tr("Oldingi usernamelar"), color: "#8E8E93", onPress: onOpenUsernameHistory },
+    { icon: "📤", label: tr("Profilni ulashish"), color: "#007AFF", onPress: onShare },
+    { icon: "⭐", label: tr("Saqlangan xabarlar"), color: "#FF9500", onPress: () => navigation.navigate("StarredMessages") },
+    { icon: "📊", label: tr("Mening faolligim"), color: "#5856D6", onPress: () => navigation.navigate("MyActivity") },
+    { icon: "@", label: tr("Eslatishlar"), color: "#007AFF", onPress: () => navigation.navigate("Mentions") },
+    { icon: "⏰", label: tr("Yodga solinganlar"), color: "#FF3B30", onPress: () => navigation.navigate("Reminders") },
+    { icon: "🚫", label: tr("Bloklangan foydalanuvchilar"), color: "#FF3B30", onPress: () => navigation.navigate("BlockedUsers") },
   ];
 
   const securityItems: MenuItem[] = [
-    { icon: "🔑", label: "Parolni o'zgartirish", color: "#FF9500", onPress: () => navigation.navigate("ChangePassword") },
-    { icon: "📱", label: "Telefon raqamni o'zgartirish", color: "#34C759", onPress: () => navigation.navigate("ChangePhone") },
-    { icon: "🕒", label: "Oxirgi marta onlayn", color: "#5856D6", onPress: () => navigation.navigate("PrivacySettings") },
-    { icon: "🛡️", label: "Ikki bosqichli tekshiruv", color: "#007AFF", onPress: () => navigation.navigate("TwoFactorSettings") },
-    { icon: "💻", label: "Faol seanslar", color: "#32ADE6", onPress: () => navigation.navigate("ActiveSessions") },
+    { icon: "🔑", label: tr("Parolni o'zgartirish"), color: "#FF9500", onPress: () => navigation.navigate("ChangePassword") },
+    { icon: "📱", label: tr("Telefon raqamni o'zgartirish"), color: "#34C759", onPress: () => navigation.navigate("ChangePhone") },
+    { icon: "🕒", label: tr("Oxirgi marta onlayn"), color: "#5856D6", onPress: () => navigation.navigate("PrivacySettings") },
+    { icon: "🛡️", label: tr("Ikki bosqichli tekshiruv"), color: "#007AFF", onPress: () => navigation.navigate("TwoFactorSettings") },
+    { icon: "💻", label: tr("Faol seanslar"), color: "#32ADE6", onPress: () => navigation.navigate("ActiveSessions") },
   ];
 
   const settingsItems: MenuItem[] = [
-    { icon: "🔔", label: "Bildirishnomalar", color: "#FF3B30", onPress: () => navigation.navigate("NotificationSettings") },
-    { icon: "🔐", label: "Ilovani qulflash", color: "#FF9500", onPress: () => navigation.navigate("AppLockSettings") },
-    { icon: "🎨", label: "Mavzu", color: "#AF52DE", onPress: () => navigation.navigate("ThemeSettings") },
+    { icon: "🔔", label: tr("Bildirishnomalar"), color: "#FF3B30", onPress: () => navigation.navigate("NotificationSettings") },
+    { icon: "🔐", label: tr("Ilovani qulflash"), color: "#FF9500", onPress: () => navigation.navigate("AppLockSettings") },
+    { icon: "🎨", label: tr("Mavzu"), color: "#AF52DE", onPress: () => navigation.navigate("ThemeSettings") },
     { icon: "🌐", label: t("language"), color: "#32ADE6", onPress: () => navigation.navigate("LanguageSettings") },
-    { icon: "📱", label: "QR kod", color: "#007AFF", onPress: () => navigation.navigate("QRCode") },
-    { icon: "🔑", label: "Qurilma kalitlari", color: "#8E8E93", onPress: () => navigation.navigate("DeviceKeys") },
-    { icon: "🔤", label: "Matn hajmi", color: "#34C759", onPress: () => navigation.navigate("ChatTextSize") },
+    { icon: "📱", label: tr("QR kod"), color: "#007AFF", onPress: () => navigation.navigate("QRCode") },
+    { icon: "🔑", label: tr("Qurilma kalitlari"), color: "#8E8E93", onPress: () => navigation.navigate("DeviceKeys") },
+    { icon: "🔤", label: tr("Matn hajmi"), color: "#34C759", onPress: () => navigation.navigate("ChatTextSize") },
   ];
 
   const servicesItems: MenuItem[] = [
-    { icon: "💰", label: "Hamyon", color: "#007AFF", onPress: () => navigation.navigate("Wallet") },
-    { icon: "🧩", label: "Mini-dasturlar", color: "#5856D6", onPress: () => navigation.navigate("MiniApps") },
-    { icon: "📰", label: "Yangiliklar", color: "#32ADE6", onPress: () => navigation.navigate("Feed") },
-    { icon: "🛒", label: "Bozor", color: "#34C759", onPress: () => navigation.navigate("Marketplace") },
-    { icon: "🧧", label: "Qizil konvert", color: "#FF3B30", onPress: () => navigation.navigate("SendRedPacket") },
-    { icon: "📞", label: "Qo'ng'iroqlar tarixi", color: "#32ADE6", onPress: () => navigation.navigate("CallHistory") },
-    { icon: "💬", label: "Tezkor javoblar", color: "#007AFF", onPress: () => navigation.navigate("QuickReplies") },
-    { icon: "📦", label: "Xotira va kesh", color: "#FF9500", onPress: () => navigation.navigate("StorageUsage") },
-    { icon: "🛡️", label: "Fayl xavfsizligi", color: "#FF3B30", onPress: () => navigation.navigate("FileSecurity") },
-    { icon: "📥", label: "Mening ma'lumotlarim", color: "#5856D6", onPress: () => navigation.navigate("AccountDataExport") },
+    { icon: "💰", label: tr("Hamyon"), color: "#007AFF", onPress: () => navigation.navigate("Wallet") },
+    { icon: "🧩", label: tr("Mini-dasturlar"), color: "#5856D6", onPress: () => navigation.navigate("MiniApps") },
+    { icon: "📰", label: tr("Yangiliklar"), color: "#32ADE6", onPress: () => navigation.navigate("Feed") },
+    { icon: "🛒", label: tr("Bozor"), color: "#34C759", onPress: () => navigation.navigate("Marketplace") },
+    { icon: "🧧", label: tr("Qizil konvert"), color: "#FF3B30", onPress: () => navigation.navigate("SendRedPacket") },
+    { icon: "📞", label: tr("Qo'ng'iroqlar tarixi"), color: "#32ADE6", onPress: () => navigation.navigate("CallHistory") },
+    { icon: "💬", label: tr("Tezkor javoblar"), color: "#007AFF", onPress: () => navigation.navigate("QuickReplies") },
+    { icon: "📦", label: tr("Xotira va kesh"), color: "#FF9500", onPress: () => navigation.navigate("StorageUsage") },
+    { icon: "🛡️", label: tr("Fayl xavfsizligi"), color: "#FF3B30", onPress: () => navigation.navigate("FileSecurity") },
+    { icon: "📥", label: tr("Mening ma'lumotlarim"), color: "#5856D6", onPress: () => navigation.navigate("AccountDataExport") },
   ];
 
   const extraItems: MenuItem[] = [
-    { icon: "💬", label: "Avtomatik javob", color: "#007AFF", onPress: () => navigation.navigate("AutoReplySettings") },
-    { icon: "💼", label: "Biznes profil", color: "#34C759", onPress: () => navigation.navigate("BusinessProfile") },
-    { icon: "☁️", label: "Bulut xotira", color: "#32ADE6", onPress: () => navigation.navigate("CloudStorage") },
-    { icon: "🎁", label: "Taklifnoma", color: "#FF9500", onPress: () => navigation.navigate("Referrals") },
-    { icon: "🏅", label: "Belgilar", color: "#FF9500", onPress: () => navigation.navigate("Badges") },
-    { icon: "🎀", label: "Sovg'alar", color: "#FF2D55", onPress: () => navigation.navigate("Gifts") },
-    { icon: "💎", label: "Sodiqlik ballari", color: "#AF52DE", onPress: () => navigation.navigate("Loyalty") },
-    { icon: "🔔", label: "Bildirishnomalar tarixi", color: "#FF3B30", onPress: () => navigation.navigate("NotificationLog") },
-    { icon: "❓", label: "Yordam markazi", color: "#8E8E93", onPress: () => navigation.navigate("Faq") },
-    { icon: "ℹ️", label: "UzChat haqida", color: "#007AFF", onPress: () => navigation.navigate("About") },
+    { icon: "💬", label: tr("Avtomatik javob"), color: "#007AFF", onPress: () => navigation.navigate("AutoReplySettings") },
+    { icon: "💼", label: tr("Biznes profil"), color: "#34C759", onPress: () => navigation.navigate("BusinessProfile") },
+    { icon: "☁️", label: tr("Bulut xotira"), color: "#32ADE6", onPress: () => navigation.navigate("CloudStorage") },
+    { icon: "🎁", label: tr("Taklifnoma"), color: "#FF9500", onPress: () => navigation.navigate("Referrals") },
+    { icon: "🏅", label: tr("Belgilar"), color: "#FF9500", onPress: () => navigation.navigate("Badges") },
+    { icon: "🎀", label: tr("Sovg'alar"), color: "#FF2D55", onPress: () => navigation.navigate("Gifts") },
+    { icon: "💎", label: tr("Sodiqlik ballari"), color: "#AF52DE", onPress: () => navigation.navigate("Loyalty") },
+    { icon: "🔔", label: tr("Bildirishnomalar tarixi"), color: "#FF3B30", onPress: () => navigation.navigate("NotificationLog") },
+    { icon: "❓", label: tr("Yordam markazi"), color: "#8E8E93", onPress: () => navigation.navigate("Faq") },
+    { icon: "ℹ️", label: tr("UzChat haqida"), color: "#007AFF", onPress: () => navigation.navigate("About") },
   ];
 
   return (
@@ -343,32 +339,32 @@ export function ProfileScreen({ navigation }: Props) {
           <View style={[styles.quickActionIconBg, { backgroundColor: "#FF9500" + "18" }]}>
             <Text style={styles.quickActionIcon}>📷</Text>
           </View>
-          <Text style={styles.quickActionLabel}>Hikoyalar</Text>
+          <Text style={styles.quickActionLabel}>{tr("Hikoyalar")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("Contacts")}>
           <View style={[styles.quickActionIconBg, { backgroundColor: "#5856D6" + "18" }]}>
             <Text style={styles.quickActionIcon}>👥</Text>
           </View>
-          <Text style={styles.quickActionLabel}>Kontaktlar</Text>
+          <Text style={styles.quickActionLabel}>{tr("Kontaktlar")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickAction} onPress={() => navigation.navigate("Wallet")}>
           <View style={[styles.quickActionIconBg, { backgroundColor: "#007AFF" + "18" }]}>
             <Text style={styles.quickActionIcon}>💰</Text>
           </View>
-          <Text style={styles.quickActionLabel}>Hamyon</Text>
+          <Text style={styles.quickActionLabel}>{tr("Hamyon")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickAction} onPress={onShare}>
           <View style={[styles.quickActionIconBg, { backgroundColor: "#34C759" + "18" }]}>
             <Text style={styles.quickActionIcon}>📤</Text>
           </View>
-          <Text style={styles.quickActionLabel}>Ulashish</Text>
+          <Text style={styles.quickActionLabel}>{tr("Ulashish")}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.editCard}>
-        <Text style={styles.editCardTitle}>Profilni tahrirlash</Text>
+        <Text style={styles.editCardTitle}>{tr("Profilni tahrirlash")}</Text>
 
-        <Text style={styles.label}>Username</Text>
+        <Text style={styles.label}>{tr("Username")}</Text>
         <View style={styles.usernameInputRow}>
           <Text style={styles.usernamePrefix}>@</Text>
           <TextInput
@@ -383,23 +379,23 @@ export function ProfileScreen({ navigation }: Props) {
           {usernameStatus === "available" && <Text style={[styles.usernameStatusIcon, styles.usernameAvailable]}>✓</Text>}
           {usernameStatus === "taken" && <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>}
         </View>
-        {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
-        {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>}
+        {usernameStatus === "taken" && <Text style={styles.usernameHint}>{tr("Bu username band")}</Text>}
+        {usernameStatus === "available" && <Text style={[styles.usernameHint, styles.usernameAvailable]}>{tr("Username bo'sh")}</Text>}
         {usernameCooldownRemainingDays > 0 && (
           <Text style={styles.usernameCooldownHint}>
             Username {USERNAME_CHANGE_COOLDOWN_DAYS} kunda bir marta o'zgartiriladi. Yana {usernameCooldownRemainingDays} kundan keyin o'zgartirishingiz mumkin
           </Text>
         )}
 
-        <Text style={styles.label}>Ism</Text>
+        <Text style={styles.label}>{tr("Ism")}</Text>
         <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} maxLength={64} />
 
-        <Text style={styles.label}>Holat</Text>
+        <Text style={styles.label}>{tr("Holat")}</Text>
         <TextInput
           style={styles.input}
           value={customStatus}
           onChangeText={setCustomStatus}
-          placeholder="Masalan: 📚 Mashg'ulotda"
+          placeholder={tr("Masalan: 📚 Mashg'ulotda")}
           placeholderTextColor={colors.textSecondary}
           maxLength={70}
         />
@@ -413,12 +409,12 @@ export function ProfileScreen({ navigation }: Props) {
           <Text style={styles.statusExpiryText}>{formatCustomStatusExpiry(user.customStatusExpiresAt)}</Text>
         )}
 
-        <Text style={styles.label}>Bio</Text>
+        <Text style={styles.label}>{tr("Bio")}</Text>
         <TextInput style={[styles.input, styles.bioInput]} value={bio} onChangeText={setBio} multiline maxLength={256} />
         <Text style={styles.charCounter}>{bio.length}/256</Text>
 
         <TouchableOpacity style={styles.saveButton} onPress={onSave} disabled={saving} activeOpacity={0.7}>
-          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Saqlash</Text>}
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>{tr("Saqlash")}</Text>}
         </TouchableOpacity>
       </View>
 
@@ -427,8 +423,8 @@ export function ProfileScreen({ navigation }: Props) {
           <Text style={styles.menuIconEmoji}>🔒</Text>
         </View>
         <View style={styles.securityBannerText}>
-          <Text style={styles.securityTitle}>End-to-End shifrlash</Text>
-          <Text style={styles.securityDesc}>Xabarlaringiz qurilmangizda shifrlanadi va faqat suhbatdoshingiz ochishi mumkin</Text>
+          <Text style={styles.securityTitle}>{tr("End-to-End shifrlash")}</Text>
+          <Text style={styles.securityDesc}>{tr("Xabarlaringiz qurilmangizda shifrlanadi va faqat suhbatdoshingiz ochishi mumkin")}</Text>
         </View>
       </View>
 
@@ -440,14 +436,14 @@ export function ProfileScreen({ navigation }: Props) {
 
       {user?.isAdmin && (
         <View style={styles.menuGroup}>
-          <Text style={styles.sectionTitle}>Boshqaruv</Text>
+          <Text style={styles.sectionTitle}>{tr("Boshqaruv")}</Text>
           <View style={styles.menuCard}>
             <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate("AdminDashboard")} activeOpacity={0.6}>
               <View style={[styles.menuIconBg, { backgroundColor: "#FF3B30" + "18" }]}>
                 <Text style={styles.menuIconEmoji}>🛡️</Text>
               </View>
-              <Text style={styles.menuRowText}>Admin panel</Text>
-              <View style={styles.adminBadge}><Text style={styles.adminBadgeText}>ADMIN</Text></View>
+              <Text style={styles.menuRowText}>{tr("Admin panel")}</Text>
+              <View style={styles.adminBadge}><Text style={styles.adminBadgeText}>{tr("ADMIN")}</Text></View>
               <Text style={styles.menuRowArrow}>›</Text>
             </TouchableOpacity>
           </View>
@@ -455,17 +451,17 @@ export function ProfileScreen({ navigation }: Props) {
       )}
 
       <TouchableOpacity style={styles.logoutButton} onPress={onLogout} activeOpacity={0.6}>
-        <Text style={styles.logoutText}>Chiqish</Text>
+        <Text style={styles.logoutText}>{tr("Chiqish")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.deleteAccountButton} onPress={onDeleteAccount} activeOpacity={0.6}>
-        <Text style={styles.deleteAccountText}>Hisobni o'chirish</Text>
+        <Text style={styles.deleteAccountText}>{tr("Hisobni o'chirish")}</Text>
       </TouchableOpacity>
 
       <Modal visible={birthdayModalVisible} transparent animationType="fade" onRequestClose={() => setBirthdayModalVisible(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setBirthdayModalVisible(false)}>
           <Pressable style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Tug'ilgan kun</Text>
+            <Text style={styles.modalTitle}>{tr("Tug'ilgan kun")}</Text>
             <View style={styles.birthdayPickerRow}>
               <FlatList
                 data={DAYS.slice(0, MAX_DAYS_IN_MONTH[pickedMonth - 1])}
@@ -509,17 +505,17 @@ export function ProfileScreen({ navigation }: Props) {
             <View style={styles.modalButtonRow}>
               {(user.birthdayDay != null || user.birthdayMonth != null) && (
                 <TouchableOpacity style={styles.modalBtn} onPress={onClearBirthday} disabled={savingBirthday}>
-                  <Text style={styles.modalBtnDanger}>O'chirish</Text>
+                  <Text style={styles.modalBtnDanger}>{tr("O'chirish")}</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.modalBtn} onPress={() => setBirthdayModalVisible(false)} disabled={savingBirthday}>
-                <Text style={styles.modalBtnText}>Bekor qilish</Text>
+                <Text style={styles.modalBtnText}>{tr("Bekor qilish")}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalBtn} onPress={onSaveBirthday} disabled={savingBirthday}>
                 {savingBirthday ? (
                   <ActivityIndicator color={colors.primary} />
                 ) : (
-                  <Text style={[styles.modalBtnText, styles.modalBtnPrimary]}>Saqlash</Text>
+                  <Text style={[styles.modalBtnText, styles.modalBtnPrimary]}>{tr("Saqlash")}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -535,11 +531,11 @@ export function ProfileScreen({ navigation }: Props) {
       >
         <Pressable style={styles.modalBackdrop} onPress={() => setUsernameHistoryVisible(false)}>
           <Pressable style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Oldingi usernamelar</Text>
+            <Text style={styles.modalTitle}>{tr("Oldingi usernamelar")}</Text>
             {loadingUsernameHistory ? (
               <ActivityIndicator color={colors.primary} style={styles.usernameHistoryLoading} />
             ) : usernameHistory.length === 0 ? (
-              <Text style={styles.usernameHistoryEmpty}>Username hali o'zgartirilmagan</Text>
+              <Text style={styles.usernameHistoryEmpty}>{tr("Username hali o'zgartirilmagan")}</Text>
             ) : (
               <FlatList
                 data={usernameHistory}
@@ -556,7 +552,7 @@ export function ProfileScreen({ navigation }: Props) {
               />
             )}
             <TouchableOpacity style={styles.modalBtn} onPress={() => setUsernameHistoryVisible(false)}>
-              <Text style={[styles.modalBtnText, styles.modalBtnPrimary]}>Yopish</Text>
+              <Text style={[styles.modalBtnText, styles.modalBtnPrimary]}>{tr("Yopish")}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>

@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewChat">;
 
@@ -48,16 +49,16 @@ export function NewChatScreen({ navigation }: Props) {
       const conversation = await createDirectConversation(contact.user);
       navigation.replace("ChatRoom", { conversationId: conversation.id, title: contact.user.displayName });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Suhbat yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Suhbat yaratib bo'lmadi");
     }
   };
 
   const onSavedMessages = async () => {
     try {
       const conversation = await getOrCreateSavedMessages();
-      navigation.replace("ChatRoom", { conversationId: conversation.id, title: "Shaxsiy yozuvlar" });
+      navigation.replace("ChatRoom", { conversationId: conversation.id, title: tr("Shaxsiy yozuvlar") });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Ochib bo'lmadi");
     }
   };
 
@@ -70,7 +71,7 @@ export function NewChatScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadContacts(); }} />;
+    return <ErrorView message={tr("Kontaktlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadContacts(); }} />;
   }
 
   return (
@@ -79,37 +80,37 @@ export function NewChatScreen({ navigation }: Props) {
         <View style={styles.groupIcon}>
           <Text style={styles.groupIconText}>👥</Text>
         </View>
-        <Text style={styles.actionText}>Yangi guruh</Text>
+        <Text style={styles.actionText}>{tr("Yangi guruh")}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("NewChannel")}>
         <View style={styles.groupIcon}>
           <Text style={styles.groupIconText}>📣</Text>
         </View>
-        <Text style={styles.actionText}>Yangi kanal</Text>
+        <Text style={styles.actionText}>{tr("Yangi kanal")}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("AddContact")}>
         <View style={styles.groupIcon}>
           <Text style={styles.groupIconText}>➕</Text>
         </View>
-        <Text style={styles.actionText}>Kontakt qo'shish</Text>
+        <Text style={styles.actionText}>{tr("Kontakt qo'shish")}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("JoinGroup")}>
         <View style={styles.groupIcon}>
           <Text style={styles.groupIconText}>🔗</Text>
         </View>
-        <Text style={styles.actionText}>Havola orqali qo'shilish</Text>
+        <Text style={styles.actionText}>{tr("Havola orqali qo'shilish")}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionRow} onPress={onSavedMessages}>
         <View style={styles.groupIcon}>
           <Text style={styles.groupIconText}>📝</Text>
         </View>
-        <Text style={styles.actionText}>Shaxsiy yozuvlar</Text>
+        <Text style={styles.actionText}>{tr("Shaxsiy yozuvlar")}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("BroadcastLists")}>
         <View style={styles.groupIcon}>
           <Text style={styles.groupIconText}>📢</Text>
         </View>
-        <Text style={styles.actionText}>Tarqatish ro'yxatlari</Text>
+        <Text style={styles.actionText}>{tr("Tarqatish ro'yxatlari")}</Text>
       </TouchableOpacity>
 
       {contacts.length > 0 && (
@@ -117,7 +118,7 @@ export function NewChatScreen({ navigation }: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}

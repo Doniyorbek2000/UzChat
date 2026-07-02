@@ -237,6 +237,7 @@ export function RootNavigator() {
   const quickRepliesBootstrap = useQuickRepliesStore((s) => s.bootstrap);
   const themeBootstrap = useThemeStore((s) => s.bootstrap);
   const i18nBootstrap = useI18nStore((s) => s.bootstrap);
+  const locale = useI18nStore((s) => s.locale);
 
   useEffect(() => {
     bootstrap();
@@ -398,7 +399,7 @@ export function RootNavigator() {
     <ErrorBoundary>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={themeColors.surface} />
       <OfflineBanner />
-      <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
+      <NavigationContainer key={locale} ref={navigationRef} theme={navTheme} linking={linking}>
         {isAuthenticated ? (
           <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: themeColors.surface }, headerTintColor: themeColors.text }}>
             <Stack.Screen name="MainTabs" component={MainNavigator} options={{ title: "UzChat" }} />

@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { referralsApi, ReferralData, ReferralStats } from "../../api/referrals";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Referrals">;
 
@@ -40,7 +41,7 @@ export function ReferralsScreen(_props: Props) {
   };
 
   const copyCode = () => {
-    Alert.alert("Kod nusxalandi", code);
+    Alert.alert(tr("Kod nusxalandi"), code);
   };
 
   if (loading) {
@@ -52,20 +53,20 @@ export function ReferralsScreen(_props: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Ma'lumotlarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Ma'lumotlarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.codeCard}>
-        <Text style={styles.codeLabel}>Sizning taklif kodingiz</Text>
+        <Text style={styles.codeLabel}>{tr("Sizning taklif kodingiz")}</Text>
         <Text style={styles.code}>{code}</Text>
         <View style={styles.codeActions}>
           <TouchableOpacity style={styles.codeBtn} onPress={copyCode} activeOpacity={0.7}>
-            <Text style={styles.codeBtnText}>📋 Nusxalash</Text>
+            <Text style={styles.codeBtnText}>{tr("📋 Nusxalash")}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.codeBtn, styles.shareBtn]} onPress={shareCode} activeOpacity={0.7}>
-            <Text style={[styles.codeBtnText, styles.shareBtnText]}>📤 Ulashish</Text>
+            <Text style={[styles.codeBtnText, styles.shareBtnText]}>{tr("📤 Ulashish")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -77,19 +78,19 @@ export function ReferralsScreen(_props: Props) {
               <Text style={styles.statIcon}>👥</Text>
             </View>
             <Text style={styles.statValue}>{stats.totalReferrals}</Text>
-            <Text style={styles.statLabel}>Takliflar</Text>
+            <Text style={styles.statLabel}>{tr("Takliflar")}</Text>
           </View>
           <View style={styles.statCard}>
             <View style={[styles.statIconContainer, { backgroundColor: "#34C759" + "15" }]}>
               <Text style={styles.statIcon}>🎁</Text>
             </View>
             <Text style={styles.statValue}>{stats.totalRewards.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>Mukofotlar</Text>
+            <Text style={styles.statLabel}>{tr("Mukofotlar")}</Text>
           </View>
         </View>
       )}
 
-      <Text style={styles.sectionTitle}>Taklif qilinganlar</Text>
+      <Text style={styles.sectionTitle}>{tr("Taklif qilinganlar")}</Text>
       <FlatList
         data={referrals}
         keyExtractor={(item) => item.id}
@@ -114,8 +115,8 @@ export function ReferralsScreen(_props: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🎁</Text>
-            <Text style={styles.emptyTitle}>Hali hech kim taklif qilinmagan</Text>
-            <Text style={styles.emptyHint}>Kodingizni do'stlaringizga ulashing</Text>
+            <Text style={styles.emptyTitle}>{tr("Hali hech kim taklif qilinmagan")}</Text>
+            <Text style={styles.emptyHint}>{tr("Kodingizni do'stlaringizga ulashing")}</Text>
           </View>
         }
       />

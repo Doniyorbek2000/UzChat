@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { miniAppsApi, MiniApp } from "../../api/miniapps";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MiniApps">;
 
@@ -30,18 +31,18 @@ const CATEGORY_CONFIG: Record<string, { icon: string; color: string }> = {
 };
 
 const CATEGORIES = [
-  { key: "all", label: "Barchasi" },
-  { key: "mine", label: "Mening" },
-  { key: "transport", label: "Transport" },
-  { key: "food", label: "Ovqat" },
-  { key: "health", label: "Sog'liq" },
-  { key: "shopping", label: "Xaridlar" },
-  { key: "finance", label: "Moliya" },
-  { key: "games", label: "O'yinlar" },
-  { key: "news", label: "Yangiliklar" },
-  { key: "entertainment", label: "Ko'ngilochar" },
-  { key: "travel", label: "Sayohat" },
-  { key: "other", label: "Boshqa" },
+  { key: "all", label: tr("Barchasi") },
+  { key: "mine", label: tr("Mening") },
+  { key: "transport", label: tr("Transport") },
+  { key: "food", label: tr("Ovqat") },
+  { key: "health", label: tr("Sog'liq") },
+  { key: "shopping", label: tr("Xaridlar") },
+  { key: "finance", label: tr("Moliya") },
+  { key: "games", label: tr("O'yinlar") },
+  { key: "news", label: tr("Yangiliklar") },
+  { key: "entertainment", label: tr("Ko'ngilochar") },
+  { key: "travel", label: tr("Sayohat") },
+  { key: "other", label: tr("Boshqa") },
 ];
 
 export function MiniAppsScreen({ navigation }: Props) {
@@ -116,7 +117,7 @@ export function MiniAppsScreen({ navigation }: Props) {
           </View>
         </View>
         <View style={styles.openBtnContainer}>
-          <Text style={styles.openBtnText}>Ochish</Text>
+          <Text style={styles.openBtnText}>{tr("Ochish")}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -128,7 +129,7 @@ export function MiniAppsScreen({ navigation }: Props) {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Mini-dastur qidirish..."
+          placeholder={tr("Mini-dastur qidirish...")}
           returnKeyType="search"
           placeholderTextColor={colors.textSecondary}
           value={search}
@@ -179,13 +180,13 @@ export function MiniAppsScreen({ navigation }: Props) {
           {renderHeader()}
           <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>Yuklanmoqda...</Text>
+            <Text style={styles.loadingText}>{tr("Yuklanmoqda...")}</Text>
           </View>
         </>
       ) : error ? (
         <>
           {renderHeader()}
-          <ErrorView message="Mini-dasturlarni yuklab bo'lmadi" onRetry={loadApps} />
+          <ErrorView message={tr("Mini-dasturlarni yuklab bo'lmadi")} onRetry={loadApps} />
         </>
       ) : (
         <FlatList

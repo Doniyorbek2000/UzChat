@@ -10,6 +10,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { InvitePreview, MyGroupJoinRequest } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "JoinGroup">;
 
@@ -43,7 +44,7 @@ export function JoinGroupScreen({ navigation }: Props) {
   const onCheck = async () => {
     const decoded = decodeInviteLink(invite);
     if (!decoded) {
-      Alert.alert("Xatolik", "Taklif havolasi noto'g'ri formatda");
+      Alert.alert(tr("Xatolik"), tr("Taklif havolasi noto'g'ri formatda"));
       return;
     }
     setLoading(true);
@@ -52,7 +53,7 @@ export function JoinGroupScreen({ navigation }: Props) {
       const result = await chatsApi.getInvitePreview(decoded.code);
       setPreview(result);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Havola topilmadi yoki eskirgan");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Havola topilmadi yoki eskirgan");
     } finally {
       setLoading(false);
     }
@@ -63,7 +64,7 @@ export function JoinGroupScreen({ navigation }: Props) {
     try {
       const result = await joinConversationByInvite(invite);
       if ("pending" in result) {
-        Alert.alert("So'rov yuborildi", "Guruhga qo'shilish so'rovingiz adminga yuborildi. Tasdiqlanganda xabar olasiz.");
+        Alert.alert(tr("So'rov yuborildi"), tr("Guruhga qo'shilish so'rovingiz adminga yuborildi. Tasdiqlanganda xabar olasiz."));
         setInvite("");
         setPreview(null);
         loadMyRequests();
@@ -71,7 +72,7 @@ export function JoinGroupScreen({ navigation }: Props) {
       }
       navigation.replace("ChatRoom", { conversationId: result.id, title: result.title ?? "" });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Guruhga qo'shilib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Guruhga qo'shilib bo'lmadi");
     } finally {
       setJoining(false);
     }
@@ -79,7 +80,7 @@ export function JoinGroupScreen({ navigation }: Props) {
 
   return (
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>Taklif havolasini joylashtiring</Text>
+      <Text style={styles.label}>{tr("Taklif havolasini joylashtiring")}</Text>
       <TextInput
         style={styles.input}
         value={invite}
@@ -87,7 +88,7 @@ export function JoinGroupScreen({ navigation }: Props) {
           setInvite(text);
           setPreview(null);
         }}
-        placeholder="Masalan: AbCdEfGh.k1l2m3..."
+        placeholder={tr("Masalan: AbCdEfGh.k1l2m3...")}
         placeholderTextColor={colors.textSecondary}
         autoCapitalize="none"
         autoCorrect={false}
@@ -99,7 +100,7 @@ export function JoinGroupScreen({ navigation }: Props) {
         onPress={onCheck}
         disabled={!invite.trim() || loading}
       >
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tekshirish</Text>}
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Tekshirish")}</Text>}
       </TouchableOpacity>
 
       {preview && (
@@ -109,7 +110,7 @@ export function JoinGroupScreen({ navigation }: Props) {
           {preview.description ? <Text style={styles.previewDescription}>{preview.description}</Text> : null}
           <Text style={styles.previewMembers}>{preview.memberCount} a'zo</Text>
           <TouchableOpacity style={styles.button} onPress={onJoin} disabled={joining}>
-            {joining ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Guruhga qo'shilish</Text>}
+            {joining ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Guruhga qo'shilish")}</Text>}
           </TouchableOpacity>
         </View>
       )}
@@ -117,22 +118,22 @@ export function JoinGroupScreen({ navigation }: Props) {
       {requestsError && (
         <View style={styles.requestsSection}>
           <TouchableOpacity onPress={loadMyRequests}>
-            <Text style={[styles.requestsTitle, { color: colors.danger }]}>So'rovlarni yuklab bo'lmadi. Qayta urinish</Text>
+            <Text style={[styles.requestsTitle, { color: colors.danger }]}>{tr("So'rovlarni yuklab bo'lmadi. Qayta urinish")}</Text>
           </TouchableOpacity>
         </View>
       )}
       {myRequests.length > 0 && (
         <View style={styles.requestsSection}>
-          <Text style={styles.requestsTitle}>Yuborilgan so'rovlar</Text>
+          <Text style={styles.requestsTitle}>{tr("Yuborilgan so'rovlar")}</Text>
           {myRequests.map((req) => (
             <View key={req.id} style={styles.requestRow}>
               <Avatar uri={req.conversation.avatarUrl} name={req.conversation.title ?? "Guruh"} size={44} />
               <View style={styles.requestInfo}>
                 <Text style={styles.requestName}>{req.conversation.title}</Text>
-                <Text style={styles.requestStatus}>Tasdiqlash kutilmoqda</Text>
+                <Text style={styles.requestStatus}>{tr("Tasdiqlash kutilmoqda")}</Text>
               </View>
               <TouchableOpacity style={styles.cancelButton} onPress={() => onCancelRequest(req.id)}>
-                <Text style={styles.cancelButtonText}>Bekor qilish</Text>
+                <Text style={styles.cancelButtonText}>{tr("Bekor qilish")}</Text>
               </TouchableOpacity>
             </View>
           ))}

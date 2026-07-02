@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useChatStore } from "../../store/chatStore";
 import { colors } from "../../theme/colors";
 import { ChatFolder } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatFolders">;
 
@@ -38,14 +39,14 @@ export function ChatFoldersScreen({ navigation }: Props) {
     const name = newName.trim();
     if (!name) return;
     if (folders.length >= MAX_FOLDERS) {
-      Alert.alert("Xatolik", `Ko'pi bilan ${MAX_FOLDERS} ta papka yaratish mumkin`);
+      Alert.alert(tr("Xatolik"), `Ko'pi bilan ${MAX_FOLDERS} ta papka yaratish mumkin`);
       return;
     }
     try {
       await createFolder(name);
       setNewName("");
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Papka yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Papka yaratib bo'lmadi");
     }
   };
 
@@ -56,9 +57,9 @@ export function ChatFoldersScreen({ navigation }: Props) {
   };
 
   const onDelete = (folder: ChatFolder) => {
-    Alert.alert("Papkani o'chirish", `"${folder.name}" papkasini o'chirmoqchimisiz?`, [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "O'chirish", style: "destructive", onPress: () => deleteFolder(folder.id).catch(() => {}) },
+    Alert.alert(tr("Papkani o'chirish"), `"${folder.name}" papkasini o'chirmoqchimisiz?`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("O'chirish"), style: "destructive", onPress: () => deleteFolder(folder.id).catch(() => {}) },
     ]);
   };
 
@@ -111,7 +112,7 @@ export function ChatFoldersScreen({ navigation }: Props) {
         ItemSeparatorComponent={Separator}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Hali papkalar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Hali papkalar yo'q")}</Text>
           </View>
         }
         ListFooterComponent={
@@ -119,7 +120,7 @@ export function ChatFoldersScreen({ navigation }: Props) {
             <View style={styles.addRow}>
               <TextInput
                 style={styles.addInput}
-                placeholder="Yangi papka nomi"
+                placeholder={tr("Yangi papka nomi")}
                 placeholderTextColor={colors.textSecondary}
                 value={newName}
                 onChangeText={setNewName}
@@ -127,7 +128,7 @@ export function ChatFoldersScreen({ navigation }: Props) {
                 returnKeyType="done"
               />
               <TouchableOpacity style={styles.addButton} onPress={onCreate}>
-                <Text style={styles.addButtonText}>Qo'shish</Text>
+                <Text style={styles.addButtonText}>{tr("Qo'shish")}</Text>
               </TouchableOpacity>
             </View>
           ) : null
@@ -136,7 +137,7 @@ export function ChatFoldersScreen({ navigation }: Props) {
       <Modal visible={!!iconPickerFolderId} transparent animationType="fade" onRequestClose={() => setIconPickerFolderId(null)}>
         <Pressable style={styles.iconPickerBackdrop} onPress={() => setIconPickerFolderId(null)}>
           <View style={styles.iconPickerSheet}>
-            <Text style={styles.iconPickerTitle}>Papka belgisi</Text>
+            <Text style={styles.iconPickerTitle}>{tr("Papka belgisi")}</Text>
             <View style={styles.iconPickerGrid}>
               <TouchableOpacity
                 style={styles.iconOption}

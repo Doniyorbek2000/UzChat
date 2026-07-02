@@ -7,6 +7,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { CommonGroup } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CommonGroups">;
 
@@ -43,7 +44,7 @@ export function CommonGroupsScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Umumiy guruhlarni yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Umumiy guruhlarni yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -69,7 +70,7 @@ export function CommonGroupsScreen({ route, navigation }: Props) {
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Umumiy guruhlar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Umumiy guruhlar yo'q")}</Text>
           </View>
         }
       />

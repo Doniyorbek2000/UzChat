@@ -23,6 +23,7 @@ import { contactsApi } from "../../api/contacts";
 import { BroadcastList, Contact, Conversation } from "../../types";
 import { getConversationDisplay } from "../../utils/conversation";
 import { recentForwardTargetsStorage } from "../../storage/recentForwardTargetsStorage";
+import { tr } from "../../i18n";
 
 const MAX_RECENT_TARGETS = 8;
 
@@ -158,11 +159,11 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
       }
       await recordRecentTargets(usedTargetIds);
       if (delivered === 0) {
-        Alert.alert("Xatolik", "Xabarni yo'naltirib bo'lmadi");
+        Alert.alert(tr("Xatolik"), tr("Xabarni yo'naltirib bo'lmadi"));
         return;
       }
       if (failed > 0) {
-        Alert.alert("Yo'naltirildi", `${delivered} ta suhbatga yuborildi, ${failed} tasiga yuborilmadi`);
+        Alert.alert(tr("Yo'naltirildi"), `${delivered} ta suhbatga yuborildi, ${failed} tasiga yuborilmadi`);
       }
       navigation.goBack();
     } finally {
@@ -234,7 +235,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}
@@ -256,7 +257,7 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
         ListHeaderComponent={
           !search.trim() && recentConversations.length > 0 ? (
             <View>
-              <Text style={styles.sectionHeader}>Tez-tez yuborilgan</Text>
+              <Text style={styles.sectionHeader}>{tr("Tez-tez yuborilgan")}</Text>
               <FlatList
                 data={recentConversations}
                 horizontal
@@ -265,15 +266,15 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
                 renderItem={({ item }) => renderRecentItem(item)}
                 contentContainerStyle={styles.recentList}
               />
-              {filteredBroadcastLists.length > 0 && <Text style={styles.sectionHeader}>Tarqatish ro'yxatlari</Text>}
+              {filteredBroadcastLists.length > 0 && <Text style={styles.sectionHeader}>{tr("Tarqatish ro'yxatlari")}</Text>}
               {filteredBroadcastLists.map(renderBroadcastItem)}
-              <Text style={styles.sectionHeader}>Suhbatlar</Text>
+              <Text style={styles.sectionHeader}>{tr("Suhbatlar")}</Text>
             </View>
           ) : filteredBroadcastLists.length > 0 ? (
             <View>
-              <Text style={styles.sectionHeader}>Tarqatish ro'yxatlari</Text>
+              <Text style={styles.sectionHeader}>{tr("Tarqatish ro'yxatlari")}</Text>
               {filteredBroadcastLists.map(renderBroadcastItem)}
-              <Text style={styles.sectionHeader}>Suhbatlar</Text>
+              <Text style={styles.sectionHeader}>{tr("Suhbatlar")}</Text>
             </View>
           ) : null
         }
@@ -288,12 +289,12 @@ export function ForwardMessageScreen({ route, navigation }: Props) {
       {totalSelected > 0 && (
         <View style={styles.footer}>
           <View style={styles.hideSenderRow}>
-            <Text style={styles.hideSenderText}>Muallifni yashirish</Text>
+            <Text style={styles.hideSenderText}>{tr("Muallifni yashirish")}</Text>
             <Switch value={hideSender} onValueChange={setHideSender} disabled={sending} />
           </View>
           <TextInput
             style={styles.commentInput}
-            placeholder="Izoh qo'shish (ixtiyoriy)"
+            placeholder={tr("Izoh qo'shish (ixtiyoriy)")}
             placeholderTextColor={colors.textSecondary}
             value={comment}
             onChangeText={setComment}

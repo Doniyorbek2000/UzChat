@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, AppState } from "react-native";
 import { API_URL } from "../config/env";
 import { colors } from "../theme/colors";
+import { tr } from "../i18n";
 
 export function OfflineBanner() {
   const [offline, setOffline] = useState(false);
@@ -39,7 +40,7 @@ export function OfflineBanner() {
 
   return (
     <View style={styles.banner}>
-      <Text style={styles.text}>Internet aloqasi yo'q</Text>
+      <Text style={styles.text}>{tr("Internet aloqasi yo'q")}</Text>
     </View>
   );
 }

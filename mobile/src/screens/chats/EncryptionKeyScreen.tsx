@@ -9,6 +9,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useVerifiedContactsStore } from "../../store/verifiedContactsStore";
 import { getSecurityCode, computeKeyFingerprint } from "../../crypto/e2ee";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EncryptionKey">;
 
@@ -42,12 +43,12 @@ export function EncryptionKeyScreen({ route }: Props) {
   const onCopy = () => {
     if (!securityCode) return;
     Clipboard.setStringAsync(securityCode).catch(() => {});
-    Alert.alert("Nusxalandi", "Xavfsizlik kodi vaqtinchalik xotiraga nusxalandi");
+    Alert.alert(tr("Nusxalandi"), tr("Xavfsizlik kodi vaqtinchalik xotiraga nusxalandi"));
   };
 
   const onCopyFingerprint = (fp: string) => {
     Clipboard.setStringAsync(fp).catch(() => {});
-    Alert.alert("Nusxalandi", "Kalit barmoq izi nusxalandi");
+    Alert.alert(tr("Nusxalandi"), tr("Kalit barmoq izi nusxalandi"));
   };
 
   const isVerified = !!securityCode && verifiedCode === securityCode;
@@ -77,13 +78,13 @@ export function EncryptionKeyScreen({ route }: Props) {
     <View style={styles.container}>
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, tab === "code" && styles.tabActive]} onPress={() => setTab("code")}>
-          <Text style={[styles.tabText, tab === "code" && styles.tabTextActive]}>Xavfsizlik kodi</Text>
+          <Text style={[styles.tabText, tab === "code" && styles.tabTextActive]}>{tr("Xavfsizlik kodi")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, tab === "keys" && styles.tabActive]} onPress={() => setTab("keys")}>
-          <Text style={[styles.tabText, tab === "keys" && styles.tabTextActive]}>Kalitlar</Text>
+          <Text style={[styles.tabText, tab === "keys" && styles.tabTextActive]}>{tr("Kalitlar")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, tab === "log" && styles.tabActive]} onPress={() => setTab("log")}>
-          <Text style={[styles.tabText, tab === "log" && styles.tabTextActive]}>Tarix</Text>
+          <Text style={[styles.tabText, tab === "log" && styles.tabTextActive]}>{tr("Tarix")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -92,13 +93,13 @@ export function EncryptionKeyScreen({ route }: Props) {
       ) : tab === "code" ? (
         <ScrollView contentContainerStyle={styles.content}>
           {!securityCode ? (
-            <Text style={styles.emptyText}>Kodni hisoblab bo'lmadi</Text>
+            <Text style={styles.emptyText}>{tr("Kodni hisoblab bo'lmadi")}</Text>
           ) : (
             <>
               <View style={styles.iconContainer}>
                 <Text style={styles.icon}>🔐</Text>
               </View>
-              <Text style={styles.title}>Xavfsizlik kodi</Text>
+              <Text style={styles.title}>{tr("Xavfsizlik kodi")}</Text>
               <Text style={styles.description}>
                 Bu kod siz va {displayName} o'rtasidagi shifrlash kalitlaridan hisoblanadi. Agar bu kod ikkingizning
                 qurilmalaringizda bir xil bo'lsa, suhbatingiz uchinchi tomon tomonidan kuzatilmayapti degani.
@@ -108,19 +109,19 @@ export function EncryptionKeyScreen({ route }: Props) {
               </View>
               {isVerified && (
                 <View style={styles.verifiedBadge}>
-                  <Text style={styles.verifiedBadgeText}>Tasdiqlangan</Text>
+                  <Text style={styles.verifiedBadgeText}>{tr("Tasdiqlangan")}</Text>
                 </View>
               )}
               {keyChanged && (
                 <View style={styles.warningBadge}>
                   <Text style={styles.warningBadgeText}>
-                    Xavfsizlik kodi o'zgardi! Avval tasdiqlangan kod endi mos kelmaydi. Qaytadan tasdiqlang.
+                    {tr("Xavfsizlik kodi o'zgardi! Avval tasdiqlangan kod endi mos kelmaydi. Qaytadan tasdiqlang.")}
                   </Text>
                 </View>
               )}
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.actionButton} onPress={onCopy}>
-                  <Text style={styles.actionButtonText}>Nusxalash</Text>
+                  <Text style={styles.actionButtonText}>{tr("Nusxalash")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionButton, styles.actionButtonOutline]}
@@ -134,7 +135,7 @@ export function EncryptionKeyScreen({ route }: Props) {
               <View style={styles.infoCard}>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoIcon}>🛡️</Text>
-                  <Text style={styles.infoText}>End-to-end shifrlash faol</Text>
+                  <Text style={styles.infoText}>{tr("End-to-end shifrlash faol")}</Text>
                 </View>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoIcon}>🔒</Text>
@@ -142,11 +143,11 @@ export function EncryptionKeyScreen({ route }: Props) {
                 </View>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoIcon}>🚫</Text>
-                  <Text style={styles.infoText}>Server xabarlarni o'qiy olmaydi — faqat shifrlangan matn saqlanadi</Text>
+                  <Text style={styles.infoText}>{tr("Server xabarlarni o'qiy olmaydi — faqat shifrlangan matn saqlanadi")}</Text>
                 </View>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoIcon}>🔑</Text>
-                  <Text style={styles.infoText}>Signal Protocol asosidagi shifrlash ishlatiladi</Text>
+                  <Text style={styles.infoText}>{tr("Signal Protocol asosidagi shifrlash ishlatiladi")}</Text>
                 </View>
               </View>
               <Text style={styles.hint}>
@@ -160,7 +161,7 @@ export function EncryptionKeyScreen({ route }: Props) {
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.sectionTitle}>{displayName} qurilmalari</Text>
           {devices.length === 0 ? (
-            <Text style={styles.emptyText}>Qurilmalar topilmadi</Text>
+            <Text style={styles.emptyText}>{tr("Qurilmalar topilmadi")}</Text>
           ) : (
             devices.map((d) => {
               const fp = computeKeyFingerprint(d.publicKey);
@@ -179,7 +180,7 @@ export function EncryptionKeyScreen({ route }: Props) {
           )}
           {peerPublicKey && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Asosiy kalit barmoq izi</Text>
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>{tr("Asosiy kalit barmoq izi")}</Text>
               <View style={styles.fingerprintCard}>
                 <Text style={styles.fingerprintLarge}>{computeKeyFingerprint(peerPublicKey)}</Text>
               </View>
@@ -187,7 +188,7 @@ export function EncryptionKeyScreen({ route }: Props) {
           )}
           {user && (
             <>
-              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Sizning kalit barmoq izingiz</Text>
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>{tr("Sizning kalit barmoq izingiz")}</Text>
               <View style={styles.fingerprintCard}>
                 <Text style={styles.fingerprintLarge}>{computeKeyFingerprint(user.publicKey)}</Text>
               </View>
@@ -212,8 +213,8 @@ export function EncryptionKeyScreen({ route }: Props) {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>📋</Text>
-              <Text style={styles.emptyTitle}>Tarix yo'q</Text>
-              <Text style={styles.emptyHint}>Kalit o'zgarishlari bu yerda ko'rsatiladi</Text>
+              <Text style={styles.emptyTitle}>{tr("Tarix yo'q")}</Text>
+              <Text style={styles.emptyHint}>{tr("Kalit o'zgarishlari bu yerda ko'rsatiladi")}</Text>
             </View>
           }
         />

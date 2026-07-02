@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { giftsApi, SentGiftData } from "../../api/gifts";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Gifts">;
 
@@ -47,7 +48,7 @@ export function GiftsScreen(_props: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Sovg'alarni yuklab bo'lmadi" onRetry={loadData} />
+        <ErrorView message={tr("Sovg'alarni yuklab bo'lmadi")} onRetry={loadData} />
       ) : (
         <FlatList
           data={items}

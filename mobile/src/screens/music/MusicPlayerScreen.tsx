@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { musicApi, MusicTrack } from "../../api/music";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MusicPlayer">;
 
@@ -27,7 +28,7 @@ export function MusicPlayerScreen(_props: Props) {
         setTracks(await musicApi.getTrending());
       }
     } catch {
-      Alert.alert("Xatolik", "Musiqalarni yuklab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Musiqalarni yuklab bo'lmadi"));
     }
     setLoading(false);
   }, [tab, search]);
@@ -99,7 +100,7 @@ export function MusicPlayerScreen(_props: Props) {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Qo'shiq qidirish..."
+          placeholder={tr("Qo'shiq qidirish...")}
           placeholderTextColor="#888"
           value={search}
           onChangeText={(t) => { setSearch(t); setTab(t.trim() ? "search" : "trending"); }}
@@ -113,7 +114,7 @@ export function MusicPlayerScreen(_props: Props) {
       </View>
 
       {!search.trim() && (
-        <Text style={styles.sectionTitle}>🔥 Trendda</Text>
+        <Text style={styles.sectionTitle}>{tr("🔥 Trendda")}</Text>
       )}
 
       {loading ? (

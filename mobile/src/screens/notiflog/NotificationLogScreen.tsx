@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { notifLogApi, NotifLogEntry } from "../../api/notifLog";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NotificationLog">;
 
@@ -68,7 +69,7 @@ export function NotificationLogScreen(_props: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Bildirishnomalarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Bildirishnomalarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   const unreadCount = items.filter((i) => !i.isRead).length;
@@ -117,8 +118,8 @@ export function NotificationLogScreen(_props: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🔔</Text>
-            <Text style={styles.emptyTitle}>Bildirishnomalar yo'q</Text>
-            <Text style={styles.emptyHint}>Yangi bildirishnomalar shu yerda ko'rinadi</Text>
+            <Text style={styles.emptyTitle}>{tr("Bildirishnomalar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Yangi bildirishnomalar shu yerda ko'rinadi")}</Text>
           </View>
         }
       />

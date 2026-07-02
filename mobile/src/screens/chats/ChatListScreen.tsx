@@ -12,6 +12,7 @@ import { ChatFolder, Conversation, ConversationParticipant } from "../../types";
 import { getConversationDisplay, formatTime, isConversationUnread } from "../../utils/conversation";
 import { decryptMessage } from "../../crypto/e2ee";
 import { stripFormatting } from "../../utils/textFormat";
+import { tr } from "../../i18n";
 
 type Props = MainTabScreenProps<"Chats">;
 
@@ -118,17 +119,17 @@ export function ChatListScreen({ navigation }: Props) {
   useEffect(() => {
     if (!selectionMode) {
       navigation.setOptions({
-        title: "Suhbatlar",
+        title: tr("Suhbatlar"),
         headerLeft: undefined,
         headerRight: () => (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginRight: 8 }}>
-            <TouchableOpacity onPress={() => navigation.navigate("Contacts")} hitSlop={8} accessibilityLabel="Kontaktlar" accessibilityRole="button">
+            <TouchableOpacity onPress={() => navigation.navigate("Contacts")} hitSlop={8} accessibilityLabel={tr("Kontaktlar")} accessibilityRole="button">
               <Text style={{ fontSize: 20 }}>👥</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate("CallHistory")} hitSlop={8} accessibilityLabel="Qo'ng'iroqlar tarixi" accessibilityRole="button">
+            <TouchableOpacity onPress={() => navigation.navigate("CallHistory")} hitSlop={8} accessibilityLabel={tr("Qo'ng'iroqlar tarixi")} accessibilityRole="button">
               <Text style={{ fontSize: 20 }}>📞</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate("Stories")} hitSlop={8} accessibilityLabel="Hikoyalar" accessibilityRole="button">
+            <TouchableOpacity onPress={() => navigation.navigate("Stories")} hitSlop={8} accessibilityLabel={tr("Hikoyalar")} accessibilityRole="button">
               <Text style={{ fontSize: 20 }}>📷</Text>
             </TouchableOpacity>
           </View>
@@ -139,25 +140,25 @@ export function ChatListScreen({ navigation }: Props) {
     navigation.setOptions({
       title: `${selectedIds.size} ta tanlandi`,
       headerLeft: () => (
-        <TouchableOpacity onPress={exitSelectionMode} hitSlop={8} accessibilityLabel="Tanlovni bekor qilish" accessibilityRole="button">
+        <TouchableOpacity onPress={exitSelectionMode} hitSlop={8} accessibilityLabel={tr("Tanlovni bekor qilish")} accessibilityRole="button">
           <Text style={styles.headerActionIcon}>✕</Text>
         </TouchableOpacity>
       ),
       headerRight: () => (
         <View style={styles.headerActions}>
-          <TouchableOpacity onPress={onToggleSelectAll} hitSlop={8} accessibilityLabel="Barchasini tanlash" accessibilityRole="button">
+          <TouchableOpacity onPress={onToggleSelectAll} hitSlop={8} accessibilityLabel={tr("Barchasini tanlash")} accessibilityRole="button">
             <Text style={styles.headerActionIcon}>☑️</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onBulkPin} hitSlop={8} accessibilityLabel="Biriktirish" accessibilityRole="button">
+          <TouchableOpacity onPress={onBulkPin} hitSlop={8} accessibilityLabel={tr("Biriktirish")} accessibilityRole="button">
             <Text style={styles.headerActionIcon}>📌</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onBulkMarkRead} hitSlop={8} accessibilityLabel="O'qilgan deb belgilash" accessibilityRole="button">
+          <TouchableOpacity onPress={onBulkMarkRead} hitSlop={8} accessibilityLabel={tr("O'qilgan deb belgilash")} accessibilityRole="button">
             <Text style={styles.headerActionIcon}>✅</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onBulkArchive} hitSlop={8} accessibilityLabel="Arxivlash" accessibilityRole="button">
+          <TouchableOpacity onPress={onBulkArchive} hitSlop={8} accessibilityLabel={tr("Arxivlash")} accessibilityRole="button">
             <Text style={styles.headerActionIcon}>🗄</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onBulkDelete} hitSlop={8} accessibilityLabel="O'chirish" accessibilityRole="button">
+          <TouchableOpacity onPress={onBulkDelete} hitSlop={8} accessibilityLabel={tr("O'chirish")} accessibilityRole="button">
             <Text style={styles.headerActionIcon}>🗑</Text>
           </TouchableOpacity>
         </View>
@@ -198,45 +199,45 @@ export function ChatListScreen({ navigation }: Props) {
       muteConversation(item.id, "off").catch(() => {});
       return;
     }
-    Alert.alert("Ovozsiz qilish muddati", undefined, [
-      { text: "1 soatga", onPress: () => muteConversation(item.id, "1h").catch(() => {}) },
-      { text: "2 soatga", onPress: () => muteConversation(item.id, "2h").catch(() => {}) },
-      { text: "8 soatga", onPress: () => muteConversation(item.id, "8h").catch(() => {}) },
-      { text: "1 kunga", onPress: () => muteConversation(item.id, "1d").catch(() => {}) },
-      { text: "2 kunga", onPress: () => muteConversation(item.id, "2d").catch(() => {}) },
-      { text: "1 haftaga", onPress: () => muteConversation(item.id, "1w").catch(() => {}) },
-      { text: "Doimiy", onPress: () => muteConversation(item.id, "forever").catch(() => {}) },
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Ovozsiz qilish muddati"), undefined, [
+      { text: tr("1 soatga"), onPress: () => muteConversation(item.id, "1h").catch(() => {}) },
+      { text: tr("2 soatga"), onPress: () => muteConversation(item.id, "2h").catch(() => {}) },
+      { text: tr("8 soatga"), onPress: () => muteConversation(item.id, "8h").catch(() => {}) },
+      { text: tr("1 kunga"), onPress: () => muteConversation(item.id, "1d").catch(() => {}) },
+      { text: tr("2 kunga"), onPress: () => muteConversation(item.id, "2d").catch(() => {}) },
+      { text: tr("1 haftaga"), onPress: () => muteConversation(item.id, "1w").catch(() => {}) },
+      { text: tr("Doimiy"), onPress: () => muteConversation(item.id, "forever").catch(() => {}) },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
   const onNotificationPreviewPress = (item: Conversation) => {
-    Alert.alert("Bildirishnoma matni", "Bu suhbat uchun bildirishnomada xabar matnini ko'rsatishni boshqaring", [
-      { text: "Standart", onPress: () => setNotificationPreview(item.id, "DEFAULT").catch(() => {}) },
-      { text: "Har doim ko'rsatish", onPress: () => setNotificationPreview(item.id, "SHOW").catch(() => {}) },
-      { text: "Har doim yashirish", onPress: () => setNotificationPreview(item.id, "HIDE").catch(() => {}) },
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Bildirishnoma matni"), tr("Bu suhbat uchun bildirishnomada xabar matnini ko'rsatishni boshqaring"), [
+      { text: tr("Standart"), onPress: () => setNotificationPreview(item.id, "DEFAULT").catch(() => {}) },
+      { text: tr("Har doim ko'rsatish"), onPress: () => setNotificationPreview(item.id, "SHOW").catch(() => {}) },
+      { text: tr("Har doim yashirish"), onPress: () => setNotificationPreview(item.id, "HIDE").catch(() => {}) },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
   const onReadReceiptsPress = (item: Conversation) => {
-    Alert.alert("O'qildi belgisi", "Bu suhbatda o'qilgan xabar belgisini yuborishni boshqaring", [
-      { text: "Standart", onPress: () => setReadReceiptsOverride(item.id, "DEFAULT").catch(() => {}) },
-      { text: "Yoqish", onPress: () => setReadReceiptsOverride(item.id, "ON").catch(() => {}) },
-      { text: "O'chirish", onPress: () => setReadReceiptsOverride(item.id, "OFF").catch(() => {}) },
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'qildi belgisi"), tr("Bu suhbatda o'qilgan xabar belgisini yuborishni boshqaring"), [
+      { text: tr("Standart"), onPress: () => setReadReceiptsOverride(item.id, "DEFAULT").catch(() => {}) },
+      { text: tr("Yoqish"), onPress: () => setReadReceiptsOverride(item.id, "ON").catch(() => {}) },
+      { text: tr("O'chirish"), onPress: () => setReadReceiptsOverride(item.id, "OFF").catch(() => {}) },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
   const onAddToFolderPress = (item: Conversation) => {
     if (folders.length === 0) {
-      Alert.alert("Papkalar yo'q", "Avval suhbatlar papkasini yarating", [
-        { text: "Bekor qilish", style: "cancel" },
-        { text: "Papka yaratish", onPress: () => navigation.navigate("ChatFolders") },
+      Alert.alert(tr("Papkalar yo'q"), tr("Avval suhbatlar papkasini yarating"), [
+        { text: tr("Bekor qilish"), style: "cancel" },
+        { text: tr("Papka yaratish"), onPress: () => navigation.navigate("ChatFolders") },
       ]);
       return;
     }
-    Alert.alert("Papkaga qo'shish", undefined, [
+    Alert.alert(tr("Papkaga qo'shish"), undefined, [
       ...folders.map((folder) => {
         const inFolder = folder.conversationIds.includes(item.id);
         return {
@@ -249,30 +250,28 @@ export function ChatListScreen({ navigation }: Props) {
           },
         };
       }),
-      { text: "Bekor qilish", style: "cancel" },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
   const onClearHistoryPress = (item: Conversation) => {
-    Alert.alert("Suhbatni tozalash", "Tozalangan xabarlar faqat sizning ko'rinishingizdan o'chiriladi", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "30 kundan eski", onPress: () => clearHistory(item.id, 30).catch(() => {}) },
-      { text: "90 kundan eski", onPress: () => clearHistory(item.id, 90).catch(() => {}) },
-      { text: "Barchasi", style: "destructive", onPress: () => clearHistory(item.id).catch(() => {}) },
+    Alert.alert(tr("Suhbatni tozalash"), tr("Tozalangan xabarlar faqat sizning ko'rinishingizdan o'chiriladi"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("30 kundan eski"), onPress: () => clearHistory(item.id, 30).catch(() => {}) },
+      { text: tr("90 kundan eski"), onPress: () => clearHistory(item.id, 90).catch(() => {}) },
+      { text: tr("Barchasi"), style: "destructive", onPress: () => clearHistory(item.id).catch(() => {}) },
     ]);
   };
 
   const onDeleteForEveryonePress = (item: Conversation) => {
-    Alert.alert(
-      "Hammaga o'chirish",
-      "Suhbat va barcha xabarlar ikki tomon uchun ham butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.",
+    Alert.alert(tr("Hammaga o'chirish"), tr("Suhbat va barcha xabarlar ikki tomon uchun ham butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi."),
       [
-        { text: "Bekor qilish", style: "cancel" },
+        { text: tr("Bekor qilish"), style: "cancel" },
         {
-          text: "Hammaga o'chirish",
+          text: tr("Hammaga o'chirish"),
           style: "destructive",
           onPress: () =>
-            deleteConversationForEveryone(item.id).catch(() => Alert.alert("Xatolik", "Suhbatni o'chirib bo'lmadi")),
+            deleteConversationForEveryone(item.id).catch(() => Alert.alert(tr("Xatolik"), tr("Suhbatni o'chirib bo'lmadi"))),
         },
       ]
     );
@@ -280,15 +279,15 @@ export function ChatListScreen({ navigation }: Props) {
 
   const onDeleteConversationPress = (item: Conversation) => {
     if (item.type === "DIRECT" && !item.isSelf) {
-      Alert.alert("Suhbatni o'chirish", undefined, [
-        { text: "Bekor qilish", style: "cancel" },
+      Alert.alert(tr("Suhbatni o'chirish"), undefined, [
+        { text: tr("Bekor qilish"), style: "cancel" },
         {
-          text: "Faqat men uchun",
+          text: tr("Faqat men uchun"),
           onPress: () =>
-            deleteConversation(item.id).catch(() => Alert.alert("Xatolik", "Suhbatni o'chirib bo'lmadi")),
+            deleteConversation(item.id).catch(() => Alert.alert(tr("Xatolik"), tr("Suhbatni o'chirib bo'lmadi"))),
         },
         {
-          text: "Hammaga o'chirish",
+          text: tr("Hammaga o'chirish"),
           style: "destructive",
           onPress: () => onDeleteForEveryonePress(item),
         },
@@ -296,27 +295,25 @@ export function ChatListScreen({ navigation }: Props) {
       return;
     }
 
-    Alert.alert(
-      "Suhbatni o'chirish",
-      "Suhbat ro'yxatdan va tarix sizning ko'rinishingizdan o'chiriladi. Yangi xabar kelsa, suhbat qaytadan paydo bo'ladi.",
+    Alert.alert(tr("Suhbatni o'chirish"), tr("Suhbat ro'yxatdan va tarix sizning ko'rinishingizdan o'chiriladi. Yangi xabar kelsa, suhbat qaytadan paydo bo'ladi."),
       [
-        { text: "Bekor qilish", style: "cancel" },
+        { text: tr("Bekor qilish"), style: "cancel" },
         {
-          text: "O'chirish",
+          text: tr("O'chirish"),
           style: "destructive",
-          onPress: () => deleteConversation(item.id).catch(() => Alert.alert("Xatolik", "Suhbatni o'chirib bo'lmadi")),
+          onPress: () => deleteConversation(item.id).catch(() => Alert.alert(tr("Xatolik"), tr("Suhbatni o'chirib bo'lmadi"))),
         },
       ]
     );
   };
 
   const onLeaveGroupPress = (item: Conversation) => {
-    Alert.alert("Guruhdan chiqish", "Haqiqatan ham guruhdan chiqmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Guruhdan chiqish"), tr("Haqiqatan ham guruhdan chiqmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Chiqish",
+        text: tr("Chiqish"),
         style: "destructive",
-        onPress: () => leaveGroup(item.id).catch(() => Alert.alert("Xatolik", "Guruhdan chiqib bo'lmadi")),
+        onPress: () => leaveGroup(item.id).catch(() => Alert.alert(tr("Xatolik"), tr("Guruhdan chiqib bo'lmadi"))),
       },
     ]);
   };
@@ -326,7 +323,7 @@ export function ChatListScreen({ navigation }: Props) {
     const pinnedIndex = pinned.findIndex((c) => c.id === item.id);
     Alert.alert(item.title ?? "Suhbat", undefined, [
       {
-        text: "☑️ Tanlash",
+        text: tr("☑️ Tanlash"),
         onPress: () => enterSelectionMode(item.id),
       },
       {
@@ -338,35 +335,35 @@ export function ChatListScreen({ navigation }: Props) {
         onPress: () => togglePin(item.id).catch(() => {}),
       },
       ...(item.isPinned && pinnedIndex > 0
-        ? [{ text: "⬆️ Yuqoriga ko'tarish", onPress: () => reorderPinned(item.id, "up").catch(() => {}) }]
+        ? [{ text: tr("⬆️ Yuqoriga ko'tarish"), onPress: () => reorderPinned(item.id, "up").catch(() => {}) }]
         : []),
       ...(item.isPinned && pinnedIndex < pinned.length - 1
-        ? [{ text: "⬇️ Pastga tushirish", onPress: () => reorderPinned(item.id, "down").catch(() => {}) }]
+        ? [{ text: tr("⬇️ Pastga tushirish"), onPress: () => reorderPinned(item.id, "down").catch(() => {}) }]
         : []),
       {
         text: item.isMuted ? "🔔 Ovozli qilish" : "🔕 Ovozsiz qilish",
         onPress: () => onMutePress(item),
       },
       {
-        text: "✉️ Bildirishnoma matni",
+        text: tr("✉️ Bildirishnoma matni"),
         onPress: () => onNotificationPreviewPress(item),
       },
       {
-        text: "👁 O'qildi belgisi",
+        text: tr("👁 O'qildi belgisi"),
         onPress: () => onReadReceiptsPress(item),
       },
       {
-        text: "📁 Papkaga qo'shish",
+        text: tr("📁 Papkaga qo'shish"),
         onPress: () => onAddToFolderPress(item),
       },
       {
         text: item.isArchived ? "📤 Arxivdan chiqarish" : "🗄 Arxivlash",
         onPress: () => toggleArchive(item.id).catch(() => {}),
       },
-      { text: "🗑 Suhbatni tozalash", onPress: () => onClearHistoryPress(item) },
-      { text: "❌ Suhbatni o'chirish", onPress: () => onDeleteConversationPress(item) },
+      { text: tr("🗑 Suhbatni tozalash"), onPress: () => onClearHistoryPress(item) },
+      { text: tr("❌ Suhbatni o'chirish"), onPress: () => onDeleteConversationPress(item) },
       ...((item.type === "GROUP" || item.type === "CHANNEL") ? [{ text: item.type === "CHANNEL" ? "🚪 Kanaldan chiqish" : "🚪 Guruhdan chiqish", onPress: () => onLeaveGroupPress(item) }] : []),
-      { text: "Bekor qilish", style: "cancel" },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
@@ -430,10 +427,10 @@ export function ChatListScreen({ navigation }: Props) {
 
   const onBulkDelete = () => {
     const ids = [...selectedIds];
-    Alert.alert("Suhbatlarni o'chirish", `${ids.length} ta suhbat ro'yxatdan o'chiriladi`, [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Suhbatlarni o'chirish"), `${ids.length} ta suhbat ro'yxatdan o'chiriladi`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           await Promise.all(ids.map((id) => deleteConversation(id).catch(() => {})));
@@ -526,7 +523,7 @@ export function ChatListScreen({ navigation }: Props) {
                 formatActivityLabel(item, typingUsers[item.id], "yozmoqda...")
               ) : drafts[item.id] ? (
                 <>
-                  <Text style={styles.draftLabel}>Qoralama: </Text>
+                  <Text style={styles.draftLabel}>{tr("Qoralama:")} </Text>
                   {stripFormatting(drafts[item.id])}
                 </>
               ) : (
@@ -630,7 +627,7 @@ export function ChatListScreen({ navigation }: Props) {
     <View style={styles.container}>
       {!isConnected && (
         <View style={styles.connectionBanner}>
-          <Text style={styles.connectionBannerText}>📡 Aloqa yo'q. Qayta ulanmoqda...</Text>
+          <Text style={styles.connectionBannerText}>{tr("📡 Aloqa yo'q. Qayta ulanmoqda...")}</Text>
         </View>
       )}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.folderBar} contentContainerStyle={styles.folderBarContent}>
@@ -639,7 +636,7 @@ export function ChatListScreen({ navigation }: Props) {
           onPress={() => setActiveFolderId(null)}
         >
           <Text style={[styles.folderChipText, activeFolderId === null && styles.folderChipTextActive]}>
-            Barchasi
+            {tr("Barchasi")}
           </Text>
           {allUnreadCount > 0 && (
             <View style={[styles.folderBadge, activeFolderId === null && styles.folderBadgeActive]}>
@@ -679,7 +676,7 @@ export function ChatListScreen({ navigation }: Props) {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Qidirish"
+          placeholder={tr("Qidirish")}
           placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -706,7 +703,7 @@ export function ChatListScreen({ navigation }: Props) {
           !query && archivedCount > 0 ? (
             <TouchableOpacity style={styles.archiveRow} onPress={() => navigation.navigate("ArchivedChats")}>
               <Text style={styles.archiveIcon}>🗄</Text>
-              <Text style={styles.archiveText}>Arxivlangan suhbatlar</Text>
+              <Text style={styles.archiveText}>{tr("Arxivlangan suhbatlar")}</Text>
               <Text style={styles.archiveCount}>{archivedCount}</Text>
             </TouchableOpacity>
           ) : null
@@ -714,14 +711,14 @@ export function ChatListScreen({ navigation }: Props) {
         ListFooterComponent={
           query.length >= 2 ? (
             <View>
-              <Text style={styles.sectionHeader}>Xabarlar</Text>
+              <Text style={styles.sectionHeader}>{tr("Xabarlar")}</Text>
               {searchingMessages ? (
                 <ActivityIndicator color={colors.primary} style={styles.messageSearchLoader} />
               ) : messageResults.length > 0 ? (
                 messageResults.map((item) => renderMessageResult(item))
               ) : (
                 <View style={styles.empty}>
-                  <Text style={styles.emptyText}>Mos xabar topilmadi</Text>
+                  <Text style={styles.emptyText}>{tr("Mos xabar topilmadi")}</Text>
                 </View>
               )}
             </View>

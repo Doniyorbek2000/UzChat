@@ -7,6 +7,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { BlockedUser, User } from "../../types";
+import { tr } from "../../i18n";
 
 export function BlockedUsersScreen() {
   const [blocked, setBlocked] = useState<BlockedUser[]>([]);
@@ -71,7 +72,7 @@ export function BlockedUsersScreen() {
 
   const onBlock = async (target: User) => {
     if (blocked.some((b) => b.user.id === target.id)) {
-      Alert.alert("Xatolik", "Foydalanuvchi allaqachon bloklangan");
+      Alert.alert(tr("Xatolik"), tr("Foydalanuvchi allaqachon bloklangan"));
       return;
     }
     setBlockingId(target.id);
@@ -81,7 +82,7 @@ export function BlockedUsersScreen() {
       setResults([]);
       load();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Bloklab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Bloklab bo'lmadi");
     } finally {
       setBlockingId(null);
     }
@@ -96,16 +97,16 @@ export function BlockedUsersScreen() {
   }
 
   if (error) {
-    return <ErrorView message="Bloklangan foydalanuvchilarni yuklab bo'lmadi" onRetry={() => { setLoading(true); load(); }} />;
+    return <ErrorView message={tr("Bloklangan foydalanuvchilarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); load(); }} />;
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.searchSection}>
-        <Text style={styles.searchLabel}>Foydalanuvchini bloklash</Text>
+        <Text style={styles.searchLabel}>{tr("Foydalanuvchini bloklash")}</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Username bo'yicha qidirish"
+          placeholder={tr("Username bo'yicha qidirish")}
           returnKeyType="search"
           placeholderTextColor={colors.textSecondary}
           value={query}
@@ -125,13 +126,13 @@ export function BlockedUsersScreen() {
               {blockingId === item.id ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.blockButtonText}>Bloklash</Text>
+                <Text style={styles.blockButtonText}>{tr("Bloklash")}</Text>
               )}
             </TouchableOpacity>
           </View>
         ))}
         {!searching && query.trim().length >= 2 && results.length === 0 && (
-          <Text style={styles.searchEmptyText}>Hech narsa topilmadi</Text>
+          <Text style={styles.searchEmptyText}>{tr("Hech narsa topilmadi")}</Text>
         )}
       </View>
       <FlatList
@@ -145,13 +146,13 @@ export function BlockedUsersScreen() {
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
             <Text style={styles.name}>{item.user.displayName}</Text>
             <TouchableOpacity style={styles.unblockButton} onPress={() => onUnblock(item)}>
-              <Text style={styles.unblockText}>Blokdan chiqarish</Text>
+              <Text style={styles.unblockText}>{tr("Blokdan chiqarish")}</Text>
             </TouchableOpacity>
           </View>
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Bloklangan foydalanuvchilar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Bloklangan foydalanuvchilar yo'q")}</Text>
           </View>
         }
       />

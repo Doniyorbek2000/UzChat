@@ -15,6 +15,7 @@ import { colors } from "../../theme/colors";
 import { Contact, User } from "../../types";
 import { formatTime } from "../../utils/conversation";
 import { formatBirthday, isBirthdayToday } from "../../utils/birthday";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "UserProfile">;
 
@@ -72,7 +73,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         title: contactAliases[profile.id] ?? profile.displayName,
       });
     } catch {
-      Alert.alert("Xatolik", "Suhbat ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Suhbat ochib bo'lmadi"));
     } finally {
       setOpening(false);
     }
@@ -88,7 +89,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         title: `🔒 ${contactAliases[profile.id] ?? profile.displayName}`,
       });
     } catch {
-      Alert.alert("Xatolik", "Maxfiy suhbat ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Maxfiy suhbat ochib bo'lmadi"));
     } finally {
       setOpening(false);
     }
@@ -113,7 +114,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
       setContact((prev) => (prev ? { ...prev, note: updated.note } : prev));
       setNoteModalOpen(false);
     } catch {
-      Alert.alert("Xatolik", "Eslatmani saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Eslatmani saqlab bo'lmadi"));
     } finally {
       setSavingNote(false);
     }
@@ -131,7 +132,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         setNotifyOnlineRequested(true);
       }
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Amalni bajarib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Amalni bajarib bo'lmadi");
     } finally {
       setNotifyLoading(false);
     }
@@ -139,17 +140,17 @@ export function UserProfileScreen({ route, navigation }: Props) {
 
   const onReport = () => {
     if (!profile) return;
-    Alert.alert("Shikoyat sababi", "Nima uchun shikoyat qilmoqchisiz?", [
+    Alert.alert(tr("Shikoyat sababi"), tr("Nima uchun shikoyat qilmoqchisiz?"), [
       ...REPORT_REASONS.map((option) => ({
         text: option.label,
         onPress: () => {
           reportsApi
             .create({ reportedUserId: profile.id, reason: option.value })
-            .then(() => Alert.alert("Yuborildi", "Shikoyatingiz qabul qilindi"))
-            .catch(() => Alert.alert("Xatolik", "Shikoyatni yuborib bo'lmadi"));
+            .then(() => Alert.alert(tr("Yuborildi"), tr("Shikoyatingiz qabul qilindi")))
+            .catch(() => Alert.alert(tr("Xatolik"), tr("Shikoyatni yuborib bo'lmadi")));
         },
       })),
-      { text: "Bekor qilish", style: "cancel" as const },
+      { text: tr("Bekor qilish"), style: "cancel" as const },
     ]);
   };
 
@@ -160,7 +161,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
       await contactsApi.sendRequest(profile.username);
       setRequestSent(true);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
     } finally {
       setSendingRequest(false);
     }
@@ -175,13 +176,13 @@ export function UserProfileScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Profil ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); setError(false); usersApi.getById(userId).then((p) => { setProfile(p); setNotifyOnlineRequested(!!p.notifyOnlineRequested); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Profil ma'lumotlarini yuklab bo'lmadi")} onRetry={() => { setLoading(true); setError(false); usersApi.getById(userId).then((p) => { setProfile(p); setNotifyOnlineRequested(!!p.notifyOnlineRequested); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   if (!profile) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>Foydalanuvchi topilmadi</Text>
+        <Text style={styles.emptyText}>{tr("Foydalanuvchi topilmadi")}</Text>
       </View>
     );
   }
@@ -214,14 +215,14 @@ export function UserProfileScreen({ route, navigation }: Props) {
 
       {!!profile.bio && (
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Bio</Text>
+          <Text style={styles.sectionLabel}>{tr("Bio")}</Text>
           <Linkify text={profile.bio} style={styles.bio} />
         </View>
       )}
 
       {!!formatBirthday(profile.birthdayDay, profile.birthdayMonth) && (
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Tug'ilgan kun</Text>
+          <Text style={styles.sectionLabel}>{tr("Tug'ilgan kun")}</Text>
           <Text style={styles.bio}>
             🎂 {formatBirthday(profile.birthdayDay, profile.birthdayMonth)}
             {isBirthdayToday(profile.birthdayDay, profile.birthdayMonth) && "  🎉 Bugun tug'ilgan kuni!"}
@@ -231,11 +232,11 @@ export function UserProfileScreen({ route, navigation }: Props) {
 
       {!!contact && (
         <TouchableOpacity style={styles.section} onPress={onOpenNoteModal}>
-          <Text style={styles.sectionLabel}>Shaxsiy eslatma</Text>
+          <Text style={styles.sectionLabel}>{tr("Shaxsiy eslatma")}</Text>
           {contact.note ? (
             <Text style={styles.bio}>{contact.note}</Text>
           ) : (
-            <Text style={styles.notePlaceholder}>Eslatma qo'shish...</Text>
+            <Text style={styles.notePlaceholder}>{tr("Eslatma qo'shish...")}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -243,24 +244,24 @@ export function UserProfileScreen({ route, navigation }: Props) {
       <View style={styles.actions}>
         <TouchableOpacity style={styles.actionRow} onPress={onMessage} disabled={opening}>
           <Text style={styles.actionIcon}>💬</Text>
-          <Text style={styles.actionText}>Xabar yozish</Text>
+          <Text style={styles.actionText}>{tr("Xabar yozish")}</Text>
           {opening && <ActivityIndicator color={colors.primary} size="small" />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={onSecretChat} disabled={opening}>
           <Text style={styles.actionIcon}>🔒</Text>
-          <Text style={styles.actionText}>Maxfiy suhbat</Text>
+          <Text style={styles.actionText}>{tr("Maxfiy suhbat")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("UserPosts", { userId: profile.id })}>
           <Text style={styles.actionIcon}>📰</Text>
-          <Text style={styles.actionText}>Postlari</Text>
+          <Text style={styles.actionText}>{tr("Postlari")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("CommonGroups", { userId: profile.id })}>
           <Text style={styles.actionIcon}>👥</Text>
-          <Text style={styles.actionText}>Umumiy guruhlar</Text>
+          <Text style={styles.actionText}>{tr("Umumiy guruhlar")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("MutualContacts", { userId: profile.id })}>
           <Text style={styles.actionIcon}>🤝</Text>
-          <Text style={styles.actionText}>Umumiy kontaktlar</Text>
+          <Text style={styles.actionText}>{tr("Umumiy kontaktlar")}</Text>
         </TouchableOpacity>
         {!contact && profile.id !== currentUser?.id && (
           <TouchableOpacity style={styles.actionRow} onPress={onAddContact} disabled={sendingRequest || requestSent}>
@@ -280,7 +281,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         )}
         <TouchableOpacity style={styles.actionRow} onPress={onShare}>
           <Text style={styles.actionIcon}>📤</Text>
-          <Text style={styles.actionText}>Profilni ulashish</Text>
+          <Text style={styles.actionText}>{tr("Profilni ulashish")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionRow}
@@ -292,12 +293,12 @@ export function UserProfileScreen({ route, navigation }: Props) {
           }
         >
           <Text style={styles.actionIcon}>🔐</Text>
-          <Text style={styles.actionText}>Shifrlash kaliti</Text>
+          <Text style={styles.actionText}>{tr("Shifrlash kaliti")}</Text>
         </TouchableOpacity>
         {profile.id !== currentUser?.id && (
           <TouchableOpacity style={styles.actionRow} onPress={onReport}>
             <Text style={styles.actionIcon}>🚩</Text>
-            <Text style={[styles.actionText, styles.dangerText]}>Foydalanuvchini shikoyat qilish</Text>
+            <Text style={[styles.actionText, styles.dangerText]}>{tr("Foydalanuvchini shikoyat qilish")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -311,13 +312,13 @@ export function UserProfileScreen({ route, navigation }: Props) {
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <Pressable style={styles.modalBackdrop} onPress={() => setNoteModalOpen(false)}>
             <Pressable style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
+              <Text style={styles.modalTitle}>{tr("Shaxsiy eslatma")}</Text>
               <Text style={styles.modalSubtitle}>{contactAliases[profile.id] ?? profile.displayName}</Text>
               <TextInput
                 style={[styles.modalInput, styles.modalNoteInput]}
                 value={noteInput}
                 onChangeText={setNoteInput}
-                placeholder="Faqat sizga ko'rinadigan eslatma..."
+                placeholder={tr("Faqat sizga ko'rinadigan eslatma...")}
                 placeholderTextColor={colors.textSecondary}
                 autoFocus
                 multiline
@@ -325,10 +326,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
               />
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteModalOpen(false)}>
-                  <Text style={styles.modalCancelText}>Bekor qilish</Text>
+                  <Text style={styles.modalCancelText}>{tr("Bekor qilish")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
-                  {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+                  {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>{tr("Saqlash")}</Text>}
                 </TouchableOpacity>
               </View>
             </Pressable>

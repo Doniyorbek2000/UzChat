@@ -7,6 +7,7 @@ import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { User } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddContact">;
 
@@ -51,7 +52,7 @@ export function AddContactScreen({ navigation }: Props) {
       await contactsApi.sendRequest(target.username);
       setSentIds((prev) => new Set(prev).add(target.id));
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
     } finally {
       setSendingId(null);
     }
@@ -59,10 +60,10 @@ export function AddContactScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Username yoki telefon raqami bo'yicha qidirish</Text>
+      <Text style={styles.label}>{tr("Username yoki telefon raqami bo'yicha qidirish")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="username yoki +998901234567"
+        placeholder={tr("username yoki +998901234567")}
         placeholderTextColor={colors.textSecondary}
         value={query}
         onChangeText={setQuery}
@@ -106,7 +107,7 @@ export function AddContactScreen({ navigation }: Props) {
           );
         }}
         ListEmptyComponent={
-          !searching && query.trim().length >= 2 ? <Text style={styles.emptyText}>Hech narsa topilmadi</Text> : null
+          !searching && query.trim().length >= 2 ? <Text style={styles.emptyText}>{tr("Hech narsa topilmadi")}</Text> : null
         }
       />
     </View>

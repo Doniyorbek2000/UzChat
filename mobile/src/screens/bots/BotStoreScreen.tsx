@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { botsApi, Bot } from "../../api/bots";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "BotStore">;
 
@@ -63,12 +64,12 @@ export function BotStoreScreen({ navigation }: Props) {
         <View style={styles.badgeRow}>
           {item.isInline && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>Inline</Text>
+              <Text style={styles.badgeText}>{tr("Inline")}</Text>
             </View>
           )}
           {!item.isActive && (
             <View style={[styles.badge, styles.badgeInactive]}>
-              <Text style={[styles.badgeText, styles.badgeInactiveText]}>Nofaol</Text>
+              <Text style={[styles.badgeText, styles.badgeInactiveText]}>{tr("Nofaol")}</Text>
             </View>
           )}
           <Text style={styles.cmdCount}>{item.commands.length} buyruq</Text>
@@ -94,7 +95,7 @@ export function BotStoreScreen({ navigation }: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Botlarni qidirish..."
+            placeholder={tr("Botlarni qidirish...")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}
@@ -119,7 +120,7 @@ export function BotStoreScreen({ navigation }: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Botlarni yuklab bo'lmadi" onRetry={load} />
+        <ErrorView message={tr("Botlarni yuklab bo'lmadi")} onRetry={load} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"

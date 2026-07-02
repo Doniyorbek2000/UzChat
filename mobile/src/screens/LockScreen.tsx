@@ -4,6 +4,7 @@ import { PinPad } from "../components/PinPad";
 import { useAppLockStore } from "../store/appLockStore";
 import { useAuthStore } from "../store/authStore";
 import { colors } from "../theme/colors";
+import { tr } from "../i18n";
 
 export function LockScreen() {
   const unlock = useAppLockStore((s) => s.unlock);
@@ -45,10 +46,10 @@ export function LockScreen() {
   };
 
   const onLogout = () => {
-    Alert.alert("Hisobdan chiqish", "PIN kodni unutdingizmi? Hisobdan chiqishingiz mumkin.", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Hisobdan chiqish"), tr("PIN kodni unutdingizmi? Hisobdan chiqishingiz mumkin."), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Chiqish",
+        text: tr("Chiqish"),
         style: "destructive",
         onPress: async () => {
           await reset();
@@ -61,14 +62,14 @@ export function LockScreen() {
   return (
     <View style={styles.container}>
       <PinPad
-        title="Ilova qulflangan"
+        title={tr("Ilova qulflangan")}
         subtitle={countdown > 0 ? `${countdown} soniya kutib turing` : "Davom etish uchun PIN kodni kiriting"}
         error={error}
         resetKey={resetKey}
         onComplete={onComplete}
       />
       <TouchableOpacity style={styles.logout} onPress={onLogout}>
-        <Text style={styles.logoutText}>Hisobdan chiqish</Text>
+        <Text style={styles.logoutText}>{tr("Hisobdan chiqish")}</Text>
       </TouchableOpacity>
     </View>
   );

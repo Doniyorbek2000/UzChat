@@ -81,6 +81,7 @@ import { REPORT_REASONS } from "../../utils/reportReasons";
 import { getPreviewLabel } from "../../utils/messagePreview";
 import { FORMAT_PATTERN } from "../../utils/textFormat";
 import { showChatNotificationSettings } from "../../utils/chatNotificationSettings";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChatRoom">;
 
@@ -121,14 +122,14 @@ function isEmojiOnlyMessage(text: string): boolean {
 const WEEKDAY_LABELS = ["Du", "Se", "Cho", "Pa", "Ju", "Sha", "Ya"];
 
 const SEARCH_TYPE_FILTERS: { type: MessageType | "ALL"; label: string }[] = [
-  { type: "ALL", label: "Hammasi" },
-  { type: "IMAGE", label: "🖼 Rasm" },
-  { type: "VIDEO", label: "🎬 Video" },
-  { type: "AUDIO", label: "🎤 Ovozli" },
-  { type: "FILE", label: "📄 Fayl" },
-  { type: "POLL", label: "📊 So'rovnoma" },
-  { type: "LOCATION", label: "📍 Joylashuv" },
-  { type: "STICKER", label: "🏷 Stiker" },
+  { type: "ALL", label: tr("Hammasi") },
+  { type: "IMAGE", label: tr("🖼 Rasm") },
+  { type: "VIDEO", label: tr("🎬 Video") },
+  { type: "AUDIO", label: tr("🎤 Ovozli") },
+  { type: "FILE", label: tr("📄 Fayl") },
+  { type: "POLL", label: tr("📊 So'rovnoma") },
+  { type: "LOCATION", label: tr("📍 Joylashuv") },
+  { type: "STICKER", label: tr("🏷 Stiker") },
 ];
 
 const MORE_REACTIONS = [
@@ -452,14 +453,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onToggleBlock = () => {
     if (!otherUser) return;
     if (conversation?.isBlocked) {
-      Alert.alert("Blokdan chiqarish", `${otherUserDisplayName} blokdan chiqarilsinmi?`, [
-        { text: "Bekor qilish", style: "cancel" },
-        { text: "Blokdan chiqarish", onPress: () => unblockUser(otherUser.id).catch(() => {}) },
+      Alert.alert(tr("Blokdan chiqarish"), `${otherUserDisplayName} blokdan chiqarilsinmi?`, [
+        { text: tr("Bekor qilish"), style: "cancel" },
+        { text: tr("Blokdan chiqarish"), onPress: () => unblockUser(otherUser.id).catch(() => {}) },
       ]);
     } else {
-      Alert.alert("Bloklash", `${otherUserDisplayName} bloklansinmi? U sizga xabar yubora olmaydi.`, [
-        { text: "Bekor qilish", style: "cancel" },
-        { text: "Bloklash", style: "destructive", onPress: () => blockUser(otherUser.id).catch(() => {}) },
+      Alert.alert(tr("Bloklash"), `${otherUserDisplayName} bloklansinmi? U sizga xabar yubora olmaydi.`, [
+        { text: tr("Bekor qilish"), style: "cancel" },
+        { text: tr("Bloklash"), style: "destructive", onPress: () => blockUser(otherUser.id).catch(() => {}) },
       ]);
     }
   };
@@ -503,7 +504,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       const translated = await translateText(msg.text, "auto", targetLang);
       setTranslations((prev) => ({ ...prev, [msg.id]: translated }));
     } catch {
-      Alert.alert("Xatolik", "Tarjima qilib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Tarjima qilib bo'lmadi"));
     } finally {
       setTranslatingId(null);
       setActionMessage(null);
@@ -522,83 +523,77 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         contactAliases,
       });
     } catch {
-      Alert.alert("Xatolik", "Suhbatni eksport qilib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Suhbatni eksport qilib bo'lmadi"));
     } finally {
       setExporting(false);
     }
   };
 
   const onClearHistory = () => {
-    Alert.alert(
-      "Suhbatni tozalash",
-      "Barcha xabarlar faqat sizning ko'rinishingizdan o'chiriladi. Davom etilsinmi?",
+    Alert.alert(tr("Suhbatni tozalash"), tr("Barcha xabarlar faqat sizning ko'rinishingizdan o'chiriladi. Davom etilsinmi?"),
       [
-        { text: "Bekor qilish", style: "cancel" },
-        { text: "Tozalash", style: "destructive", onPress: () => clearHistory(conversationId).catch(() => {}) },
+        { text: tr("Bekor qilish"), style: "cancel" },
+        { text: tr("Tozalash"), style: "destructive", onPress: () => clearHistory(conversationId).catch(() => {}) },
       ]
     );
   };
 
   const onSetDisappearingMessages = () => {
-    Alert.alert(
-      "O'chiriladigan xabarlar",
-      "Yangi xabarlar belgilangan vaqtdan so'ng avtomatik o'chiriladi",
+    Alert.alert(tr("O'chiriladigan xabarlar"), tr("Yangi xabarlar belgilangan vaqtdan so'ng avtomatik o'chiriladi"),
       [
         ...DISAPPEARING_MESSAGE_OPTIONS.map((option) => ({
           text: option.label,
           onPress: () =>
             setDisappearingMessages(conversationId, option.value).catch(() => {
-              Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+              Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
             }),
         })),
-        { text: "Bekor qilish", style: "cancel" as const },
+        { text: tr("Bekor qilish"), style: "cancel" as const },
       ]
     );
   };
 
   const onSetAutoDelete = () => {
-    Alert.alert(
-      "Faolsizlikda avtomatik o'chirish",
-      "Suhbatda uzoq vaqt yangi xabar bo'lmasa, u faqat sizning ro'yxatingizdan olib tashlanadi",
+    Alert.alert(tr("Faolsizlikda avtomatik o'chirish"), tr("Suhbatda uzoq vaqt yangi xabar bo'lmasa, u faqat sizning ro'yxatingizdan olib tashlanadi"),
       [
         ...AUTO_DELETE_OPTIONS.map((option) => ({
           text: option.label,
           onPress: () =>
             setAutoDelete(conversationId, option.value).catch(() => {
-              Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+              Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
             }),
         })),
-        { text: "Bekor qilish", style: "cancel" as const },
+        { text: tr("Bekor qilish"), style: "cancel" as const },
       ]
     );
   };
 
   const reportUser = (reportedUserId: string, reportConversationId?: string, messageId?: string) => {
-    Alert.alert("Shikoyat sababi", "Nima uchun shikoyat qilmoqchisiz?", [
+    Alert.alert(tr("Shikoyat sababi"), tr("Nima uchun shikoyat qilmoqchisiz?"), [
       ...REPORT_REASONS.map((option) => ({
         text: option.label,
         onPress: () => {
           reportsApi
             .create({ reportedUserId, conversationId: reportConversationId, messageId, reason: option.value })
-            .then(() => Alert.alert("Yuborildi", "Shikoyatingiz qabul qilindi"))
-            .catch(() => Alert.alert("Xatolik", "Shikoyatni yuborib bo'lmadi"));
+            .then(() => Alert.alert(tr("Yuborildi"), tr("Shikoyatingiz qabul qilindi")))
+            .catch(() => Alert.alert(tr("Xatolik"), tr("Shikoyatni yuborib bo'lmadi")));
         },
       })),
-      { text: "Bekor qilish", style: "cancel" as const },
+      { text: tr("Bekor qilish"), style: "cancel" as const },
     ]);
   };
 
   const onChatMenu = () => {
     if (!otherUser || !conversation) return;
     Alert.alert(otherUserDisplayName, undefined, [
-      { text: "🖼 Umumiy media", onPress: () => navigation.navigate("SharedMedia", { conversationId }) },
-      { text: "👥 Umumiy guruhlar", onPress: () => navigation.navigate("CommonGroups", { userId: otherUser.id }) },
+      { text: tr("🖼 Umumiy media"), onPress: () => navigation.navigate("SharedMedia", { conversationId }) },
+      { text: tr("👥 Umumiy guruhlar"), onPress: () => navigation.navigate("CommonGroups", { userId: otherUser.id }) },
       {
-        text: "🔔 Bildirishnoma sozlamalari",
+        text: tr("🔔 Bildirishnoma sozlamalari"),
         onPress: () => showChatNotificationSettings(conversation, setNotificationPreview, setReadReceiptsOverride),
       },
-      { text: "📤 Suhbatni eksport qilish", onPress: onExportChat },
-      { text: "🗑 Suhbatni tozalash", onPress: onClearHistory },
+      { text: tr("📤 Suhbatni eksport qilish"), onPress: onExportChat },
+      { text: tr("🗑 Suhbatni tozalash"), onPress: onClearHistory },
       {
         text: `⏳ O'chiriladigan xabarlar (${formatDisappearingDuration(conversation?.disappearingSeconds ?? null)})`,
         onPress: onSetDisappearingMessages,
@@ -618,8 +613,8 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         style: conversation?.isBlocked ? "default" : "destructive",
         onPress: onToggleBlock,
       },
-      { text: "🚩 Foydalanuvchini shikoyat qilish", style: "destructive", onPress: () => reportUser(otherUser.id, conversationId) },
-      { text: "Bekor qilish", style: "cancel" },
+      { text: tr("🚩 Foydalanuvchini shikoyat qilish"), style: "destructive", onPress: () => reportUser(otherUser.id, conversationId) },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
@@ -891,7 +886,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const onReplyPreviewPress = (replyPreview: ReplyPreview) => {
     if (replyPreview.deletedAt) {
-      Alert.alert("Xabar o'chirilgan", "Bu xabar o'chirilgan");
+      Alert.alert(tr("Xabar o'chirilgan"), tr("Bu xabar o'chirilgan"));
       return;
     }
     navigation.setParams({ highlightMessageId: replyPreview.id });
@@ -982,9 +977,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onUnpinLatest = () => {
     if (!activePinned) return;
     const messageId = activePinned.id;
-    Alert.alert("Qadalgan xabar", "Xabarni qadashdan olib tashlansinmi?", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "Olib tashlash", style: "destructive", onPress: () => unpinMessage(conversationId, messageId).catch(() => {}) },
+    Alert.alert(tr("Qadalgan xabar"), tr("Xabarni qadashdan olib tashlansinmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("Olib tashlash"), style: "destructive", onPress: () => unpinMessage(conversationId, messageId).catch(() => {}) },
     ]);
   };
 
@@ -1073,7 +1068,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         if (!state.hasMoreByConversation[conversationId]) break;
         await loadOlderMessages(conversationId);
       }
-      Alert.alert("Topilmadi", "Bu sana yoki undan oldingi xabarlar topilmadi");
+      Alert.alert(tr("Topilmadi"), tr("Bu sana yoki undan oldingi xabarlar topilmadi"));
     } finally {
       setDateJumpSearching(false);
     }
@@ -1117,7 +1112,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         setText(trimmed);
         setEditingMessage(editingMessage);
         const message = err?.response?.data?.error?.message;
-        Alert.alert("Xatolik", message ?? "Xabarni tahrirlab bo'lmadi. Internet aloqasini tekshiring");
+        Alert.alert(tr("Xatolik"), message ?? "Xabarni tahrirlab bo'lmadi. Internet aloqasini tekshiring");
       }
       return;
     }
@@ -1138,9 +1133,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         sendWhenOnline
       );
       if (sendWhenOnline) {
-        Alert.alert("Rejalashtirildi", "Foydalanuvchi onlayn bo'lganda xabar yuboriladi");
+        Alert.alert(tr("Rejalashtirildi"), tr("Foydalanuvchi onlayn bo'lganda xabar yuboriladi"));
       } else if (scheduledFor) {
-        Alert.alert("Rejalashtirildi", "Xabar belgilangan vaqtda yuboriladi");
+        Alert.alert(tr("Rejalashtirildi"), tr("Xabar belgilangan vaqtda yuboriladi"));
       } else {
         scrollToLatest();
       }
@@ -1149,11 +1144,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       if (scheduledFor || sendWhenOnline) {
         // Scheduled sends have no optimistic bubble — restore the input.
         setText(trimmed);
-        Alert.alert("Xatolik", message ?? "Xabar yuborilmadi. Internet aloqasini tekshiring");
+        Alert.alert(tr("Xatolik"), message ?? "Xabar yuborilmadi. Internet aloqasini tekshiring");
       } else if (message) {
         // Server rejected it for a concrete reason (ban, slow mode, ...);
         // the failed bubble handles retry, the alert explains why.
-        Alert.alert("Xatolik", message);
+        Alert.alert(tr("Xatolik"), message);
       }
     }
   };
@@ -1162,19 +1157,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
 
   const onSendOptions = () => {
     if (!text.trim() || editingMessage) return;
-    Alert.alert(
-      "Yuborish parametrlari",
-      "Xabarni qanday yuborish kerak?",
+    Alert.alert(tr("Yuborish parametrlari"), tr("Xabarni qanday yuborish kerak?"),
       [
-        { text: "Ovozsiz yuborish", onPress: () => onSend(undefined, true) },
+        { text: tr("Ovozsiz yuborish"), onPress: () => onSend(undefined, true) },
         ...SCHEDULE_OPTIONS.map((option) => ({
           text: option.label,
           onPress: () => onSend(option.getDate().toISOString()),
         })),
         ...(canSendWhenOnline
-          ? [{ text: "🟢 Onlayn bo'lganda yuborish", onPress: () => onSend(undefined, undefined, true) }]
+          ? [{ text: tr("🟢 Onlayn bo'lganda yuborish"), onPress: () => onSend(undefined, undefined, true) }]
           : []),
-        { text: "Bekor qilish", style: "cancel" as const },
+        { text: tr("Bekor qilish"), style: "cancel" as const },
       ]
     );
   };
@@ -1258,9 +1251,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const onShowFormatHelp = () => {
-    Alert.alert(
-      "Matnni formatlash",
-      "Xabar matnida belgilarni qo'llash mumkin:\n\n*qalin*\n_kursiv_\n~chizilgan~\n`kod`\n||spoiler||\n\nYoki matnni belgilang — formatlash tugmalari paydo bo'ladi."
+    Alert.alert(tr("Matnni formatlash"), tr("Xabar matnida belgilarni qo'llash mumkin:\\n\\n*qalin*\\n_kursiv_\\n~chizilgan~\\n`kod`\\n||spoiler||\\n\\nYoki matnni belgilang — formatlash tugmalari paydo bo'ladi.")
     );
   };
 
@@ -1284,7 +1275,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Ruxsat kerak", "Rasm yuborish uchun galereyaga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Rasm yuborish uchun galereyaga ruxsat bering"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -1313,7 +1304,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const pickImageAsFile = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Ruxsat kerak", "Rasm yuborish uchun galereyaga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Rasm yuborish uchun galereyaga ruxsat bering"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -1343,7 +1334,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const pickVideo = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Ruxsat kerak", "Video yuborish uchun galereyaga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Video yuborish uchun galereyaga ruxsat bering"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -1373,7 +1364,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const takePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Ruxsat kerak", "Rasm olish uchun kameraga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Rasm olish uchun kameraga ruxsat bering"));
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -1416,7 +1407,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const pasteImage = async () => {
     const hasImage = await Clipboard.hasImageAsync();
     if (!hasImage) {
-      Alert.alert("Bo'sh", "Klipbordda rasm topilmadi");
+      Alert.alert(tr("Bo'sh"), tr("Klipbordda rasm topilmadi"));
       return;
     }
     const image = await Clipboard.getImageAsync({ format: "png" });
@@ -1480,8 +1471,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       }
     } catch (err: any) {
       cancelPendingMedia();
-      Alert.alert(
-        "Xatolik",
+      Alert.alert(tr("Xatolik"),
         err?.response?.data?.error?.message ?? (type === "IMAGE" ? "Rasmni yuborib bo'lmadi" : "Faylni yuborib bo'lmadi")
       );
     } finally {
@@ -1496,7 +1486,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       const Location = require("expo-location");
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Ruxsat berilmadi", "Joylashuvni aniqlash uchun ruxsat bering");
+        Alert.alert(tr("Ruxsat berilmadi"), tr("Joylashuvni aniqlash uchun ruxsat bering"));
         return;
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
@@ -1505,43 +1495,43 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       setReplyingTo(null);
       await sendLocationMessage(conversationId, latitude, longitude, `📍 ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, replyToId);
     } catch {
-      Alert.alert("Xatolik", "Joylashuvni aniqlash imkonsiz");
+      Alert.alert(tr("Xatolik"), tr("Joylashuvni aniqlash imkonsiz"));
     }
   };
 
   const onAttach = () => {
     if (!canSendMedia) {
-      Alert.alert("Cheklangan", "Bu guruhda a'zolar faqat matnli xabar yuborishi mumkin");
+      Alert.alert(tr("Cheklangan"), tr("Bu guruhda a'zolar faqat matnli xabar yuborishi mumkin"));
       return;
     }
-    Alert.alert("Yuborish", "Nimani yubormoqchisiz?", [
-      { text: "📷 Kameradan rasm", onPress: takePhoto },
-      { text: "🖼 Rasm", onPress: pickImage },
-      { text: "🎬 Video", onPress: pickVideo },
-      { text: "🖼 Rasm (siqilmagan, fayl sifatida)", onPress: pickImageAsFile },
-      { text: "📄 Fayl", onPress: pickFile },
-      { text: "👤 Kontakt", onPress: () => navigation.navigate("ShareContact", { conversationId }) },
+    Alert.alert(tr("Yuborish"), tr("Nimani yubormoqchisiz?"), [
+      { text: tr("📷 Kameradan rasm"), onPress: takePhoto },
+      { text: tr("🖼 Rasm"), onPress: pickImage },
+      { text: tr("🎬 Video"), onPress: pickVideo },
+      { text: tr("🖼 Rasm (siqilmagan, fayl sifatida)"), onPress: pickImageAsFile },
+      { text: tr("📄 Fayl"), onPress: pickFile },
+      { text: tr("👤 Kontakt"), onPress: () => navigation.navigate("ShareContact", { conversationId }) },
       {
-        text: "📊 So'rovnoma",
+        text: tr("📊 So'rovnoma"),
         onPress: () => {
           if (!canSendPolls) {
-            Alert.alert("Cheklangan", "Bu guruhda a'zolar so'rovnoma yarata olmaydi");
+            Alert.alert(tr("Cheklangan"), tr("Bu guruhda a'zolar so'rovnoma yarata olmaydi"));
             return;
           }
           openPollModal();
         },
       },
       {
-        text: "🙂 Stiker",
+        text: tr("🙂 Stiker"),
         onPress: () => {
           setActiveStickerPackIndex(recentStickers.length > 0 ? -1 : 0);
           setStickerPickerVisible(true);
         },
       },
-      { text: "📍 Joylashuv", onPress: onShareLocation },
-      { text: "💬 Tezkor javob", onPress: onOpenQuickReplies },
-      { text: "📋 Klipborddan rasm", onPress: pasteImage },
-      { text: "Bekor qilish", style: "cancel" },
+      { text: tr("📍 Joylashuv"), onPress: onShareLocation },
+      { text: tr("💬 Tezkor javob"), onPress: onOpenQuickReplies },
+      { text: tr("📋 Klipborddan rasm"), onPress: pasteImage },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
@@ -1555,7 +1545,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       scrollToLatest();
     } catch (err: any) {
       const message = err?.response?.data?.error?.message;
-      Alert.alert("Xatolik", message ?? "Xabar yuborilmadi. Internet aloqasini tekshiring");
+      Alert.alert(tr("Xatolik"), message ?? "Xabar yuborilmadi. Internet aloqasini tekshiring");
     }
   };
 
@@ -1607,9 +1597,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   };
 
   const onPickPollDeadline = () => {
-    Alert.alert(
-      "Yopilish vaqti",
-      "So'rovnoma avtomatik yopiladigan vaqtni tanlang",
+    Alert.alert(tr("Yopilish vaqti"), tr("So'rovnoma avtomatik yopiladigan vaqtni tanlang"),
       POLL_DEADLINE_OPTIONS.map((option) => ({
         text: option.label,
         onPress: () => setPollDeadlineSeconds(option.value),
@@ -1644,14 +1632,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       );
       scrollToLatest();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rovnomani yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "So'rovnomani yuborib bo'lmadi");
     }
   };
 
   const startRecording = async () => {
     const permission = await requestRecordingPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Ruxsat kerak", "Ovozli xabar yuborish uchun mikrofonga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Ovozli xabar yuborish uchun mikrofonga ruxsat bering"));
       return;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
@@ -1691,23 +1679,23 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       );
       scrollToLatest();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Ovozli xabarni yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Ovozli xabarni yuborib bo'lmadi");
     } finally {
       setSending(false);
     }
   };
 
   const onDelete = (item: DecryptedMessage) => {
-    Alert.alert("Xabarni o'chirish", "Bu xabar barcha ishtirokchilardan o'chiriladi", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "O'chirish", style: "destructive", onPress: () => deleteMessage(conversationId, item.id) },
+    Alert.alert(tr("Xabarni o'chirish"), tr("Bu xabar barcha ishtirokchilardan o'chiriladi"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("O'chirish"), style: "destructive", onPress: () => deleteMessage(conversationId, item.id) },
     ]);
   };
 
   const onHideForMe = (item: DecryptedMessage) => {
-    Alert.alert("Xabarni mendan o'chirish", "Bu xabar faqat siz uchun o'chiriladi, boshqalar uni ko'rishda davom etadi", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "O'chirish", style: "destructive", onPress: () => hideMessageForMe(conversationId, item.id).catch(() => {}) },
+    Alert.alert(tr("Xabarni mendan o'chirish"), tr("Bu xabar faqat siz uchun o'chiriladi, boshqalar uni ko'rishda davom etadi"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("O'chirish"), style: "destructive", onPress: () => hideMessageForMe(conversationId, item.id).catch(() => {}) },
     ]);
   };
 
@@ -1774,7 +1762,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     if (emoji === quickReactionEmoji) return;
     setQuickReactionEmoji(emoji).catch(() => {});
     recordEmoji(emoji).catch(() => {});
-    Alert.alert("Tezkor reaksiya o'rnatildi", `Endi xabarni ikki marta bosganda ${emoji} reaksiyasi qo'yiladi.`);
+    Alert.alert(tr("Tezkor reaksiya o'rnatildi"), `Endi xabarni ikki marta bosganda ${emoji} reaksiyasi qo'yiladi.`);
   };
 
   const onBulkForward = () => {
@@ -1808,10 +1796,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         Date.now() - new Date(m.createdAt).getTime() <= RECALL_WINDOW_MS
     );
     if (eligible.length === 0) return;
-    Alert.alert("Tanlangan xabarlarni o'chirish", `${eligible.length} ta xabar barcha ishtirokchilardan o'chiriladi`, [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Tanlangan xabarlarni o'chirish"), `${eligible.length} ta xabar barcha ishtirokchilardan o'chiriladi`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           for (const item of eligible) {
@@ -1826,10 +1814,10 @@ export function ChatRoomScreen({ route, navigation }: Props) {
   const onBulkHideForMe = () => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    Alert.alert("Tanlangan xabarlarni mendan o'chirish", `${ids.length} ta xabar faqat siz uchun o'chiriladi`, [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Tanlangan xabarlarni mendan o'chirish"), `${ids.length} ta xabar faqat siz uchun o'chiriladi`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           for (const id of ids) {
@@ -1909,7 +1897,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       item.id === firstUnreadMessageId ? (
         <View style={styles.unreadSeparatorRow}>
           <View style={styles.unreadSeparatorLine} />
-          <Text style={styles.unreadSeparatorText}>Yangi xabarlar</Text>
+          <Text style={styles.unreadSeparatorText}>{tr("Yangi xabarlar")}</Text>
           <View style={styles.unreadSeparatorLine} />
         </View>
       ) : null;
@@ -1939,13 +1927,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       content = (
         <View>
           <Text style={[styles.messageText, { fontSize: 16 * fontScale }]}>{item.text}</Text>
-          <Text style={styles.keptDeletedLabel}>🚫 O'chirilgan — siz saqlab qoldingiz</Text>
+          <Text style={styles.keptDeletedLabel}>{tr("🚫 O'chirilgan — siz saqlab qoldingiz")}</Text>
         </View>
       );
     } else if (item.deletedAt) {
-      content = <Text style={styles.deletedText}>🚫 Xabar o'chirildi</Text>;
+      content = <Text style={styles.deletedText}>{tr("🚫 Xabar o'chirildi")}</Text>;
     } else if (item.decryptFailed) {
-      content = <Text style={styles.messageText}>🔒 Xabarni ochib bo'lmadi</Text>;
+      content = <Text style={styles.messageText}>{tr("🔒 Xabarni ochib bo'lmadi")}</Text>;
     } else if (item.type === "IMAGE" && item.viewOnce && conversationKey) {
       content = (
         <ViewOnceImageBubble
@@ -2089,7 +2077,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           {content}
           {translations[item.id] && (
             <View style={styles.translationBox}>
-              <Text style={styles.translationLabel}>Tarjima:</Text>
+              <Text style={styles.translationLabel}>{tr("Tarjima:")}</Text>
               <Text style={styles.translationText}>{translations[item.id]}</Text>
               <TouchableOpacity onPress={() => setTranslations((prev) => { const next = { ...prev }; delete next[item.id]; return next; })} hitSlop={8}>
                 <Text style={styles.translationDismiss}>✕</Text>
@@ -2099,7 +2087,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           {translatingId === item.id && (
             <View style={styles.translationBox}>
               <ActivityIndicator size="small" color={colors.primary} />
-              <Text style={styles.translationLabel}> Tarjima qilinmoqda...</Text>
+              <Text style={styles.translationLabel}> {tr("Tarjima qilinmoqda...")}</Text>
             </View>
           )}
           {!item.deletedAt &&
@@ -2128,7 +2116,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )}
           <View style={styles.messageFooter}>
-            {item.editedAt && !item.deletedAt && <Text style={styles.editedLabel}>tahrirlangan</Text>}
+            {item.editedAt && !item.deletedAt && <Text style={styles.editedLabel}>{tr("tahrirlangan")}</Text>}
             {item.isStarred && <Text style={styles.starIcon}>⭐</Text>}
             <Text style={styles.messageTime}>
               {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -2144,14 +2132,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             <TouchableOpacity
               style={styles.sendFailedRow}
               onPress={() =>
-                Alert.alert("Xabar yuborilmadi", undefined, [
-                  { text: "O'chirish", style: "destructive", onPress: () => discardFailedMessage(conversationId, item.id) },
-                  { text: "Qayta yuborish", onPress: () => retryFailedMessage(conversationId, item.id).catch(() => {}) },
-                  { text: "Bekor qilish", style: "cancel" },
+                Alert.alert(tr("Xabar yuborilmadi"), undefined, [
+                  { text: tr("O'chirish"), style: "destructive", onPress: () => discardFailedMessage(conversationId, item.id) },
+                  { text: tr("Qayta yuborish"), onPress: () => retryFailedMessage(conversationId, item.id).catch(() => {}) },
+                  { text: tr("Bekor qilish"), style: "cancel" },
                 ])
               }
             >
-              <Text style={styles.sendFailedText}>⚠️ Yuborilmadi — qayta urinish uchun bosing</Text>
+              <Text style={styles.sendFailedText}>{tr("⚠️ Yuborilmadi — qayta urinish uchun bosing")}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -2260,7 +2248,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         ListEmptyComponent={
           !loading ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyText}>🔒 Xabarlar end-to-end shifrlangan</Text>
+              <Text style={styles.emptyText}>{tr("🔒 Xabarlar end-to-end shifrlangan")}</Text>
             </View>
           ) : null
         }
@@ -2298,7 +2286,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <View style={styles.replyBar} />
           <View style={styles.replyContent}>
             <Text style={styles.replyAuthor} numberOfLines={1}>
-              ✏️ Xabarni tahrirlash
+              {tr("✏️ Xabarni tahrirlash")}
             </Text>
             <Text style={styles.replyText} numberOfLines={1}>
               {getPreviewLabel(editingMessage)}
@@ -2327,30 +2315,30 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       )}
       {conversation?.isBlocked ? (
         <View style={styles.blockedBar}>
-          <Text style={styles.blockedText}>🚫 Siz bu foydalanuvchini bloklagansiz</Text>
+          <Text style={styles.blockedText}>{tr("🚫 Siz bu foydalanuvchini bloklagansiz")}</Text>
           <TouchableOpacity onPress={onToggleBlock}>
-            <Text style={styles.blockedAction}>Blokdan chiqarish</Text>
+            <Text style={styles.blockedAction}>{tr("Blokdan chiqarish")}</Text>
           </TouchableOpacity>
         </View>
       ) : !canSend ? (
         <View style={styles.blockedBar}>
-          <Text style={styles.blockedText}>🔇 Faqat guruh egasi va adminlar xabar yubora oladi</Text>
+          <Text style={styles.blockedText}>{tr("🔇 Faqat guruh egasi va adminlar xabar yubora oladi")}</Text>
         </View>
       ) : recording ? (
         <View style={styles.recordingRow}>
           <View style={styles.recordingDot} />
           <Text style={styles.recordingTime}>{formatDuration(recorderState.durationMillis / 1000)}</Text>
-          <Text style={styles.recordingHint}>Ovoz yozilmoqda...</Text>
-          <TouchableOpacity style={styles.recordingCancel} onPress={cancelRecording} accessibilityLabel="Yozishni bekor qilish" accessibilityRole="button">
-            <Text style={styles.recordingCancelText}>Bekor qilish</Text>
+          <Text style={styles.recordingHint}>{tr("Ovoz yozilmoqda...")}</Text>
+          <TouchableOpacity style={styles.recordingCancel} onPress={cancelRecording} accessibilityLabel={tr("Yozishni bekor qilish")} accessibilityRole="button">
+            <Text style={styles.recordingCancelText}>{tr("Bekor qilish")}</Text>
           </TouchableOpacity>
           {conversation?.type !== "CHANNEL" && (
-            <TouchableOpacity style={styles.mediaPreviewViewOnce} onPress={() => sendRecording(true)} accessibilityLabel="Bir martalik ovozli xabar" accessibilityRole="button">
+            <TouchableOpacity style={styles.mediaPreviewViewOnce} onPress={() => sendRecording(true)} accessibilityLabel={tr("Bir martalik ovozli xabar")} accessibilityRole="button">
               <Text style={styles.mediaPreviewViewOnceText}>🔥</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={styles.sendButton} onPress={() => sendRecording(false)} accessibilityLabel="Ovozli xabar yuborish" accessibilityRole="button">
-            <Text style={styles.sendText}>Yuborish</Text>
+          <TouchableOpacity style={styles.sendButton} onPress={() => sendRecording(false)} accessibilityLabel={tr("Ovozli xabar yuborish")} accessibilityRole="button">
+            <Text style={styles.sendText}>{tr("Yuborish")}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -2383,44 +2371,44 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           {selection.start !== selection.end && (
             <View style={styles.formatToolbar}>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("*")} accessibilityLabel="Qalin" accessibilityRole="button">
-                <Text style={[styles.formatButtonText, styles.boldText]}>B</Text>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("*")} accessibilityLabel={tr("Qalin")} accessibilityRole="button">
+                <Text style={[styles.formatButtonText, styles.boldText]}>{tr("B")}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("_")} accessibilityLabel="Kursiv" accessibilityRole="button">
-                <Text style={[styles.formatButtonText, styles.italicText]}>I</Text>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("_")} accessibilityLabel={tr("Kursiv")} accessibilityRole="button">
+                <Text style={[styles.formatButtonText, styles.italicText]}>{tr("I")}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("~")} accessibilityLabel="Chizilgan" accessibilityRole="button">
-                <Text style={[styles.formatButtonText, styles.strikeText]}>S</Text>
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("~")} accessibilityLabel={tr("Chizilgan")} accessibilityRole="button">
+                <Text style={[styles.formatButtonText, styles.strikeText]}>{tr("S")}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("`")} accessibilityLabel="Kod" accessibilityRole="button">
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("`")} accessibilityLabel={tr("Kod")} accessibilityRole="button">
                 <Text style={[styles.formatButtonText, styles.codeText]}>{"</>"}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("||")} accessibilityLabel="Spoiler" accessibilityRole="button">
+              <TouchableOpacity style={styles.formatButton} onPress={() => onFormatSelection("||")} accessibilityLabel={tr("Spoiler")} accessibilityRole="button">
                 <Text style={styles.formatButtonText}>🙈</Text>
               </TouchableOpacity>
             </View>
           )}
           <View style={styles.inputRow}>
-            <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage} accessibilityLabel="Fayl biriktirish" accessibilityRole="button">
+            <TouchableOpacity style={styles.attachButton} onPress={onAttach} disabled={sending || !!editingMessage} accessibilityLabel={tr("Fayl biriktirish")} accessibilityRole="button">
               {sending ? <ActivityIndicator color={colors.primary} size="small" /> : <Text style={styles.attachIcon}>+</Text>}
             </TouchableOpacity>
             {isGroupLike && (
-              <TouchableOpacity style={styles.attachButton} onPress={() => setMentionPickerVisible(true)} disabled={sending} accessibilityLabel="Foydalanuvchini eslatish" accessibilityRole="button">
+              <TouchableOpacity style={styles.attachButton} onPress={() => setMentionPickerVisible(true)} disabled={sending} accessibilityLabel={tr("Foydalanuvchini eslatish")} accessibilityRole="button">
                 <Text style={styles.attachIcon}>@</Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.attachButton} onPress={onShowFormatHelp} disabled={sending} accessibilityLabel="Matn formatlash" accessibilityRole="button">
-              <Text style={styles.formatHelpIcon}>Aa</Text>
+            <TouchableOpacity style={styles.attachButton} onPress={onShowFormatHelp} disabled={sending} accessibilityLabel={tr("Matn formatlash")} accessibilityRole="button">
+              <Text style={styles.formatHelpIcon}>{tr("Aa")}</Text>
             </TouchableOpacity>
             <TextInput
               style={styles.input}
               value={text}
               onChangeText={onChangeText}
               onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
-              placeholder="Xabar yozing..."
+              placeholder={tr("Xabar yozing...")}
               placeholderTextColor={colors.textSecondary}
               multiline
-              accessibilityLabel="Xabar matni"
+              accessibilityLabel={tr("Xabar matni")}
             />
             {text.trim() || editingMessage ? (
               <TouchableOpacity
@@ -2428,17 +2416,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 onPress={() => onSend()}
                 onLongPress={onSendOptions}
                 disabled={!editingMessage && slowModeRemaining > 0}
-                accessibilityLabel="Xabar yuborish"
+                accessibilityLabel={tr("Xabar yuborish")}
                 accessibilityRole="button"
               >
-                <Text style={styles.sendText}>Yuborish</Text>
+                <Text style={styles.sendText}>{tr("Yuborish")}</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={styles.attachButton}
                 onPress={startRecording}
                 disabled={sending || !!editingMessage || !canSendMedia}
-                accessibilityLabel="Ovozli xabar yozish"
+                accessibilityLabel={tr("Ovozli xabar yozish")}
                 accessibilityRole="button"
               >
                 <Text style={styles.attachIcon}>🎤</Text>
@@ -2479,7 +2467,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   <Text style={styles.reactionPickerMore}>➕</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={styles.quickReactionHint}>Ikki marta bosish uchun reaksiyani uzoq bosib tanlang</Text>
+              <Text style={styles.quickReactionHint}>{tr("Ikki marta bosish uchun reaksiyani uzoq bosib tanlang")}</Text>
             </>
           )}
           <TouchableOpacity
@@ -2492,7 +2480,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               setActionMessage(null);
             }}
           >
-            <Text style={styles.actionButtonText}>↩️ Javob berish</Text>
+            <Text style={styles.actionButtonText}>{tr("↩️ Javob berish")}</Text>
           </TouchableOpacity>
           {actionMessage &&
             isGroupLike &&
@@ -2515,11 +2503,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                     const { title } = getConversationDisplay(dm, user?.id ?? "", contactAliases);
                     navigation.navigate("ChatRoom", { conversationId: dm.id, title });
                   } catch {
-                    Alert.alert("Xatolik", "Shaxsiy javob yuborib bo'lmadi");
+                    Alert.alert(tr("Xatolik"), tr("Shaxsiy javob yuborib bo'lmadi"));
                   }
                 }}
               >
-                <Text style={styles.actionButtonText}>↪️ Shaxsiy javob</Text>
+                <Text style={styles.actionButtonText}>{tr("↪️ Shaxsiy javob")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage && !actionMessage.deletedAt && (
@@ -2530,7 +2518,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 setActionMessage(null);
               }}
             >
-              <Text style={styles.actionButtonText}>☑️ Tanlash</Text>
+              <Text style={styles.actionButtonText}>{tr("☑️ Tanlash")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage &&
@@ -2552,7 +2540,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   setActionMessage(null);
                 }}
               >
-                <Text style={styles.actionButtonText}>📋 Nusxalash</Text>
+                <Text style={styles.actionButtonText}>{tr("📋 Nusxalash")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage &&
@@ -2575,7 +2563,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   Share.share({ message: text }).catch(() => {});
                 }}
               >
-                <Text style={styles.actionButtonText}>↗️ Ulashish</Text>
+                <Text style={styles.actionButtonText}>{tr("↗️ Ulashish")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage &&
@@ -2595,7 +2583,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   onEdit(message);
                 }}
               >
-                <Text style={styles.actionButtonText}>✏️ Tahrirlash</Text>
+                <Text style={styles.actionButtonText}>{tr("✏️ Tahrirlash")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage && actionMessage.editedAt && !actionMessage.deletedAt && !actionMessage.decryptFailed && (
@@ -2607,7 +2595,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 onShowEditHistory(message);
               }}
             >
-              <Text style={styles.actionButtonText}>🕘 Tahrirlash tarixi</Text>
+              <Text style={styles.actionButtonText}>{tr("🕘 Tahrirlash tarixi")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage &&
@@ -2620,17 +2608,17 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 onPress={() => {
                   const message = actionMessage;
                   setActionMessage(null);
-                  Alert.alert("So'rovnomani yopish", "Yopilgandan so'ng ovoz berib bo'lmaydi. Davom etilsinmi?", [
-                    { text: "Bekor qilish", style: "cancel" },
+                  Alert.alert(tr("So'rovnomani yopish"), tr("Yopilgandan so'ng ovoz berib bo'lmaydi. Davom etilsinmi?"), [
+                    { text: tr("Bekor qilish"), style: "cancel" },
                     {
-                      text: "Yopish",
+                      text: tr("Yopish"),
                       style: "destructive",
-                      onPress: () => closePoll(conversationId, message.id).catch(() => Alert.alert("Xatolik", "So'rovnomani yopib bo'lmadi")),
+                      onPress: () => closePoll(conversationId, message.id).catch(() => Alert.alert(tr("Xatolik"), tr("So'rovnomani yopib bo'lmadi"))),
                     },
                   ]);
                 }}
               >
-                <Text style={styles.actionButtonText}>🔒 So'rovnomani yopish</Text>
+                <Text style={styles.actionButtonText}>{tr("🔒 So'rovnomani yopish")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage && !actionMessage.deletedAt && !actionMessage.viewOnce && (
@@ -2661,9 +2649,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                     unpinMessage(conversationId, message.id).catch(() => {});
                     return;
                   }
-                  Alert.alert(
-                    "Xabarni qadash",
-                    "Qadalgan xabar qancha vaqt ko'rsatilishini tanlang",
+                  Alert.alert(tr("Xabarni qadash"), tr("Qadalgan xabar qancha vaqt ko'rsatilishini tanlang"),
                     PIN_DURATION_OPTIONS.map((option) => ({
                       text: option.label,
                       onPress: () => {
@@ -2673,9 +2659,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                           doPin(true);
                           return;
                         }
-                        Alert.alert("Bildirishnoma", "Barcha a'zolarga xabar berilsinmi?", [
-                          { text: "Yo'q", onPress: () => doPin(false) },
-                          { text: "Ha", onPress: () => doPin(true) },
+                        Alert.alert(tr("Bildirishnoma"), tr("Barcha a'zolarga xabar berilsinmi?"), [
+                          { text: tr("Yo'q"), onPress: () => doPin(false) },
+                          { text: tr("Ha"), onPress: () => doPin(true) },
                         ]);
                       },
                     }))
@@ -2693,20 +2679,18 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               onPress={() => {
                 const message = actionMessage;
                 setActionMessage(null);
-                Alert.alert(
-                  "Yodga solish",
-                  "Bu xabar haqida qachon eslatilsin?",
+                Alert.alert(tr("Yodga solish"), tr("Bu xabar haqida qachon eslatilsin?"),
                   REMINDER_DURATION_OPTIONS.map((option) => ({
                     text: option.label,
                     onPress: () =>
                       setReminder(conversationId, message.id, option.value)
-                        .then(() => Alert.alert("Yodga solish", "Eslatma o'rnatildi"))
-                        .catch(() => Alert.alert("Xatolik", "Eslatmani o'rnatib bo'lmadi")),
+                        .then(() => Alert.alert(tr("Yodga solish"), tr("Eslatma o'rnatildi")))
+                        .catch(() => Alert.alert(tr("Xatolik"), tr("Eslatmani o'rnatib bo'lmadi"))),
                   }))
                 );
               }}
             >
-              <Text style={styles.actionButtonText}>⏰ Yodga solish</Text>
+              <Text style={styles.actionButtonText}>{tr("⏰ Yodga solish")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage && isGroupLike && actionMessage.senderId === user?.id && !actionMessage.deletedAt && (
@@ -2718,7 +2702,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 setSeenByMessage(message);
               }}
             >
-              <Text style={styles.actionButtonText}>👁 Kim ko'rdi</Text>
+              <Text style={styles.actionButtonText}>{tr("👁 Kim ko'rdi")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage &&
@@ -2734,7 +2718,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   setMessageInfoMessage(message);
                 }}
               >
-                <Text style={styles.actionButtonText}>ℹ️ Xabar haqida</Text>
+                <Text style={styles.actionButtonText}>{tr("ℹ️ Xabar haqida")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage && canForwardOrCopy && !actionMessage.decryptFailed && !actionMessage.viewOnce && (
@@ -2745,7 +2729,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 setActionMessage(null);
               }}
             >
-              <Text style={styles.actionButtonText}>➡️ Yo'naltirish</Text>
+              <Text style={styles.actionButtonText}>{tr("➡️ Yo'naltirish")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage && canForwardOrCopy && !actionMessage.decryptFailed && !actionMessage.viewOnce && !conversation?.isSelf && (
@@ -2757,13 +2741,13 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 try {
                   const saved = await getOrCreateSavedMessages();
                   await forwardMessage(conversationId, message.id, saved.id, false);
-                  Alert.alert("Yuborildi", "Saqlangan xabarlarga yuborildi");
+                  Alert.alert(tr("Yuborildi"), tr("Saqlangan xabarlarga yuborildi"));
                 } catch {
-                  Alert.alert("Xatolik", "Saqlangan xabarlarga yuborib bo'lmadi");
+                  Alert.alert(tr("Xatolik"), tr("Saqlangan xabarlarga yuborib bo'lmadi"));
                 }
               }}
             >
-              <Text style={styles.actionButtonText}>📥 Saqlangan xabarlarga yuborish</Text>
+              <Text style={styles.actionButtonText}>{tr("📥 Saqlangan xabarlarga yuborish")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage &&
@@ -2781,7 +2765,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   onDelete(message);
                 }}
               >
-                <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🗑 O'chirish</Text>
+                <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>{tr("🗑 O'chirish")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage && !actionMessage.deletedAt && (
@@ -2793,7 +2777,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 onHideForMe(message);
               }}
             >
-              <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🙈 Mendan o'chirish</Text>
+              <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>{tr("🙈 Mendan o'chirish")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage &&
@@ -2809,7 +2793,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   patUser(conversationId, message.senderId).catch(() => {});
                 }}
               >
-                <Text style={styles.actionButtonText}>👋 Chimchilash</Text>
+                <Text style={styles.actionButtonText}>{tr("👋 Chimchilash")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage && !actionMessage.deletedAt && !actionMessage.decryptFailed && !!actionMessage.text && actionMessage.type !== "SYSTEM" && !translations[actionMessage.id] && (
@@ -2820,7 +2804,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 setShowTranslateLangPicker(true);
               }}
             >
-              <Text style={styles.actionButtonText}>🌐 Tarjima qilish</Text>
+              <Text style={styles.actionButtonText}>{tr("🌐 Tarjima qilish")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage && actionMessage.senderId !== user?.id && actionMessage.type !== "SYSTEM" && (
@@ -2832,7 +2816,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 markRead(conversationId, message.id, message.createdAt).catch(() => {});
               }}
             >
-              <Text style={styles.actionButtonText}>📍 Shu yergacha o'qilgan deb belgilash</Text>
+              <Text style={styles.actionButtonText}>{tr("📍 Shu yergacha o'qilgan deb belgilash")}</Text>
             </TouchableOpacity>
           )}
           {actionMessage &&
@@ -2847,7 +2831,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   reportUser(message.senderId, conversationId, message.id);
                 }}
               >
-                <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>🚩 Xabarni shikoyat qilish</Text>
+                <Text style={[styles.actionButtonText, styles.actionButtonDanger]}>{tr("🚩 Xabarni shikoyat qilish")}</Text>
               </TouchableOpacity>
             )}
           {actionMessage && actionMessage.type !== "SYSTEM" && (
@@ -2867,14 +2851,14 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 if (message.editedAt) {
                   info += `\nTahrirlangan: ${new Date(message.editedAt).toLocaleString([], dateOptions)}`;
                 }
-                Alert.alert("Xabar haqida", info);
+                Alert.alert(tr("Xabar haqida"), info);
               }}
             >
-              <Text style={styles.actionButtonText}>ℹ️ Ma'lumot</Text>
+              <Text style={styles.actionButtonText}>{tr("ℹ️ Ma'lumot")}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.actionButton} onPress={() => setActionMessage(null)}>
-            <Text style={styles.actionButtonText}>Bekor qilish</Text>
+            <Text style={styles.actionButtonText}>{tr("Bekor qilish")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -2896,7 +2880,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
         }}
       >
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Reaksiya tanlang</Text>
+          <Text style={styles.mentionPickerTitle}>{tr("Reaksiya tanlang")}</Text>
           <View style={styles.moreReactionsGrid}>
             {MORE_REACTIONS.map((emoji) => (
               <TouchableOpacity
@@ -2918,7 +2902,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           <View style={styles.customReactionRow}>
             <TextInput
               style={styles.customReactionInput}
-              placeholder="Boshqa emoji..."
+              placeholder={tr("Boshqa emoji...")}
               placeholderTextColor={colors.textSecondary}
               value={customReactionEmoji}
               onChangeText={setCustomReactionEmoji}
@@ -2958,7 +2942,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     <Modal visible={!!seenByMessage} transparent animationType="fade" onRequestClose={() => setSeenByMessage(null)}>
       <Pressable style={styles.actionBackdrop} onPress={() => setSeenByMessage(null)}>
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Kim ko'rdi</Text>
+          <Text style={styles.mentionPickerTitle}>{tr("Kim ko'rdi")}</Text>
           <ScrollView style={styles.seenByList}>
             {seenByMessage &&
               (() => {
@@ -2990,7 +2974,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               })()}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setSeenByMessage(null)}>
-            <Text style={styles.actionButtonText}>Yopish</Text>
+            <Text style={styles.actionButtonText}>{tr("Yopish")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -2998,15 +2982,15 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     <Modal visible={!!messageInfoMessage} transparent animationType="fade" onRequestClose={() => setMessageInfoMessage(null)}>
       <Pressable style={styles.actionBackdrop} onPress={() => setMessageInfoMessage(null)}>
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Xabar haqida</Text>
+          <Text style={styles.mentionPickerTitle}>{tr("Xabar haqida")}</Text>
           {messageInfoMessage && (
             <View style={styles.messageInfoList}>
               <View style={styles.messageInfoRow}>
-                <Text style={styles.messageInfoLabel}>Yuborildi</Text>
+                <Text style={styles.messageInfoLabel}>{tr("Yuborildi")}</Text>
                 <Text style={styles.messageInfoValue}>{formatDateTime(messageInfoMessage.createdAt)}</Text>
               </View>
               <View style={styles.messageInfoRow}>
-                <Text style={styles.messageInfoLabel}>Yetkazildi</Text>
+                <Text style={styles.messageInfoLabel}>{tr("Yetkazildi")}</Text>
                 <Text style={styles.messageInfoValue}>
                   {otherParticipant && isMessageDelivered(messageInfoMessage, otherParticipant)
                     ? formatDateTime(otherParticipant.lastDeliveredAt!)
@@ -3014,7 +2998,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 </Text>
               </View>
               <View style={styles.messageInfoRow}>
-                <Text style={styles.messageInfoLabel}>O'qildi</Text>
+                <Text style={styles.messageInfoLabel}>{tr("O'qildi")}</Text>
                 <Text style={styles.messageInfoValue}>
                   {otherParticipant && isMessageRead(messageInfoMessage, otherParticipant)
                     ? formatDateTime(otherParticipant.lastReadAt!)
@@ -3024,7 +3008,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )}
           <TouchableOpacity style={styles.actionButton} onPress={() => setMessageInfoMessage(null)}>
-            <Text style={styles.actionButtonText}>Yopish</Text>
+            <Text style={styles.actionButtonText}>{tr("Yopish")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -3037,7 +3021,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     >
       <Pressable style={styles.actionBackdrop} onPress={() => setReactionDetailsMessage(null)}>
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Reaksiyalar</Text>
+          <Text style={styles.mentionPickerTitle}>{tr("Reaksiyalar")}</Text>
           <ScrollView style={styles.seenByList}>
             {reactionDetailsMessage &&
               groupReactions(reactionDetailsMessage.reactions).map(({ emoji, userIds }) => (
@@ -3058,7 +3042,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               ))}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setReactionDetailsMessage(null)}>
-            <Text style={styles.actionButtonText}>Yopish</Text>
+            <Text style={styles.actionButtonText}>{tr("Yopish")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -3071,7 +3055,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     >
       <Pressable style={styles.actionBackdrop} onPress={() => setPollVotesMessage(null)}>
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Ovozlar</Text>
+          <Text style={styles.mentionPickerTitle}>{tr("Ovozlar")}</Text>
           <ScrollView style={styles.seenByList}>
             {pollVotesMessage?.pollMeta?.options.map((option) => {
               const voters = (pollVotesMessage.pollVotes ?? []).filter((v) => v.optionIds.includes(option.id));
@@ -3080,7 +3064,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   <Text style={styles.seenBySectionLabel}>
                     {option.text} · {voters.length}
                   </Text>
-                  {voters.length === 0 && <Text style={styles.seenByName}>Hali ovoz yo'q</Text>}
+                  {voters.length === 0 && <Text style={styles.seenByName}>{tr("Hali ovoz yo'q")}</Text>}
                   {voters.map((v) => {
                     const uid = v.userId!;
                     const participant = conversation?.participants.find((p) => p.userId === uid);
@@ -3096,7 +3080,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             })}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setPollVotesMessage(null)}>
-            <Text style={styles.actionButtonText}>Yopish</Text>
+            <Text style={styles.actionButtonText}>{tr("Yopish")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -3109,7 +3093,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     >
       <Pressable style={styles.actionBackdrop} onPress={() => setEditHistoryMessage(null)}>
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Tahrirlash tarixi</Text>
+          <Text style={styles.mentionPickerTitle}>{tr("Tahrirlash tarixi")}</Text>
           <ScrollView style={styles.seenByList}>
             {loadingEditHistory ? (
               <ActivityIndicator color={colors.primary} style={styles.editHistoryLoader} />
@@ -3146,7 +3130,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             )}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setEditHistoryMessage(null)}>
-            <Text style={styles.actionButtonText}>Yopish</Text>
+            <Text style={styles.actionButtonText}>{tr("Yopish")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -3159,7 +3143,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     >
       <Pressable style={styles.actionBackdrop} onPress={() => setMentionPickerVisible(false)}>
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Kimnidir eslatish</Text>
+          <Text style={styles.mentionPickerTitle}>{tr("Kimnidir eslatish")}</Text>
           {canMentionEveryone && (
             <TouchableOpacity style={styles.actionButton} onPress={onMentionEveryone}>
               <Text style={styles.actionButtonText}>
@@ -3185,7 +3169,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </TouchableOpacity>
             ))}
           <TouchableOpacity style={styles.actionButton} onPress={() => setMentionPickerVisible(false)}>
-            <Text style={styles.actionButtonText}>Bekor qilish</Text>
+            <Text style={styles.actionButtonText}>{tr("Bekor qilish")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -3198,7 +3182,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     >
       <Pressable style={styles.actionBackdrop} onPress={() => setQuickReplyPickerVisible(false)}>
         <Pressable style={styles.actionSheet}>
-          <Text style={styles.mentionPickerTitle}>Tezkor javob</Text>
+          <Text style={styles.mentionPickerTitle}>{tr("Tezkor javob")}</Text>
           <ScrollView style={styles.seenByList}>
             {quickReplies.map((item) => (
               <TouchableOpacity key={item.id} style={styles.actionButton} onPress={() => onSelectQuickReply(item.text)}>
@@ -3209,7 +3193,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             ))}
           </ScrollView>
           <TouchableOpacity style={styles.actionButton} onPress={() => setQuickReplyPickerVisible(false)}>
-            <Text style={styles.actionButtonText}>Bekor qilish</Text>
+            <Text style={styles.actionButtonText}>{tr("Bekor qilish")}</Text>
           </TouchableOpacity>
         </Pressable>
       </Pressable>
@@ -3225,7 +3209,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Xabarlarni qidirish"
+            placeholder={tr("Xabarlarni qidirish")}
             placeholderTextColor={colors.textSecondary}
             autoFocus
             returnKeyType="search"
@@ -3248,7 +3232,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             }}
             hitSlop={8}
           >
-            <Text style={styles.searchClose}>Yopish</Text>
+            <Text style={styles.searchClose}>{tr("Yopish")}</Text>
           </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.searchSenderFilterBar}>
@@ -3270,7 +3254,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               style={[styles.senderChip, !searchSenderId && styles.senderChipActive]}
               onPress={() => setSearchSenderId(null)}
             >
-              <Text style={[styles.senderChipText, !searchSenderId && styles.senderChipTextActive]}>Hammasi</Text>
+              <Text style={[styles.senderChipText, !searchSenderId && styles.senderChipTextActive]}>{tr("Hammasi")}</Text>
             </TouchableOpacity>
             {searchableSenders.map((sender) => (
               <TouchableOpacity
@@ -3312,7 +3296,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                 {searchLoadingMore ? (
                   <ActivityIndicator color={colors.primary} />
                 ) : (
-                  <Text style={styles.searchLoadMoreText}>Eski xabarlarni qidirish</Text>
+                  <Text style={styles.searchLoadMoreText}>{tr("Eski xabarlarni qidirish")}</Text>
                 )}
               </TouchableOpacity>
             ) : null
@@ -3320,7 +3304,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           ListEmptyComponent={
             searchActive ? (
               <View style={styles.searchEmpty}>
-                <Text style={styles.emptyText}>Hech narsa topilmadi</Text>
+                <Text style={styles.emptyText}>{tr("Hech narsa topilmadi")}</Text>
               </View>
             ) : null
           }
@@ -3391,9 +3375,9 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       <Pressable style={styles.actionBackdrop} onPress={() => setStickerPickerVisible(false)}>
         <Pressable style={styles.actionSheet}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={styles.mentionPickerTitle}>Stiker tanlang</Text>
+            <Text style={styles.mentionPickerTitle}>{tr("Stiker tanlang")}</Text>
             <TouchableOpacity onPress={() => { setStickerPickerVisible(false); onOpenGifPicker(); }} style={{ paddingHorizontal: 12 }}>
-              <Text style={{ color: colors.primary, fontWeight: "600", fontSize: 14 }}>GIF</Text>
+              <Text style={{ color: colors.primary, fontWeight: "600", fontSize: 14 }}>{tr("GIF")}</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stickerPackTabs}>
@@ -3407,7 +3391,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   style={[styles.stickerPackTabText, activeStickerPackIndex === -1 && styles.stickerPackTabTextActive]}
                   numberOfLines={1}
                 >
-                  Oxirgi
+                  {tr("Oxirgi")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -3446,7 +3430,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       >
         <View style={styles.searchHeader}>
           <TouchableOpacity onPress={() => setPollModalVisible(false)}>
-            <Text style={styles.searchClose}>Bekor qilish</Text>
+            <Text style={styles.searchClose}>{tr("Bekor qilish")}</Text>
           </TouchableOpacity>
           <Text style={styles.pollHeaderTitle}>{pollQuiz ? "Yangi test" : "Yangi so'rovnoma"}</Text>
           <TouchableOpacity
@@ -3466,22 +3450,22 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   styles.pollSendDisabled,
               ]}
             >
-              Yuborish
+              {tr("Yuborish")}
             </Text>
           </TouchableOpacity>
         </View>
         <ScrollView style={styles.pollBody} keyboardShouldPersistTaps="handled">
-          <Text style={styles.pollLabel}>Savol</Text>
+          <Text style={styles.pollLabel}>{tr("Savol")}</Text>
           <TextInput
             style={styles.pollInput}
             value={pollQuestion}
             onChangeText={setPollQuestion}
-            placeholder="Savolingizni yozing"
+            placeholder={tr("Savolingizni yozing")}
             placeholderTextColor={colors.textSecondary}
             multiline
           />
-          <Text style={styles.pollLabel}>Variantlar</Text>
-          {pollQuiz && <Text style={styles.pollHint}>To'g'ri javobni belgilash uchun doirachani bosing</Text>}
+          <Text style={styles.pollLabel}>{tr("Variantlar")}</Text>
+          {pollQuiz && <Text style={styles.pollHint}>{tr("To'g'ri javobni belgilash uchun doirachani bosing")}</Text>}
           {pollOptions.map((option, index) => (
             <View key={index} style={styles.pollOptionRow}>
               {pollQuiz && (
@@ -3512,26 +3496,26 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           )}
           {!pollQuiz && (
             <View style={styles.pollSwitchRow}>
-              <Text style={styles.pollSwitchLabel}>Bir nechta javob</Text>
+              <Text style={styles.pollSwitchLabel}>{tr("Bir nechta javob")}</Text>
               <Switch value={pollMultipleChoice} onValueChange={setPollMultipleChoice} trackColor={{ true: colors.primary }} />
             </View>
           )}
           <View style={styles.pollSwitchRow}>
-            <Text style={styles.pollSwitchLabel}>Anonim so'rovnoma</Text>
+            <Text style={styles.pollSwitchLabel}>{tr("Anonim so'rovnoma")}</Text>
             <Switch value={pollAnonymous} onValueChange={setPollAnonymous} trackColor={{ true: colors.primary }} />
           </View>
           <View style={styles.pollSwitchRow}>
-            <Text style={styles.pollSwitchLabel}>Test rejimi (to'g'ri javob bilan)</Text>
+            <Text style={styles.pollSwitchLabel}>{tr("Test rejimi (to'g'ri javob bilan)")}</Text>
             <Switch value={pollQuiz} onValueChange={onToggleQuiz} trackColor={{ true: colors.primary }} />
           </View>
           {pollQuiz && (
             <>
-              <Text style={styles.pollLabel}>Tushuntirish (ixtiyoriy)</Text>
+              <Text style={styles.pollLabel}>{tr("Tushuntirish (ixtiyoriy)")}</Text>
               <TextInput
                 style={styles.pollInput}
                 value={pollQuizExplanation}
                 onChangeText={setPollQuizExplanation}
-                placeholder="Javobdan keyin ko'rsatiladigan izoh"
+                placeholder={tr("Javobdan keyin ko'rsatiladigan izoh")}
                 placeholderTextColor={colors.textSecondary}
                 multiline
                 maxLength={300}
@@ -3539,7 +3523,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </>
           )}
           <TouchableOpacity style={styles.pollSwitchRow} onPress={onPickPollDeadline}>
-            <Text style={styles.pollSwitchLabel}>Yopilish vaqti</Text>
+            <Text style={styles.pollSwitchLabel}>{tr("Yopilish vaqti")}</Text>
             <Text style={styles.pollDeadlineValue}>{formatPollDeadline(pollDeadlineSeconds)} ›</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -3549,7 +3533,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       <View style={styles.exportOverlay}>
         <View style={styles.exportBox}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={styles.exportText}>Eksport qilinmoqda...</Text>
+          <Text style={styles.exportText}>{tr("Eksport qilinmoqda...")}</Text>
         </View>
       </View>
     </Modal>
@@ -3575,11 +3559,11 @@ export function ChatRoomScreen({ route, navigation }: Props) {
             </View>
           )}
           {pendingMedia?.isUncompressedImage && (
-            <Text style={styles.mediaPreviewFileBadge}>📄 Siqilmagan rasm fayl sifatida yuboriladi</Text>
+            <Text style={styles.mediaPreviewFileBadge}>{tr("📄 Siqilmagan rasm fayl sifatida yuboriladi")}</Text>
           )}
           <TextInput
             style={styles.mediaCaptionInput}
-            placeholder="Izoh qo'shish..."
+            placeholder={tr("Izoh qo'shish...")}
             placeholderTextColor={colors.textSecondary}
             value={mediaCaption}
             onChangeText={setMediaCaption}
@@ -3587,7 +3571,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
           />
           <View style={styles.mediaPreviewActions}>
             <TouchableOpacity style={styles.mediaPreviewCancel} onPress={cancelPendingMedia} disabled={sending}>
-              <Text style={styles.mediaPreviewCancelText}>Bekor qilish</Text>
+              <Text style={styles.mediaPreviewCancelText}>{tr("Bekor qilish")}</Text>
             </TouchableOpacity>
             {(pendingMedia?.type === "IMAGE" || pendingMedia?.type === "VIDEO") && (
               <TouchableOpacity
@@ -3615,7 +3599,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
                   <ActivityIndicator color="#fff" />
                 )
               ) : (
-                <Text style={styles.mediaPreviewSendText}>Yuborish</Text>
+                <Text style={styles.mediaPreviewSendText}>{tr("Yuborish")}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -3633,16 +3617,16 @@ export function ChatRoomScreen({ route, navigation }: Props) {
       <View style={styles.container}>
         <View style={styles.searchHeader}>
           <TouchableOpacity onPress={() => setGifPickerVisible(false)}>
-            <Text style={styles.searchClose}>Yopish</Text>
+            <Text style={styles.searchClose}>{tr("Yopish")}</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.text }}>GIF tanlang</Text>
+          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.text }}>{tr("GIF tanlang")}</Text>
           <View style={{ width: 60 }} />
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.background, borderRadius: 10, marginHorizontal: 12, marginVertical: 8, paddingHorizontal: 12, height: 40, gap: 8 }}>
           <Text style={{ fontSize: 14 }}>🔍</Text>
           <TextInput
             style={{ flex: 1, fontSize: 15, color: colors.text, height: "100%", padding: 0 }}
-            placeholder="GIF qidirish..."
+            placeholder={tr("GIF qidirish...")}
             placeholderTextColor={colors.textSecondary}
             value={gifSearch}
             onChangeText={onSearchGif}
@@ -3671,7 +3655,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <View style={styles.centerContent}><Text style={{ color: colors.textSecondary }}>GIF topilmadi</Text></View>
+              <View style={styles.centerContent}><Text style={{ color: colors.textSecondary }}>{tr("GIF topilmadi")}</Text></View>
             }
           />
         )}
@@ -3680,7 +3664,7 @@ export function ChatRoomScreen({ route, navigation }: Props) {
     <Modal visible={showTranslateLangPicker} transparent animationType="fade" onRequestClose={() => setShowTranslateLangPicker(false)}>
       <Pressable style={styles.actionBackdrop} onPress={() => setShowTranslateLangPicker(false)}>
         <View style={styles.actionSheet}>
-          <Text style={styles.translationLabel}>Tarjima tili</Text>
+          <Text style={styles.translationLabel}>{tr("Tarjima tili")}</Text>
           <ScrollView style={{ maxHeight: 350 }}>
             {LANGUAGES.map((lang) => (
               <TouchableOpacity

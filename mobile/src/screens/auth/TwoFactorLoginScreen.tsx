@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "TwoFactorLogin">;
 
@@ -23,7 +24,7 @@ export function TwoFactorLoginScreen({ route }: Props) {
     try {
       await completeTwoFactorLogin(pendingToken, password);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Parol noto'g'ri");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Parol noto'g'ri");
     } finally {
       setLoading(false);
     }
@@ -35,7 +36,7 @@ export function TwoFactorLoginScreen({ route }: Props) {
       await requestTwoFactorRecovery(pendingToken);
       setMode("recover");
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Kod yuborib bo'lmadi");
     } finally {
       setLoading(false);
     }
@@ -43,14 +44,14 @@ export function TwoFactorLoginScreen({ route }: Props) {
 
   const onVerifyRecovery = async () => {
     if (code.length !== 6) {
-      Alert.alert("Xatolik", "6 xonali kodni kiriting");
+      Alert.alert(tr("Xatolik"), tr("6 xonali kodni kiriting"));
       return;
     }
     setLoading(true);
     try {
       await recoverTwoFactorLogin(pendingToken, code);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod noto'g'ri");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Kod noto'g'ri");
     } finally {
       setLoading(false);
     }
@@ -60,8 +61,8 @@ export function TwoFactorLoginScreen({ route }: Props) {
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.container}>
-        <Text style={styles.title}>Parolni tiklash</Text>
-        <Text style={styles.subtitle}>Telefon raqamingizga yuborilgan 6 xonali kodni kiriting</Text>
+        <Text style={styles.title}>{tr("Parolni tiklash")}</Text>
+        <Text style={styles.subtitle}>{tr("Telefon raqamingizga yuborilgan 6 xonali kodni kiriting")}</Text>
 
         <TextInput
           style={[styles.input, styles.codeInput]}
@@ -75,10 +76,10 @@ export function TwoFactorLoginScreen({ route }: Props) {
         />
 
         <TouchableOpacity style={styles.button} onPress={onVerifyRecovery} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Tasdiqlash")}</Text>}
         </TouchableOpacity>
         <TouchableOpacity style={styles.linkButton} onPress={() => setMode("password")} disabled={loading}>
-          <Text style={styles.linkButtonText}>Orqaga</Text>
+          <Text style={styles.linkButtonText}>{tr("Orqaga")}</Text>
         </TouchableOpacity>
       </View>
       </KeyboardAvoidingView>
@@ -88,13 +89,13 @@ export function TwoFactorLoginScreen({ route }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <View style={styles.container}>
-      <Text style={styles.title}>Ikki bosqichli tekshiruv</Text>
-      <Text style={styles.subtitle}>Hisobingiz uchun qo'shimcha (bulutli) parolni kiriting</Text>
+      <Text style={styles.title}>{tr("Ikki bosqichli tekshiruv")}</Text>
+      <Text style={styles.subtitle}>{tr("Hisobingiz uchun qo'shimcha (bulutli) parolni kiriting")}</Text>
       {hint && <Text style={styles.hint}>Maslahat: {hint}</Text>}
 
       <TextInput
         style={styles.input}
-        placeholder="Qo'shimcha parol"
+        placeholder={tr("Qo'shimcha parol")}
         placeholderTextColor={colors.textSecondary}
         secureTextEntry
                 autoComplete="password"
@@ -104,10 +105,10 @@ export function TwoFactorLoginScreen({ route }: Props) {
       />
 
       <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Tasdiqlash")}</Text>}
       </TouchableOpacity>
       <TouchableOpacity style={styles.linkButton} onPress={onRequestRecovery} disabled={loading}>
-        <Text style={styles.linkButtonText}>Qo'shimcha parolni unutdingizmi?</Text>
+        <Text style={styles.linkButtonText}>{tr("Qo'shimcha parolni unutdingizmi?")}</Text>
       </TouchableOpacity>
     </View>
     </KeyboardAvoidingView>

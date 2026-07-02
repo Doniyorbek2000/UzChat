@@ -5,13 +5,14 @@ import { RootStackParamList } from "../../navigation/types";
 import { subscriptionsApi, ChannelSubscription } from "../../api/subscriptions";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MySubscriptions">;
 
 const TIER_CONFIG = {
-  vip: { icon: "👑", label: "VIP", color: "#FF9500", bg: "#FF9500" + "15" },
-  premium: { icon: "⭐", label: "Premium", color: "#AF52DE", bg: "#AF52DE" + "15" },
-  basic: { icon: "✓", label: "Oddiy", color: "#34C759", bg: "#34C759" + "15" },
+  vip: { icon: "👑", label: tr("VIP"), color: "#FF9500", bg: "#FF9500" + "15" },
+  premium: { icon: "⭐", label: tr("Premium"), color: "#AF52DE", bg: "#AF52DE" + "15" },
+  basic: { icon: "✓", label: tr("Oddiy"), color: "#34C759", bg: "#34C759" + "15" },
 };
 
 export function MySubscriptionsScreen({ navigation }: Props) {
@@ -34,17 +35,17 @@ export function MySubscriptionsScreen({ navigation }: Props) {
   }, []);
 
   const handleUnsubscribe = (sub: ChannelSubscription) => {
-    Alert.alert("Obunani bekor qilish", `${sub.conversation?.name} kanalidan obunani bekor qilmoqchimisiz?`, [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Obunani bekor qilish"), `${sub.conversation?.name} kanalidan obunani bekor qilmoqchimisiz?`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Ha, bekor qilish",
+        text: tr("Ha, bekor qilish"),
         style: "destructive",
         onPress: async () => {
           try {
             await subscriptionsApi.unsubscribe(sub.conversationId);
             setSubs((prev) => prev.filter((s) => s.id !== sub.id));
           } catch {
-            Alert.alert("Xatolik", "Obunani bekor qilib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Obunani bekor qilib bo'lmadi"));
           }
         },
       },
@@ -60,7 +61,7 @@ export function MySubscriptionsScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Obunalarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Obunalarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -100,8 +101,8 @@ export function MySubscriptionsScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📢</Text>
-            <Text style={styles.emptyTitle}>Obunalar yo'q</Text>
-            <Text style={styles.emptyHint}>Kanallarga obuna bo'ling va maxsus kontent oling</Text>
+            <Text style={styles.emptyTitle}>{tr("Obunalar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Kanallarga obuna bo'ling va maxsus kontent oling")}</Text>
           </View>
         }
       />

@@ -5,14 +5,15 @@ import { RootStackParamList } from "../../navigation/types";
 import { fileSecurityApi, FileSecuritySettings } from "../../api/fileSecurity";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "FileSecurity">;
 
 const FILE_SIZE_OPTIONS = [
-  { label: "5 MB", value: 5 * 1024 * 1024 },
-  { label: "10 MB", value: 10 * 1024 * 1024 },
-  { label: "25 MB", value: 25 * 1024 * 1024 },
-  { label: "50 MB", value: 50 * 1024 * 1024 },
+  { label: tr("5 MB"), value: 5 * 1024 * 1024 },
+  { label: tr("10 MB"), value: 10 * 1024 * 1024 },
+  { label: tr("25 MB"), value: 25 * 1024 * 1024 },
+  { label: tr("50 MB"), value: 50 * 1024 * 1024 },
 ];
 
 export function FileSecurityScreen({}: Props) {
@@ -37,7 +38,7 @@ export function FileSecurityScreen({}: Props) {
       const updated = await fileSecurityApi.updateSettings(patch);
       setSettings(updated);
     } catch {
-      Alert.alert("Xatolik", "Sozlamalarni saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamalarni saqlab bo'lmadi"));
     }
     setSaving(false);
   };
@@ -46,7 +47,7 @@ export function FileSecurityScreen({}: Props) {
     if (!customBlockType.trim() || !settings) return;
     const ext = customBlockType.trim().toLowerCase().replace(".", "");
     if (settings.blockedFileTypes.includes(ext)) {
-      Alert.alert("Xatolik", "Bu tur allaqachon bloklangan");
+      Alert.alert(tr("Xatolik"), tr("Bu tur allaqachon bloklangan"));
       return;
     }
     update({ blockedFileTypes: [...settings.blockedFileTypes, ext] });
@@ -63,18 +64,18 @@ export function FileSecurityScreen({}: Props) {
   }
 
   if (error || !settings) {
-    return <ErrorView message="Sozlamalarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Sozlamalarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       {/* Xavfli fayllar */}
-      <Text style={styles.sectionTitle}>Xavfli fayllar himoyasi</Text>
+      <Text style={styles.sectionTitle}>{tr("Xavfli fayllar himoyasi")}</Text>
       <View style={styles.card}>
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Bajariladigan fayllarni bloklash</Text>
-            <Text style={styles.settingHint}>APK, EXE, BAT, CMD va boshqa xavfli fayllar</Text>
+            <Text style={styles.settingLabel}>{tr("Bajariladigan fayllarni bloklash")}</Text>
+            <Text style={styles.settingHint}>{tr("APK, EXE, BAT, CMD va boshqa xavfli fayllar")}</Text>
           </View>
           <Switch
             value={settings.blockExecutableFiles}
@@ -87,8 +88,8 @@ export function FileSecurityScreen({}: Props) {
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Barcha fayllarni bloklash</Text>
-            <Text style={styles.settingHint}>Hech qanday fayl qabul qilinmaydi</Text>
+            <Text style={styles.settingLabel}>{tr("Barcha fayllarni bloklash")}</Text>
+            <Text style={styles.settingHint}>{tr("Hech qanday fayl qabul qilinmaydi")}</Text>
           </View>
           <Switch
             value={settings.blockAllFiles}
@@ -101,8 +102,8 @@ export function FileSecurityScreen({}: Props) {
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Notanishlardan media bloklash</Text>
-            <Text style={styles.settingHint}>Kontaktlar ro'yxatida bo'lmaganlardan</Text>
+            <Text style={styles.settingLabel}>{tr("Notanishlardan media bloklash")}</Text>
+            <Text style={styles.settingHint}>{tr("Kontaktlar ro'yxatida bo'lmaganlardan")}</Text>
           </View>
           <Switch
             value={settings.blockMediaFromStrangers}
@@ -113,7 +114,7 @@ export function FileSecurityScreen({}: Props) {
       </View>
 
       {/* Fayl hajmi */}
-      <Text style={styles.sectionTitle}>Maksimal fayl hajmi</Text>
+      <Text style={styles.sectionTitle}>{tr("Maksimal fayl hajmi")}</Text>
       <View style={styles.card}>
         <View style={styles.sizeOptions}>
           {FILE_SIZE_OPTIONS.map((opt) => (
@@ -131,7 +132,7 @@ export function FileSecurityScreen({}: Props) {
       </View>
 
       {/* Bloklangan turlar */}
-      <Text style={styles.sectionTitle}>Bloklangan fayl turlari</Text>
+      <Text style={styles.sectionTitle}>{tr("Bloklangan fayl turlari")}</Text>
       <View style={styles.card}>
         <View style={styles.tagContainer}>
           {settings.blockedFileTypes.map((ext) => (
@@ -144,7 +145,7 @@ export function FileSecurityScreen({}: Props) {
         <View style={styles.addTypeRow}>
           <TextInput
             style={styles.addTypeInput}
-            placeholder="Yangi tur qo'shish (masalan: zip)"
+            placeholder={tr("Yangi tur qo'shish (masalan: zip)")}
             placeholderTextColor={colors.textSecondary}
             value={customBlockType}
             onChangeText={setCustomBlockType}
@@ -157,12 +158,12 @@ export function FileSecurityScreen({}: Props) {
       </View>
 
       {/* Avtomatik yuklab olish */}
-      <Text style={styles.sectionTitle}>Avtomatik yuklab olish</Text>
+      <Text style={styles.sectionTitle}>{tr("Avtomatik yuklab olish")}</Text>
       <View style={styles.card}>
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Media avtomatik yuklash</Text>
-            <Text style={styles.settingHint}>Rasmlar, video, ovozli xabarlar</Text>
+            <Text style={styles.settingLabel}>{tr("Media avtomatik yuklash")}</Text>
+            <Text style={styles.settingHint}>{tr("Rasmlar, video, ovozli xabarlar")}</Text>
           </View>
           <Switch
             value={settings.autoDownloadMedia}
@@ -175,7 +176,7 @@ export function FileSecurityScreen({}: Props) {
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Wi-Fi da yuklab olish</Text>
+            <Text style={styles.settingLabel}>{tr("Wi-Fi da yuklab olish")}</Text>
           </View>
           <Switch
             value={settings.autoDownloadOnWifi}
@@ -189,8 +190,8 @@ export function FileSecurityScreen({}: Props) {
 
         <View style={styles.settingRow}>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>Mobil internetda yuklab olish</Text>
-            <Text style={styles.settingHint}>Internet trafigini tejash uchun o'chiring</Text>
+            <Text style={styles.settingLabel}>{tr("Mobil internetda yuklab olish")}</Text>
+            <Text style={styles.settingHint}>{tr("Internet trafigini tejash uchun o'chiring")}</Text>
           </View>
           <Switch
             value={settings.autoDownloadOnMobile}

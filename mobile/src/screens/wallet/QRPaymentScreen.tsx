@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { qrPaymentsApi, QrPayment } from "../../api/qrPayments";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "QRPayment">;
 
@@ -37,12 +38,12 @@ export function QRPaymentScreen({ navigation }: Props) {
         amount: amount ? parseFloat(amount) : undefined,
         note: note || undefined,
       });
-      Alert.alert("QR kod yaratildi", `Kod: ${qr.qrCode}\n\nSumma: ${qr.amount ? `${qr.amount} UZS` : "Ixtiyoriy"}`);
+      Alert.alert(tr("QR kod yaratildi"), `Kod: ${qr.qrCode}\n\nSumma: ${qr.amount ? `${qr.amount} UZS` : "Ixtiyoriy"}`);
       setAmount("");
       setNote("");
       setHistory((prev) => [qr, ...prev]);
     } catch {
-      Alert.alert("Xatolik", "QR kod yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("QR kod yaratib bo'lmadi"));
     }
     setCreating(false);
   };
@@ -63,10 +64,10 @@ export function QRPaymentScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.createSection}>
-        <Text style={styles.sectionTitle}>QR to'lov yaratish</Text>
+        <Text style={styles.sectionTitle}>{tr("QR to'lov yaratish")}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Summa (ixtiyoriy)"
+          placeholder={tr("Summa (ixtiyoriy)")}
           placeholderTextColor={colors.textSecondary}
           keyboardType="numeric"
           value={amount}
@@ -74,7 +75,7 @@ export function QRPaymentScreen({ navigation }: Props) {
         />
         <TextInput
           style={styles.input}
-          placeholder="Izoh (ixtiyoriy)"
+          placeholder={tr("Izoh (ixtiyoriy)")}
           placeholderTextColor={colors.textSecondary}
           value={note}
           onChangeText={setNote}
@@ -83,7 +84,7 @@ export function QRPaymentScreen({ navigation }: Props) {
           {creating ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.createBtnText}>QR kod yaratish</Text>
+            <Text style={styles.createBtnText}>{tr("QR kod yaratish")}</Text>
           )}
         </TouchableOpacity>
 
@@ -91,15 +92,15 @@ export function QRPaymentScreen({ navigation }: Props) {
           style={styles.scanBtn}
           onPress={() => navigation.navigate("QRPaymentScan")}
         >
-          <Text style={styles.scanBtnText}>📷 QR kod skanerlash</Text>
+          <Text style={styles.scanBtnText}>{tr("📷 QR kod skanerlash")}</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Tarix</Text>
+      <Text style={styles.sectionTitle}>{tr("Tarix")}</Text>
       {loading ? (
         <ActivityIndicator color={colors.primary} />
       ) : error ? (
-        <ErrorView message="Tarixni yuklab bo'lmadi" onRetry={loadData} />
+        <ErrorView message={tr("Tarixni yuklab bo'lmadi")} onRetry={loadData} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"
@@ -121,7 +122,7 @@ export function QRPaymentScreen({ navigation }: Props) {
               </Text>
             </View>
           )}
-          ListEmptyComponent={<Text style={styles.emptyText}>Hali QR to'lovlar yo'q</Text>}
+          ListEmptyComponent={<Text style={styles.emptyText}>{tr("Hali QR to'lovlar yo'q")}</Text>}
           contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         />

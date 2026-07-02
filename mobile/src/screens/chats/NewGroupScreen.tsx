@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewGroup">;
 
@@ -56,11 +57,11 @@ export function NewGroupScreen({ navigation }: Props) {
 
   const onCreate = async () => {
     if (!title.trim()) {
-      Alert.alert("Xatolik", "Guruh nomini kiriting");
+      Alert.alert(tr("Xatolik"), tr("Guruh nomini kiriting"));
       return;
     }
     if (selected.size < 1) {
-      Alert.alert("Xatolik", "Kamida 1 ta a'zo tanlang");
+      Alert.alert(tr("Xatolik"), tr("Kamida 1 ta a'zo tanlang"));
       return;
     }
     setCreating(true);
@@ -69,7 +70,7 @@ export function NewGroupScreen({ navigation }: Props) {
       const conversation = await createGroupConversation(title.trim(), members);
       navigation.replace("ChatRoom", { conversationId: conversation.id, title: conversation.title ?? title });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Guruh yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Guruh yaratib bo'lmadi");
     } finally {
       setCreating(false);
     }
@@ -84,20 +85,20 @@ export function NewGroupScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadContacts(); }} />;
+    return <ErrorView message={tr("Kontaktlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadContacts(); }} />;
   }
 
   const canCreate = title.trim().length > 0 && selected.size >= 1 && !creating;
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Guruh nomi" placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
+      <TextInput style={styles.input} placeholder={tr("Guruh nomi")} placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
       {contacts.length > 0 && (
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}

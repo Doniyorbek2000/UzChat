@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { forumsApi, ForumTopic } from "../../api/forums";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ForumTopics">;
 
@@ -40,7 +41,7 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
       setNewTitle("");
       setShowCreate(false);
     } catch {
-      Alert.alert("Xatolik", "Mavzu yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Mavzu yaratib bo'lmadi"));
     }
     setCreating(false);
   };
@@ -50,7 +51,7 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
       const updated = await forumsApi.updateTopic(conversationId, topic.id, { isPinned: !topic.isPinned });
       setTopics((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     } catch {
-      Alert.alert("Xatolik", "Mavzuni o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Mavzuni o'zgartirib bo'lmadi"));
     }
   };
 
@@ -59,22 +60,22 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
       const updated = await forumsApi.updateTopic(conversationId, topic.id, { isClosed: !topic.isClosed });
       setTopics((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     } catch {
-      Alert.alert("Xatolik", "Mavzuni o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Mavzuni o'zgartirib bo'lmadi"));
     }
   };
 
   const handleDelete = (topic: ForumTopic) => {
-    Alert.alert("O'chirish", `"${topic.title}" mavzusini o'chirmoqchimisiz?`, [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'chirish"), `"${topic.title}" mavzusini o'chirmoqchimisiz?`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           try {
             await forumsApi.deleteTopic(conversationId, topic.id);
             setTopics((prev) => prev.filter((t) => t.id !== topic.id));
           } catch {
-            Alert.alert("Xatolik", "Mavzuni o'chirib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Mavzuni o'chirib bo'lmadi"));
           }
         },
       },
@@ -90,7 +91,7 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Mavzularni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Mavzularni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -103,7 +104,7 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
         <View style={styles.createForm}>
           <TextInput
             style={styles.input}
-            placeholder="Mavzu nomi..."
+            placeholder={tr("Mavzu nomi...")}
             placeholderTextColor={colors.textSecondary}
             value={newTitle}
             onChangeText={setNewTitle}
@@ -118,7 +119,7 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
             {creating ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.submitBtnText}>Yaratish</Text>
+              <Text style={styles.submitBtnText}>{tr("Yaratish")}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -141,8 +142,8 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
               Alert.alert(item.title, undefined, [
                 { text: item.isPinned ? "Olib tashlash" : "Qadash", onPress: () => handleTogglePin(item) },
                 { text: item.isClosed ? "Ochish" : "Yopish", onPress: () => handleToggleClose(item) },
-                { text: "O'chirish", style: "destructive", onPress: () => handleDelete(item) },
-                { text: "Bekor qilish", style: "cancel" },
+                { text: tr("O'chirish"), style: "destructive", onPress: () => handleDelete(item) },
+                { text: tr("Bekor qilish"), style: "cancel" },
               ]);
             }}
           >
@@ -167,8 +168,8 @@ export function ForumTopicsScreen({ route, navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>💬</Text>
-            <Text style={styles.emptyTitle}>Mavzular yo'q</Text>
-            <Text style={styles.emptyHint}>Muhokama uchun birinchi mavzuni yarating</Text>
+            <Text style={styles.emptyTitle}>{tr("Mavzular yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Muhokama uchun birinchi mavzuni yarating")}</Text>
           </View>
         }
       />

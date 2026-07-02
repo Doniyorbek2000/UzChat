@@ -22,6 +22,7 @@ import { useChatStore } from "../../store/chatStore";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { BroadcastList, Contact } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "BroadcastLists">;
 
@@ -63,10 +64,10 @@ export function BroadcastListsScreen({ navigation }: Props) {
   );
 
   const onDelete = (list: BroadcastList) => {
-    Alert.alert("Ro'yxatni o'chirish", `"${list.name}" ro'yxatini o'chirmoqchimisiz?`, [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Ro'yxatni o'chirish"), `"${list.name}" ro'yxatini o'chirmoqchimisiz?`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: () => {
           broadcastsApi
@@ -80,9 +81,9 @@ export function BroadcastListsScreen({ navigation }: Props) {
 
   const onLongPress = (list: BroadcastList) => {
     Alert.alert(list.name, undefined, [
-      { text: "Tahrirlash", onPress: () => navigation.navigate("EditBroadcastList", { list }) },
-      { text: "O'chirish", style: "destructive", onPress: () => onDelete(list) },
-      { text: "Bekor qilish", style: "cancel" },
+      { text: tr("Tahrirlash"), onPress: () => navigation.navigate("EditBroadcastList", { list }) },
+      { text: tr("O'chirish"), style: "destructive", onPress: () => onDelete(list) },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
@@ -108,8 +109,7 @@ export function BroadcastListsScreen({ navigation }: Props) {
       }
       setSendTarget(null);
       setMessage("");
-      Alert.alert(
-        "Yuborildi",
+      Alert.alert(tr("Yuborildi"),
         failed > 0 ? `Xabar ${delivered} kishiga yuborildi, ${failed} kishiga yuborilmadi` : `Xabar ${delivered} kishiga yuborildi`
       );
     } finally {
@@ -126,7 +126,7 @@ export function BroadcastListsScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Tarqatish ro'yxatlarini yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Tarqatish ro'yxatlarini yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -154,7 +154,7 @@ export function BroadcastListsScreen({ navigation }: Props) {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Hali tarqatish ro'yxatlari yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Hali tarqatish ro'yxatlari yo'q")}</Text>
           </View>
         }
         ListFooterComponent={
@@ -162,7 +162,7 @@ export function BroadcastListsScreen({ navigation }: Props) {
             <View style={[styles.icon, styles.addIcon]}>
               <Text style={styles.iconText}>➕</Text>
             </View>
-            <Text style={styles.addText}>Yangi ro'yxat yaratish</Text>
+            <Text style={styles.addText}>{tr("Yangi ro'yxat yaratish")}</Text>
           </TouchableOpacity>
         }
       />
@@ -172,11 +172,11 @@ export function BroadcastListsScreen({ navigation }: Props) {
           <View style={styles.modalSheet}>
             <Text style={styles.modalTitle}>{sendTarget?.name}</Text>
             <Text style={styles.modalSubtitle}>
-              Xabar har bir a'zoga alohida shaxsiy xabar sifatida yuboriladi
+              {tr("Xabar har bir a'zoga alohida shaxsiy xabar sifatida yuboriladi")}
             </Text>
             <TextInput
               style={styles.modalInput}
-              placeholder="Xabar matni"
+              placeholder={tr("Xabar matni")}
               placeholderTextColor={colors.textSecondary}
               value={message}
               onChangeText={setMessage}
@@ -192,10 +192,10 @@ export function BroadcastListsScreen({ navigation }: Props) {
                 }}
                 disabled={sending}
               >
-                <Text style={styles.modalCancelText}>Bekor qilish</Text>
+                <Text style={styles.modalCancelText}>{tr("Bekor qilish")}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalSend} onPress={onSend} disabled={sending}>
-                {sending ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSendText}>Yuborish</Text>}
+                {sending ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSendText}>{tr("Yuborish")}</Text>}
               </TouchableOpacity>
             </View>
           </View>

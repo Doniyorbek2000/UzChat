@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { gamesApi } from "../../api/games";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GameView">;
 
@@ -22,13 +23,13 @@ export function GameViewScreen({ route, navigation }: Props) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorIcon}>⚠️</Text>
-        <Text style={styles.errorText}>O'yinni yuklab bo'lmadi</Text>
-        <Text style={styles.errorHint}>Internet aloqangizni tekshiring</Text>
+        <Text style={styles.errorText}>{tr("O'yinni yuklab bo'lmadi")}</Text>
+        <Text style={styles.errorHint}>{tr("Internet aloqangizni tekshiring")}</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => setHasError(false)}>
-          <Text style={styles.retryText}>Qayta urinish</Text>
+          <Text style={styles.retryText}>{tr("Qayta urinish")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>Ortga</Text>
+          <Text style={styles.backText}>{tr("Ortga")}</Text>
         </TouchableOpacity>
       </View>
     );

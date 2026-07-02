@@ -8,6 +8,7 @@ import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { MessageType } from "../../types";
 import { formatScheduledTime, SCHEDULE_OPTIONS } from "../../utils/scheduledMessages";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ScheduledMessages">;
 
@@ -53,10 +54,10 @@ export function ScheduledMessagesScreen({ route }: Props) {
   );
 
   const onCancel = (item: DecryptedMessage) => {
-    Alert.alert("Bekor qilish", "Rejalashtirilgan xabarni bekor qilasizmi?", [
-      { text: "Yo'q", style: "cancel" },
+    Alert.alert(tr("Bekor qilish"), tr("Rejalashtirilgan xabarni bekor qilasizmi?"), [
+      { text: tr("Yo'q"), style: "cancel" },
       {
-        text: "Ha, bekor qilish",
+        text: tr("Ha, bekor qilish"),
         style: "destructive",
         onPress: () => cancelScheduledMessage(conversationId, item.id).catch(() => {}),
       },
@@ -64,37 +65,37 @@ export function ScheduledMessagesScreen({ route }: Props) {
   };
 
   const onSendNow = (item: DecryptedMessage) => {
-    Alert.alert("Hozir yuborish", "Xabar hoziroq yuborilsinmi?", [
-      { text: "Yo'q", style: "cancel" },
+    Alert.alert(tr("Hozir yuborish"), tr("Xabar hoziroq yuborilsinmi?"), [
+      { text: tr("Yo'q"), style: "cancel" },
       {
-        text: "Ha, yuborish",
+        text: tr("Ha, yuborish"),
         onPress: () =>
           sendScheduledMessageNow(conversationId, item.id).catch(() =>
-            Alert.alert("Xatolik", "Xabarni yuborib bo'lmadi")
+            Alert.alert(tr("Xatolik"), tr("Xabarni yuborib bo'lmadi"))
           ),
       },
     ]);
   };
 
   const onReschedule = (item: DecryptedMessage) => {
-    Alert.alert("Vaqtni o'zgartirish", undefined, [
+    Alert.alert(tr("Vaqtni o'zgartirish"), undefined, [
       ...SCHEDULE_OPTIONS.map((opt) => ({
         text: opt.label,
         onPress: () =>
           rescheduleMessage(conversationId, item.id, opt.getDate().toISOString()).catch(() =>
-            Alert.alert("Xatolik", "Vaqtni o'zgartirib bo'lmadi")
+            Alert.alert(tr("Xatolik"), tr("Vaqtni o'zgartirib bo'lmadi"))
           ),
       })),
-      { text: "Bekor qilish", style: "cancel" as const },
+      { text: tr("Bekor qilish"), style: "cancel" as const },
     ]);
   };
 
   const onItemActions = (item: DecryptedMessage) => {
-    Alert.alert("Rejalashtirilgan xabar", undefined, [
-      { text: "🚀 Hozir yuborish", onPress: () => onSendNow(item) },
-      ...(item.sendWhenOnline ? [] : [{ text: "🕒 Vaqtni o'zgartirish", onPress: () => onReschedule(item) }]),
-      { text: "🗑 Bekor qilish", style: "destructive", onPress: () => onCancel(item) },
-      { text: "Yopish", style: "cancel" },
+    Alert.alert(tr("Rejalashtirilgan xabar"), undefined, [
+      { text: tr("🚀 Hozir yuborish"), onPress: () => onSendNow(item) },
+      ...(item.sendWhenOnline ? [] : [{ text: tr("🕒 Vaqtni o'zgartirish"), onPress: () => onReschedule(item) }]),
+      { text: tr("🗑 Bekor qilish"), style: "destructive", onPress: () => onCancel(item) },
+      { text: tr("Yopish"), style: "cancel" },
     ]);
   };
 
@@ -123,7 +124,7 @@ export function ScheduledMessagesScreen({ route }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Rejalashtirilgan xabarlarni yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Rejalashtirilgan xabarlarni yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -136,7 +137,7 @@ export function ScheduledMessagesScreen({ route }: Props) {
         ItemSeparatorComponent={Separator}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>🕒 Rejalashtirilgan xabarlar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("🕒 Rejalashtirilgan xabarlar yo'q")}</Text>
           </View>
         }
       />

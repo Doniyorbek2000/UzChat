@@ -2,25 +2,26 @@ import { Image, Linking, ScrollView, Text, View, StyleSheet, TouchableOpacity } 
 import { API_URL } from "../../config/env";
 import { colors } from "../../theme/colors";
 import appJson from "../../../app.json";
+import { tr } from "../../i18n";
 
 const APP_VERSION = appJson.expo.version;
 
 const FEATURES = [
-  { icon: "🔒", text: "End-to-end shifrlash", color: "#34C759" },
-  { icon: "👥", text: "Shaxsiy va guruh suhbatlari", color: "#5856D6" },
-  { icon: "📞", text: "Audio va video qo'ng'iroqlar", color: "#007AFF" },
-  { icon: "💰", text: "Hamyon va to'lovlar", color: "#FF9500" },
-  { icon: "🧩", text: "Mini-dasturlar platformasi", color: "#AF52DE" },
-  { icon: "📰", text: "Yangiliklar va postlar", color: "#32ADE6" },
-  { icon: "🛒", text: "Bozor va do'konlar", color: "#34C759" },
-  { icon: "🎙️", text: "Ovozli xonalar va efirlar", color: "#FF2D55" },
-  { icon: "🎮", text: "O'yinlar markazi", color: "#AF52DE" },
-  { icon: "🎵", text: "Musiqa pleyer", color: "#FF9500" },
-  { icon: "📷", text: "Hikoyalar va reelslar", color: "#FF3B30" },
-  { icon: "🧧", text: "Qizil konvertlar", color: "#FF3B30" },
-  { icon: "🛡️", text: "Ikki bosqichli tekshiruv", color: "#007AFF" },
-  { icon: "📍", text: "Joylashuv ulashish", color: "#00C7BE" },
-  { icon: "✅", text: "Tasdiqlangan hisoblar", color: "#34C759" },
+  { icon: "🔒", text: tr("End-to-end shifrlash"), color: "#34C759" },
+  { icon: "👥", text: tr("Shaxsiy va guruh suhbatlari"), color: "#5856D6" },
+  { icon: "📞", text: tr("Audio va video qo'ng'iroqlar"), color: "#007AFF" },
+  { icon: "💰", text: tr("Hamyon va to'lovlar"), color: "#FF9500" },
+  { icon: "🧩", text: tr("Mini-dasturlar platformasi"), color: "#AF52DE" },
+  { icon: "📰", text: tr("Yangiliklar va postlar"), color: "#32ADE6" },
+  { icon: "🛒", text: tr("Bozor va do'konlar"), color: "#34C759" },
+  { icon: "🎙️", text: tr("Ovozli xonalar va efirlar"), color: "#FF2D55" },
+  { icon: "🎮", text: tr("O'yinlar markazi"), color: "#AF52DE" },
+  { icon: "🎵", text: tr("Musiqa pleyer"), color: "#FF9500" },
+  { icon: "📷", text: tr("Hikoyalar va reelslar"), color: "#FF3B30" },
+  { icon: "🧧", text: tr("Qizil konvertlar"), color: "#FF3B30" },
+  { icon: "🛡️", text: tr("Ikki bosqichli tekshiruv"), color: "#007AFF" },
+  { icon: "📍", text: tr("Joylashuv ulashish"), color: "#00C7BE" },
+  { icon: "✅", text: tr("Tasdiqlangan hisoblar"), color: "#34C759" },
 ];
 
 export function AboutScreen() {
@@ -28,19 +29,19 @@ export function AboutScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.heroSection}>
         <Image source={require("../../../assets/icon.png")} style={styles.icon} />
-        <Text style={styles.name}>UzChat</Text>
+        <Text style={styles.name}>{tr("UzChat")}</Text>
         <Text style={styles.version}>Versiya {APP_VERSION}</Text>
-        <Text style={styles.tagline}>O'zbekiston uchun super-ilova</Text>
+        <Text style={styles.tagline}>{tr("O'zbekiston uchun super-ilova")}</Text>
       </View>
 
       <View style={styles.descCard}>
         <Text style={styles.descText}>
-          UzChat — end-to-end shifrlangan xabar almashish, to'lov tizimlari, mini-dasturlar va ijtimoiy tarmoq imkoniyatlarini birlashtirgan O'zbekiston uchun yaratilgan super-ilova. Xabarlaringiz qurilmangizda shifrlanadi va faqat suhbatdoshingiz ochishi mumkin.
+          {tr("UzChat — end-to-end shifrlangan xabar almashish, to'lov tizimlari, mini-dasturlar va ijtimoiy tarmoq imkoniyatlarini birlashtirgan O'zbekiston uchun yaratilgan super-ilova. Xabarlaringiz qurilmangizda shifrlanadi va faqat suhbatdoshingiz ochishi mumkin.")}
         </Text>
       </View>
 
       <View style={styles.featuresCard}>
-        <Text style={styles.featuresTitle}>Imkoniyatlar</Text>
+        <Text style={styles.featuresTitle}>{tr("Imkoniyatlar")}</Text>
         {FEATURES.map((f, i) => (
           <View key={i} style={styles.featureRow}>
             <View style={[styles.featureIconBg, { backgroundColor: f.color + "18" }]}>
@@ -56,7 +57,7 @@ export function AboutScreen() {
           <View style={[styles.featureIconBg, { backgroundColor: "#007AFF18" }]}>
             <Text style={styles.featureIcon}>📋</Text>
           </View>
-          <Text style={styles.linkText}>Maxfiylik siyosati</Text>
+          <Text style={styles.linkText}>{tr("Maxfiylik siyosati")}</Text>
           <Text style={styles.linkArrow}>›</Text>
         </TouchableOpacity>
         <View style={styles.divider} />
@@ -64,7 +65,7 @@ export function AboutScreen() {
           <View style={[styles.featureIconBg, { backgroundColor: "#007AFF18" }]}>
             <Text style={styles.featureIcon}>📄</Text>
           </View>
-          <Text style={styles.linkText}>Foydalanish shartlari</Text>
+          <Text style={styles.linkText}>{tr("Foydalanish shartlari")}</Text>
           <Text style={styles.linkArrow}>›</Text>
         </TouchableOpacity>
       </View>

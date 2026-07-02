@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { channelStatsApi, ChannelStatsResponse } from "../../api/channelStats";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChannelStats">;
 
@@ -22,7 +23,7 @@ export function ChannelStatsScreen({ route }: Props) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
   }
   if (error || !stats) {
-    return <ErrorView message="Statistikani yuklab bo'lmadi" onRetry={() => { setLoading(true); channelStatsApi.getStats(conversationId).then((s) => { setStats(s); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Statistikani yuklab bo'lmadi")} onRetry={() => { setLoading(true); channelStatsApi.getStats(conversationId).then((s) => { setStats(s); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   const maxMsg = Math.max(...stats.dailyStats.map((d) => d.messageCount), 1);
@@ -33,21 +34,21 @@ export function ChannelStatsScreen({ route }: Props) {
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{stats.memberCount.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>A'zolar</Text>
+          <Text style={styles.statLabel}>{tr("A'zolar")}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{stats.totalMessages.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>Jami xabarlar</Text>
+          <Text style={styles.statLabel}>{tr("Jami xabarlar")}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{stats.messagesThisWeek.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>Bu hafta</Text>
+          <Text style={styles.statLabel}>{tr("Bu hafta")}</Text>
         </View>
       </View>
 
       {stats.dailyStats.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>Kunlik xabarlar (30 kun)</Text>
+          <Text style={styles.sectionTitle}>{tr("Kunlik xabarlar (30 kun)")}</Text>
           <View style={styles.chart}>
             <View style={styles.bars}>
               {stats.dailyStats.map((d, i) => (
@@ -63,7 +64,7 @@ export function ChannelStatsScreen({ route }: Props) {
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>A'zolar dinamikasi</Text>
+          <Text style={styles.sectionTitle}>{tr("A'zolar dinamikasi")}</Text>
           <View style={styles.historyList}>
             {stats.dailyStats.slice(-7).reverse().map((d, i) => (
               <View key={i} style={styles.historyRow}>

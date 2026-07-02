@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { liveStreamApi, LiveStream } from "../../api/livestream";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LiveStreams">;
 
@@ -54,12 +55,12 @@ export function LiveStreamsScreen({ navigation }: Props) {
       <View style={styles.overlay}>
         {item.status === "LIVE" && (
           <View style={styles.liveBadge}>
-            <Text style={styles.liveBadgeText}>● JONLI</Text>
+            <Text style={styles.liveBadgeText}>{tr("● JONLI")}</Text>
           </View>
         )}
         {item.status === "SCHEDULED" && (
           <View style={styles.scheduledBadge}>
-            <Text style={styles.scheduledBadgeText}>📅 Rejalashtirilgan</Text>
+            <Text style={styles.scheduledBadgeText}>{tr("📅 Rejalashtirilgan")}</Text>
           </View>
         )}
         <View style={styles.viewerBadge}>
@@ -82,10 +83,10 @@ export function LiveStreamsScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, tab === "active" && styles.tabActive]} onPress={() => setTab("active")}>
-          <Text style={[styles.tabText, tab === "active" && styles.tabTextActive]}>🔴 Jonli efir</Text>
+          <Text style={[styles.tabText, tab === "active" && styles.tabTextActive]}>{tr("🔴 Jonli efir")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, tab === "scheduled" && styles.tabActive]} onPress={() => setTab("scheduled")}>
-          <Text style={[styles.tabText, tab === "scheduled" && styles.tabTextActive]}>📅 Rejalashtirilgan</Text>
+          <Text style={[styles.tabText, tab === "scheduled" && styles.tabTextActive]}>{tr("📅 Rejalashtirilgan")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -94,7 +95,7 @@ export function LiveStreamsScreen({ navigation }: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Jonli efirlarni yuklab bo'lmadi" onRetry={load} />
+        <ErrorView message={tr("Jonli efirlarni yuklab bo'lmadi")} onRetry={load} />
       ) : (
         <FlatList
           data={streams}

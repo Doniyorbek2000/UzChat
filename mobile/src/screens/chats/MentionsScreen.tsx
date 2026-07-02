@@ -12,6 +12,7 @@ import { Conversation, Message } from "../../types";
 import { getConversationDisplay, formatTime } from "../../utils/conversation";
 import { getPreviewLabel } from "../../utils/messagePreview";
 import { chatsApi } from "../../api/chats";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Mentions">;
 
@@ -106,7 +107,7 @@ export function MentionsScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Eslatmalarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadAll().finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Eslatmalarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadAll().finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -119,7 +120,7 @@ export function MentionsScreen({ navigation }: Props) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>@ Sizni eslatib o'tgan xabarlar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("@ Sizni eslatib o'tgan xabarlar yo'q")}</Text>
           </View>
         }
       />

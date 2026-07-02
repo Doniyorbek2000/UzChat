@@ -8,62 +8,63 @@ import { usersApi } from "../../api/users";
 import { colors } from "../../theme/colors";
 import { GroupAddPrivacy, LastSeenPrivacy, MessagePrivacy } from "../../types";
 import { DISAPPEARING_MESSAGE_OPTIONS } from "../../utils/disappearingMessages";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PrivacySettings">;
 
 const LAST_SEEN_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
-  { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar oxirgi marta qachon onlayn bo'lganingizni ko'ra oladi" },
-  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz oxirgi marta onlayn bo'lganingizni ko'ra oladi" },
-  { value: "NOBODY", label: "Hech kim", description: "Hech kim oxirgi marta onlayn bo'lganingizni ko'ra olmaydi" },
+  { value: "EVERYONE", label: tr("Hamma"), description: tr("Barcha foydalanuvchilar oxirgi marta qachon onlayn bo'lganingizni ko'ra oladi") },
+  { value: "CONTACTS", label: tr("Faqat kontaktlar"), description: tr("Faqat sizning kontaktlaringiz oxirgi marta onlayn bo'lganingizni ko'ra oladi") },
+  { value: "NOBODY", label: tr("Hech kim"), description: tr("Hech kim oxirgi marta onlayn bo'lganingizni ko'ra olmaydi") },
 ];
 
 const AVATAR_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
-  { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar profil rasmingizni ko'ra oladi" },
-  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz profil rasmingizni ko'ra oladi" },
-  { value: "NOBODY", label: "Hech kim", description: "Hech kim profil rasmingizni ko'ra olmaydi, o'rniga harf ko'rinadi" },
+  { value: "EVERYONE", label: tr("Hamma"), description: tr("Barcha foydalanuvchilar profil rasmingizni ko'ra oladi") },
+  { value: "CONTACTS", label: tr("Faqat kontaktlar"), description: tr("Faqat sizning kontaktlaringiz profil rasmingizni ko'ra oladi") },
+  { value: "NOBODY", label: tr("Hech kim"), description: tr("Hech kim profil rasmingizni ko'ra olmaydi, o'rniga harf ko'rinadi") },
 ];
 
 const BIO_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
-  { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar bio matningizni ko'ra oladi" },
-  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz bio matningizni ko'ra oladi" },
-  { value: "NOBODY", label: "Hech kim", description: "Hech kim bio matningizni ko'ra olmaydi" },
+  { value: "EVERYONE", label: tr("Hamma"), description: tr("Barcha foydalanuvchilar bio matningizni ko'ra oladi") },
+  { value: "CONTACTS", label: tr("Faqat kontaktlar"), description: tr("Faqat sizning kontaktlaringiz bio matningizni ko'ra oladi") },
+  { value: "NOBODY", label: tr("Hech kim"), description: tr("Hech kim bio matningizni ko'ra olmaydi") },
 ];
 
 const BIRTHDAY_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
-  { value: "EVERYONE", label: "Hamma", description: "Barcha foydalanuvchilar tug'ilgan kuningizni ko'ra oladi" },
-  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz tug'ilgan kuningizni ko'ra oladi" },
-  { value: "NOBODY", label: "Hech kim", description: "Hech kim tug'ilgan kuningizni ko'ra olmaydi" },
+  { value: "EVERYONE", label: tr("Hamma"), description: tr("Barcha foydalanuvchilar tug'ilgan kuningizni ko'ra oladi") },
+  { value: "CONTACTS", label: tr("Faqat kontaktlar"), description: tr("Faqat sizning kontaktlaringiz tug'ilgan kuningizni ko'ra oladi") },
+  { value: "NOBODY", label: tr("Hech kim"), description: tr("Hech kim tug'ilgan kuningizni ko'ra olmaydi") },
 ];
 
 const GROUP_ADD_OPTIONS: { value: GroupAddPrivacy; label: string; description: string }[] = [
-  { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi sizni guruhga qo'sha oladi" },
-  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz sizni guruhga qo'sha oladi" },
-  { value: "NOBODY", label: "Hech kim", description: "Sizni hech kim guruhga qo'sha olmaydi, faqat taklif havolasi orqali qo'shilishingiz mumkin" },
+  { value: "EVERYONE", label: tr("Hamma"), description: tr("Istalgan foydalanuvchi sizni guruhga qo'sha oladi") },
+  { value: "CONTACTS", label: tr("Faqat kontaktlar"), description: tr("Faqat sizning kontaktlaringiz sizni guruhga qo'sha oladi") },
+  { value: "NOBODY", label: tr("Hech kim"), description: tr("Sizni hech kim guruhga qo'sha olmaydi, faqat taklif havolasi orqali qo'shilishingiz mumkin") },
 ];
 
 const MESSAGE_PRIVACY_OPTIONS: { value: MessagePrivacy; label: string; description: string }[] = [
-  { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi sizga yangi xabar yozishni boshlay oladi" },
-  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz siz bilan yangi suhbat boshlay oladi" },
-  { value: "NOBODY", label: "Hech kim", description: "Hech kim siz bilan yangi suhbat boshlay olmaydi. Mavjud suhbatlaringizga ta'sir qilmaydi" },
+  { value: "EVERYONE", label: tr("Hamma"), description: tr("Istalgan foydalanuvchi sizga yangi xabar yozishni boshlay oladi") },
+  { value: "CONTACTS", label: tr("Faqat kontaktlar"), description: tr("Faqat sizning kontaktlaringiz siz bilan yangi suhbat boshlay oladi") },
+  { value: "NOBODY", label: tr("Hech kim"), description: tr("Hech kim siz bilan yangi suhbat boshlay olmaydi. Mavjud suhbatlaringizga ta'sir qilmaydi") },
 ];
 
 const PHONE_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
-  { value: "EVERYONE", label: "Hamma", description: "Istalgan foydalanuvchi telefon raqamingiz orqali sizni topa oladi" },
-  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz telefon raqamingiz orqali sizni topa oladi" },
-  { value: "NOBODY", label: "Hech kim", description: "Hech kim telefon raqamingiz orqali sizni topa olmaydi" },
+  { value: "EVERYONE", label: tr("Hamma"), description: tr("Istalgan foydalanuvchi telefon raqamingiz orqali sizni topa oladi") },
+  { value: "CONTACTS", label: tr("Faqat kontaktlar"), description: tr("Faqat sizning kontaktlaringiz telefon raqamingiz orqali sizni topa oladi") },
+  { value: "NOBODY", label: tr("Hech kim"), description: tr("Hech kim telefon raqamingiz orqali sizni topa olmaydi") },
 ];
 
 const FORWARDED_MESSAGE_PRIVACY_OPTIONS: { value: LastSeenPrivacy; label: string; description: string }[] = [
-  { value: "EVERYONE", label: "Hamma", description: "Xabaringiz yo'naltirilganda ismingiz va profilingizga havola ko'rsatiladi" },
-  { value: "CONTACTS", label: "Faqat kontaktlar", description: "Faqat sizning kontaktlaringiz xabaringizni yo'naltirsa ismingiz ko'rsatiladi" },
-  { value: "NOBODY", label: "Hech kim", description: "Xabaringiz yo'naltirilganda ismingiz ko'rsatilmaydi" },
+  { value: "EVERYONE", label: tr("Hamma"), description: tr("Xabaringiz yo'naltirilganda ismingiz va profilingizga havola ko'rsatiladi") },
+  { value: "CONTACTS", label: tr("Faqat kontaktlar"), description: tr("Faqat sizning kontaktlaringiz xabaringizni yo'naltirsa ismingiz ko'rsatiladi") },
+  { value: "NOBODY", label: tr("Hech kim"), description: tr("Xabaringiz yo'naltirilganda ismingiz ko'rsatilmaydi") },
 ];
 
 const SELF_DESTRUCT_OPTIONS: { value: 30 | 90 | 180 | 365; label: string }[] = [
-  { value: 30, label: "1 oy" },
-  { value: 90, label: "3 oy" },
-  { value: 180, label: "6 oy" },
-  { value: 365, label: "1 yil" },
+  { value: 30, label: tr("1 oy") },
+  { value: 90, label: tr("3 oy") },
+  { value: 180, label: tr("6 oy") },
+  { value: 365, label: tr("1 yil") },
 ];
 
 export function PrivacySettingsScreen({ navigation }: Props) {
@@ -84,7 +85,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ lastSeenPrivacy: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -97,7 +98,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ avatarPrivacy: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -110,7 +111,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ bioPrivacy: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -123,7 +124,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ birthdayPrivacy: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -136,7 +137,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ groupAddPrivacy: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -149,7 +150,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ messagePrivacy: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -162,7 +163,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ phoneNumberPrivacy: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -175,7 +176,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ forwardedMessagePrivacy: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -188,7 +189,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ readReceiptsEnabled: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -201,7 +202,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ defaultDisappearingSeconds: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -214,7 +215,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ selfDestructDays: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -227,7 +228,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       await usersApi.updateMe({ typingIndicatorsEnabled: value });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -235,7 +236,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionTitle}>Oxirgi marta onlayn bo'lgan vaqtni kim ko'ra oladi</Text>
+      <Text style={styles.sectionTitle}>{tr("Oxirgi marta onlayn bo'lgan vaqtni kim ko'ra oladi")}</Text>
       {LAST_SEEN_OPTIONS.map((option) => {
         const selected = user.lastSeenPrivacy === option.value;
         return (
@@ -257,7 +258,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
 
       <TouchableOpacity style={styles.row} onPress={() => navigation.navigate("LastSeenExceptions")}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Istisnolar</Text>
+          <Text style={styles.rowLabel}>{tr("Istisnolar")}</Text>
           <Text style={styles.rowDescription}>
             Tanlangan kontaktlar uchun yuqoridagi sozlamadan qat'i nazar, oxirgi marta onlayn bo'lgan vaqtni har
             doim ko'rsatish yoki yashirish
@@ -266,7 +267,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         <Text style={styles.rowArrow}>›</Text>
       </TouchableOpacity>
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Profil rasmimni kim ko'ra oladi</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Profil rasmimni kim ko'ra oladi")}</Text>
       {AVATAR_PRIVACY_OPTIONS.map((option) => {
         const selected = user.avatarPrivacy === option.value;
         return (
@@ -291,7 +292,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         );
       })}
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Bio matnimni kim ko'ra oladi</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Bio matnimni kim ko'ra oladi")}</Text>
       {BIO_PRIVACY_OPTIONS.map((option) => {
         const selected = user.bioPrivacy === option.value;
         return (
@@ -316,7 +317,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         );
       })}
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Tug'ilgan kunimni kim ko'ra oladi</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Tug'ilgan kunimni kim ko'ra oladi")}</Text>
       {BIRTHDAY_PRIVACY_OPTIONS.map((option) => {
         const selected = user.birthdayPrivacy === option.value;
         return (
@@ -341,7 +342,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         );
       })}
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Kim meni guruhlarga qo'sha oladi</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Kim meni guruhlarga qo'sha oladi")}</Text>
       {GROUP_ADD_OPTIONS.map((option) => {
         const selected = user.groupAddPrivacy === option.value;
         return (
@@ -361,7 +362,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         );
       })}
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Kim menga yangi xabar yoza oladi</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Kim menga yangi xabar yoza oladi")}</Text>
       {MESSAGE_PRIVACY_OPTIONS.map((option) => {
         const selected = user.messagePrivacy === option.value;
         return (
@@ -381,7 +382,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         );
       })}
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Telefon raqami orqali kim meni topa oladi</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Telefon raqami orqali kim meni topa oladi")}</Text>
       {PHONE_PRIVACY_OPTIONS.map((option) => {
         const selected = user.phoneNumberPrivacy === option.value;
         return (
@@ -401,7 +402,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         );
       })}
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Yo'naltirilgan xabarlarda ismimni kim ko'ra oladi</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Yo'naltirilgan xabarlarda ismimni kim ko'ra oladi")}</Text>
       {FORWARDED_MESSAGE_PRIVACY_OPTIONS.map((option) => {
         const selected = user.forwardedMessagePrivacy === option.value;
         return (
@@ -426,10 +427,10 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         );
       })}
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>O'qilgan xabarlar</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("O'qilgan xabarlar")}</Text>
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Ko'rilgan belgisi</Text>
+          <Text style={styles.rowLabel}>{tr("Ko'rilgan belgisi")}</Text>
           <Text style={styles.rowDescription}>
             O'chirilsa, shaxsiy suhbatlarda xabaringiz o'qilganini boshqalar ko'ra olmaydi va siz ham ularning
             o'qilgan xabarlarini ko'ra olmaysiz
@@ -442,12 +443,12 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         )}
       </View>
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Yozish holati</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Yozish holati")}</Text>
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Yozayotganini ko'rsatish</Text>
+          <Text style={styles.rowLabel}>{tr("Yozayotganini ko'rsatish")}</Text>
           <Text style={styles.rowDescription}>
-            O'chirilsa, "yozmoqda..." va ovozli xabar yozish belgilari boshqalarga ko'rsatilmaydi
+            {tr("O'chirilsa, \"yozmoqda...\" va ovozli xabar yozish belgilari boshqalarga ko'rsatilmaydi")}
           </Text>
         </View>
         {saving === "typingIndicators" ? (
@@ -461,10 +462,10 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         )}
       </View>
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Xabarlarni saqlab qolish</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Xabarlarni saqlab qolish")}</Text>
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>O'chirilgan xabarlarni saqlash</Text>
+          <Text style={styles.rowLabel}>{tr("O'chirilgan xabarlarni saqlash")}</Text>
           <Text style={styles.rowDescription}>
             Suhbatdosh o'chirgan xabarlarning nusxasi faqat shu qurilmada saqlanib qoladi va "o'chirilgan"
             belgisi bilan ko'rinadi. Suhbatdoshga bu haqda hech narsa yuborilmaydi
@@ -478,7 +479,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
       </View>
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Tahrir tarixini saqlash</Text>
+          <Text style={styles.rowLabel}>{tr("Tahrir tarixini saqlash")}</Text>
           <Text style={styles.rowDescription}>
             Xabar tahrirlanganda avvalgi matn shu qurilmada saqlanadi — "Tahrirlash tarixi" bo'limida
             barcha eski versiyalarni ko'rasiz
@@ -491,9 +492,9 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         />
       </View>
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Yangi suhbatlar uchun o'chiriladigan xabarlar</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Yangi suhbatlar uchun o'chiriladigan xabarlar")}</Text>
       <Text style={styles.rowDescription}>
-        Siz boshlagan yangi suhbatlarda xabarlar avtomatik shu vaqtdan so'ng o'chiriladi
+        {tr("Siz boshlagan yangi suhbatlarda xabarlar avtomatik shu vaqtdan so'ng o'chiriladi")}
       </Text>
       {DISAPPEARING_MESSAGE_OPTIONS.map((option) => {
         const selected = (user.defaultDisappearingSeconds ?? null) === option.value;
@@ -518,7 +519,7 @@ export function PrivacySettingsScreen({ navigation }: Props) {
         );
       })}
 
-      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>Hisobni o'chirish</Text>
+      <Text style={[styles.sectionTitle, styles.sectionSpacer]}>{tr("Hisobni o'chirish")}</Text>
       <Text style={styles.rowDescription}>
         Agar belgilangan muddat davomida hisobingizga kirmasangiz, hisobingiz va barcha ma'lumotlaringiz avtomatik
         o'chiriladi

@@ -9,6 +9,7 @@ import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { GroupJoinRequest } from "../../types";
 import { useChatStore } from "../../store/chatStore";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "JoinRequests">;
 
@@ -47,7 +48,7 @@ export function JoinRequestsScreen({ route }: Props) {
     try {
       await chatsApi.approveJoinRequest(conversationId, id);
     } catch {
-      Alert.alert("Xatolik", "So'rovni qabul qilib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("So'rovni qabul qilib bo'lmadi"));
       load();
     }
   };
@@ -57,7 +58,7 @@ export function JoinRequestsScreen({ route }: Props) {
     try {
       await chatsApi.declineJoinRequest(conversationId, id);
     } catch {
-      Alert.alert("Xatolik", "So'rovni rad etib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("So'rovni rad etib bo'lmadi"));
       load();
     }
   };
@@ -71,7 +72,7 @@ export function JoinRequestsScreen({ route }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="So'rovlarni yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("So'rovlarni yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -86,16 +87,16 @@ export function JoinRequestsScreen({ route }: Props) {
             <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
             <Text style={styles.name}>{item.user.displayName}</Text>
             <TouchableOpacity style={styles.acceptButton} onPress={() => onApprove(item.id)}>
-              <Text style={styles.acceptText}>Qabul qilish</Text>
+              <Text style={styles.acceptText}>{tr("Qabul qilish")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.declineButton} onPress={() => onDecline(item.id)}>
-              <Text style={styles.declineText}>Rad etish</Text>
+              <Text style={styles.declineText}>{tr("Rad etish")}</Text>
             </TouchableOpacity>
           </View>
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Qo'shilish so'rovlari yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Qo'shilish so'rovlari yo'q")}</Text>
           </View>
         }
       />

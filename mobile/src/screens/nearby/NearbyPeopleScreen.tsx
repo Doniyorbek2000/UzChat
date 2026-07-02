@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { nearbyApi, NearbyPerson } from "../../api/nearby";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NearbyPeople">;
 
@@ -46,7 +47,7 @@ export function NearbyPeopleScreen({ navigation }: Props) {
       const result = await nearbyApi.findNearby({ latitude: loc.latitude, longitude: loc.longitude, radiusKm: radius });
       setPeople(result);
     } catch {
-      Alert.alert("Xatolik", "Yaqin odamlarni topib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Yaqin odamlarni topib bo'lmadi"));
     }
     setLoading(false);
   }, [radius, getLocation]);
@@ -59,7 +60,7 @@ export function NearbyPeopleScreen({ navigation }: Props) {
       await nearbyApi.setVisibility(value);
     } catch {
       setVisible(!value);
-      Alert.alert("Xatolik", "Ko'rinishni o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Ko'rinishni o'zgartirib bo'lmadi"));
     }
   };
 
@@ -74,7 +75,7 @@ export function NearbyPeopleScreen({ navigation }: Props) {
         <View style={styles.visibilityRow}>
           <View style={styles.visibilityLabel}>
             <Text style={styles.controlIcon}>👁</Text>
-            <Text style={styles.controlLabelText}>Meni ko'rsatish</Text>
+            <Text style={styles.controlLabelText}>{tr("Meni ko'rsatish")}</Text>
           </View>
           <Switch value={visible} onValueChange={handleVisibilityToggle} trackColor={{ true: colors.primary }} />
         </View>
@@ -100,7 +101,7 @@ export function NearbyPeopleScreen({ navigation }: Props) {
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>📍 {locationError}</Text>
           <TouchableOpacity onPress={search} activeOpacity={0.7}>
-            <Text style={styles.retryText}>Qayta urinish</Text>
+            <Text style={styles.retryText}>{tr("Qayta urinish")}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -139,8 +140,8 @@ export function NearbyPeopleScreen({ navigation }: Props) {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>📍</Text>
-              <Text style={styles.emptyTitle}>Yaqinda hech kim topilmadi</Text>
-              <Text style={styles.emptyHint}>Radiusni oshirib ko'ring</Text>
+              <Text style={styles.emptyTitle}>{tr("Yaqinda hech kim topilmadi")}</Text>
+              <Text style={styles.emptyHint}>{tr("Radiusni oshirib ko'ring")}</Text>
             </View>
           }
         />

@@ -34,6 +34,7 @@ import { isParticipantRestricted } from "../../utils/restriction";
 import { formatJoinDate, formatTime } from "../../utils/conversation";
 import { showChatNotificationSettings } from "../../utils/chatNotificationSettings";
 import { ConversationParticipant, Message, MessageType, ParticipantRole } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupInfo">;
 
@@ -139,7 +140,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { title: trimmed });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
       setTitle(conversation.title ?? "");
     }
   };
@@ -153,7 +154,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { description: trimmed || null });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
       setDescription(conversation.description ?? "");
     }
   };
@@ -167,16 +168,16 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         : await createInviteLink(conversationId);
       await Share.share({ message: invite });
     } catch {
-      Alert.alert("Xatolik", "Taklif havolasini ulashib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Taklif havolasini ulashib bo'lmadi"));
     } finally {
       setInviteLoading(false);
     }
   };
 
   const onRevokeInviteLink = () => {
-    Alert.alert("Taklif havolasini bekor qilish", "Eski havola endi ishlamaydi. Davom etilsinmi?", [
-      { text: "Yo'q", style: "cancel" },
-      { text: "Ha, bekor qilish", style: "destructive", onPress: () => revokeInviteLink(conversationId).catch(() => {}) },
+    Alert.alert(tr("Taklif havolasini bekor qilish"), tr("Eski havola endi ishlamaydi. Davom etilsinmi?"), [
+      { text: tr("Yo'q"), style: "cancel" },
+      { text: tr("Ha, bekor qilish"), style: "destructive", onPress: () => revokeInviteLink(conversationId).catch(() => {}) },
     ]);
   };
 
@@ -187,7 +188,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       const invite = await createInviteLink(conversationId, { expiresInSeconds, maxUses });
       await Share.share({ message: invite });
     } catch {
-      Alert.alert("Xatolik", "Taklif havolasini yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Taklif havolasini yaratib bo'lmadi"));
     } finally {
       setInviteLoading(false);
     }
@@ -195,35 +196,33 @@ export function GroupInfoScreen({ route, navigation }: Props) {
 
   const onConfigureInviteLink = () => {
     if (inviteLoading) return;
-    Alert.alert("Havolaning amal qilish muddati", "Yangi taklif havolasi qachongacha amal qiladi?", [
+    Alert.alert(tr("Havolaning amal qilish muddati"), tr("Yangi taklif havolasi qachongacha amal qiladi?"), [
       ...INVITE_EXPIRY_OPTIONS.map((expiryOption) => ({
         text: expiryOption.label,
         onPress: () =>
-          Alert.alert("Foydalanish chegarasi", "Yangi havoladan necha kishi qo'shilishi mumkin?", [
+          Alert.alert(tr("Foydalanish chegarasi"), tr("Yangi havoladan necha kishi qo'shilishi mumkin?"), [
             ...INVITE_MAX_USES_OPTIONS.map((usesOption) => ({
               text: usesOption.label,
               onPress: () => onCreateInviteLinkWithOptions(expiryOption.value, usesOption.value),
             })),
-            { text: "Bekor qilish", style: "cancel" as const },
+            { text: tr("Bekor qilish"), style: "cancel" as const },
           ]),
       })),
-      { text: "Bekor qilish", style: "cancel" as const },
+      { text: tr("Bekor qilish"), style: "cancel" as const },
     ]);
   };
 
   const onSetDisappearingMessages = () => {
-    Alert.alert(
-      "O'chiriladigan xabarlar",
-      "Yangi xabarlar belgilangan vaqtdan so'ng avtomatik o'chiriladi",
+    Alert.alert(tr("O'chiriladigan xabarlar"), tr("Yangi xabarlar belgilangan vaqtdan so'ng avtomatik o'chiriladi"),
       [
         ...DISAPPEARING_MESSAGE_OPTIONS.map((option) => ({
           text: option.label,
           onPress: () =>
             setDisappearingMessages(conversationId, option.value).catch(() => {
-              Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+              Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
             }),
         })),
-        { text: "Bekor qilish", style: "cancel" as const },
+        { text: tr("Bekor qilish"), style: "cancel" as const },
       ]
     );
   };
@@ -232,7 +231,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { onlyAdminsCanSend: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -240,7 +239,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { noForwards: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -248,7 +247,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { requireAdminApproval: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -256,7 +255,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { membersCanAddMembers: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -264,7 +263,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { membersCanPinMessages: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -272,7 +271,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { membersCanChangeInfo: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -280,7 +279,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { hideHistoryForNewMembers: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -288,7 +287,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { hideMembersList: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -296,7 +295,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { membersCanSendMedia: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -304,7 +303,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { membersCanSendPolls: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -312,7 +311,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     try {
       await updateGroupInfo(conversationId, { reactionsEnabled: value });
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     }
   };
 
@@ -323,7 +322,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       (text) => {
         const trimmed = (text ?? "").trim();
         updateGroupInfo(conversationId, { welcomeMessage: trimmed || null }).catch(() => {
-          Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+          Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
         });
       },
       "plain-text",
@@ -332,18 +331,16 @@ export function GroupInfoScreen({ route, navigation }: Props) {
   };
 
   const onSetSlowMode = () => {
-    Alert.alert(
-      "Sekin rejim",
-      "A'zolar ketma-ket xabar yuborishdan oldin kutishi kerak bo'lgan vaqt",
+    Alert.alert(tr("Sekin rejim"), tr("A'zolar ketma-ket xabar yuborishdan oldin kutishi kerak bo'lgan vaqt"),
       [
         ...SLOW_MODE_OPTIONS.map((option) => ({
           text: option.label,
           onPress: () =>
             updateGroupInfo(conversationId, { slowModeSeconds: option.value }).catch(() => {
-              Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+              Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
             }),
         })),
-        { text: "Bekor qilish", style: "cancel" as const },
+        { text: tr("Bekor qilish"), style: "cancel" as const },
       ]
     );
   };
@@ -360,7 +357,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     if (!canEditInfo || uploadingAvatar) return;
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Ruxsat kerak", "Avatar tanlash uchun galereyaga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Avatar tanlash uchun galereyaga ruxsat bering"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -377,7 +374,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       const { url } = await uploadPlainFile(asset.uri, asset.mimeType ?? "image/jpeg");
       await updateGroupInfo(conversationId, { avatarUrl: url });
     } catch {
-      Alert.alert("Xatolik", "Avatarni yangilab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Avatarni yangilab bo'lmadi"));
     } finally {
       setUploadingAvatar(false);
     }
@@ -391,18 +388,18 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       text: isSenderMuted ? "🔔 Xabarlarini ovozsizlikdan chiqarish" : "🔕 Xabarlarini ovozsiz qilish",
       onPress: () =>
         toggleMutedSender(conversationId, participant.userId).catch(() => {
-          Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+          Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
         }),
     };
 
     if (!canManage) {
       Alert.alert(contactAliases[participant.userId] ?? participant.user.displayName, undefined, [
         {
-          text: "👤 Profilni ko'rish",
+          text: tr("👤 Profilni ko'rish"),
           onPress: () => navigation.navigate("UserProfile", { userId: participant.userId }),
         },
         muteOption,
-        { text: "Bekor qilish", style: "cancel" },
+        { text: tr("Bekor qilish"), style: "cancel" },
       ]);
       return;
     }
@@ -410,7 +407,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     const options: { text: string; style?: "default" | "destructive" | "cancel"; onPress?: () => void }[] = [];
 
     options.push({
-      text: "👤 Profilni ko'rish",
+      text: tr("👤 Profilni ko'rish"),
       onPress: () => navigation.navigate("UserProfile", { userId: participant.userId }),
     });
 
@@ -419,17 +416,17 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     if (isOwner) {
       if (participant.role === "MEMBER") {
         options.push({
-          text: "Admin qilish",
+          text: tr("Admin qilish"),
           onPress: () => updateParticipantRole(conversationId, participant.userId, "ADMIN").catch(() => {
-            Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
           }),
         });
       }
       if (participant.role === "ADMIN") {
         options.push({
-          text: "Adminlikdan olish",
+          text: tr("Adminlikdan olish"),
           onPress: () => updateParticipantRole(conversationId, participant.userId, "MEMBER").catch(() => {
-            Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
           }),
         });
         options.push({
@@ -440,7 +437,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
               "Adminning ismi yonida ko'rinadigan unvon (masalan, Moderator). Bo'sh qoldirsangiz, \"Admin\" ko'rsatiladi.",
               (text) =>
                 updateParticipantCustomTitle(conversationId, participant.userId, (text ?? "").trim() || null).catch(() => {
-                  Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                  Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
                 }),
               "plain-text",
               participant.customTitle ?? ""
@@ -449,16 +446,16 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         });
       }
       options.push({
-        text: "Egalikni topshirish",
+        text: tr("Egalikni topshirish"),
         onPress: () => {
           const participantName = contactAliases[participant.userId] ?? participant.user.displayName;
-          Alert.alert("Egalikni topshirish", `${participantName}ga guruh egaligini topshirasizmi?`, [
-            { text: "Bekor qilish", style: "cancel" },
+          Alert.alert(tr("Egalikni topshirish"), `${participantName}ga guruh egaligini topshirasizmi?`, [
+            { text: tr("Bekor qilish"), style: "cancel" },
             {
-              text: "Topshirish",
+              text: tr("Topshirish"),
               onPress: () =>
                 updateParticipantRole(conversationId, participant.userId, "OWNER").catch(() => {
-                  Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                  Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
                 }),
             },
           ]);
@@ -469,47 +466,47 @@ export function GroupInfoScreen({ route, navigation }: Props) {
     if (participant.role === "MEMBER") {
       if (isParticipantRestricted(participant)) {
         options.push({
-          text: "Cheklovni bekor qilish",
+          text: tr("Cheklovni bekor qilish"),
           onPress: () =>
             restrictParticipant(conversationId, participant.userId, "off").catch(() => {
-              Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+              Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
             }),
         });
       } else {
         options.push({
-          text: "Xabar yozishni cheklash",
+          text: tr("Xabar yozishni cheklash"),
           onPress: () => {
             const participantName = contactAliases[participant.userId] ?? participant.user.displayName;
             Alert.alert(`${participantName}ni cheklash`, "Qancha vaqt davomida xabar yoza olmasin?", [
               {
-                text: "1 soatga",
+                text: tr("1 soatga"),
                 onPress: () =>
                   restrictParticipant(conversationId, participant.userId, "1h").catch(() => {
-                    Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                    Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
                   }),
               },
               {
-                text: "1 kunga",
+                text: tr("1 kunga"),
                 onPress: () =>
                   restrictParticipant(conversationId, participant.userId, "1d").catch(() => {
-                    Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                    Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
                   }),
               },
               {
-                text: "1 haftaga",
+                text: tr("1 haftaga"),
                 onPress: () =>
                   restrictParticipant(conversationId, participant.userId, "1w").catch(() => {
-                    Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                    Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
                   }),
               },
               {
-                text: "Doimiy",
+                text: tr("Doimiy"),
                 onPress: () =>
                   restrictParticipant(conversationId, participant.userId, "forever").catch(() => {
-                    Alert.alert("Xatolik", "Amalni bajarib bo'lmadi");
+                    Alert.alert(tr("Xatolik"), tr("Amalni bajarib bo'lmadi"));
                   }),
               },
-              { text: "Bekor qilish", style: "cancel" },
+              { text: tr("Bekor qilish"), style: "cancel" },
             ]);
           },
         });
@@ -518,29 +515,28 @@ export function GroupInfoScreen({ route, navigation }: Props) {
 
     if (isOwner || participant.role === "MEMBER") {
       options.push({
-        text: "Guruhdan chiqarish",
+        text: tr("Guruhdan chiqarish"),
         style: "destructive",
         onPress: () =>
           removeParticipant(conversationId, participant.userId).catch(() => {
-            Alert.alert("Xatolik", "A'zoni chiqarib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("A'zoni chiqarib bo'lmadi"));
           }),
       });
       options.push({
-        text: "Chiqarish va bloklash",
+        text: tr("Chiqarish va bloklash"),
         style: "destructive",
         onPress: () => {
           const participantName = contactAliases[participant.userId] ?? participant.user.displayName;
-          Alert.alert(
-            "Chiqarish va bloklash",
+          Alert.alert(tr("Chiqarish va bloklash"),
             `${participantName} guruhdan chiqariladi va qaytadan qo'shila olmaydi. Davom etilsinmi?`,
             [
-              { text: "Bekor qilish", style: "cancel" },
+              { text: tr("Bekor qilish"), style: "cancel" },
               {
-                text: "Bloklash",
+                text: tr("Bloklash"),
                 style: "destructive",
                 onPress: () =>
                   banParticipant(conversationId, participant.userId).catch(() => {
-                    Alert.alert("Xatolik", "A'zoni bloklab bo'lmadi");
+                    Alert.alert(tr("Xatolik"), tr("A'zoni bloklab bo'lmadi"));
                   }),
               },
             ]
@@ -549,7 +545,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       });
     }
 
-    options.push({ text: "Bekor qilish", style: "cancel" });
+    options.push({ text: tr("Bekor qilish"), style: "cancel" });
 
     Alert.alert(contactAliases[participant.userId] ?? participant.user.displayName, undefined, options);
   };
@@ -566,33 +562,33 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         contactAliases,
       });
     } catch {
-      Alert.alert("Xatolik", "Suhbatni eksport qilib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Suhbatni eksport qilib bo'lmadi"));
     } finally {
       setExporting(false);
     }
   };
 
   const onClearHistory = () => {
-    Alert.alert("Suhbatni tozalash", "Tozalangan xabarlar faqat sizning ko'rinishingizdan o'chiriladi", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "30 kundan eski", onPress: () => clearHistory(conversationId, 30).catch(() => {}) },
-      { text: "90 kundan eski", onPress: () => clearHistory(conversationId, 90).catch(() => {}) },
-      { text: "Barchasi", style: "destructive", onPress: () => clearHistory(conversationId).catch(() => {}) },
+    Alert.alert(tr("Suhbatni tozalash"), tr("Tozalangan xabarlar faqat sizning ko'rinishingizdan o'chiriladi"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("30 kundan eski"), onPress: () => clearHistory(conversationId, 30).catch(() => {}) },
+      { text: tr("90 kundan eski"), onPress: () => clearHistory(conversationId, 90).catch(() => {}) },
+      { text: tr("Barchasi"), style: "destructive", onPress: () => clearHistory(conversationId).catch(() => {}) },
     ]);
   };
 
   const onLeave = () => {
-    Alert.alert("Guruhdan chiqish", "Haqiqatan ham guruhdan chiqmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Guruhdan chiqish"), tr("Haqiqatan ham guruhdan chiqmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Chiqish",
+        text: tr("Chiqish"),
         style: "destructive",
         onPress: async () => {
           try {
             await leaveGroup(conversationId);
             navigation.popToTop();
           } catch {
-            Alert.alert("Xatolik", "Guruhdan chiqib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Guruhdan chiqib bo'lmadi"));
           }
         },
       },
@@ -622,14 +618,14 @@ export function GroupInfoScreen({ route, navigation }: Props) {
 
       {(canEditInfo || conversation.description) && (
         <View style={styles.descriptionSection}>
-          <Text style={styles.descriptionLabel}>Tavsif</Text>
+          <Text style={styles.descriptionLabel}>{tr("Tavsif")}</Text>
           {canEditInfo ? (
             <TextInput
               style={styles.descriptionInput}
               value={description}
               onChangeText={setDescription}
               onBlur={onSaveDescription}
-              placeholder="Guruh haqida ma'lumot qo'shing"
+              placeholder={tr("Guruh haqida ma'lumot qo'shing")}
               placeholderTextColor={colors.textSecondary}
               multiline
               maxLength={500}
@@ -646,7 +642,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             <Text style={styles.encryptionIconText}>🔐</Text>
           </View>
           <View style={styles.encryptionHeaderInfo}>
-            <Text style={styles.encryptionTitle}>End-to-end shifrlash</Text>
+            <Text style={styles.encryptionTitle}>{tr("End-to-end shifrlash")}</Text>
             <Text style={styles.encryptionStatus}>
               {conversation.useSenderKeys ? "SenderKey protokoli (katta guruhlar)" : "Signal Protocol"}
             </Text>
@@ -661,7 +657,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           </View>
           <View style={styles.encryptionDetailRow}>
             <Text style={styles.encryptionDetailIcon}>🔒</Text>
-            <Text style={styles.encryptionDetailText}>Xabarlar server tomonidan o'qilmaydi</Text>
+            <Text style={styles.encryptionDetailText}>{tr("Xabarlar server tomonidan o'qilmaydi")}</Text>
           </View>
           <View style={styles.encryptionDetailRow}>
             <Text style={styles.encryptionDetailIcon}>🔑</Text>
@@ -676,23 +672,21 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           <TouchableOpacity
             style={styles.upgradeButton}
             onPress={() => {
-              Alert.alert(
-                "Superguruhga aylantirish",
-                "Superguruh 500,000 gacha a'zo qo'shish imkonini beradi va SenderKey shifrlash ishlatiladi. Bu amalni bekor qilib bo'lmaydi.",
+              Alert.alert(tr("Superguruhga aylantirish"), tr("Superguruh 500,000 gacha a'zo qo'shish imkonini beradi va SenderKey shifrlash ishlatiladi. Bu amalni bekor qilib bo'lmaydi."),
                 [
-                  { text: "Bekor qilish", style: "cancel" },
+                  { text: tr("Bekor qilish"), style: "cancel" },
                   {
-                    text: "Aylantirish",
+                    text: tr("Aylantirish"),
                     onPress: () =>
                       chatsApi.upgradeToSupergroup(conversationId).catch(() => {
-                        Alert.alert("Xatolik", "Superguruhga aylantirib bo'lmadi");
+                        Alert.alert(tr("Xatolik"), tr("Superguruhga aylantirib bo'lmadi"));
                       }),
                   },
                 ]
               );
             }}
           >
-            <Text style={styles.upgradeButtonText}>Superguruhga aylantirish</Text>
+            <Text style={styles.upgradeButtonText}>{tr("Superguruhga aylantirish")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -701,26 +695,26 @@ export function GroupInfoScreen({ route, navigation }: Props) {
         <View style={styles.statsSection}>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{stats.total}</Text>
-            <Text style={styles.statLabel}>💬 Xabar</Text>
+            <Text style={styles.statLabel}>{tr("💬 Xabar")}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{stats.media}</Text>
-            <Text style={styles.statLabel}>🖼 Media</Text>
+            <Text style={styles.statLabel}>{tr("🖼 Media")}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{stats.voice}</Text>
-            <Text style={styles.statLabel}>🎵 Ovozli</Text>
+            <Text style={styles.statLabel}>{tr("🎵 Ovozli")}</Text>
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{stats.files}</Text>
-            <Text style={styles.statLabel}>📄 Fayl</Text>
+            <Text style={styles.statLabel}>{tr("📄 Fayl")}</Text>
           </View>
         </View>
       )}
 
       {stats?.topSenders && stats.topSenders.length > 0 && (
         <View style={styles.activitySection}>
-          <Text style={styles.activityTitle}>Faol a'zolar</Text>
+          <Text style={styles.activityTitle}>{tr("Faol a'zolar")}</Text>
           {stats.topSenders.map((sender) => {
             const participant = conversation.participants.find((p) => p.userId === sender.userId);
             if (!participant) return null;
@@ -746,7 +740,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
 
       {stats?.byWeekday && (
         <View style={styles.activitySection}>
-          <Text style={styles.activityTitle}>Haftalik faollik</Text>
+          <Text style={styles.activityTitle}>{tr("Haftalik faollik")}</Text>
           <View style={styles.weekdayRow}>
             {WEEKDAY_ORDER.map((dayIndex, i) => {
               const count = stats.byWeekday![dayIndex];
@@ -767,7 +761,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
 
       {stats?.topReactedMessages && stats.topReactedMessages.length > 0 && (
         <View style={styles.activitySection}>
-          <Text style={styles.activityTitle}>Eng ko'p reaksiya olgan xabarlar</Text>
+          <Text style={styles.activityTitle}>{tr("Eng ko'p reaksiya olgan xabarlar")}</Text>
           {stats.topReactedMessages.map(({ message, reactionCount }) => {
             const sender = conversation.participants.find((p) => p.userId === message.senderId);
             const senderName =
@@ -808,19 +802,19 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           onPress={() => navigation.navigate("SharedMedia", { conversationId })}
         >
           <Text style={styles.inviteIcon}>🖼</Text>
-          <Text style={styles.inviteText}>Umumiy media</Text>
+          <Text style={styles.inviteText}>{tr("Umumiy media")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.inviteRow}
           onPress={() => showChatNotificationSettings(conversation, setNotificationPreview, setReadReceiptsOverride)}
         >
           <Text style={styles.inviteIcon}>🔔</Text>
-          <Text style={styles.inviteText}>Bildirishnoma sozlamalari</Text>
+          <Text style={styles.inviteText}>{tr("Bildirishnoma sozlamalari")}</Text>
         </TouchableOpacity>
         {(conversation.type !== "GROUP" || !conversation.noForwards || canManage) && (
           <TouchableOpacity style={styles.inviteRow} onPress={onExportChat} disabled={exporting}>
             <Text style={styles.inviteIcon}>📤</Text>
-            <Text style={styles.inviteText}>Suhbatni eksport qilish</Text>
+            <Text style={styles.inviteText}>{tr("Suhbatni eksport qilish")}</Text>
             {exporting && <ActivityIndicator color={colors.primary} size="small" />}
           </TouchableOpacity>
         )}
@@ -838,7 +832,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           {conversation.inviteCode && (
             <View style={styles.inviteRow}>
               <Text style={styles.inviteIcon}>ℹ️</Text>
-              <Text style={styles.inviteText}>Havola holati</Text>
+              <Text style={styles.inviteText}>{tr("Havola holati")}</Text>
               <Text style={styles.inviteValue}>
                 {formatInviteStatus(
                   conversation.inviteCodeExpiresAt,
@@ -850,17 +844,17 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           )}
           <TouchableOpacity style={styles.inviteRow} onPress={onConfigureInviteLink} disabled={inviteLoading}>
             <Text style={styles.inviteIcon}>⚙️</Text>
-            <Text style={styles.inviteText}>Yangi havola yaratish (muddat/limit bilan)</Text>
+            <Text style={styles.inviteText}>{tr("Yangi havola yaratish (muddat/limit bilan)")}</Text>
           </TouchableOpacity>
           {conversation.inviteCode && (
             <TouchableOpacity style={styles.inviteRow} onPress={onRevokeInviteLink}>
               <Text style={styles.inviteIcon}>🚫</Text>
-              <Text style={[styles.inviteText, { color: colors.danger }]}>Havolani bekor qilish</Text>
+              <Text style={[styles.inviteText, { color: colors.danger }]}>{tr("Havolani bekor qilish")}</Text>
             </TouchableOpacity>
           )}
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>🛡️</Text>
-            <Text style={styles.inviteText}>Yangi a'zolarni admin tasdiqlasin</Text>
+            <Text style={styles.inviteText}>{tr("Yangi a'zolarni admin tasdiqlasin")}</Text>
             <Switch value={conversation.requireAdminApproval} onValueChange={onToggleRequireAdminApproval} />
           </View>
           <TouchableOpacity
@@ -868,73 +862,73 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             onPress={() => navigation.navigate("JoinRequests", { conversationId })}
           >
             <Text style={styles.inviteIcon}>📝</Text>
-            <Text style={styles.inviteText}>Qo'shilish so'rovlari</Text>
+            <Text style={styles.inviteText}>{tr("Qo'shilish so'rovlari")}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.inviteRow} onPress={onSetDisappearingMessages}>
             <Text style={styles.inviteIcon}>⏳</Text>
-            <Text style={styles.inviteText}>O'chiriladigan xabarlar</Text>
+            <Text style={styles.inviteText}>{tr("O'chiriladigan xabarlar")}</Text>
             <Text style={styles.inviteValue}>{formatDisappearingDuration(conversation.disappearingSeconds)}</Text>
           </TouchableOpacity>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>🔇</Text>
-            <Text style={styles.inviteText}>Faqat adminlar yoza oladi</Text>
+            <Text style={styles.inviteText}>{tr("Faqat adminlar yoza oladi")}</Text>
             <Switch value={conversation.onlyAdminsCanSend} onValueChange={onToggleOnlyAdminsCanSend} />
           </View>
           <TouchableOpacity style={styles.inviteRow} onPress={onSetSlowMode}>
             <Text style={styles.inviteIcon}>🐢</Text>
-            <Text style={styles.inviteText}>Sekin rejim</Text>
+            <Text style={styles.inviteText}>{tr("Sekin rejim")}</Text>
             <Text style={styles.inviteValue}>{formatSlowModeDuration(conversation.slowModeSeconds)}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.inviteRow} onPress={onSetWelcomeMessage}>
             <Text style={styles.inviteIcon}>👋</Text>
-            <Text style={styles.inviteText}>Salomlashuv xabari</Text>
+            <Text style={styles.inviteText}>{tr("Salomlashuv xabari")}</Text>
             <Text style={[styles.inviteValue, { maxWidth: 140 }]} numberOfLines={1}>
               {conversation.welcomeMessage || "O'rnatilmagan"}
             </Text>
           </TouchableOpacity>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>🔒</Text>
-            <Text style={styles.inviteText}>A'zolarga nusxalash va yo'naltirishni man qilish</Text>
+            <Text style={styles.inviteText}>{tr("A'zolarga nusxalash va yo'naltirishni man qilish")}</Text>
             <Switch value={conversation.noForwards} onValueChange={onToggleNoForwards} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>➕</Text>
-            <Text style={styles.inviteText}>A'zolar yangi a'zo qo'shishi mumkin</Text>
+            <Text style={styles.inviteText}>{tr("A'zolar yangi a'zo qo'shishi mumkin")}</Text>
             <Switch value={conversation.membersCanAddMembers} onValueChange={onToggleMembersCanAddMembers} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>📌</Text>
-            <Text style={styles.inviteText}>A'zolar xabarlarni qadashi mumkin</Text>
+            <Text style={styles.inviteText}>{tr("A'zolar xabarlarni qadashi mumkin")}</Text>
             <Switch value={conversation.membersCanPinMessages} onValueChange={onToggleMembersCanPinMessages} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>✏️</Text>
-            <Text style={styles.inviteText}>A'zolar guruh ma'lumotlarini tahrirlashi mumkin</Text>
+            <Text style={styles.inviteText}>{tr("A'zolar guruh ma'lumotlarini tahrirlashi mumkin")}</Text>
             <Switch value={conversation.membersCanChangeInfo} onValueChange={onToggleMembersCanChangeInfo} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>🖼️</Text>
-            <Text style={styles.inviteText}>A'zolar media yuborishi mumkin</Text>
+            <Text style={styles.inviteText}>{tr("A'zolar media yuborishi mumkin")}</Text>
             <Switch value={conversation.membersCanSendMedia} onValueChange={onToggleMembersCanSendMedia} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>📊</Text>
-            <Text style={styles.inviteText}>A'zolar so'rovnoma yaratishi mumkin</Text>
+            <Text style={styles.inviteText}>{tr("A'zolar so'rovnoma yaratishi mumkin")}</Text>
             <Switch value={conversation.membersCanSendPolls} onValueChange={onToggleMembersCanSendPolls} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>🙈</Text>
-            <Text style={styles.inviteText}>Yangi a'zolar uchun eski xabarlarni yashirish</Text>
+            <Text style={styles.inviteText}>{tr("Yangi a'zolar uchun eski xabarlarni yashirish")}</Text>
             <Switch value={conversation.hideHistoryForNewMembers} onValueChange={onToggleHideHistoryForNewMembers} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>👁️</Text>
-            <Text style={styles.inviteText}>A'zolardan a'zolar ro'yxatini yashirish</Text>
+            <Text style={styles.inviteText}>{tr("A'zolardan a'zolar ro'yxatini yashirish")}</Text>
             <Switch value={conversation.hideMembersList} onValueChange={onToggleHideMembersList} />
           </View>
           <View style={styles.inviteRow}>
             <Text style={styles.inviteIcon}>😀</Text>
-            <Text style={styles.inviteText}>Reaksiyalarga ruxsat berish</Text>
+            <Text style={styles.inviteText}>{tr("Reaksiyalarga ruxsat berish")}</Text>
             <Switch value={conversation.reactionsEnabled} onValueChange={onToggleReactionsEnabled} />
           </View>
           <TouchableOpacity
@@ -942,21 +936,21 @@ export function GroupInfoScreen({ route, navigation }: Props) {
             onPress={() => navigation.navigate("GroupAuditLog", { conversationId })}
           >
             <Text style={styles.inviteIcon}>📋</Text>
-            <Text style={styles.inviteText}>So'nggi harakatlar</Text>
+            <Text style={styles.inviteText}>{tr("So'nggi harakatlar")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.inviteRow}
             onPress={() => navigation.navigate("BannedUsers", { conversationId })}
           >
             <Text style={styles.inviteIcon}>🚫</Text>
-            <Text style={styles.inviteText}>Bloklangan foydalanuvchilar</Text>
+            <Text style={styles.inviteText}>{tr("Bloklangan foydalanuvchilar")}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {conversation.hideMembersList && !canManage ? (
         <View style={styles.hiddenMembers}>
-          <Text style={styles.hiddenMembersText}>A'zolar ro'yxati guruh egasi yoki adminlar tomonidan yashirilgan</Text>
+          <Text style={styles.hiddenMembersText}>{tr("A'zolar ro'yxati guruh egasi yoki adminlar tomonidan yashirilgan")}</Text>
           <Text style={styles.hiddenMembersCount}>{conversation.participants.length} a'zo</Text>
         </View>
       ) : (
@@ -980,7 +974,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
                   <Text style={styles.memberSearchIcon}>🔍</Text>
                   <TextInput
                     style={styles.memberSearchInput}
-                    placeholder="A'zoni qidirish"
+                    placeholder={tr("A'zoni qidirish")}
                     returnKeyType="search"
                     placeholderTextColor={colors.textSecondary}
                     value={memberSearch}
@@ -993,7 +987,7 @@ export function GroupInfoScreen({ route, navigation }: Props) {
           ListEmptyComponent={
             memberQuery ? (
               <View style={styles.memberEmpty}>
-                <Text style={styles.memberEmptyText}>Hech kim topilmadi</Text>
+                <Text style={styles.memberEmptyText}>{tr("Hech kim topilmadi")}</Text>
               </View>
             ) : null
           }
@@ -1024,11 +1018,11 @@ export function GroupInfoScreen({ route, navigation }: Props) {
       )}
 
       <TouchableOpacity style={styles.clearButton} onPress={onClearHistory}>
-        <Text style={styles.clearButtonText}>🗑 Suhbatni tozalash</Text>
+        <Text style={styles.clearButtonText}>{tr("🗑 Suhbatni tozalash")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.leaveButton} onPress={onLeave}>
-        <Text style={styles.leaveButtonText}>Guruhdan chiqish</Text>
+        <Text style={styles.leaveButtonText}>{tr("Guruhdan chiqish")}</Text>
       </TouchableOpacity>
 
       <Modal visible={avatarViewerOpen} transparent animationType="fade" onRequestClose={() => setAvatarViewerOpen(false)}>

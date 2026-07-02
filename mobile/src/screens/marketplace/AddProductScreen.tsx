@@ -6,6 +6,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi } from "../../api/marketplace";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddProduct">;
 
@@ -21,12 +22,12 @@ export function AddProductScreen({ route, navigation }: Props) {
 
   const handleSubmit = async () => {
     if (!name.trim() || !price.trim()) {
-      Alert.alert("Xatolik", "Nom va narxni kiriting");
+      Alert.alert(tr("Xatolik"), tr("Nom va narxni kiriting"));
       return;
     }
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum <= 0) {
-      Alert.alert("Xatolik", "Narx noto'g'ri");
+      Alert.alert(tr("Xatolik"), tr("Narx noto'g'ri"));
       return;
     }
     setSubmitting(true);
@@ -41,7 +42,7 @@ export function AddProductScreen({ route, navigation }: Props) {
       });
       navigation.goBack();
     } catch {
-      Alert.alert("Xatolik", "Mahsulot qo'shib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Mahsulot qo'shib bo'lmadi"));
     }
     setSubmitting(false);
   };
@@ -49,22 +50,22 @@ export function AddProductScreen({ route, navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text style={styles.label}>Mahsulot nomi *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom" placeholderTextColor={colors.textSecondary} maxLength={200} />
+      <Text style={styles.label}>{tr("Mahsulot nomi *")}</Text>
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder={tr("Nom")} placeholderTextColor={colors.textSecondary} maxLength={200} />
 
-      <Text style={styles.label}>Tavsif</Text>
-      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Tavsif" placeholderTextColor={colors.textSecondary} multiline maxLength={2000} />
+      <Text style={styles.label}>{tr("Tavsif")}</Text>
+      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder={tr("Tavsif")} placeholderTextColor={colors.textSecondary} multiline maxLength={2000} />
 
-      <Text style={styles.label}>SKU (ixtiyoriy)</Text>
-      <TextInput style={styles.input} value={sku} onChangeText={setSku} placeholder="Mahsulot kodi" placeholderTextColor={colors.textSecondary} maxLength={50} />
+      <Text style={styles.label}>{tr("SKU (ixtiyoriy)")}</Text>
+      <TextInput style={styles.input} value={sku} onChangeText={setSku} placeholder={tr("Mahsulot kodi")} placeholderTextColor={colors.textSecondary} maxLength={50} />
 
-      <Text style={styles.label}>Kategoriya</Text>
-      <TextInput style={styles.input} value={category} onChangeText={setCategory} placeholder="general" placeholderTextColor={colors.textSecondary} maxLength={50} />
+      <Text style={styles.label}>{tr("Kategoriya")}</Text>
+      <TextInput style={styles.input} value={category} onChangeText={setCategory} placeholder={tr("general")} placeholderTextColor={colors.textSecondary} maxLength={50} />
 
-      <Text style={styles.label}>Narx (UZS) *</Text>
+      <Text style={styles.label}>{tr("Narx (UZS) *")}</Text>
       <TextInput style={styles.input} value={price} onChangeText={setPrice} placeholder="0" placeholderTextColor={colors.textSecondary} keyboardType="numeric" />
 
-      <Text style={styles.label}>Zaxira</Text>
+      <Text style={styles.label}>{tr("Zaxira")}</Text>
       <TextInput style={styles.input} value={stock} onChangeText={setStock} placeholder="0" placeholderTextColor={colors.textSecondary} keyboardType="numeric" />
 
       <TouchableOpacity
@@ -72,7 +73,7 @@ export function AddProductScreen({ route, navigation }: Props) {
         onPress={handleSubmit}
         disabled={!name.trim() || !price.trim() || submitting}
       >
-        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Mahsulot qo'shish</Text>}
+        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>{tr("Mahsulot qo'shish")}</Text>}
       </TouchableOpacity>
     </ScrollView>
     </KeyboardAvoidingView>

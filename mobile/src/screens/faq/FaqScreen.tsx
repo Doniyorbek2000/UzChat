@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { faqApi, FaqArticleData } from "../../api/faq";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Faq">;
 
@@ -30,7 +31,7 @@ export function FaqScreen(_props: Props) {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Savol qidirish..."
+          placeholder={tr("Savol qidirish...")}
           placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
@@ -48,7 +49,7 @@ export function FaqScreen(_props: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Savollarni yuklab bo'lmadi" onRetry={loadData} />
+        <ErrorView message={tr("Savollarni yuklab bo'lmadi")} onRetry={loadData} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"

@@ -6,6 +6,7 @@ import { highlightsApi, StoryHighlight } from "../../api/highlights";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StoryHighlights">;
 
@@ -32,17 +33,17 @@ export function StoryHighlightsScreen({ route }: Props) {
   }, [userId]);
 
   const handleDelete = (highlightId: string) => {
-    Alert.alert("O'chirish", "Bu highlights'ni o'chirmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'chirish"), tr("Bu highlights'ni o'chirmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           try {
             await highlightsApi.delete(highlightId);
             setHighlights((prev) => prev.filter((h) => h.id !== highlightId));
           } catch {
-            Alert.alert("Xatolik", "Highlights o'chirib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Highlights o'chirib bo'lmadi"));
           }
         },
       },
@@ -54,7 +55,7 @@ export function StoryHighlightsScreen({ route }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Highlights yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Highlights yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   const renderHighlight = ({ item }: { item: StoryHighlight }) => (
@@ -106,7 +107,7 @@ export function StoryHighlightsScreen({ route }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>💫</Text>
-            <Text style={styles.emptyText}>Highlights mavjud emas</Text>
+            <Text style={styles.emptyText}>{tr("Highlights mavjud emas")}</Text>
           </View>
         }
       />

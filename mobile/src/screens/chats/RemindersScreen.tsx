@@ -12,6 +12,7 @@ import { MessageReminderInfo } from "../../types";
 import { getConversationDisplay, formatTime } from "../../utils/conversation";
 import { getPreviewLabel } from "../../utils/messagePreview";
 import { formatReminderTimeRemaining } from "../../utils/messageReminders";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Reminders">;
 
@@ -51,10 +52,10 @@ export function RemindersScreen({ navigation }: Props) {
   };
 
   const onCancel = (item: MessageReminderInfo) => {
-    Alert.alert("Eslatma", "Ushbu xabar uchun eslatma o'chirilsinmi?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Eslatma"), tr("Ushbu xabar uchun eslatma o'chirilsinmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: () => cancelReminder(item.conversationId, item.message.id).catch(() => {}),
       },
@@ -132,7 +133,7 @@ export function RemindersScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Eslatmalarni yuklab bo'lmadi" onRetry={loadAll} />;
+    return <ErrorView message={tr("Eslatmalarni yuklab bo'lmadi")} onRetry={loadAll} />;
   }
 
   return (
@@ -142,7 +143,7 @@ export function RemindersScreen({ navigation }: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}

@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { communitiesApi, Community } from "../../api/communities";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Communities">;
 
@@ -28,17 +29,17 @@ export function CommunitiesScreen({ navigation }: Props) {
   }, []);
 
   const handleDelete = (communityId: string) => {
-    Alert.alert("O'chirish", "Bu jamiyatni o'chirmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'chirish"), tr("Bu jamiyatni o'chirmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           try {
             await communitiesApi.delete(communityId);
             setCommunities((prev) => prev.filter((c) => c.id !== communityId));
           } catch {
-            Alert.alert("Xatolik", "Jamiyatni o'chirib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Jamiyatni o'chirib bo'lmadi"));
           }
         },
       },
@@ -54,7 +55,7 @@ export function CommunitiesScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Jamiyatlarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Jamiyatlarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -95,8 +96,8 @@ export function CommunitiesScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🏘️</Text>
-            <Text style={styles.emptyTitle}>Jamiyatlar yo'q</Text>
-            <Text style={styles.emptyHint}>Guruhlarni birlashtirish uchun jamiyat yarating</Text>
+            <Text style={styles.emptyTitle}>{tr("Jamiyatlar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Guruhlarni birlashtirish uchun jamiyat yarating")}</Text>
           </View>
         }
       />

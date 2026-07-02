@@ -6,6 +6,7 @@ import { usersApi } from "../../api/users";
 import { secureStorage } from "../../storage/secureStorage";
 import { uploadKeyBackup } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChangePassword">;
 
@@ -17,11 +18,11 @@ export function ChangePasswordScreen({ navigation }: Props) {
 
   const onSubmit = async () => {
     if (newPassword.length < 10 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
-      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak");
+      Alert.alert(tr("Xatolik"), tr("Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert("Xatolik", "Yangi parollar mos kelmadi");
+      Alert.alert(tr("Xatolik"), tr("Yangi parollar mos kelmadi"));
       return;
     }
     setSaving(true);
@@ -31,13 +32,11 @@ export function ChangePasswordScreen({ navigation }: Props) {
       // device restore keeps working.
       const keyPair = await secureStorage.getKeyPair();
       if (keyPair) uploadKeyBackup(keyPair, newPassword);
-      Alert.alert(
-        "Saqlandi",
-        "Parol muvaffaqiyatli o'zgartirildi. Boshqa qurilmalardagi seanslar tugatildi",
-        [{ text: "OK", onPress: () => navigation.goBack() }]
+      Alert.alert(tr("Saqlandi"), tr("Parol muvaffaqiyatli o'zgartirildi. Boshqa qurilmalardagi seanslar tugatildi"),
+        [{ text: tr("OK"), onPress: () => navigation.goBack() }]
       );
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Parolni o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Parolni o'zgartirib bo'lmadi");
     } finally {
       setSaving(false);
     }
@@ -48,7 +47,7 @@ export function ChangePasswordScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Joriy parol</Text>
+        <Text style={styles.label}>{tr("Joriy parol")}</Text>
         <TextInput
           style={styles.input}
           value={currentPassword}
@@ -58,14 +57,14 @@ export function ChangePasswordScreen({ navigation }: Props) {
           autoFocus
         />
 
-        <Text style={styles.label}>Yangi parol</Text>
+        <Text style={styles.label}>{tr("Yangi parol")}</Text>
         <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry autoComplete="password" />
 
-        <Text style={styles.label}>Yangi parolni tasdiqlang</Text>
+        <Text style={styles.label}>{tr("Yangi parolni tasdiqlang")}</Text>
         <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry autoComplete="password" />
 
         <TouchableOpacity style={[styles.button, !canSubmit && styles.buttonDisabled]} onPress={onSubmit} disabled={!canSubmit}>
-          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Saqlash</Text>}
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Saqlash")}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -6,6 +6,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { reelsApi } from "../../api/reels";
 import { uploadPlainFile } from "../../utils/mediaFile";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreateReel">;
 
@@ -22,7 +23,7 @@ export function CreateReelScreen({ navigation }: Props) {
   const onPickVideo = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Ruxsat kerak", "Video tanlash uchun gallereyaga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Video tanlash uchun gallereyaga ruxsat bering"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -39,7 +40,7 @@ export function CreateReelScreen({ navigation }: Props) {
       const { url } = await uploadPlainFile(asset.uri, asset.mimeType ?? "video/mp4");
       setVideoUrl(url);
     } catch {
-      Alert.alert("Xatolik", "Video yuklashda xatolik");
+      Alert.alert(tr("Xatolik"), tr("Video yuklashda xatolik"));
       setVideoLocalUri(null);
     } finally {
       setUploading(false);
@@ -48,7 +49,7 @@ export function CreateReelScreen({ navigation }: Props) {
 
   const handleCreate = async () => {
     if (!videoUrl.trim()) {
-      Alert.alert("Xatolik", "Video tanlang yoki URL kiriting");
+      Alert.alert(tr("Xatolik"), tr("Video tanlang yoki URL kiriting"));
       return;
     }
     setCreating(true);
@@ -62,11 +63,11 @@ export function CreateReelScreen({ navigation }: Props) {
           ? hashtags.split(",").map((h) => h.trim()).filter(Boolean)
           : undefined,
       });
-      Alert.alert("Muvaffaqiyat", "Reel yaratildi!", [
-        { text: "OK", onPress: () => navigation.goBack() },
+      Alert.alert(tr("Muvaffaqiyat"), tr("Reel yaratildi!"), [
+        { text: tr("OK"), onPress: () => navigation.goBack() },
       ]);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message || "Reel yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message || "Reel yaratib bo'lmadi");
     }
     setCreating(false);
   };
@@ -79,28 +80,28 @@ export function CreateReelScreen({ navigation }: Props) {
         {uploading ? (
           <>
             <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.uploadText}>Yuklanmoqda...</Text>
+            <Text style={styles.uploadText}>{tr("Yuklanmoqda...")}</Text>
           </>
         ) : videoLocalUri ? (
           <>
             <Image source={{ uri: videoLocalUri }} style={styles.uploadPreview} />
             <View style={styles.uploadOverlay}>
-              <Text style={styles.uploadOverlayText}>O'zgartirish</Text>
+              <Text style={styles.uploadOverlayText}>{tr("O'zgartirish")}</Text>
             </View>
           </>
         ) : (
           <>
             <Text style={styles.uploadIcon}>🎬</Text>
-            <Text style={styles.uploadText}>Video tanlash</Text>
-            <Text style={styles.uploadHint}>Galereyadan tanlang yoki URL kiriting</Text>
+            <Text style={styles.uploadText}>{tr("Video tanlash")}</Text>
+            <Text style={styles.uploadHint}>{tr("Galereyadan tanlang yoki URL kiriting")}</Text>
           </>
         )}
       </TouchableOpacity>
 
-      <Text style={styles.label}>Video URL</Text>
+      <Text style={styles.label}>{tr("Video URL")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="https://..."
+        placeholder={tr("https://...")}
         placeholderTextColor={colors.textSecondary}
         value={videoUrl}
         onChangeText={setVideoUrl}
@@ -108,10 +109,10 @@ export function CreateReelScreen({ navigation }: Props) {
         keyboardType="url"
       />
 
-      <Text style={styles.label}>Muqova rasm URL (ixtiyoriy)</Text>
+      <Text style={styles.label}>{tr("Muqova rasm URL (ixtiyoriy)")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="https://..."
+        placeholder={tr("https://...")}
         placeholderTextColor={colors.textSecondary}
         value={thumbnailUrl}
         onChangeText={setThumbnailUrl}
@@ -119,10 +120,10 @@ export function CreateReelScreen({ navigation }: Props) {
         keyboardType="url"
       />
 
-      <Text style={styles.label}>Tavsif</Text>
+      <Text style={styles.label}>{tr("Tavsif")}</Text>
       <TextInput
         style={[styles.input, styles.multiline]}
-        placeholder="Reel haqida..."
+        placeholder={tr("Reel haqida...")}
         placeholderTextColor={colors.textSecondary}
         value={caption}
         onChangeText={setCaption}
@@ -130,19 +131,19 @@ export function CreateReelScreen({ navigation }: Props) {
         numberOfLines={3}
       />
 
-      <Text style={styles.label}>Musiqa nomi (ixtiyoriy)</Text>
+      <Text style={styles.label}>{tr("Musiqa nomi (ixtiyoriy)")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Qo'shiq nomi"
+        placeholder={tr("Qo'shiq nomi")}
         placeholderTextColor={colors.textSecondary}
         value={musicTitle}
         onChangeText={setMusicTitle}
       />
 
-      <Text style={styles.label}>Hashtaglar (vergul bilan)</Text>
+      <Text style={styles.label}>{tr("Hashtaglar (vergul bilan)")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="uzchat, video, reel"
+        placeholder={tr("uzchat, video, reel")}
         placeholderTextColor={colors.textSecondary}
         value={hashtags}
         onChangeText={setHashtags}
@@ -152,7 +153,7 @@ export function CreateReelScreen({ navigation }: Props) {
         {creating ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.createBtnText}>Reel joylash</Text>
+          <Text style={styles.createBtnText}>{tr("Reel joylash")}</Text>
         )}
       </TouchableOpacity>
     </ScrollView>

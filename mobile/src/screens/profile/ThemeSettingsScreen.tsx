@@ -1,13 +1,14 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useColors } from "../../theme/colors";
 import { useThemeStore } from "../../store/themeStore";
+import { tr } from "../../i18n";
 
 type ThemeMode = "light" | "dark" | "system";
 
 const OPTIONS: { value: ThemeMode; label: string; icon: string; desc: string }[] = [
-  { value: "system", label: "Tizim sozlamasi", icon: "📱", desc: "Qurilma sozlamasiga moslashadi" },
-  { value: "light", label: "Yorug' rejim", icon: "☀️", desc: "Oq fon, qora matn" },
-  { value: "dark", label: "Qorong'u rejim", icon: "🌙", desc: "Qora fon, oq matn" },
+  { value: "system", label: tr("Tizim sozlamasi"), icon: "📱", desc: tr("Qurilma sozlamasiga moslashadi") },
+  { value: "light", label: tr("Yorug' rejim"), icon: "☀️", desc: tr("Oq fon, qora matn") },
+  { value: "dark", label: tr("Qorong'u rejim"), icon: "🌙", desc: tr("Qora fon, oq matn") },
 ];
 
 export function ThemeSettingsScreen() {
@@ -18,7 +19,7 @@ export function ThemeSettingsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.hint, { color: colors.textSecondary }]}>
-        Ilovaning ko'rinishini tanlang. Tizim sozlamasi tanlansa, qurilmangiz mavzusiga avtomatik moslashadi.
+        {tr("Ilovaning ko'rinishini tanlang. Tizim sozlamasi tanlansa, qurilmangiz mavzusiga avtomatik moslashadi.")}
       </Text>
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
         {OPTIONS.map((option, i) => {

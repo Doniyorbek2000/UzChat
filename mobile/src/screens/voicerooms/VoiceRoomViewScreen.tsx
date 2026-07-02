@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { voiceRoomsApi, VoiceRoom, VoiceRoomParticipant } from "../../api/voiceRooms";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VoiceRoomView">;
 
@@ -29,7 +30,7 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
       const updated = await voiceRoomsApi.get(roomId);
       setRoom(updated);
     } catch {
-      Alert.alert("Xatolik", "Xonaga qo'shilib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Xonaga qo'shilib bo'lmadi"));
     }
   };
 
@@ -39,22 +40,22 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
       setJoined(false);
       navigation.goBack();
     } catch {
-      Alert.alert("Xatolik", "Xonadan chiqib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Xonadan chiqib bo'lmadi"));
     }
   };
 
   const handleEnd = () => {
-    Alert.alert("Tugatish", "Xonani tugatmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Tugatish"), tr("Xonani tugatmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Tugatish",
+        text: tr("Tugatish"),
         style: "destructive",
         onPress: async () => {
           try {
             await voiceRoomsApi.end(roomId);
             navigation.goBack();
           } catch {
-            Alert.alert("Xatolik", "Xonani tugatib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Xonani tugatib bo'lmadi"));
           }
         },
       },
@@ -67,7 +68,7 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
       const updated = await voiceRoomsApi.get(roomId);
       setRoom(updated);
     } catch {
-      Alert.alert("Xatolik", "Ovozni o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Ovozni o'zgartirib bo'lmadi"));
     }
   };
 
@@ -101,8 +102,8 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
               onLongPress={() => {
                 if (isHost && p.userId !== userId) {
                   Alert.alert(p.user.displayName, undefined, [
-                    { text: "Tinglovchiga aylantirish", onPress: () => voiceRoomsApi.demoteToListener(roomId, p.userId).then(() => voiceRoomsApi.get(roomId).then(setRoom)) },
-                    { text: "Bekor qilish", style: "cancel" },
+                    { text: tr("Tinglovchiga aylantirish"), onPress: () => voiceRoomsApi.demoteToListener(roomId, p.userId).then(() => voiceRoomsApi.get(roomId).then(setRoom)) },
+                    { text: tr("Bekor qilish"), style: "cancel" },
                   ]);
                 }
               }}
@@ -130,8 +131,8 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
               onLongPress={() => {
                 if (isHost) {
                   Alert.alert(item.user.displayName, undefined, [
-                    { text: "So'zlovchiga ko'tarish", onPress: () => voiceRoomsApi.promoteToSpeaker(roomId, item.userId).then(() => voiceRoomsApi.get(roomId).then(setRoom)) },
-                    { text: "Bekor qilish", style: "cancel" },
+                    { text: tr("So'zlovchiga ko'tarish"), onPress: () => voiceRoomsApi.promoteToSpeaker(roomId, item.userId).then(() => voiceRoomsApi.get(roomId).then(setRoom)) },
+                    { text: tr("Bekor qilish"), style: "cancel" },
                   ]);
                 }
               }}
@@ -154,17 +155,17 @@ export function VoiceRoomViewScreen({ route, navigation }: Props) {
         )}
         {!joined && room.status === "LIVE" && (
           <TouchableOpacity style={styles.joinBtn} onPress={handleJoin}>
-            <Text style={styles.joinBtnText}>Qo'shilish</Text>
+            <Text style={styles.joinBtnText}>{tr("Qo'shilish")}</Text>
           </TouchableOpacity>
         )}
         {joined && (
           <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave}>
-            <Text style={styles.leaveBtnText}>Chiqish</Text>
+            <Text style={styles.leaveBtnText}>{tr("Chiqish")}</Text>
           </TouchableOpacity>
         )}
         {isHost && room.status === "LIVE" && (
           <TouchableOpacity style={styles.endBtn} onPress={handleEnd}>
-            <Text style={styles.endBtnText}>Tugatish</Text>
+            <Text style={styles.endBtnText}>{tr("Tugatish")}</Text>
           </TouchableOpacity>
         )}
       </View>

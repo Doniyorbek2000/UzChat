@@ -4,6 +4,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useChatStore } from "../../store/chatStore";
 import { exportAccountData } from "../../utils/dataExport";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 export function AccountDataExportScreen() {
   const user = useAuthStore((s) => s.user);
@@ -16,7 +17,7 @@ export function AccountDataExportScreen() {
     try {
       await exportAccountData(user, conversations);
     } catch {
-      Alert.alert("Xatolik", "Ma'lumotlarni eksport qilib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Ma'lumotlarni eksport qilib bo'lmadi"));
     } finally {
       setExporting(false);
     }
@@ -35,7 +36,7 @@ export function AccountDataExportScreen() {
         funksiyasidan foydalaning.
       </Text>
       <TouchableOpacity style={styles.button} onPress={onExport} disabled={exporting}>
-        {exporting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Yuklab olish</Text>}
+        {exporting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Yuklab olish")}</Text>}
       </TouchableOpacity>
     </View>
   );

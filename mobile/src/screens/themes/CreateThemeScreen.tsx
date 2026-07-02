@@ -4,14 +4,15 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { themesApi } from "../../api/themes";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreateTheme">;
 
 const COLOR_PRESETS = [
-  { label: "Ko'k", primary: "#007AFF", bg: "#FFFFFF", surface: "#F2F2F7", text: "#000000" },
-  { label: "Qora", primary: "#0A84FF", bg: "#000000", surface: "#1C1C1E", text: "#FFFFFF" },
-  { label: "Yashil", primary: "#34C759", bg: "#F0FFF4", surface: "#E8F5E9", text: "#1B5E20" },
-  { label: "Binafsha", primary: "#AF52DE", bg: "#FDF4FF", surface: "#F3E5F5", text: "#4A148C" },
+  { label: tr("Ko'k"), primary: "#007AFF", bg: "#FFFFFF", surface: "#F2F2F7", text: "#000000" },
+  { label: tr("Qora"), primary: "#0A84FF", bg: "#000000", surface: "#1C1C1E", text: tr("#FFFFFF") },
+  { label: tr("Yashil"), primary: "#34C759", bg: "#F0FFF4", surface: "#E8F5E9", text: tr("#1B5E20") },
+  { label: tr("Binafsha"), primary: "#AF52DE", bg: "#FDF4FF", surface: "#F3E5F5", text: tr("#4A148C") },
 ];
 
 export function CreateThemeScreen({ navigation }: Props) {
@@ -34,7 +35,7 @@ export function CreateThemeScreen({ navigation }: Props) {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert("Xatolik", "Mavzu nomini kiriting");
+      Alert.alert(tr("Xatolik"), tr("Mavzu nomini kiriting"));
       return;
     }
     setSaving(true);
@@ -48,9 +49,9 @@ export function CreateThemeScreen({ navigation }: Props) {
         textColor,
         isDark,
       });
-      Alert.alert("Muvaffaqiyat", "Mavzu yaratildi!", [{ text: "OK", onPress: () => navigation.goBack() }]);
+      Alert.alert(tr("Muvaffaqiyat"), tr("Mavzu yaratildi!"), [{ text: tr("OK"), onPress: () => navigation.goBack() }]);
     } catch {
-      Alert.alert("Xatolik", "Mavzuni yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Mavzuni yaratib bo'lmadi"));
     }
     setSaving(false);
   };
@@ -59,13 +60,13 @@ export function CreateThemeScreen({ navigation }: Props) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
 
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>Mavzu nomi</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Masalan: Mening mavzum" placeholderTextColor={colors.textSecondary} maxLength={50} />
+      <Text style={styles.label}>{tr("Mavzu nomi")}</Text>
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder={tr("Masalan: Mening mavzum")} placeholderTextColor={colors.textSecondary} maxLength={50} />
 
-      <Text style={styles.label}>Tavsif (ixtiyoriy)</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={description} onChangeText={setDescription} placeholder="Qisqacha tavsif..." placeholderTextColor={colors.textSecondary} multiline maxLength={200} />
+      <Text style={styles.label}>{tr("Tavsif (ixtiyoriy)")}</Text>
+      <TextInput style={[styles.input, styles.multiline]} value={description} onChangeText={setDescription} placeholder={tr("Qisqacha tavsif...")} placeholderTextColor={colors.textSecondary} multiline maxLength={200} />
 
-      <Text style={styles.label}>Tayyor ranglar</Text>
+      <Text style={styles.label}>{tr("Tayyor ranglar")}</Text>
       <View style={styles.presets}>
         {COLOR_PRESETS.map((p) => (
           <TouchableOpacity key={p.label} style={[styles.presetBtn, { backgroundColor: p.primary }]} onPress={() => applyPreset(p)}>
@@ -74,27 +75,27 @@ export function CreateThemeScreen({ navigation }: Props) {
         ))}
       </View>
 
-      <Text style={styles.label}>Asosiy rang</Text>
-      <TextInput style={styles.input} value={primaryColor} onChangeText={setPrimaryColor} placeholder="#007AFF" placeholderTextColor={colors.textSecondary} />
+      <Text style={styles.label}>{tr("Asosiy rang")}</Text>
+      <TextInput style={styles.input} value={primaryColor} onChangeText={setPrimaryColor} placeholder={tr("#007AFF")} placeholderTextColor={colors.textSecondary} />
 
-      <Text style={styles.label}>Fon rangi</Text>
-      <TextInput style={styles.input} value={backgroundColor} onChangeText={setBackgroundColor} placeholder="#FFFFFF" placeholderTextColor={colors.textSecondary} />
+      <Text style={styles.label}>{tr("Fon rangi")}</Text>
+      <TextInput style={styles.input} value={backgroundColor} onChangeText={setBackgroundColor} placeholder={tr("#FFFFFF")} placeholderTextColor={colors.textSecondary} />
 
-      <Text style={styles.label}>Yuza rangi</Text>
-      <TextInput style={styles.input} value={surfaceColor} onChangeText={setSurfaceColor} placeholder="#F2F2F7" placeholderTextColor={colors.textSecondary} />
+      <Text style={styles.label}>{tr("Yuza rangi")}</Text>
+      <TextInput style={styles.input} value={surfaceColor} onChangeText={setSurfaceColor} placeholder={tr("#F2F2F7")} placeholderTextColor={colors.textSecondary} />
 
-      <Text style={styles.label}>Matn rangi</Text>
+      <Text style={styles.label}>{tr("Matn rangi")}</Text>
       <TextInput style={styles.input} value={textColor} onChangeText={setTextColor} placeholder="#000000" placeholderTextColor={colors.textSecondary} />
 
       <TouchableOpacity style={styles.toggleRow} onPress={() => setIsDark(!isDark)}>
-        <Text style={styles.toggleLabel}>Qorong'u mavzu</Text>
+        <Text style={styles.toggleLabel}>{tr("Qorong'u mavzu")}</Text>
         <View style={[styles.toggle, isDark && styles.toggleActive]}>
           <View style={[styles.toggleThumb, isDark && styles.toggleThumbActive]} />
         </View>
       </TouchableOpacity>
 
       <View style={styles.previewSection}>
-        <Text style={styles.label}>Ko'rinish</Text>
+        <Text style={styles.label}>{tr("Ko'rinish")}</Text>
         <View style={[styles.preview, { backgroundColor }]}>
           <View style={[styles.previewHeader, { backgroundColor: surfaceColor }]}>
             <View style={[styles.previewDot, { backgroundColor: primaryColor }]} />
@@ -108,7 +109,7 @@ export function CreateThemeScreen({ navigation }: Props) {
       </View>
 
       <TouchableOpacity style={[styles.saveBtn, saving && styles.saveBtnDisabled]} onPress={handleSave} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Mavzuni saqlash</Text>}
+        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>{tr("Mavzuni saqlash")}</Text>}
       </TouchableOpacity>
     </ScrollView>
 

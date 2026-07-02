@@ -12,6 +12,7 @@ import { Conversation, Message, MessageType } from "../../types";
 import { chatsApi } from "../../api/chats";
 import { getConversationDisplay, formatTime } from "../../utils/conversation";
 import { decryptMessage } from "../../crypto/e2ee";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StarredMessages">;
 
@@ -141,7 +142,7 @@ export function StarredMessagesScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Yulduzli xabarlarni yuklab bo'lmadi" onRetry={loadAll} />;
+    return <ErrorView message={tr("Yulduzli xabarlarni yuklab bo'lmadi")} onRetry={loadAll} />;
   }
 
   return (
@@ -151,7 +152,7 @@ export function StarredMessagesScreen({ navigation }: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}

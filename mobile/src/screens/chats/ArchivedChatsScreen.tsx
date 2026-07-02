@@ -12,6 +12,7 @@ import { Conversation } from "../../types";
 import { getConversationDisplay, formatTime, isConversationUnread } from "../../utils/conversation";
 import { decryptMessage } from "../../crypto/e2ee";
 import { stripFormatting } from "../../utils/textFormat";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ArchivedChats">;
 
@@ -65,7 +66,7 @@ export function ArchivedChatsScreen({ navigation }: Props) {
 
   useEffect(() => {
     if (!selectionMode) {
-      navigation.setOptions({ title: "Arxivlangan suhbatlar", headerLeft: undefined, headerRight: undefined });
+      navigation.setOptions({ title: tr("Arxivlangan suhbatlar"), headerLeft: undefined, headerRight: undefined });
       return;
     }
     navigation.setOptions({
@@ -157,10 +158,10 @@ export function ArchivedChatsScreen({ navigation }: Props) {
 
   const onBulkDelete = () => {
     const ids = [...selectedIds];
-    Alert.alert("Suhbatlarni o'chirish", `${ids.length} ta suhbat ro'yxatdan o'chiriladi`, [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Suhbatlarni o'chirish"), `${ids.length} ta suhbat ro'yxatdan o'chiriladi`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           await Promise.all(ids.map((id) => deleteConversation(id).catch(() => {})));
@@ -189,26 +190,26 @@ export function ArchivedChatsScreen({ navigation }: Props) {
       muteConversation(item.id, "off").catch(() => {});
       return;
     }
-    Alert.alert("Ovozsiz qilish muddati", undefined, [
-      { text: "1 soatga", onPress: () => muteConversation(item.id, "1h").catch(() => {}) },
-      { text: "2 soatga", onPress: () => muteConversation(item.id, "2h").catch(() => {}) },
-      { text: "8 soatga", onPress: () => muteConversation(item.id, "8h").catch(() => {}) },
-      { text: "1 kunga", onPress: () => muteConversation(item.id, "1d").catch(() => {}) },
-      { text: "2 kunga", onPress: () => muteConversation(item.id, "2d").catch(() => {}) },
-      { text: "1 haftaga", onPress: () => muteConversation(item.id, "1w").catch(() => {}) },
-      { text: "Doimiy", onPress: () => muteConversation(item.id, "forever").catch(() => {}) },
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Ovozsiz qilish muddati"), undefined, [
+      { text: tr("1 soatga"), onPress: () => muteConversation(item.id, "1h").catch(() => {}) },
+      { text: tr("2 soatga"), onPress: () => muteConversation(item.id, "2h").catch(() => {}) },
+      { text: tr("8 soatga"), onPress: () => muteConversation(item.id, "8h").catch(() => {}) },
+      { text: tr("1 kunga"), onPress: () => muteConversation(item.id, "1d").catch(() => {}) },
+      { text: tr("2 kunga"), onPress: () => muteConversation(item.id, "2d").catch(() => {}) },
+      { text: tr("1 haftaga"), onPress: () => muteConversation(item.id, "1w").catch(() => {}) },
+      { text: tr("Doimiy"), onPress: () => muteConversation(item.id, "forever").catch(() => {}) },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
   const onLongPressConversation = (item: Conversation) => {
     Alert.alert(item.title ?? "Suhbat", undefined, [
       {
-        text: "☑️ Tanlash",
+        text: tr("☑️ Tanlash"),
         onPress: () => enterSelectionMode(item.id),
       },
       {
-        text: "📤 Arxivdan chiqarish",
+        text: tr("📤 Arxivdan chiqarish"),
         onPress: () => toggleArchive(item.id).catch(() => {}),
       },
       {
@@ -223,7 +224,7 @@ export function ArchivedChatsScreen({ navigation }: Props) {
         text: item.isMuted ? "🔔 Ovozli qilish" : "🔕 Ovozsiz qilish",
         onPress: () => onMutePress(item),
       },
-      { text: "Bekor qilish", style: "cancel" },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
@@ -273,7 +274,7 @@ export function ArchivedChatsScreen({ navigation }: Props) {
             <Text style={styles.preview} numberOfLines={1}>
               {drafts[item.id] ? (
                 <>
-                  <Text style={styles.draftLabel}>Qoralama: </Text>
+                  <Text style={styles.draftLabel}>{tr("Qoralama:")} </Text>
                   {drafts[item.id]}
                 </>
               ) : (
@@ -298,7 +299,7 @@ export function ArchivedChatsScreen({ navigation }: Props) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>🗄 Arxivlangan suhbatlar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("🗄 Arxivlangan suhbatlar yo'q")}</Text>
           </View>
         }
       />

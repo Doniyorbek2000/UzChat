@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import * as FileSystem from "expo-file-system/legacy";
 import { DICTIONARIES, SUPPORTED_LOCALES, TranslationKey, uz } from "./translations";
+import { STRING_DICTIONARIES } from "./strings";
 
 export { SUPPORTED_LOCALES };
 export type { TranslationKey };
@@ -70,4 +71,16 @@ export function t(key: TranslationKey): string {
 export function useT(): (key: TranslationKey) => string {
   const locale = useI18nStore((s) => s.locale);
   return (key) => DICTIONARIES[locale]?.[key] ?? uz[key];
+}
+
+/**
+ * Gettext-style translate: the key IS the Uzbek source string, so every
+ * screen can be wrapped mechanically; untranslated strings simply render the
+ * Uzbek original. Non-reactive by design — RootNavigator remounts the whole
+ * tree when the locale changes, so every tr() re-evaluates instantly.
+ */
+export function tr(source: string): string {
+  const { locale } = useI18nStore.getState();
+  if (locale === "uz") return source;
+  return STRING_DICTIONARIES[locale]?.[source] ?? source;
 }

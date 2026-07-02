@@ -16,6 +16,7 @@ import * as Sharing from "expo-sharing";
 import { DecryptedMessage } from "../store/chatStore";
 import { downloadAndDecryptFile, extensionFromName, getCachedFileUri } from "../utils/mediaFile";
 import { colors } from "../theme/colors";
+import { tr } from "../i18n";
 
 interface Props {
   visible: boolean;
@@ -142,7 +143,7 @@ function GalleryImage({
   return (
     <View style={[styles.page, { width, height }]}>
       {error ? (
-        <Text style={styles.errorText}>⚠️ Yuklab bo'lmadi</Text>
+        <Text style={styles.errorText}>{tr("⚠️ Yuklab bo'lmadi")}</Text>
       ) : uri ? (
         <Image source={{ uri }} style={{ width, height }} resizeMode="contain" />
       ) : (

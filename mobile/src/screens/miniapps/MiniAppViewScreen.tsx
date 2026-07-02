@@ -6,6 +6,7 @@ import { colors } from "../../theme/colors";
 import { useAuthStore } from "../../store/authStore";
 import { miniAppsApi, MiniApp } from "../../api/miniapps";
 import { paymentsApi } from "../../api/payments";
+import { tr } from "../../i18n";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { WebView } = require("react-native-webview");
@@ -81,7 +82,7 @@ export function MiniAppViewScreen({ route, navigation }: Props) {
   const confirmDialog = (title: string, message: string, confirmLabel: string) =>
     new Promise<boolean>((resolve) => {
       Alert.alert(title, message, [
-        { text: "Bekor qilish", style: "cancel", onPress: () => resolve(false) },
+        { text: tr("Bekor qilish"), style: "cancel", onPress: () => resolve(false) },
         { text: confirmLabel, onPress: () => resolve(true) },
       ]);
     });
@@ -195,7 +196,7 @@ export function MiniAppViewScreen({ route, navigation }: Props) {
           respond(msg.id, true, { paymentId: payment.id, status: payment.status, amount: payment.amount });
         } catch (err: any) {
           const message = err?.response?.data?.error?.message ?? "PAYMENT_FAILED";
-          Alert.alert("To'lov amalga oshmadi", String(message));
+          Alert.alert(tr("To'lov amalga oshmadi"), String(message));
           respond(msg.id, false, { message: String(message) });
         } finally {
           paymentInFlightRef.current = false;
@@ -228,7 +229,7 @@ export function MiniAppViewScreen({ route, navigation }: Props) {
         <View style={styles.toolbarCenter}>
           <Text style={styles.toolbarTitle} numberOfLines={1}>{name}</Text>
           {loading ? (
-            <Text style={styles.toolbarSubtitle}>Yuklanmoqda...</Text>
+            <Text style={styles.toolbarSubtitle}>{tr("Yuklanmoqda...")}</Text>
           ) : app ? (
             <Text style={styles.toolbarSubtitle}>@{app.creator.username}</Text>
           ) : null}

@@ -9,6 +9,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact, LastSeenException } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LastSeenExceptions">;
 
@@ -66,7 +67,7 @@ export function LastSeenExceptionsScreen({}: Props) {
       else await usersApi.setLastSeenException(userId, mode);
       load();
     } catch {
-      Alert.alert("Xatolik", "O'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("O'zgartirib bo'lmadi"));
     }
   };
 
@@ -74,13 +75,13 @@ export function LastSeenExceptionsScreen({}: Props) {
     const current = exceptionByUserId.get(contact.user.id);
     const name = contact.alias ?? contact.user.displayName;
     const options: { text: string; style?: "default" | "destructive" | "cancel"; onPress?: () => void }[] = [
-      { text: "Har doim ko'rsatish", onPress: () => onSetMode(contact.user.id, "ALLOW") },
-      { text: "Har doim yashirish", onPress: () => onSetMode(contact.user.id, "DENY") },
+      { text: tr("Har doim ko'rsatish"), onPress: () => onSetMode(contact.user.id, "ALLOW") },
+      { text: tr("Har doim yashirish"), onPress: () => onSetMode(contact.user.id, "DENY") },
     ];
     if (current) {
-      options.push({ text: "Standart sozlamaga qaytarish", onPress: () => onSetMode(contact.user.id, null) });
+      options.push({ text: tr("Standart sozlamaga qaytarish"), onPress: () => onSetMode(contact.user.id, null) });
     }
-    options.push({ text: "Bekor qilish", style: "cancel" });
+    options.push({ text: tr("Bekor qilish"), style: "cancel" });
     Alert.alert(name, undefined, options);
   };
 
@@ -93,7 +94,7 @@ export function LastSeenExceptionsScreen({}: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Ma'lumotlarni yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Ma'lumotlarni yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -107,7 +108,7 @@ export function LastSeenExceptionsScreen({}: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}
@@ -132,8 +133,8 @@ export function LastSeenExceptionsScreen({}: Props) {
             <TouchableOpacity style={styles.row} onPress={() => onContactPress(item)}>
               <Avatar uri={item.user.avatarUrl} name={item.user.displayName} />
               <Text style={styles.name}>{item.alias ?? item.user.displayName}</Text>
-              {mode === "ALLOW" && <Text style={styles.badgeAllow}>Har doim ko'rsatish</Text>}
-              {mode === "DENY" && <Text style={styles.badgeDeny}>Har doim yashirish</Text>}
+              {mode === "ALLOW" && <Text style={styles.badgeAllow}>{tr("Har doim ko'rsatish")}</Text>}
+              {mode === "DENY" && <Text style={styles.badgeDeny}>{tr("Har doim yashirish")}</Text>}
             </TouchableOpacity>
           );
         }}

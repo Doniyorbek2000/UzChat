@@ -5,13 +5,14 @@ import { RootStackParamList } from "../../navigation/types";
 import { stickersApi, StickerPack } from "../../api/stickers";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StickerStore">;
 
 const TAB_CONFIG = {
-  featured: { label: "⭐ Mashhur", emptyIcon: "🌟", emptyTitle: "Mashhur stikerlar yo'q", emptyHint: "Tez orada yangi stikerlar qo'shiladi" },
-  installed: { label: "📥 O'rnatilgan", emptyIcon: "📦", emptyTitle: "O'rnatilgan stikerlar yo'q", emptyHint: "Mashhur bo'limidan stiker to'plamlarini o'rnating" },
-  mine: { label: "👤 Mening", emptyIcon: "🎨", emptyTitle: "Stiker to'plamingiz yo'q", emptyHint: "O'z stiker to'plamingizni yarating" },
+  featured: { label: tr("⭐ Mashhur"), emptyIcon: "🌟", emptyTitle: "Mashhur stikerlar yo'q", emptyHint: "Tez orada yangi stikerlar qo'shiladi" },
+  installed: { label: tr("📥 O'rnatilgan"), emptyIcon: "📦", emptyTitle: "O'rnatilgan stikerlar yo'q", emptyHint: "Mashhur bo'limidan stiker to'plamlarini o'rnating" },
+  mine: { label: tr("👤 Mening"), emptyIcon: "🎨", emptyTitle: "Stiker to'plamingiz yo'q", emptyHint: "O'z stiker to'plamingizni yarating" },
 } as const;
 
 export function StickerStoreScreen({ navigation }: Props) {
@@ -84,7 +85,7 @@ export function StickerStoreScreen({ navigation }: Props) {
         <View style={styles.badgeRow}>
           {item.isAnimated && (
             <View style={styles.animatedBadge}>
-              <Text style={styles.animatedBadgeText}>✨ Animatsion</Text>
+              <Text style={styles.animatedBadgeText}>{tr("✨ Animatsion")}</Text>
             </View>
           )}
         </View>
@@ -100,7 +101,7 @@ export function StickerStoreScreen({ navigation }: Props) {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Stiker to'plamlarini qidirish..."
+          placeholder={tr("Stiker to'plamlarini qidirish...")}
           placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
@@ -129,7 +130,7 @@ export function StickerStoreScreen({ navigation }: Props) {
 
       {tab === "mine" && (
         <View style={styles.createHint}>
-          <Text style={styles.createHintText}>📌 O'z stiker to'plamingizni yarating</Text>
+          <Text style={styles.createHintText}>{tr("📌 O'z stiker to'plamingizni yarating")}</Text>
         </View>
       )}
 
@@ -138,7 +139,7 @@ export function StickerStoreScreen({ navigation }: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Stikerlarni yuklab bo'lmadi" onRetry={load} />
+        <ErrorView message={tr("Stikerlarni yuklab bo'lmadi")} onRetry={load} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"

@@ -5,21 +5,22 @@ import { RootStackParamList } from "../../navigation/types";
 import { bookmarksApi, Bookmark } from "../../api/bookmarks";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 const MESSAGE_TYPE_LABELS: Record<string, { icon: string; label: string }> = {
-  text: { icon: "💬", label: "Xabar" },
-  image: { icon: "📷", label: "Rasm" },
-  video: { icon: "🎬", label: "Video" },
-  audio: { icon: "🎤", label: "Ovozli xabar" },
-  voice: { icon: "🎤", label: "Ovozli xabar" },
-  file: { icon: "📎", label: "Fayl" },
-  document: { icon: "📄", label: "Hujjat" },
-  location: { icon: "📍", label: "Joylashuv" },
-  contact: { icon: "👤", label: "Kontakt" },
-  sticker: { icon: "🎨", label: "Stiker" },
-  gif: { icon: "🎞️", label: "GIF" },
-  poll: { icon: "📊", label: "So'rovnoma" },
-  reply: { icon: "↩️", label: "Javob" },
+  text: { icon: "💬", label: tr("Xabar") },
+  image: { icon: "📷", label: tr("Rasm") },
+  video: { icon: "🎬", label: tr("Video") },
+  audio: { icon: "🎤", label: tr("Ovozli xabar") },
+  voice: { icon: "🎤", label: tr("Ovozli xabar") },
+  file: { icon: "📎", label: tr("Fayl") },
+  document: { icon: "📄", label: tr("Hujjat") },
+  location: { icon: "📍", label: tr("Joylashuv") },
+  contact: { icon: "👤", label: tr("Kontakt") },
+  sticker: { icon: "🎨", label: tr("Stiker") },
+  gif: { icon: "🎞️", label: tr("GIF") },
+  poll: { icon: "📊", label: tr("So'rovnoma") },
+  reply: { icon: "↩️", label: tr("Javob") },
 };
 
 function getMessagePreview(msg: Bookmark["message"]): string {
@@ -50,17 +51,17 @@ export function BookmarksScreen({ navigation }: Props) {
   }, []);
 
   const handleRemove = (bookmark: Bookmark) => {
-    Alert.alert("O'chirish", "Bu xatcho'pni o'chirmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'chirish"), tr("Bu xatcho'pni o'chirmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           try {
             await bookmarksApi.remove(bookmark.id);
             setBookmarks((prev) => prev.filter((b) => b.id !== bookmark.id));
           } catch {
-            Alert.alert("Xatolik", "Xatcho'pni o'chirib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Xatcho'pni o'chirib bo'lmadi"));
           }
         },
       },
@@ -76,7 +77,7 @@ export function BookmarksScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Xatcho'plarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Xatcho'plarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -123,8 +124,8 @@ export function BookmarksScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🔖</Text>
-            <Text style={styles.emptyTitle}>Xatcho'plar yo'q</Text>
-            <Text style={styles.emptyHint}>Xabarlarni xatcho'plash uchun ularni bosib ushlab turing</Text>
+            <Text style={styles.emptyTitle}>{tr("Xatcho'plar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Xabarlarni xatcho'plash uchun ularni bosib ushlab turing")}</Text>
           </View>
         }
       />

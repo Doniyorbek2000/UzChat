@@ -8,6 +8,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Store } from "../../api/marketplace";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MyStores">;
 
@@ -46,7 +47,7 @@ export function MyStoresScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Do'konlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); marketplaceApi.getMyStores().then((s) => { setStores(s); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Do'konlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); marketplaceApi.getMyStores().then((s) => { setStores(s); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -85,8 +86,8 @@ export function MyStoresScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🏪</Text>
-            <Text style={styles.emptyTitle}>Do'konlar yo'q</Text>
-            <Text style={styles.emptyHint}>O'z do'koningizni yarating va savdo boshlang</Text>
+            <Text style={styles.emptyTitle}>{tr("Do'konlar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("O'z do'koningizni yarating va savdo boshlang")}</Text>
             <TouchableOpacity style={styles.createBtn} onPress={() => navigation.navigate("CreateStore")} activeOpacity={0.7}>
               <Text style={styles.createBtnText}>+ Do'kon yaratish</Text>
             </TouchableOpacity>

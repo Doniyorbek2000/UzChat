@@ -18,6 +18,7 @@ import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { authApi } from "../../api/auth";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Register">;
 
@@ -83,7 +84,7 @@ export function RegisterScreen({ navigation }: Props) {
 
   const onRequestOtp = async () => {
     if (phone.trim().length < 10) {
-      Alert.alert("Xatolik", "Telefon raqamni to'g'ri kiriting");
+      Alert.alert(tr("Xatolik"), tr("Telefon raqamni to'g'ri kiriting"));
       return;
     }
     setLoading(true);
@@ -93,7 +94,7 @@ export function RegisterScreen({ navigation }: Props) {
       startCountdown();
       setTimeout(() => codeRef.current?.focus(), 300);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "SMS yuborishda xatolik");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "SMS yuborishda xatolik");
     } finally {
       setLoading(false);
     }
@@ -101,7 +102,7 @@ export function RegisterScreen({ navigation }: Props) {
 
   const onVerifyCode = () => {
     if (code.length !== 6) {
-      Alert.alert("Xatolik", "6 xonali kodni kiriting");
+      Alert.alert(tr("Xatolik"), tr("6 xonali kodni kiriting"));
       return;
     }
     setStep("profile");
@@ -113,9 +114,9 @@ export function RegisterScreen({ navigation }: Props) {
     try {
       await requestRegisterOtp(phone.trim());
       startCountdown();
-      Alert.alert("Yuborildi", "Yangi tasdiqlash kodi yuborildi");
+      Alert.alert(tr("Yuborildi"), tr("Yangi tasdiqlash kodi yuborildi"));
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Qaytadan yuborishda xatolik");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Qaytadan yuborishda xatolik");
     } finally {
       setLoading(false);
     }
@@ -123,19 +124,19 @@ export function RegisterScreen({ navigation }: Props) {
 
   const onComplete = async () => {
     if (!displayName.trim()) {
-      Alert.alert("Xatolik", "Ismingizni kiriting");
+      Alert.alert(tr("Xatolik"), tr("Ismingizni kiriting"));
       return;
     }
     if (!USERNAME_PATTERN.test(username.trim())) {
-      Alert.alert("Xatolik", "Username 3-24 ta belgi, faqat harf, raqam va _ bo'lishi kerak");
+      Alert.alert(tr("Xatolik"), tr("Username 3-24 ta belgi, faqat harf, raqam va _ bo'lishi kerak"));
       return;
     }
     if (usernameStatus === "taken") {
-      Alert.alert("Xatolik", "Bu username band");
+      Alert.alert(tr("Xatolik"), tr("Bu username band"));
       return;
     }
     if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf, 1 raqam va 1 maxsus belgi (!@#$%) bo'lishi kerak");
+      Alert.alert(tr("Xatolik"), tr("Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf, 1 raqam va 1 maxsus belgi (!@#$%) bo'lishi kerak"));
       return;
     }
 
@@ -151,12 +152,12 @@ export function RegisterScreen({ navigation }: Props) {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView keyboardDismissMode="on-drag" contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Ro'yxatdan o'tish</Text>
+          <Text style={styles.title}>{tr("Ro'yxatdan o'tish")}</Text>
 
           {step === "phone" && (
             <>
-              <Text style={styles.subtitle}>Telefon raqamingizni kiriting</Text>
-              <Text style={styles.hint}>Tasdiqlash kodi SMS orqali yuboriladi</Text>
+              <Text style={styles.subtitle}>{tr("Telefon raqamingizni kiriting")}</Text>
+              <Text style={styles.hint}>{tr("Tasdiqlash kodi SMS orqali yuboriladi")}</Text>
 
               <TextInput
                 style={styles.input}
@@ -168,7 +169,7 @@ export function RegisterScreen({ navigation }: Props) {
                 autoCapitalize="none"
                 returnKeyType="go"
                 onSubmitEditing={onRequestOtp}
-                accessibilityLabel="Telefon raqam"
+                accessibilityLabel={tr("Telefon raqam")}
               />
 
               <TouchableOpacity
@@ -176,18 +177,18 @@ export function RegisterScreen({ navigation }: Props) {
                 onPress={onRequestOtp}
                 disabled={loading}
               >
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Davom etish</Text>}
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Davom etish")}</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                <Text style={styles.link}>Hisobingiz bormi? Kirish</Text>
+                <Text style={styles.link}>{tr("Hisobingiz bormi? Kirish")}</Text>
               </TouchableOpacity>
             </>
           )}
 
           {step === "otp" && (
             <>
-              <Text style={styles.subtitle}>Tasdiqlash kodi</Text>
+              <Text style={styles.subtitle}>{tr("Tasdiqlash kodi")}</Text>
               <Text style={styles.hint}>{phone} raqamiga yuborilgan 6 xonali kodni kiriting</Text>
 
               <TextInput
@@ -202,7 +203,7 @@ export function RegisterScreen({ navigation }: Props) {
                 returnKeyType="go"
                 onSubmitEditing={onVerifyCode}
                 autoFocus
-                accessibilityLabel="Tasdiqlash kodi"
+                accessibilityLabel={tr("Tasdiqlash kodi")}
               />
 
               <TouchableOpacity
@@ -210,7 +211,7 @@ export function RegisterScreen({ navigation }: Props) {
                 onPress={onVerifyCode}
                 disabled={loading}
               >
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Tasdiqlash")}</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity onPress={onResendOtp} disabled={countdown > 0}>
@@ -220,38 +221,38 @@ export function RegisterScreen({ navigation }: Props) {
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => { setStep("phone"); setCode(""); }}>
-                <Text style={styles.link}>Raqamni o'zgartirish</Text>
+                <Text style={styles.link}>{tr("Raqamni o'zgartirish")}</Text>
               </TouchableOpacity>
             </>
           )}
 
           {step === "profile" && (
             <>
-              <Text style={styles.subtitle}>Profilingizni yarating</Text>
+              <Text style={styles.subtitle}>{tr("Profilingizni yarating")}</Text>
 
               <TextInput
                 style={styles.input}
-                placeholder="Ismingiz"
+                placeholder={tr("Ismingiz")}
                 placeholderTextColor={colors.textSecondary}
                 value={displayName}
                 onChangeText={setDisplayName}
                 returnKeyType="next"
                 onSubmitEditing={() => usernameRef.current?.focus()}
-                accessibilityLabel="Ism"
+                accessibilityLabel={tr("Ism")}
               />
 
               <View style={styles.usernameWrapper}>
                 <TextInput
                   ref={usernameRef}
                   style={[styles.input, styles.usernameInput]}
-                  placeholder="Username"
+                  placeholder={tr("Username")}
                   placeholderTextColor={colors.textSecondary}
                   value={username}
                   onChangeText={setUsername}
                   autoCapitalize="none"
                   returnKeyType="next"
                   onSubmitEditing={() => passwordRef.current?.focus()}
-                  accessibilityLabel="Username"
+                  accessibilityLabel={tr("Username")}
                 />
                 {usernameStatus === "checking" && (
                   <ActivityIndicator style={styles.usernameStatusIcon} size="small" color={colors.textSecondary} />
@@ -263,15 +264,15 @@ export function RegisterScreen({ navigation }: Props) {
                   <Text style={[styles.usernameStatusIcon, styles.usernameTaken]}>✕</Text>
                 )}
               </View>
-              {usernameStatus === "taken" && <Text style={styles.usernameHint}>Bu username band</Text>}
+              {usernameStatus === "taken" && <Text style={styles.usernameHint}>{tr("Bu username band")}</Text>}
               {usernameStatus === "available" && (
-                <Text style={[styles.usernameHint, styles.usernameAvailable]}>Username bo'sh</Text>
+                <Text style={[styles.usernameHint, styles.usernameAvailable]}>{tr("Username bo'sh")}</Text>
               )}
 
               <TextInput
                 ref={passwordRef}
                 style={styles.input}
-                placeholder="Parol (kamida 10 ta belgi, AaBb1!)"
+                placeholder={tr("Parol (kamida 10 ta belgi, AaBb1!)")}
                 placeholderTextColor={colors.textSecondary}
                 secureTextEntry
                 autoComplete="password"
@@ -279,7 +280,7 @@ export function RegisterScreen({ navigation }: Props) {
                 onChangeText={setPassword}
                 returnKeyType="go"
                 onSubmitEditing={onComplete}
-                accessibilityLabel="Parol"
+                accessibilityLabel={tr("Parol")}
               />
 
               <TouchableOpacity
@@ -287,11 +288,11 @@ export function RegisterScreen({ navigation }: Props) {
                 onPress={onComplete}
                 disabled={loading}
               >
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Ro'yxatdan o'tish</Text>}
+                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Ro'yxatdan o'tish")}</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => setStep("otp")}>
-                <Text style={styles.link}>Orqaga</Text>
+                <Text style={styles.link}>{tr("Orqaga")}</Text>
               </TouchableOpacity>
             </>
           )}

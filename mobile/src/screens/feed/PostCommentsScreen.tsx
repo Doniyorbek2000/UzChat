@@ -11,6 +11,7 @@ import { useAuthStore } from "../../store/authStore";
 import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PostComments">;
 
@@ -56,7 +57,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
       setComments((prev) => [...prev, comment]);
       setText("");
     } catch {
-      Alert.alert("Xatolik", "Izoh qo'shib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Izoh qo'shib bo'lmadi"));
     }
     setSending(false);
   };
@@ -66,7 +67,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
       await feedApi.deleteComment(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch {
-      Alert.alert("Xatolik", "Izohni o'chirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Izohni o'chirib bo'lmadi"));
     }
   };
 
@@ -89,7 +90,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Izohlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadComments().finally(() => setLoading(false)); }} />
+        <ErrorView message={tr("Izohlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadComments().finally(() => setLoading(false)); }} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"
@@ -116,7 +117,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
           )}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>Izohlar yo'q</Text>
+              <Text style={styles.emptyText}>{tr("Izohlar yo'q")}</Text>
             </View>
           }
         />
@@ -126,7 +127,7 @@ export function PostCommentsScreen({ route, navigation }: Props) {
         <TextInput
           ref={inputRef}
           style={styles.input}
-          placeholder="Izoh yozing..."
+          placeholder={tr("Izoh yozing...")}
           placeholderTextColor={colors.textSecondary}
           value={text}
           onChangeText={setText}

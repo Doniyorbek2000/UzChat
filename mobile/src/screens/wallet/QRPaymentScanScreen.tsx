@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { qrPaymentsApi } from "../../api/qrPayments";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "QRPaymentScan">;
 
@@ -24,7 +25,7 @@ export function QRPaymentScanScreen({ navigation }: Props) {
       });
       if (qr.amount) setAmount(String(qr.amount));
     } catch {
-      Alert.alert("Xatolik", "QR kod topilmadi yoki muddati tugagan");
+      Alert.alert(tr("Xatolik"), tr("QR kod topilmadi yoki muddati tugagan"));
     }
   };
 
@@ -36,11 +37,11 @@ export function QRPaymentScanScreen({ navigation }: Props) {
         qrCode: qrCode.trim(),
         amount: amount ? parseFloat(amount) : undefined,
       });
-      Alert.alert("Muvaffaqiyat", "To'lov amalga oshirildi!", [
-        { text: "OK", onPress: () => navigation.goBack() },
+      Alert.alert(tr("Muvaffaqiyat"), tr("To'lov amalga oshirildi!"), [
+        { text: tr("OK"), onPress: () => navigation.goBack() },
       ]);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message || "To'lov amalga oshirilmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message || "To'lov amalga oshirilmadi");
     }
     setPaying(false);
   };
@@ -49,30 +50,30 @@ export function QRPaymentScanScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.scanArea}>
         <Text style={styles.scanIcon}>📷</Text>
-        <Text style={styles.scanHint}>Kameradan QR kod skanerlash yoki qo'lda kiriting</Text>
+        <Text style={styles.scanHint}>{tr("Kameradan QR kod skanerlash yoki qo'lda kiriting")}</Text>
       </View>
 
       <View style={styles.form}>
         <TextInput
           style={styles.input}
-          placeholder="QR kodni kiriting"
+          placeholder={tr("QR kodni kiriting")}
           placeholderTextColor={colors.textSecondary}
           value={qrCode}
           onChangeText={setQrCode}
           autoCapitalize="none"
         />
         <TouchableOpacity style={styles.lookupBtn} onPress={handleLookup}>
-          <Text style={styles.lookupBtnText}>Tekshirish</Text>
+          <Text style={styles.lookupBtnText}>{tr("Tekshirish")}</Text>
         </TouchableOpacity>
 
         {info && (
           <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>Qabul qiluvchi: <Text style={styles.infoValue}>{info.creator}</Text></Text>
+            <Text style={styles.infoLabel}>{tr("Qabul qiluvchi:")} <Text style={styles.infoValue}>{info.creator}</Text></Text>
             {info.requestedAmount && (
-              <Text style={styles.infoLabel}>Summa: <Text style={styles.infoValue}>{info.requestedAmount}</Text></Text>
+              <Text style={styles.infoLabel}>{tr("Summa:")} <Text style={styles.infoValue}>{info.requestedAmount}</Text></Text>
             )}
             {info.note && (
-              <Text style={styles.infoLabel}>Izoh: <Text style={styles.infoValue}>{info.note}</Text></Text>
+              <Text style={styles.infoLabel}>{tr("Izoh:")} <Text style={styles.infoValue}>{info.note}</Text></Text>
             )}
           </View>
         )}
@@ -80,7 +81,7 @@ export function QRPaymentScanScreen({ navigation }: Props) {
         {info && !info.requestedAmount && (
           <TextInput
             style={styles.input}
-            placeholder="Summa kiriting"
+            placeholder={tr("Summa kiriting")}
             placeholderTextColor={colors.textSecondary}
             keyboardType="numeric"
             value={amount}
@@ -92,7 +93,7 @@ export function QRPaymentScanScreen({ navigation }: Props) {
           {paying ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.payBtnText}>To'lash</Text>
+            <Text style={styles.payBtnText}>{tr("To'lash")}</Text>
           )}
         </TouchableOpacity>
       </View>
