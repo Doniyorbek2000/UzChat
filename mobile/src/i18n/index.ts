@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { I18nManager } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";
 import { DICTIONARIES, SUPPORTED_LOCALES, TranslationKey, uz } from "./translations";
 import { STRING_DICTIONARIES } from "./strings";
@@ -54,9 +55,18 @@ export const useI18nStore = create<I18nState>((set) => ({
 
   setLocale: async (locale) => {
     if (!DICTIONARIES[locale]) return;
-    set({ locale, isRtl: rtlFor(locale) });
+    const rtl = rtlFor(locale);
+    set({ locale, isRtl: rtl });
     try {
       await FileSystem.writeAsStringAsync(LOCALE_FILE, JSON.stringify({ locale }));
+    } catch {}
+    // Arabic/Persian/Urdu need a right-to-left layout. RN applies the flip on
+    // the next app start; the language screen tells the user to restart.
+    try {
+      if (I18nManager.isRTL !== rtl) {
+        I18nManager.allowRTL(rtl);
+        I18nManager.forceRTL(rtl);
+      }
     } catch {}
   },
 }));

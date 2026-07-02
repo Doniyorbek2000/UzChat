@@ -32,21 +32,41 @@ export async function deleteOwnUploadByUrl(url: string | null | undefined) {
 // uploads left behind by client send failures after a successful upload.
 const ORPHAN_AGE_MS = 24 * 60 * 60 * 1000;
 
+const GC_BATCH_SIZE = 100;
+
 export async function cleanupOrphanedUploads() {
   const candidates = await storage.listOlderThan(Date.now() - ORPHAN_AGE_MS);
   let removed = 0;
 
-  for (const candidate of candidates) {
-    const basename = path.basename(candidate.name);
-    const [msgRef, userRef, convRef] = await Promise.all([
-      prisma.message.findFirst({ where: { mediaUrl: { endsWith: basename } }, select: { id: true } }),
-      prisma.user.findFirst({ where: { avatarUrl: { endsWith: basename } }, select: { id: true } }),
-      prisma.conversation.findFirst({ where: { avatarUrl: { endsWith: basename } }, select: { id: true } }),
+  // Batched reference checks: one OR-query per table per 100 files instead
+  // of three round-trips per file.
+  for (let i = 0; i < candidates.length; i += GC_BATCH_SIZE) {
+    const batch = candidates.slice(i, i + GC_BATCH_SIZE).map((c) => path.basename(c.name));
+    const [msgRefs, userRefs, convRefs] = await Promise.all([
+      prisma.message.findMany({
+        where: { OR: batch.map((b) => ({ mediaUrl: { endsWith: b } })) },
+        select: { mediaUrl: true },
+      }),
+      prisma.user.findMany({
+        where: { OR: batch.map((b) => ({ avatarUrl: { endsWith: b } })) },
+        select: { avatarUrl: true },
+      }),
+      prisma.conversation.findMany({
+        where: { OR: batch.map((b) => ({ avatarUrl: { endsWith: b } })) },
+        select: { avatarUrl: true },
+      }),
     ]);
-    if (msgRef || userRef || convRef) continue;
 
-    await storage.remove(basename);
-    removed++;
+    const referenced = new Set<string>();
+    for (const r of msgRefs) if (r.mediaUrl) referenced.add(path.basename(r.mediaUrl));
+    for (const r of userRefs) if (r.avatarUrl) referenced.add(path.basename(r.avatarUrl));
+    for (const r of convRefs) if (r.avatarUrl) referenced.add(path.basename(r.avatarUrl));
+
+    for (const basename of batch) {
+      if (referenced.has(basename)) continue;
+      await storage.remove(basename);
+      removed++;
+    }
   }
 
   return removed;

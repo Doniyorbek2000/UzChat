@@ -109,6 +109,31 @@ export function ReelsFeedScreen({ navigation }: Props) {
     reelsApi.view(activeReel.id).catch(() => {});
   }, [activeReel?.id]);
 
+  // Instagram-style vertical swipe between reels inside the player.
+  const touchStartY = useRef(0);
+  const activeIndex = activeReel ? reels.findIndex((r) => r.id === activeReel.id) : -1;
+  const nextReel = activeIndex >= 0 ? reels[activeIndex + 1] : undefined;
+
+  const goToReel = (direction: 1 | -1) => {
+    if (activeIndex < 0) return;
+    const target = reels[activeIndex + direction];
+    if (target) {
+      setActiveReel(target);
+      setVideoPaused(false);
+    } else if (direction === 1) {
+      loadMore();
+    }
+  };
+
+  const onPlayerTouchStart = (pageY: number) => {
+    touchStartY.current = pageY;
+  };
+  const onPlayerTouchEnd = (pageY: number) => {
+    const dy = pageY - touchStartY.current;
+    if (dy < -60) goToReel(1);
+    else if (dy > 60) goToReel(-1);
+  };
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -373,7 +398,11 @@ export function ReelsFeedScreen({ navigation }: Props) {
 
       <Modal visible={!!activeReel} animationType="slide" statusBarTranslucent>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
-        <SafeAreaView style={styles.playerContainer}>
+        <SafeAreaView
+          style={styles.playerContainer}
+          onTouchStart={(e) => onPlayerTouchStart(e.nativeEvent.pageY)}
+          onTouchEnd={(e) => onPlayerTouchEnd(e.nativeEvent.pageY)}
+        >
           <TouchableOpacity style={styles.closeBtn} onPress={() => { setActiveReel(null); setVideoPaused(false); }}>
             <Text style={styles.closeBtnText}>✕</Text>
           </TouchableOpacity>
@@ -428,6 +457,16 @@ export function ReelsFeedScreen({ navigation }: Props) {
                   )}
                 </View>
               </View>
+
+              {/* Warms the cache for the next reel so an up-swipe starts instantly. */}
+              {nextReel && (
+                <Video
+                  source={{ uri: nextReel.videoUrl }}
+                  style={styles.preloadVideo}
+                  shouldPlay={false}
+                  isMuted
+                />
+              )}
             </>
           )}
         </SafeAreaView>
@@ -617,6 +656,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   emptyButtonText: { fontSize: 15, fontWeight: "600", color: "#fff" },
+  preloadVideo: { width: 1, height: 1, position: "absolute", opacity: 0 },
   playerContainer: { flex: 1, backgroundColor: "#000" },
   closeBtn: { position: "absolute", top: 50, left: 16, zIndex: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
   closeBtnText: { fontSize: 18, color: "#fff", fontWeight: "700" },
