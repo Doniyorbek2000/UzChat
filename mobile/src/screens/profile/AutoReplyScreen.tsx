@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { autoReplyApi, AutoReplySettings } from "../../api/autoReply";
+import { invalidateAutoReplyCache } from "../../utils/autoReply";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
 
@@ -37,6 +38,7 @@ export function AutoReplyScreen(_props: Props) {
     try {
       const updated = await autoReplyApi.update({ isEnabled, message, onlyForStrangers: onlyStrangers });
       setSettings(updated);
+      invalidateAutoReplyCache();
       Alert.alert("Saqlandi", "Avtomatik javob sozlamalari saqlandi");
     } catch {
       Alert.alert("Xatolik", "Sozlamalarni saqlab bo'lmadi");

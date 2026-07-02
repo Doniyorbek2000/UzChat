@@ -18,6 +18,7 @@ import { draftStorage } from "../storage/draftStorage";
 import { draftsApi } from "../api/drafts";
 import { getConversationDisplay, isConversationUnread, messagePreviewText } from "../utils/conversation";
 import { getActiveConversationId } from "../utils/pushNotifications";
+import { maybeAutoReply } from "../utils/autoReply";
 import { useToastStore } from "./toastStore";
 import {
   ChatFolder,
@@ -1523,6 +1524,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       const key = get().getConversationKey(conversation);
       const decrypted = decryptToMessage(key, message);
+
+      if (message.senderId !== currentUser?.id && currentUser) {
+        maybeAutoReply(conversation, message, currentUser.id, (cid, text) =>
+          get().sendTextMessage(cid, text)
+        ).catch(() => {});
+      }
 
       if (
         message.senderId !== currentUser?.id &&
