@@ -104,6 +104,13 @@
       ],
       [
         "expo-secure-store"
+      ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          "cameraPermission": "UzChat video qo'ng'iroqlar uchun kameradan foydalanadi",
+          "microphonePermission": "UzChat qo'ng'iroqlar uchun mikrofondan foydalanadi"
+        }
       ]
     ],
     "extra": {

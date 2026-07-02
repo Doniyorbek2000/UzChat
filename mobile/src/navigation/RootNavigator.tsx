@@ -144,6 +144,7 @@ import { useQuickRepliesStore } from "../store/quickRepliesStore";
 import { getConversationDisplay } from "../utils/conversation";
 import { MessageNotificationData, updateAppBadgeCount, clearAppBadgeCount } from "../utils/pushNotifications";
 import { getSocket } from "../socket/socket";
+import { setPendingOffer } from "../webrtc/callSession";
 import { colors } from "../theme/colors";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -300,8 +301,11 @@ export function RootNavigator() {
       callerDisplayName: string;
       callerAvatarUrl: string | null;
       callType: "audio" | "video";
+      offer: { type: string; sdp: string };
     }) => {
       if (navigationRef.isReady()) {
+        // CallScreen consumes the offer when the user answers.
+        setPendingOffer(data.offer as any);
         navigationRef.navigate("Call", {
           userId: data.callerId,
           displayName: data.callerDisplayName,
