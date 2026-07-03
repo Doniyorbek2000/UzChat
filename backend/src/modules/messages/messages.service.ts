@@ -1,15 +1,13 @@
-import fs from "fs/promises";
-import path from "path";
 import { ConversationType, GroupAuditAction, Message, MessageType, ParticipantRole } from "@prisma/client";
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
-import { getIo, isUserOnline } from "../../sockets";
+import { getIo, isUserOnline, filterOnlineUsers } from "../../sockets";
 import { pushService } from "../push/push.service";
 import { chatsService, isParticipantMuted } from "../chats/chats.service";
 import { contactsService } from "../contacts/contacts.service";
 import { canRevealForwardedFrom } from "../../utils/lastSeen";
 import { isInQuietHours, isNotificationsPaused } from "../../utils/notificationPreferences";
-import { uploadsDir } from "../media/upload";
+import { deleteOwnUploadByUrl } from "../media/upload";
 import { EditMessageInput, GlobalSearchQuery, ListMessagesQuery, SearchMessagesQuery, SendMessageInput, SetReminderInput } from "./messages.schema";
 import { logger } from "../../utils/logger";
 import { presenceService } from "../../services/presence.service";
@@ -189,10 +187,11 @@ async function notifyParticipants(senderId: string, conversationId: string, mess
     });
     if (participants.length === 0) return false;
 
+    const onlineIds = await filterOnlineUsers(participants.map((p) => p.userId));
     const recipients = participants.filter(
       (p) =>
         !p.mutedSenderIds.includes(senderId) &&
-        !isUserOnline(p.userId) &&
+        !onlineIds.has(p.userId) &&
         !isInQuietHours(p.user) &&
         !isNotificationsPaused(p.user)
     );
@@ -258,7 +257,8 @@ async function markDeliveredForOnlineRecipients(
   participants: { userId: string }[],
   deliveredAt: Date
 ) {
-  const onlineRecipients = participants.filter((p) => p.userId !== senderId && isUserOnline(p.userId));
+  const onlineIds = await filterOnlineUsers(participants.map((p) => p.userId));
+  const onlineRecipients = participants.filter((p) => p.userId !== senderId && onlineIds.has(p.userId));
   if (onlineRecipients.length === 0) return;
 
   await prisma.conversationParticipant.updateMany({
@@ -276,7 +276,7 @@ async function markDeliveredForOnlineRecipients(
 }
 
 async function notifyReaction(reactorId: string, conversationId: string, message: Message, emoji: string) {
-  if (isUserOnline(message.senderId) || message.senderId === reactorId) return;
+  if (message.senderId === reactorId || (await isUserOnline(message.senderId))) return;
 
   const participant = await prisma.conversationParticipant.findUnique({
     where: { conversationId_userId: { conversationId, userId: message.senderId } },
@@ -349,10 +349,11 @@ async function notifyEditMentions(senderId: string, conversationId: string, mess
   });
   if (!conversation) return;
 
+  const onlineIds = await filterOnlineUsers(conversation.participants.map((p) => p.userId));
   const recipients = conversation.participants.filter(
     (p) =>
       !p.mutedSenderIds.includes(senderId) &&
-      !isUserOnline(p.userId) &&
+      !onlineIds.has(p.userId) &&
       p.user.notifyMentions &&
       !isInQuietHours(p.user) &&
       !isNotificationsPaused(p.user)
@@ -799,8 +800,7 @@ export const messagesService = {
     });
 
     if (message.mediaUrl) {
-      const filename = path.basename(message.mediaUrl);
-      await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
+      await deleteOwnUploadByUrl(message.mediaUrl);
     }
 
     return updated;
@@ -847,8 +847,7 @@ export const messagesService = {
     });
 
     if (message.mediaUrl) {
-      const filename = path.basename(message.mediaUrl);
-      await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
+      await deleteOwnUploadByUrl(message.mediaUrl);
     }
 
     return formatMessage(updated, userId);
@@ -1167,8 +1166,7 @@ export const messagesService = {
           })
         );
         if (m.mediaUrl) {
-          const filename = path.basename(m.mediaUrl);
-          await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
+          await deleteOwnUploadByUrl(m.mediaUrl);
         }
       } catch (err) {
         logger.error("Failed to expire message", { messageId: m.id, error: String(err) });
@@ -1227,8 +1225,7 @@ export const messagesService = {
     await prisma.message.delete({ where: { id: messageId } });
 
     if (message.mediaUrl) {
-      const filename = path.basename(message.mediaUrl);
-      await fs.unlink(path.join(uploadsDir, filename)).catch(() => {});
+      await deleteOwnUploadByUrl(message.mediaUrl);
     }
   },
 

@@ -1,23 +1,29 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import path from "path";
-import { env } from "../../config/env";
 import { Errors } from "../../utils/errors";
-import { uploadsDir } from "./upload";
+import { storage } from "../../services/storage.service";
+import { finalizeUpload } from "./upload";
 
 export const mediaController = {
   async upload(req: Request, res: Response) {
     if (!req.file) throw Errors.badRequest("Fayl yuborilmadi");
-    res.status(201).json({
-      url: `${env.publicUrl}/media/${req.file.filename}`,
-      size: req.file.size,
-    });
+    const stored = await finalizeUpload(req.file);
+    res.status(201).json(stored);
   },
 
-  async get(req: Request, res: Response, next: NextFunction) {
+  async get(req: Request, res: Response) {
     const filename = path.basename(req.params.filename);
+    const file = await storage.download(filename);
+    if (!file) throw Errors.notFound("Fayl");
+
     res.set("Cache-Control", "private, max-age=31536000, immutable");
-    res.sendFile(path.join(uploadsDir, filename), (err) => {
-      if (err) next(Errors.notFound("Fayl"));
+    if (file.contentType) res.set("Content-Type", file.contentType);
+    else if (path.extname(filename)) res.type(path.extname(filename));
+    if (file.contentLength !== undefined) res.set("Content-Length", String(file.contentLength));
+    file.stream.on("error", () => {
+      if (!res.headersSent) res.status(404).end();
+      else res.destroy();
     });
+    file.stream.pipe(res);
   },
 };

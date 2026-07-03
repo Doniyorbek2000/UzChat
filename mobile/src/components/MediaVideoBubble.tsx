@@ -4,6 +4,7 @@ import { Video, ResizeMode } from "expo-av";
 import { downloadAndDecryptFile, extensionFromName, formatDuration } from "../utils/mediaFile";
 import { DecryptedMessage } from "../store/chatStore";
 import { colors } from "../theme/colors";
+import { tr } from "../i18n";
 
 const MAX_WIDTH = 220;
 const MAX_HEIGHT = 280;
@@ -61,8 +62,8 @@ export function MediaVideoBubble({ message, conversationKey }: Props) {
   if (error) {
     return (
       <Pressable style={[styles.box, { width, height }]} onPress={onPress}>
-        <Text style={styles.errorText}>⚠️ Yuklab bo'lmadi</Text>
-        <Text style={styles.duration}>Qayta urinish uchun bosing</Text>
+        <Text style={styles.errorText}>{tr("⚠️ Yuklab bo'lmadi")}</Text>
+        <Text style={styles.duration}>{tr("Qayta urinish uchun bosing")}</Text>
       </Pressable>
     );
   }

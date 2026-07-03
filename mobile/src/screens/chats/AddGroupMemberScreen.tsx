@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddGroupMember">;
 
@@ -76,11 +77,11 @@ export function AddGroupMemberScreen({ route, navigation }: Props) {
         }
       }
       if (added === 0) {
-        Alert.alert("Xatolik", lastErrorMessage ?? "A'zo qo'shib bo'lmadi");
+        Alert.alert(tr("Xatolik"), lastErrorMessage ?? "A'zo qo'shib bo'lmadi");
         return;
       }
       if (failed > 0) {
-        Alert.alert("Qo'shildi", `${added} kishi qo'shildi, ${failed} kishini qo'shib bo'lmadi`);
+        Alert.alert(tr("Qo'shildi"), `${added} kishi qo'shildi, ${failed} kishini qo'shib bo'lmadi`);
       }
       navigation.goBack();
     } finally {
@@ -97,7 +98,7 @@ export function AddGroupMemberScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadContacts(); }} />;
+    return <ErrorView message={tr("Kontaktlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadContacts(); }} />;
   }
 
   return (
@@ -107,7 +108,7 @@ export function AddGroupMemberScreen({ route, navigation }: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}

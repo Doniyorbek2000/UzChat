@@ -5,15 +5,16 @@ import { RootStackParamList } from "../../navigation/types";
 import { gamesApi, GameData } from "../../api/games";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GameCenter">;
 
 const CATEGORIES = [
-  { key: "all", label: "Barchasi", icon: "🌐" },
-  { key: "casual", label: "Oddiy", icon: "🎯" },
-  { key: "puzzle", label: "Boshqotirma", icon: "🧩" },
-  { key: "action", label: "Harakat", icon: "⚡" },
-  { key: "multiplayer", label: "Ko'p o'yinchi", icon: "👥" },
+  { key: "all", label: tr("Barchasi"), icon: "🌐" },
+  { key: "casual", label: tr("Oddiy"), icon: "🎯" },
+  { key: "puzzle", label: tr("Boshqotirma"), icon: "🧩" },
+  { key: "action", label: tr("Harakat"), icon: "⚡" },
+  { key: "multiplayer", label: tr("Ko'p o'yinchi"), icon: "👥" },
 ];
 
 export function GameCenterScreen({ navigation }: Props) {
@@ -69,13 +70,13 @@ export function GameCenterScreen({ navigation }: Props) {
           {renderHeader()}
           <View style={styles.center}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.loadingText}>Yuklanmoqda...</Text>
+            <Text style={styles.loadingText}>{tr("Yuklanmoqda...")}</Text>
           </View>
         </>
       ) : error ? (
         <>
           {renderHeader()}
-          <ErrorView message="O'yinlarni yuklab bo'lmadi" onRetry={loadData} />
+          <ErrorView message={tr("O'yinlarni yuklab bo'lmadi")} onRetry={loadData} />
         </>
       ) : (
         <FlatList
@@ -99,7 +100,7 @@ export function GameCenterScreen({ navigation }: Props) {
                 {item.rating > 0 && <Text style={styles.gameRating}>⭐ {item.rating.toFixed(1)}</Text>}
               </View>
               <View style={styles.playBtn}>
-                <Text style={styles.playBtnText}>O'ynash</Text>
+                <Text style={styles.playBtnText}>{tr("O'ynash")}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -108,8 +109,8 @@ export function GameCenterScreen({ navigation }: Props) {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>🎮</Text>
-              <Text style={styles.emptyTitle}>O'yinlar yo'q</Text>
-              <Text style={styles.emptyHint}>Bu kategoriyada hali o'yinlar mavjud emas</Text>
+              <Text style={styles.emptyTitle}>{tr("O'yinlar yo'q")}</Text>
+              <Text style={styles.emptyHint}>{tr("Bu kategoriyada hali o'yinlar mavjud emas")}</Text>
             </View>
           }
         />

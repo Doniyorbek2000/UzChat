@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "VerifyOtp">;
 
@@ -34,14 +35,14 @@ export function VerifyOtpScreen({ route }: Props) {
 
   const onSubmit = async () => {
     if (code.length !== 6) {
-      Alert.alert("Xatolik", "6 xonali kodni kiriting");
+      Alert.alert(tr("Xatolik"), tr("6 xonali kodni kiriting"));
       return;
     }
     setLoading(true);
     try {
       await verifyRegisterOtp({ phone, code, username, displayName, password });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod noto'g'ri");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Kod noto'g'ri");
     } finally {
       setLoading(false);
     }
@@ -63,9 +64,9 @@ export function VerifyOtpScreen({ route }: Props) {
           return prev - 1;
         });
       }, 1000);
-      Alert.alert("Yuborildi", "Yangi tasdiqlash kodi yuborildi");
+      Alert.alert(tr("Yuborildi"), tr("Yangi tasdiqlash kodi yuborildi"));
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Qaytadan yuborishda xatolik");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Qaytadan yuborishda xatolik");
     } finally {
       setLoading(false);
     }
@@ -74,7 +75,7 @@ export function VerifyOtpScreen({ route }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <View style={styles.container}>
-      <Text style={styles.title}>Tasdiqlash kodi</Text>
+      <Text style={styles.title}>{tr("Tasdiqlash kodi")}</Text>
       <Text style={styles.subtitle}>{phone} raqamiga yuborilgan 6 xonali kodni kiriting</Text>
 
       <TextInput
@@ -89,7 +90,7 @@ export function VerifyOtpScreen({ route }: Props) {
         autoFocus
         returnKeyType="go"
         onSubmitEditing={onSubmit}
-        accessibilityLabel="Tasdiqlash kodi"
+        accessibilityLabel={tr("Tasdiqlash kodi")}
       />
 
       <TouchableOpacity
@@ -97,7 +98,7 @@ export function VerifyOtpScreen({ route }: Props) {
         onPress={onSubmit}
         disabled={loading}
       >
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Tasdiqlash")}</Text>}
       </TouchableOpacity>
 
       <TouchableOpacity onPress={onResend} disabled={countdown > 0}>

@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { businessApi, BusinessProfileData } from "../../api/business";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "BusinessProfile">;
 
@@ -53,7 +54,7 @@ export function BusinessProfileScreen(_props: Props) {
 
   const handleSave = async () => {
     if (!businessName.trim()) {
-      Alert.alert("Xatolik", "Biznes nomi kiritilishi shart");
+      Alert.alert(tr("Xatolik"), tr("Biznes nomi kiritilishi shart"));
       return;
     }
     setSaving(true);
@@ -71,17 +72,17 @@ export function BusinessProfileScreen(_props: Props) {
         autoReplyMsg: autoReplyMsg.trim() || undefined,
       });
       setProfile(updated);
-      Alert.alert("Saqlandi", "Biznes profil yangilandi");
+      Alert.alert(tr("Saqlandi"), tr("Biznes profil yangilandi"));
     } catch {
-      Alert.alert("Xatolik", "Profilni saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Profilni saqlab bo'lmadi"));
     }
     setSaving(false);
   };
 
   const handleDelete = () => {
-    Alert.alert("O'chirish", "Biznes profilni o'chirmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "O'chirish", style: "destructive", onPress: async () => {
+    Alert.alert(tr("O'chirish"), tr("Biznes profilni o'chirmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("O'chirish"), style: "destructive", onPress: async () => {
         await businessApi.deleteProfile().catch(() => {});
         setProfile(null);
         setBusinessName("");
@@ -103,7 +104,7 @@ export function BusinessProfileScreen(_props: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Biznes profilni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Biznes profilni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -112,14 +113,14 @@ export function BusinessProfileScreen(_props: Props) {
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       {profile?.isVerified && (
         <View style={styles.verifiedBadge}>
-          <Text style={styles.verifiedText}>✓ Tasdiqlangan biznes</Text>
+          <Text style={styles.verifiedText}>{tr("✓ Tasdiqlangan biznes")}</Text>
         </View>
       )}
 
-      <Text style={styles.label}>Biznes nomi *</Text>
-      <TextInput style={styles.input} value={businessName} onChangeText={setBusinessName} placeholder="Biznes nomi..." placeholderTextColor={colors.textSecondary} maxLength={100} />
+      <Text style={styles.label}>{tr("Biznes nomi *")}</Text>
+      <TextInput style={styles.input} value={businessName} onChangeText={setBusinessName} placeholder={tr("Biznes nomi...")} placeholderTextColor={colors.textSecondary} maxLength={100} />
 
-      <Text style={styles.label}>Kategoriya</Text>
+      <Text style={styles.label}>{tr("Kategoriya")}</Text>
       <View style={styles.categories}>
         {CATEGORIES.map((c) => (
           <TouchableOpacity key={c} style={[styles.catBtn, category === c && styles.catBtnActive]} onPress={() => setCategory(c)}>
@@ -128,37 +129,37 @@ export function BusinessProfileScreen(_props: Props) {
         ))}
       </View>
 
-      <Text style={styles.label}>Tavsif</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={description} onChangeText={setDescription} placeholder="Biznes haqida..." placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
+      <Text style={styles.label}>{tr("Tavsif")}</Text>
+      <TextInput style={[styles.input, styles.multiline]} value={description} onChangeText={setDescription} placeholder={tr("Biznes haqida...")} placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
 
-      <Text style={styles.label}>Manzil</Text>
-      <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Manzil..." placeholderTextColor={colors.textSecondary} />
+      <Text style={styles.label}>{tr("Manzil")}</Text>
+      <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder={tr("Manzil...")} placeholderTextColor={colors.textSecondary} />
 
-      <Text style={styles.label}>Telefon</Text>
+      <Text style={styles.label}>{tr("Telefon")}</Text>
       <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+998 ..." placeholderTextColor={colors.textSecondary} keyboardType="phone-pad" autoComplete="tel" />
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="email@example.com" placeholderTextColor={colors.textSecondary} keyboardType="email-address" autoCapitalize="none" />
+      <Text style={styles.label}>{tr("Email")}</Text>
+      <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder={tr("email@example.com")} placeholderTextColor={colors.textSecondary} keyboardType="email-address" autoCapitalize="none" />
 
-      <Text style={styles.label}>Veb-sayt</Text>
-      <TextInput style={styles.input} value={website} onChangeText={setWebsite} placeholder="https://..." placeholderTextColor={colors.textSecondary} autoCapitalize="none" />
+      <Text style={styles.label}>{tr("Veb-sayt")}</Text>
+      <TextInput style={styles.input} value={website} onChangeText={setWebsite} placeholder={tr("https://...")} placeholderTextColor={colors.textSecondary} autoCapitalize="none" />
 
-      <Text style={styles.label}>Ish vaqti</Text>
+      <Text style={styles.label}>{tr("Ish vaqti")}</Text>
       <TextInput style={styles.input} value={workingHours} onChangeText={setWorkingHours} placeholder="09:00 - 18:00" placeholderTextColor={colors.textSecondary} />
 
-      <Text style={styles.label}>Salomlash xabari</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={greetingMsg} onChangeText={setGreetingMsg} placeholder="Xarid uchun rahmat!..." placeholderTextColor={colors.textSecondary} multiline maxLength={300} />
+      <Text style={styles.label}>{tr("Salomlash xabari")}</Text>
+      <TextInput style={[styles.input, styles.multiline]} value={greetingMsg} onChangeText={setGreetingMsg} placeholder={tr("Xarid uchun rahmat!...")} placeholderTextColor={colors.textSecondary} multiline maxLength={300} />
 
-      <Text style={styles.label}>Avtomatik javob</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={autoReplyMsg} onChangeText={setAutoReplyMsg} placeholder="Hozirda band..." placeholderTextColor={colors.textSecondary} multiline maxLength={300} />
+      <Text style={styles.label}>{tr("Avtomatik javob")}</Text>
+      <TextInput style={[styles.input, styles.multiline]} value={autoReplyMsg} onChangeText={setAutoReplyMsg} placeholder={tr("Hozirda band...")} placeholderTextColor={colors.textSecondary} multiline maxLength={300} />
 
       <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.5 }]} onPress={handleSave} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>Saqlash</Text>}
+        {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>{tr("Saqlash")}</Text>}
       </TouchableOpacity>
 
       {profile && (
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-          <Text style={styles.deleteBtnText}>Biznes profilni o'chirish</Text>
+          <Text style={styles.deleteBtnText}>{tr("Biznes profilni o'chirish")}</Text>
         </TouchableOpacity>
       )}
     </ScrollView>

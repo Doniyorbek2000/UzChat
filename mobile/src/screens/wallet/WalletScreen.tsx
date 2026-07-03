@@ -9,6 +9,7 @@ import { Avatar } from "../../components/Avatar";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Wallet">;
 
@@ -53,7 +54,7 @@ export function WalletScreen({ navigation }: Props) {
   const onTopUp = async () => {
     const amount = parseFloat(topUpAmount);
     if (!amount || amount <= 0) {
-      Alert.alert("Xatolik", "To'g'ri miqdor kiriting");
+      Alert.alert(tr("Xatolik"), tr("To'g'ri miqdor kiriting"));
       return;
     }
     try {
@@ -61,11 +62,11 @@ export function WalletScreen({ navigation }: Props) {
       setBalance(result);
       setTopUpAmount("");
       setTopUpVisible(false);
-      Alert.alert("Muvaffaqiyat", `${formatAmount(amount, "UZS")} hisobga qo'shildi`);
+      Alert.alert(tr("Muvaffaqiyat"), `${formatAmount(amount, "UZS")} hisobga qo'shildi`);
       loadData();
     } catch (err: any) {
       const message = err?.response?.data?.error?.message;
-      Alert.alert("Xatolik", message ?? "Hisobni to'ldirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), message ?? "Hisobni to'ldirib bo'lmadi");
     }
   };
 
@@ -78,13 +79,13 @@ export function WalletScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Hamyon ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); loadData(); }} />;
+    return <ErrorView message={tr("Hamyon ma'lumotlarini yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadData(); }} />;
   }
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Joriy balans</Text>
+        <Text style={styles.balanceLabel}>{tr("Joriy balans")}</Text>
         <Text style={styles.balanceAmount}>
           {balance ? formatAmount(balance.balance, balance.currency) : "0 UZS"}
         </Text>
@@ -93,7 +94,7 @@ export function WalletScreen({ navigation }: Props) {
             <Text style={styles.balanceBtnText}>+ To'ldirish</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.balanceBtn} onPress={() => navigation.navigate("SendPayment")}>
-            <Text style={styles.balanceBtnText}>Yuborish</Text>
+            <Text style={styles.balanceBtnText}>{tr("Yuborish")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -102,19 +103,19 @@ export function WalletScreen({ navigation }: Props) {
         <View style={styles.topUpRow}>
           <TextInput
             style={styles.topUpInput}
-            placeholder="Miqdor (UZS)"
+            placeholder={tr("Miqdor (UZS)")}
             placeholderTextColor={colors.textSecondary}
             keyboardType="numeric"
             value={topUpAmount}
             onChangeText={setTopUpAmount}
           />
           <TouchableOpacity style={styles.topUpBtn} onPress={onTopUp}>
-            <Text style={styles.topUpBtnText}>Tasdiqlash</Text>
+            <Text style={styles.topUpBtnText}>{tr("Tasdiqlash")}</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      <Text style={styles.sectionTitle}>To'lovlar tarixi</Text>
+      <Text style={styles.sectionTitle}>{tr("To'lovlar tarixi")}</Text>
       <FlatList
         data={history}
         keyExtractor={(item) => item.id}
@@ -140,7 +141,7 @@ export function WalletScreen({ navigation }: Props) {
           );
         }}
         ListEmptyComponent={
-          <EmptyState icon="💰" title="Hali to'lovlar yo'q" subtitle="Birinchi to'lovni yuborish uchun pastdagi tugmani bosing" />
+          <EmptyState icon="💰" title={tr("Hali to'lovlar yo'q")} subtitle={tr("Birinchi to'lovni yuborish uchun pastdagi tugmani bosing")} />
         }
       />
     </KeyboardAvoidingView>

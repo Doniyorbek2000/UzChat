@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { badgesApi, BadgeData } from "../../api/badges";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Badges">;
 
@@ -31,13 +32,13 @@ export function BadgesScreen(_props: Props) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Yuklanmoqda...</Text>
+        <Text style={styles.loadingText}>{tr("Yuklanmoqda...")}</Text>
       </View>
     );
   }
 
   if (error) {
-    return <ErrorView message="Belgilarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Belgilarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -45,7 +46,7 @@ export function BadgesScreen(_props: Props) {
       {badges.length > 0 && (
         <View style={styles.statsCard}>
           <Text style={styles.statsCount}>{badges.length}</Text>
-          <Text style={styles.statsLabel}>ta belgi olingan</Text>
+          <Text style={styles.statsLabel}>{tr("ta belgi olingan")}</Text>
         </View>
       )}
       <FlatList
@@ -67,8 +68,8 @@ export function BadgesScreen(_props: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🏅</Text>
-            <Text style={styles.emptyTitle}>Hali belgilar yo'q</Text>
-            <Text style={styles.emptyHint}>Faol bo'ling va belgilar oling!</Text>
+            <Text style={styles.emptyTitle}>{tr("Hali belgilar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Faol bo'ling va belgilar oling!")}</Text>
           </View>
         }
       />

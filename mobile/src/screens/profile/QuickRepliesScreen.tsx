@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { QuickReply, useQuickRepliesStore } from "../../store/quickRepliesStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 export function QuickRepliesScreen() {
   const quickReplies = useQuickRepliesStore((s) => s.quickReplies);
@@ -34,9 +35,9 @@ export function QuickRepliesScreen() {
   };
 
   const onRemove = (item: QuickReply) => {
-    Alert.alert("O'chirish", "Bu tezkor javobni o'chirmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "O'chirish", style: "destructive", onPress: () => removeQuickReply(item.id).catch(() => {}) },
+    Alert.alert(tr("O'chirish"), tr("Bu tezkor javobni o'chirmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("O'chirish"), style: "destructive", onPress: () => removeQuickReply(item.id).catch(() => {}) },
     ]);
   };
 
@@ -90,7 +91,7 @@ export function QuickRepliesScreen() {
         ItemSeparatorComponent={Separator}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Hali tezkor javoblar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Hali tezkor javoblar yo'q")}</Text>
           </View>
         }
         style={styles.list}
@@ -100,12 +101,12 @@ export function QuickRepliesScreen() {
           style={styles.addInput}
           value={newText}
           onChangeText={setNewText}
-          placeholder="Yangi tezkor javob matni"
+          placeholder={tr("Yangi tezkor javob matni")}
           placeholderTextColor={colors.textSecondary}
           multiline
         />
         <TouchableOpacity style={styles.addButton} onPress={onAdd} disabled={!newText.trim()}>
-          <Text style={styles.addButtonText}>Qo'shish</Text>
+          <Text style={styles.addButtonText}>{tr("Qo'shish")}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

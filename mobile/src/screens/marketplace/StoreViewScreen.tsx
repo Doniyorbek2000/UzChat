@@ -10,6 +10,7 @@ import { marketplaceApi, Store, Product } from "../../api/marketplace";
 import { useAuthStore } from "../../store/authStore";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StoreView">;
 
@@ -55,7 +56,7 @@ export function StoreViewScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Do'kon ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); load().finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Do'kon ma'lumotlarini yuklab bo'lmadi")} onRetry={() => { setLoading(true); load().finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -107,12 +108,12 @@ export function StoreViewScreen({ route, navigation }: Props) {
           )}
           <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
           <Text style={styles.productPrice}>{formatPrice(item.price, item.currency)}</Text>
-          {item.stock <= 0 && <Text style={styles.outOfStock}>Tugagan</Text>}
+          {item.stock <= 0 && <Text style={styles.outOfStock}>{tr("Tugagan")}</Text>}
         </TouchableOpacity>
       )}
       ListEmptyComponent={
         <View style={styles.center}>
-          <Text style={styles.emptyText}>Mahsulotlar yo'q</Text>
+          <Text style={styles.emptyText}>{tr("Mahsulotlar yo'q")}</Text>
         </View>
       }
     />

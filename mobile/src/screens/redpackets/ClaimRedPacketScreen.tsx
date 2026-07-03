@@ -6,6 +6,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { redPacketsApi, RedPacket } from "../../api/redpackets";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ClaimRedPacket">;
 
@@ -23,7 +24,7 @@ export function ClaimRedPacketScreen({ route, navigation }: Props) {
       const p = await redPacketsApi.getById(inputId.trim());
       setPacket(p);
     } catch {
-      Alert.alert("Xatolik", "Konvert topilmadi");
+      Alert.alert(tr("Xatolik"), tr("Konvert topilmadi"));
     }
     setLoading(false);
   };
@@ -33,13 +34,12 @@ export function ClaimRedPacketScreen({ route, navigation }: Props) {
     setClaiming(true);
     try {
       await redPacketsApi.claim(packet.id);
-      Alert.alert(
-        "Tabriklaymiz! 🎉",
+      Alert.alert(tr("Tabriklaymiz! 🎉"),
         `Siz ${packet.amount.toLocaleString()} ${packet.currency} oldingiz!`,
-        [{ text: "OK", onPress: () => navigation.goBack() }]
+        [{ text: tr("OK"), onPress: () => navigation.goBack() }]
       );
     } catch (e: any) {
-      Alert.alert("Xatolik", e?.response?.data?.error?.message ?? "Konvertni ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), e?.response?.data?.error?.message ?? "Konvertni ochib bo'lmadi");
     }
     setClaiming(false);
   };
@@ -48,17 +48,17 @@ export function ClaimRedPacketScreen({ route, navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.envelope}>
         <Text style={styles.envelopeIcon}>🧧</Text>
-        <Text style={styles.envelopeTitle}>Qizil Konvert</Text>
+        <Text style={styles.envelopeTitle}>{tr("Qizil Konvert")}</Text>
       </View>
 
       {!packet ? (
         <View style={styles.inputSection}>
-          <Text style={styles.label}>Konvert ID ni kiriting</Text>
+          <Text style={styles.label}>{tr("Konvert ID ni kiriting")}</Text>
           <TextInput
             style={styles.input}
             value={inputId}
             onChangeText={setInputId}
-            placeholder="Konvert ID..."
+            placeholder={tr("Konvert ID...")}
             placeholderTextColor="rgba(255,255,255,0.5)"
             autoCapitalize="none"
           />
@@ -67,7 +67,7 @@ export function ClaimRedPacketScreen({ route, navigation }: Props) {
             onPress={loadPacket}
             disabled={!inputId.trim() || loading}
           >
-            {loading ? <ActivityIndicator color="#C41E3A" /> : <Text style={styles.openBtnText}>Qidirish</Text>}
+            {loading ? <ActivityIndicator color="#C41E3A" /> : <Text style={styles.openBtnText}>{tr("Qidirish")}</Text>}
           </TouchableOpacity>
         </View>
       ) : (
@@ -82,7 +82,7 @@ export function ClaimRedPacketScreen({ route, navigation }: Props) {
               onPress={handleClaim}
               disabled={claiming}
             >
-              {claiming ? <ActivityIndicator color="#C41E3A" /> : <Text style={styles.claimBtnText}>Ochish</Text>}
+              {claiming ? <ActivityIndicator color="#C41E3A" /> : <Text style={styles.claimBtnText}>{tr("Ochish")}</Text>}
             </TouchableOpacity>
           ) : (
             <Text style={styles.statusText}>

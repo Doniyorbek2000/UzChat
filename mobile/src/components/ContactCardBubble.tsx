@@ -7,6 +7,7 @@ import { useAuthStore } from "../store/authStore";
 import { usersApi } from "../api/users";
 import { RootStackParamList } from "../navigation/types";
 import { colors } from "../theme/colors";
+import { tr } from "../i18n";
 
 interface Props {
   message: DecryptedMessage;
@@ -31,7 +32,7 @@ export function ContactCardBubble({ message, navigation }: Props) {
       const conversation = await createDirectConversation(target);
       navigation.navigate("ChatRoom", { conversationId: conversation.id, title: target.displayName });
     } catch {
-      Alert.alert("Xatolik", "Suhbat ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Suhbat ochib bo'lmadi"));
     } finally {
       setLoading(false);
     }

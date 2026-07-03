@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { liveStreamApi, LiveStream } from "../../api/livestream";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LiveStreamView">;
 
@@ -28,7 +29,7 @@ export function LiveStreamViewScreen({ route, navigation }: Props) {
       setLiked(!liked);
       setStream((prev) => prev ? { ...prev, likeCount: prev.likeCount + (liked ? -1 : 1) } : prev);
     } catch {
-      Alert.alert("Xatolik", "Like bosib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Like bosib bo'lmadi"));
     }
   };
 
@@ -37,22 +38,22 @@ export function LiveStreamViewScreen({ route, navigation }: Props) {
       const updated = await liveStreamApi.start(streamId);
       setStream(updated);
     } catch {
-      Alert.alert("Xatolik", "Efirni boshlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Efirni boshlab bo'lmadi"));
     }
   };
 
   const handleEnd = () => {
-    Alert.alert("Tugatish", "Efirni tugatmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Tugatish"), tr("Efirni tugatmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Tugatish",
+        text: tr("Tugatish"),
         style: "destructive",
         onPress: async () => {
           try {
             await liveStreamApi.end(streamId);
             navigation.goBack();
           } catch {
-            Alert.alert("Xatolik", "Efirni tugatib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Efirni tugatib bo'lmadi"));
           }
         },
       },
@@ -82,7 +83,7 @@ export function LiveStreamViewScreen({ route, navigation }: Props) {
           <View style={styles.topInfo}>
             {stream.status === "LIVE" && (
               <View style={styles.liveBadge}>
-                <Text style={styles.liveBadgeText}>JONLI</Text>
+                <Text style={styles.liveBadgeText}>{tr("JONLI")}</Text>
               </View>
             )}
             <Text style={styles.viewerCount}>👁 {stream.viewerCount.toLocaleString()}</Text>
@@ -110,13 +111,13 @@ export function LiveStreamViewScreen({ route, navigation }: Props) {
 
           {isHost && stream.status === "SCHEDULED" && (
             <TouchableOpacity style={styles.startBtn} onPress={handleStart}>
-              <Text style={styles.startBtnText}>Efirni boshlash</Text>
+              <Text style={styles.startBtnText}>{tr("Efirni boshlash")}</Text>
             </TouchableOpacity>
           )}
 
           {isHost && stream.status === "LIVE" && (
             <TouchableOpacity style={styles.endBtn} onPress={handleEnd}>
-              <Text style={styles.endBtnText}>Efirni tugatish</Text>
+              <Text style={styles.endBtnText}>{tr("Efirni tugatish")}</Text>
             </TouchableOpacity>
           )}
         </View>

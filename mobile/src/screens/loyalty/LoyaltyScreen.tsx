@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { loyaltyApi, LoyaltyPointsData, LoyaltyTxn, LeaderboardEntry } from "../../api/loyalty";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Loyalty">;
 
@@ -13,10 +14,10 @@ const LEVEL_LABELS: Record<string, string> = { bronze: "Bronza", silver: "Kumush
 const LEVEL_COLORS: Record<string, string> = { bronze: "#CD7F32", silver: "#C0C0C0", gold: "#FFD700", diamond: "#B9F2FF" };
 
 const REWARDS = [
-  { id: "r1", icon: "🎨", name: "Maxsus stiker to'plami", cost: 100, desc: "Premium stikerlar" },
-  { id: "r2", icon: "🏷️", name: "Profil badge", cost: 250, desc: "Maxsus profil nishoni" },
-  { id: "r3", icon: "🎨", name: "Maxsus mavzu", cost: 500, desc: "Premium ilova mavzusi" },
-  { id: "r4", icon: "💎", name: "VIP status (1 oy)", cost: 1000, desc: "1 oylik VIP imkoniyatlar" },
+  { id: "r1", icon: "🎨", name: "Maxsus stiker to'plami", cost: 100, desc: tr("Premium stikerlar") },
+  { id: "r2", icon: "🏷️", name: "Profil badge", cost: 250, desc: tr("Maxsus profil nishoni") },
+  { id: "r3", icon: "🎨", name: "Maxsus mavzu", cost: 500, desc: tr("Premium ilova mavzusi") },
+  { id: "r4", icon: "💎", name: "VIP status (1 oy)", cost: 1000, desc: tr("1 oylik VIP imkoniyatlar") },
 ];
 
 export function LoyaltyScreen(_props: Props) {
@@ -54,9 +55,9 @@ export function LoyaltyScreen(_props: Props) {
   useEffect(() => { loadData(); }, [loadData]);
 
   const tabs = [
-    { key: "overview" as const, label: "Ball", icon: "💎" },
-    { key: "history" as const, label: "Tarix", icon: "📋" },
-    { key: "leaderboard" as const, label: "Reyting", icon: "🏆" },
+    { key: "overview" as const, label: tr("Ball"), icon: "💎" },
+    { key: "history" as const, label: tr("Tarix"), icon: "📋" },
+    { key: "leaderboard" as const, label: tr("Reyting"), icon: "🏆" },
   ];
 
   return (
@@ -76,7 +77,7 @@ export function LoyaltyScreen(_props: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Ma'lumotlarni yuklab bo'lmadi" onRetry={loadData} />
+        <ErrorView message={tr("Ma'lumotlarni yuklab bo'lmadi")} onRetry={loadData} />
       ) : tab === "overview" && points ? (
         <FlatList
           data={REWARDS}
@@ -87,7 +88,7 @@ export function LoyaltyScreen(_props: Props) {
                 <Text style={styles.levelIcon}>{LEVEL_ICONS[points.level] ?? "🥉"}</Text>
               </View>
               <Text style={styles.pointsValue}>{points.points.toLocaleString()}</Text>
-              <Text style={styles.pointsLabel}>ball</Text>
+              <Text style={styles.pointsLabel}>{tr("ball")}</Text>
               <View style={styles.levelRow}>
                 <Text style={styles.levelText}>{LEVEL_LABELS[points.level] ?? points.level} darajasi</Text>
               </View>
@@ -108,18 +109,18 @@ export function LoyaltyScreen(_props: Props) {
                 activeOpacity={0.7}
                 onPress={() => {
                   if (!canAfford) {
-                    Alert.alert("Ball yetarli emas", `Bu mukofot uchun ${item.cost} ball kerak`);
+                    Alert.alert(tr("Ball yetarli emas"), `Bu mukofot uchun ${item.cost} ball kerak`);
                     return;
                   }
-                  Alert.alert("Mukofot olish", `${item.name} uchun ${item.cost} ball sarflaysizmi?`, [
-                    { text: "Bekor qilish", style: "cancel" },
-                    { text: "Olish", onPress: async () => {
+                  Alert.alert(tr("Mukofot olish"), `${item.name} uchun ${item.cost} ball sarflaysizmi?`, [
+                    { text: tr("Bekor qilish"), style: "cancel" },
+                    { text: tr("Olish"), onPress: async () => {
                       try {
                         await loyaltyApi.spend(item.cost, `Mukofot: ${item.name}`);
                         setPoints({ ...points, points: points.points - item.cost });
-                        Alert.alert("Tabriklaymiz!", `${item.name} muvaffaqiyatli olindi`);
+                        Alert.alert(tr("Tabriklaymiz!"), `${item.name} muvaffaqiyatli olindi`);
                       } catch {
-                        Alert.alert("Xatolik", "Mukofotni olib bo'lmadi");
+                        Alert.alert(tr("Xatolik"), tr("Mukofotni olib bo'lmadi"));
                       }
                     }},
                   ]);
@@ -164,8 +165,8 @@ export function LoyaltyScreen(_props: Props) {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>📋</Text>
-              <Text style={styles.emptyTitle}>Tarix bo'sh</Text>
-              <Text style={styles.emptyHint}>Ball topganingizda bu yerda ko'rinadi</Text>
+              <Text style={styles.emptyTitle}>{tr("Tarix bo'sh")}</Text>
+              <Text style={styles.emptyHint}>{tr("Ball topganingizda bu yerda ko'rinadi")}</Text>
             </View>
           }
         />

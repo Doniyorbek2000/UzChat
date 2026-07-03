@@ -8,16 +8,17 @@ import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Order } from "../../api/marketplace";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MyOrders">;
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-  PENDING: { label: "Kutilmoqda", color: "#FF9500", icon: "⏳" },
-  CONFIRMED: { label: "Tasdiqlangan", color: "#007AFF", icon: "✓" },
-  SHIPPED: { label: "Jo'natilgan", color: "#5856D6", icon: "📦" },
-  DELIVERED: { label: "Yetkazilgan", color: "#34C759", icon: "✅" },
-  CANCELLED: { label: "Bekor qilingan", color: "#FF3B30", icon: "✕" },
-  REFUNDED: { label: "Qaytarilgan", color: "#8E8E93", icon: "↩" },
+  PENDING: { label: tr("Kutilmoqda"), color: "#FF9500", icon: "⏳" },
+  CONFIRMED: { label: tr("Tasdiqlangan"), color: "#007AFF", icon: "✓" },
+  SHIPPED: { label: tr("Jo'natilgan"), color: "#5856D6", icon: "📦" },
+  DELIVERED: { label: tr("Yetkazilgan"), color: "#34C759", icon: "✅" },
+  CANCELLED: { label: tr("Bekor qilingan"), color: "#FF3B30", icon: "✕" },
+  REFUNDED: { label: tr("Qaytarilgan"), color: "#8E8E93", icon: "↩" },
 };
 
 export function MyOrdersScreen({ navigation }: Props) {
@@ -43,16 +44,16 @@ export function MyOrdersScreen({ navigation }: Props) {
   }, []);
 
   const cancelOrder = (orderId: string) => {
-    Alert.alert("Bekor qilish", "Buyurtmani bekor qilmoqchimisiz?", [
-      { text: "Yo'q", style: "cancel" },
+    Alert.alert(tr("Bekor qilish"), tr("Buyurtmani bekor qilmoqchimisiz?"), [
+      { text: tr("Yo'q"), style: "cancel" },
       {
-        text: "Ha", style: "destructive",
+        text: tr("Ha"), style: "destructive",
         onPress: async () => {
           try {
             const updated = await marketplaceApi.updateOrderStatus(orderId, "CANCELLED");
             setOrders((prev) => prev.map((o) => o.id === orderId ? updated : o));
           } catch {
-            Alert.alert("Xatolik", "Buyurtmani bekor qilib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Buyurtmani bekor qilib bo'lmadi"));
           }
         },
       },
@@ -68,7 +69,7 @@ export function MyOrdersScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Buyurtmalarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Buyurtmalarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -108,7 +109,7 @@ export function MyOrdersScreen({ navigation }: Props) {
 
               {item.status === "PENDING" && (
                 <TouchableOpacity style={styles.cancelBtn} onPress={() => cancelOrder(item.id)} activeOpacity={0.7}>
-                  <Text style={styles.cancelBtnText}>Bekor qilish</Text>
+                  <Text style={styles.cancelBtnText}>{tr("Bekor qilish")}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -117,8 +118,8 @@ export function MyOrdersScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📋</Text>
-            <Text style={styles.emptyTitle}>Buyurtmalar yo'q</Text>
-            <Text style={styles.emptyHint}>Do'konlardan xarid qiling</Text>
+            <Text style={styles.emptyTitle}>{tr("Buyurtmalar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Do'konlardan xarid qiling")}</Text>
           </View>
         }
       />

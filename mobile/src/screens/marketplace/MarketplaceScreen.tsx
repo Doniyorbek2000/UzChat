@@ -10,17 +10,18 @@ import { marketplaceApi, Store } from "../../api/marketplace";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Marketplace">;
 
 const CATEGORIES = [
-  { key: "all", label: "Barchasi", icon: "🌐" },
-  { key: "electronics", label: "Elektronika", icon: "📱" },
-  { key: "clothing", label: "Kiyimlar", icon: "👕" },
-  { key: "food", label: "Oziq-ovqat", icon: "🍽️" },
-  { key: "home", label: "Uy-joy", icon: "🏠" },
-  { key: "beauty", label: "Go'zallik", icon: "💄" },
-  { key: "general", label: "Boshqa", icon: "📦" },
+  { key: "all", label: tr("Barchasi"), icon: "🌐" },
+  { key: "electronics", label: tr("Elektronika"), icon: "📱" },
+  { key: "clothing", label: tr("Kiyimlar"), icon: "👕" },
+  { key: "food", label: tr("Oziq-ovqat"), icon: "🍽️" },
+  { key: "home", label: tr("Uy-joy"), icon: "🏠" },
+  { key: "beauty", label: tr("Go'zallik"), icon: "💄" },
+  { key: "general", label: tr("Boshqa"), icon: "📦" },
 ];
 
 export function MarketplaceScreen({ navigation }: Props) {
@@ -29,10 +30,10 @@ export function MarketplaceScreen({ navigation }: Props) {
       headerRight: () => (
         <View style={{ flexDirection: "row", gap: 12, marginRight: 8 }}>
           <TouchableOpacity onPress={() => navigation.navigate("MyStores")}>
-            <Text style={{ color: colors.primary, fontSize: 14, fontWeight: "600" }}>Do'konlarim</Text>
+            <Text style={{ color: colors.primary, fontSize: 14, fontWeight: "600" }}>{tr("Do'konlarim")}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate("MyOrders")}>
-            <Text style={{ color: colors.primary, fontSize: 14, fontWeight: "600" }}>Buyurtmalar</Text>
+            <Text style={{ color: colors.primary, fontSize: 14, fontWeight: "600" }}>{tr("Buyurtmalar")}</Text>
           </TouchableOpacity>
         </View>
       ),
@@ -81,7 +82,7 @@ export function MarketplaceScreen({ navigation }: Props) {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Do'kon qidirish..."
+          placeholder={tr("Do'kon qidirish...")}
           returnKeyType="search"
           placeholderTextColor={colors.textSecondary}
           value={search}
@@ -125,10 +126,10 @@ export function MarketplaceScreen({ navigation }: Props) {
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Yuklanmoqda...</Text>
+          <Text style={styles.loadingText}>{tr("Yuklanmoqda...")}</Text>
         </View>
       ) : error ? (
-        <ErrorView message="Do'konlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadStores().finally(() => setLoading(false)); }} />
+        <ErrorView message={tr("Do'konlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadStores().finally(() => setLoading(false)); }} />
       ) : (
         <FlatList
           data={filtered}
@@ -162,8 +163,8 @@ export function MarketplaceScreen({ navigation }: Props) {
           ListEmptyComponent={
             <EmptyState
               icon="🛒"
-              title="Do'konlar topilmadi"
-              subtitle="Yangi do'kon ochish uchun pastdagi tugmani bosing"
+              title={tr("Do'konlar topilmadi")}
+              subtitle={tr("Yangi do'kon ochish uchun pastdagi tugmani bosing")}
               actionLabel="Do'kon ochish"
               onAction={() => navigation.navigate("CreateStore")}
             />

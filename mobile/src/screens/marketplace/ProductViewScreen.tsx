@@ -9,6 +9,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi, Product } from "../../api/marketplace";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ProductView">;
 
@@ -43,11 +44,11 @@ export function ProductViewScreen({ route, navigation }: Props) {
         storeId,
         items: [{ productId: product.id, quantity: 1 }],
       });
-      Alert.alert("Muvaffaqiyat", "Buyurtma yaratildi!", [
-        { text: "OK", onPress: () => navigation.navigate("MyOrders") },
+      Alert.alert(tr("Muvaffaqiyat"), tr("Buyurtma yaratildi!"), [
+        { text: tr("OK"), onPress: () => navigation.navigate("MyOrders") },
       ]);
     } catch {
-      Alert.alert("Xatolik", "Buyurtma yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Buyurtma yaratib bo'lmadi"));
     }
     setOrdering(false);
   };

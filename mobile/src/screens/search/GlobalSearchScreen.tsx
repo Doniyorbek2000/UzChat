@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { getConversationDisplay } from "../../utils/conversation";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GlobalSearch">;
 type SearchTab = "all" | "users" | "groups" | "channels" | "messages";
@@ -78,22 +79,22 @@ export function GlobalSearchScreen({ navigation }: Props) {
   };
 
   const TABS: { key: SearchTab; label: string }[] = [
-    { key: "all", label: "Barchasi" },
-    { key: "users", label: "Odamlar" },
-    { key: "groups", label: "Guruhlar" },
-    { key: "channels", label: "Kanallar" },
-    { key: "messages", label: "Xabarlar" },
+    { key: "all", label: tr("Barchasi") },
+    { key: "users", label: tr("Odamlar") },
+    { key: "groups", label: tr("Guruhlar") },
+    { key: "channels", label: tr("Kanallar") },
+    { key: "messages", label: tr("Xabarlar") },
   ];
 
   const allResults: any[] = [];
   if (results) {
-    if (results.users?.length) allResults.push({ type: "header", title: "Foydalanuvchilar" }, ...results.users.map((u) => ({ ...u, type: "user" as const })));
-    if (results.groups?.length) allResults.push({ type: "header", title: "Guruhlar" }, ...results.groups.map((g) => ({ ...g, type: "group" as const })));
-    if (results.channels?.length) allResults.push({ type: "header", title: "Kanallar" }, ...results.channels.map((c) => ({ ...c, type: "channel" as const })));
+    if (results.users?.length) allResults.push({ type: "header", title: tr("Foydalanuvchilar") }, ...results.users.map((u) => ({ ...u, type: "user" as const })));
+    if (results.groups?.length) allResults.push({ type: "header", title: tr("Guruhlar") }, ...results.groups.map((g) => ({ ...g, type: "group" as const })));
+    if (results.channels?.length) allResults.push({ type: "header", title: tr("Kanallar") }, ...results.channels.map((c) => ({ ...c, type: "channel" as const })));
   }
   if (messageResults.length) {
     allResults.push(
-      { type: "header", title: "Xabarlar" },
+      { type: "header", title: tr("Xabarlar") },
       ...messageResults.map((r) => ({ ...r.message, type: "message" as const, conversationId: r.conversationId }))
     );
   }
@@ -103,7 +104,7 @@ export function GlobalSearchScreen({ navigation }: Props) {
       <View style={styles.searchBar}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Qidirish..."
+          placeholder={tr("Qidirish...")}
           returnKeyType="search"
           placeholderTextColor={colors.textSecondary}
           value={query}
@@ -124,9 +125,9 @@ export function GlobalSearchScreen({ navigation }: Props) {
       {showHistory && history.length > 0 && (
         <View style={styles.historySection}>
           <View style={styles.historyHeader}>
-            <Text style={styles.historyTitle}>So'nggi qidiruvlar</Text>
+            <Text style={styles.historyTitle}>{tr("So'nggi qidiruvlar")}</Text>
             <TouchableOpacity onPress={clearHistory}>
-              <Text style={styles.clearBtn}>Tozalash</Text>
+              <Text style={styles.clearBtn}>{tr("Tozalash")}</Text>
             </TouchableOpacity>
           </View>
           {history.map((h) => (

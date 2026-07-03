@@ -1,5 +1,6 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
+import { presenceService } from "../../services/presence.service";
 import { CreateReelInput, ReelCommentInput } from "./reels.schema";
 
 const authorSelect = {
@@ -26,7 +27,40 @@ export const reelsService = {
     });
   },
 
+  // "For you" feed: engagement-weighted score decayed by age (Reddit/HN-style
+  // hot ranking) instead of a plain chronological dump. `cursor` is a numeric
+  // offset — scores shift between requests, so id-cursors can't be stable.
+  // At larger scale the score should be precomputed by a job into a column.
   async getFeed(userId: string, cursor?: string) {
+    const offset = Math.max(0, Number.parseInt(cursor ?? "0", 10) || 0);
+    const take = 20;
+
+    const ranked = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "Reel"
+      WHERE "isPublic" = true
+      ORDER BY
+        (("likeCount" * 4.0 + "commentCount" * 6.0 + "shareCount" * 8.0 + "viewCount" * 0.05 + 1.0)
+          / POWER(GREATEST(EXTRACT(EPOCH FROM (NOW() - "createdAt")) / 3600.0, 0) + 2.0, 1.5)) DESC,
+        "createdAt" DESC
+      LIMIT ${take} OFFSET ${offset}
+    `;
+    if (ranked.length === 0) return [];
+
+    const ids = ranked.map((r) => r.id);
+    const reels = await prisma.reel.findMany({
+      where: { id: { in: ids } },
+      include: {
+        author: { select: authorSelect },
+        likes: { where: { userId }, select: { id: true } },
+      },
+    });
+    const byId = new Map(reels.map((r) => [r.id, r]));
+    return ids.map((id) => byId.get(id)).filter((r): r is NonNullable<typeof r> => !!r);
+  },
+
+  // Chronological feed of people you actively follow-by-content (kept for a
+  // "Latest" tab and as a fallback for clients that still send id cursors).
+  async getLatest(userId: string, cursor?: string) {
     return prisma.reel.findMany({
       where: { isPublic: true },
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -76,11 +110,26 @@ export const reelsService = {
     return reel;
   },
 
-  async view(reelId: string) {
-    await prisma.reel.update({
+  // Counts at most one view per user per reel per 6 hours (Redis NX key), so
+  // replays and reconnects don't inflate viewCount. Without Redis it degrades
+  // to the old count-everything behaviour rather than dropping views.
+  async view(reelId: string, userId: string) {
+    const isFirstView = await presenceService.deduplicateAction(`reelview:${reelId}:${userId}`, 6 * 3600);
+    if (!isFirstView) return;
+    await prisma.reel
+      .update({ where: { id: reelId }, data: { viewCount: { increment: 1 } } })
+      .catch(() => {}); // reel may have been deleted between view and update
+  },
+
+  async share(userId: string, reelId: string) {
+    const reel = await prisma.reel.findUnique({ where: { id: reelId }, select: { id: true, isPublic: true, authorId: true } });
+    if (!reel || (!reel.isPublic && reel.authorId !== userId)) throw Errors.notFound("Reel");
+    const updated = await prisma.reel.update({
       where: { id: reelId },
-      data: { viewCount: { increment: 1 } },
+      data: { shareCount: { increment: 1 } },
+      select: { id: true, shareCount: true },
     });
+    return updated;
   },
 
   async toggleLike(userId: string, reelId: string) {

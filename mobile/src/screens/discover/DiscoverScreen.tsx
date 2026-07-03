@@ -1,84 +1,91 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, RefreshControl } from "react-native";
 import { MainTabScreenProps } from "../../navigation/types";
 import { colors } from "../../theme/colors";
+import { recentServicesStorage } from "../../storage/recentServicesStorage";
+import { tr } from "../../i18n";
 
 type Props = MainTabScreenProps<"Discover">;
 
 const ESSENTIAL_SERVICES = [
-  { key: "wallet", icon: "💰", label: "Hamyon", screen: "Wallet" as const, color: "#007AFF" },
-  { key: "marketplace", icon: "🛒", label: "Bozor", screen: "Marketplace" as const, color: "#34C759" },
-  { key: "contacts", icon: "👥", label: "Kontaktlar", screen: "Contacts" as const, color: "#5856D6" },
-  { key: "calls", icon: "📞", label: "Qo'ng'iroqlar", screen: "CallHistory" as const, color: "#32ADE6" },
+  { key: "wallet", icon: "💰", label: tr("Hamyon"), screen: "Wallet" as const, color: "#007AFF" },
+  { key: "marketplace", icon: "🛒", label: tr("Bozor"), screen: "Marketplace" as const, color: "#34C759" },
+  { key: "contacts", icon: "👥", label: tr("Kontaktlar"), screen: "Contacts" as const, color: "#5856D6" },
+  { key: "calls", icon: "📞", label: tr("Qo'ng'iroqlar"), screen: "CallHistory" as const, color: "#32ADE6" },
 ];
 
 const SOCIAL = [
-  { key: "feed", icon: "📰", label: "Yangiliklar", screen: "Feed" as const },
-  { key: "stories", icon: "📷", label: "Hikoyalar", screen: "Stories" as const },
-  { key: "voicerooms", icon: "🎙️", label: "Ovozli xonalar", screen: "VoiceRooms" as const },
-  { key: "livestreams", icon: "📡", label: "Jonli efirlar", screen: "LiveStreams" as const },
-  { key: "communities", icon: "🏘️", label: "Jamiyatlar", screen: "Communities" as const },
-  { key: "events", icon: "📅", label: "Tadbirlar", screen: "Events" as const },
-  { key: "nearby", icon: "📍", label: "Yaqin odamlar", screen: "NearbyPeople" as const },
-  { key: "subscriptions", icon: "📢", label: "Obunalar", screen: "MySubscriptions" as const },
+  { key: "feed", icon: "📰", label: tr("Yangiliklar"), screen: "Feed" as const },
+  { key: "stories", icon: "📷", label: tr("Hikoyalar"), screen: "Stories" as const },
+  { key: "voicerooms", icon: "🎙️", label: tr("Ovozli xonalar"), screen: "VoiceRooms" as const },
+  { key: "livestreams", icon: "📡", label: tr("Jonli efirlar"), screen: "LiveStreams" as const },
+  { key: "communities", icon: "🏘️", label: tr("Jamiyatlar"), screen: "Communities" as const },
+  { key: "events", icon: "📅", label: tr("Tadbirlar"), screen: "Events" as const },
+  { key: "nearby", icon: "📍", label: tr("Yaqin odamlar"), screen: "NearbyPeople" as const },
+  { key: "subscriptions", icon: "📢", label: tr("Obunalar"), screen: "MySubscriptions" as const },
 ];
 
 const ENTERTAINMENT = [
-  { key: "music", icon: "🎵", label: "Musiqa", screen: "MusicPlayer" as const },
-  { key: "games", icon: "🎮", label: "O'yinlar", screen: "GameCenter" as const },
-  { key: "stickers", icon: "🎨", label: "Stikerlar", screen: "StickerStore" as const },
-  { key: "themes", icon: "🎨", label: "Mavzular", screen: "ThemeStore" as const },
-  { key: "greetings", icon: "💌", label: "Tabriklar", screen: "GreetingCards" as const },
-  { key: "gifts", icon: "🎁", label: "Sovg'alar", screen: "Gifts" as const },
+  { key: "music", icon: "🎵", label: tr("Musiqa"), screen: "MusicPlayer" as const },
+  { key: "games", icon: "🎮", label: tr("O'yinlar"), screen: "GameCenter" as const },
+  { key: "stickers", icon: "🎨", label: tr("Stikerlar"), screen: "StickerStore" as const },
+  { key: "themes", icon: "🎨", label: tr("Mavzular"), screen: "ThemeStore" as const },
+  { key: "greetings", icon: "💌", label: tr("Tabriklar"), screen: "GreetingCards" as const },
+  { key: "gifts", icon: "🎁", label: tr("Sovg'alar"), screen: "Gifts" as const },
 ];
 
 const TOOLS = [
-  { key: "miniapps", icon: "📱", label: "Mini-dasturlar", screen: "MiniApps" as const },
-  { key: "bots", icon: "🤖", label: "Botlar", screen: "BotStore" as const },
-  { key: "cloud", icon: "☁️", label: "Bulut xotira", screen: "CloudStorage" as const },
-  { key: "search", icon: "🔍", label: "Qidiruv", screen: "GlobalSearch" as const },
-  { key: "redpacket", icon: "🧧", label: "Qizil konvert", screen: "SendRedPacket" as const },
-  { key: "business", icon: "💼", label: "Biznes profil", screen: "BusinessProfile" as const },
-  { key: "referrals", icon: "🎁", label: "Taklifnoma", screen: "Referrals" as const },
-  { key: "badges", icon: "🏅", label: "Belgilar", screen: "Badges" as const },
-  { key: "loyalty", icon: "💎", label: "Sodiqlik", screen: "Loyalty" as const },
-  { key: "wishlist", icon: "❤️", label: "Istaklar", screen: "Wishlist" as const },
-  { key: "faq", icon: "❓", label: "Yordam", screen: "Faq" as const },
+  { key: "miniapps", icon: "📱", label: tr("Mini-dasturlar"), screen: "MiniApps" as const },
+  { key: "bots", icon: "🤖", label: tr("Botlar"), screen: "BotStore" as const },
+  { key: "cloud", icon: "☁️", label: tr("Bulut xotira"), screen: "CloudStorage" as const },
+  { key: "search", icon: "🔍", label: tr("Qidiruv"), screen: "GlobalSearch" as const },
+  { key: "redpacket", icon: "🧧", label: tr("Qizil konvert"), screen: "SendRedPacket" as const },
+  { key: "business", icon: "💼", label: tr("Biznes profil"), screen: "BusinessProfile" as const },
+  { key: "referrals", icon: "🎁", label: tr("Taklifnoma"), screen: "Referrals" as const },
+  { key: "badges", icon: "🏅", label: tr("Belgilar"), screen: "Badges" as const },
+  { key: "loyalty", icon: "💎", label: tr("Sodiqlik"), screen: "Loyalty" as const },
+  { key: "wishlist", icon: "❤️", label: tr("Istaklar"), screen: "Wishlist" as const },
+  { key: "faq", icon: "❓", label: tr("Yordam"), screen: "Faq" as const },
 ];
 
 const PLATFORM_SERVICES = [
-  { key: "taxi", icon: "🚕", label: "Taksi", category: "transport" },
-  { key: "hotels", icon: "🏨", label: "Mehmonxonalar", category: "travel" },
-  { key: "food", icon: "🍽️", label: "Ovqatlanish", category: "food" },
-  { key: "doctors", icon: "👨‍⚕️", label: "Shifokor", category: "health" },
-  { key: "pharmacy", icon: "💊", label: "Dorixona", category: "health" },
-  { key: "shopping", icon: "🛍️", label: "Xaridlar", category: "shopping" },
-  { key: "news", icon: "📡", label: "Yangiliklar", category: "news" },
+  { key: "taxi", icon: "🚕", label: tr("Taksi"), category: "transport" },
+  { key: "hotels", icon: "🏨", label: tr("Mehmonxonalar"), category: "travel" },
+  { key: "food", icon: "🍽️", label: tr("Ovqatlanish"), category: "food" },
+  { key: "doctors", icon: "👨‍⚕️", label: tr("Shifokor"), category: "health" },
+  { key: "pharmacy", icon: "💊", label: tr("Dorixona"), category: "health" },
+  { key: "shopping", icon: "🛍️", label: tr("Xaridlar"), category: "shopping" },
+  { key: "news", icon: "📡", label: tr("Yangiliklar"), category: "news" },
 ];
 
 const QUICK_ACTIONS = [
-  { key: "qr", icon: "📱", label: "QR kod skaneri", screen: "QRCode" as const },
-  { key: "qrpay", icon: "💳", label: "QR to'lov", screen: "QRPayment" as const },
-  { key: "broadcast", icon: "📢", label: "Tarqatish ro'yxatlari", screen: "BroadcastLists" as const },
-  { key: "starred", icon: "⭐", label: "Saqlangan xabarlar", screen: "StarredMessages" as const },
-  { key: "mentions", icon: "📌", label: "Eslatishlar", screen: "Mentions" as const },
-  { key: "redpacket", icon: "🧧", label: "Konvert ochish", screen: "ClaimRedPacket" as const },
-  { key: "reminders", icon: "⏰", label: "Yodga solinganlar", screen: "Reminders" as const },
-  { key: "bookmarks", icon: "🔖", label: "Xatcho'plar", screen: "Bookmarks" as const },
-  { key: "notes", icon: "📝", label: "Eslatmalar", screen: "Notes" as const },
-  { key: "notiflog", icon: "🔔", label: "Bildirishnomalar tarixi", screen: "NotificationLog" as const },
+  { key: "qr", icon: "📱", label: tr("QR kod skaneri"), screen: "QRCode" as const },
+  { key: "qrpay", icon: "💳", label: tr("QR to'lov"), screen: "QRPayment" as const },
+  { key: "broadcast", icon: "📢", label: tr("Tarqatish ro'yxatlari"), screen: "BroadcastLists" as const },
+  { key: "starred", icon: "⭐", label: tr("Saqlangan xabarlar"), screen: "StarredMessages" as const },
+  { key: "mentions", icon: "📌", label: tr("Eslatishlar"), screen: "Mentions" as const },
+  { key: "redpacket", icon: "🧧", label: tr("Konvert ochish"), screen: "ClaimRedPacket" as const },
+  { key: "reminders", icon: "⏰", label: tr("Yodga solinganlar"), screen: "Reminders" as const },
+  { key: "bookmarks", icon: "🔖", label: tr("Xatcho'plar"), screen: "Bookmarks" as const },
+  { key: "notes", icon: "📝", label: tr("Eslatmalar"), screen: "Notes" as const },
+  { key: "notiflog", icon: "🔔", label: tr("Bildirishnomalar tarixi"), screen: "NotificationLog" as const },
 ];
 
 const FEATURED = [
-  { key: "wallet", icon: "💰", title: "UzChat Hamyon", desc: "Pul yuborish va qabul qilish", color: "#007AFF", screen: "Wallet" as const },
-  { key: "marketplace", icon: "🛒", title: "Bozor", desc: "Mahsulotlarni sotib oling", color: "#34C759", screen: "Marketplace" as const },
-  { key: "games", icon: "🎮", title: "O'yinlar", desc: "Do'stlar bilan o'ynang", color: colors.warning, screen: "GameCenter" as const },
-  { key: "music", icon: "🎵", title: "Musiqa", desc: "Sevimli qo'shiqlarni tinglang", color: "#AF52DE", screen: "MusicPlayer" as const },
+  { key: "wallet", icon: "💰", title: tr("UzChat Hamyon"), desc: tr("Pul yuborish va qabul qilish"), color: "#007AFF", screen: "Wallet" as const },
+  { key: "marketplace", icon: "🛒", title: tr("Bozor"), desc: tr("Mahsulotlarni sotib oling"), color: "#34C759", screen: "Marketplace" as const },
+  { key: "games", icon: "🎮", title: tr("O'yinlar"), desc: tr("Do'stlar bilan o'ynang"), color: colors.warning, screen: "GameCenter" as const },
+  { key: "music", icon: "🎵", title: tr("Musiqa"), desc: tr("Sevimli qo'shiqlarni tinglang"), color: "#AF52DE", screen: "MusicPlayer" as const },
 ];
 
 export function DiscoverScreen({ navigation }: Props) {
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [recentKeys, setRecentKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    recentServicesStorage.getRecent().then(setRecentKeys).catch(() => {});
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -95,7 +102,15 @@ export function DiscoverScreen({ navigation }: Props) {
     ? allItems.filter((i) => i.label.toLowerCase().includes(search.toLowerCase()))
     : null;
 
+  // Personalised recents: identified by target screen (unique across
+  // sections), resolved back to the first matching catalog item.
+  const recentItems = recentKeys
+    .map((id) => allItems.find((i) => ((i as { screen?: string }).screen ?? i.key) === id))
+    .filter((i): i is (typeof allItems)[number] => !!i);
+
   const handlePress = (item: { screen?: string; key: string }) => {
+    const id = item.screen ?? item.key;
+    recentServicesStorage.recordUse(id).then(setRecentKeys).catch(() => {});
     if (item.screen) {
       if (item.screen === "ClaimRedPacket") {
         navigation.navigate("ClaimRedPacket", {});
@@ -116,7 +131,7 @@ export function DiscoverScreen({ navigation }: Props) {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Xizmat yoki dastur qidirish..."
+          placeholder={tr("Xizmat yoki dastur qidirish...")}
           placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
@@ -131,6 +146,13 @@ export function DiscoverScreen({ navigation }: Props) {
 
       {filtered ? (
         <View style={styles.searchResults}>
+          <TouchableOpacity style={styles.globalSearchRow} onPress={() => navigation.navigate("GlobalSearch")}>
+            <Text style={styles.globalSearchIcon}>🌐</Text>
+            <Text style={styles.globalSearchText}>
+              {tr("Odamlar, xabarlar va kanallardan izlash")}
+            </Text>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
           <Text style={styles.searchResultCount}>{filtered.length} ta natija</Text>
           <View style={styles.grid}>
             {filtered.map((s) => (
@@ -149,19 +171,35 @@ export function DiscoverScreen({ navigation }: Props) {
           {filtered.length === 0 && (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>🔍</Text>
-              <Text style={styles.emptyText}>Natija topilmadi</Text>
-              <Text style={styles.emptyHint}>Boshqa kalit so'z bilan qidiring</Text>
+              <Text style={styles.emptyText}>{tr("Natija topilmadi")}</Text>
+              <Text style={styles.emptyHint}>{tr("Boshqa kalit so'z bilan qidiring")}</Text>
             </View>
           )}
         </View>
       ) : (
         <>
+          {recentItems.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>{tr("Oxirgi ishlatilganlar")}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentRow}>
+                {recentItems.map((s) => (
+                  <TouchableOpacity key={(s as { screen?: string }).screen ?? s.key} style={styles.recentCard} onPress={() => handlePress(s)}>
+                    <View style={styles.serviceIconBg}>
+                      <Text style={styles.serviceIcon}>{s.icon}</Text>
+                    </View>
+                    <Text style={styles.serviceLabel} numberOfLines={1}>{s.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          )}
+
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuredScroll} contentContainerStyle={styles.featuredContainer}>
             {FEATURED.map((f) => (
               <TouchableOpacity
                 key={f.key}
                 style={[styles.featuredCard, { backgroundColor: f.color }]}
-                onPress={() => navigation.navigate(f.screen as any)}
+                onPress={() => handlePress(f)}
               >
                 <Text style={styles.featuredIcon}>{f.icon}</Text>
                 <Text style={styles.featuredTitle}>{f.title}</Text>
@@ -175,7 +213,7 @@ export function DiscoverScreen({ navigation }: Props) {
               <TouchableOpacity
                 key={s.key}
                 style={styles.essentialCard}
-                onPress={() => navigation.navigate(s.screen as any)}
+                onPress={() => handlePress(s)}
               >
                 <View style={[styles.essentialIconBg, { backgroundColor: s.color + "18" }]}>
                   <Text style={styles.essentialIcon}>{s.icon}</Text>
@@ -185,13 +223,13 @@ export function DiscoverScreen({ navigation }: Props) {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Ijtimoiy</Text>
+          <Text style={styles.sectionTitle}>{tr("Ijtimoiy")}</Text>
           <View style={styles.grid}>
             {SOCIAL.map((s) => (
               <TouchableOpacity
                 key={s.key}
                 style={styles.serviceCard}
-                onPress={() => navigation.navigate(s.screen as any)}
+                onPress={() => handlePress(s)}
               >
                 <View style={styles.serviceIconBg}>
                   <Text style={styles.serviceIcon}>{s.icon}</Text>
@@ -201,13 +239,13 @@ export function DiscoverScreen({ navigation }: Props) {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Ko'ngilochar</Text>
+          <Text style={styles.sectionTitle}>{tr("Ko'ngilochar")}</Text>
           <View style={styles.grid}>
             {ENTERTAINMENT.map((s) => (
               <TouchableOpacity
                 key={s.key}
                 style={styles.serviceCard}
-                onPress={() => navigation.navigate(s.screen as any)}
+                onPress={() => handlePress(s)}
               >
                 <View style={styles.serviceIconBg}>
                   <Text style={styles.serviceIcon}>{s.icon}</Text>
@@ -217,13 +255,13 @@ export function DiscoverScreen({ navigation }: Props) {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Asboblar va xizmatlar</Text>
+          <Text style={styles.sectionTitle}>{tr("Asboblar va xizmatlar")}</Text>
           <View style={styles.grid}>
             {TOOLS.map((s) => (
               <TouchableOpacity
                 key={s.key}
                 style={styles.serviceCard}
-                onPress={() => navigation.navigate(s.screen as any)}
+                onPress={() => handlePress(s)}
               >
                 <View style={styles.serviceIconBg}>
                   <Text style={styles.serviceIcon}>{s.icon}</Text>
@@ -233,14 +271,14 @@ export function DiscoverScreen({ navigation }: Props) {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Platform xizmatlari</Text>
-          <Text style={styles.sectionSubtitle}>Mini-dasturlar orqali ishlaydi</Text>
+          <Text style={styles.sectionTitle}>{tr("Platform xizmatlari")}</Text>
+          <Text style={styles.sectionSubtitle}>{tr("Mini-dasturlar orqali ishlaydi")}</Text>
           <View style={styles.grid}>
             {PLATFORM_SERVICES.map((s) => (
               <TouchableOpacity
                 key={s.key}
                 style={styles.serviceCard}
-                onPress={() => navigation.navigate("MiniApps")}
+                onPress={() => handlePress(s)}
               >
                 <View style={styles.serviceIconBg}>
                   <Text style={styles.serviceIcon}>{s.icon}</Text>
@@ -250,7 +288,7 @@ export function DiscoverScreen({ navigation }: Props) {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Tezkor harakatlar</Text>
+          <Text style={styles.sectionTitle}>{tr("Tezkor harakatlar")}</Text>
           <View style={styles.menuList}>
             {QUICK_ACTIONS.map((s) => (
               <TouchableOpacity
@@ -347,6 +385,11 @@ const styles = StyleSheet.create({
   menuIcon: { fontSize: 18 },
   menuLabel: { flex: 1, fontSize: 15, color: colors.text, fontWeight: "500" },
   menuArrow: { fontSize: 18, color: colors.textSecondary },
+  recentRow: { gap: 10, paddingHorizontal: 16, paddingBottom: 12, marginTop: 8 },
+  recentCard: { width: 76, backgroundColor: colors.surface, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 4, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
+  globalSearchRow: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 10 },
+  globalSearchIcon: { fontSize: 16 },
+  globalSearchText: { flex: 1, fontSize: 14, color: colors.text, fontWeight: "500" },
   emptyContainer: { alignItems: "center", paddingTop: 60 },
   emptyIcon: { fontSize: 48 },
   emptyText: { fontSize: 16, fontWeight: "600", color: colors.text, marginTop: 12 },

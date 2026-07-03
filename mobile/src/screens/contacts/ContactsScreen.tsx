@@ -27,6 +27,7 @@ import { Contact, ContactRequest, ContactSuggestion, OutgoingContactRequest } fr
 import { useContactsStore } from "../../store/contactsStore";
 import { useChatStore } from "../../store/chatStore";
 import { formatTime } from "../../utils/conversation";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Contacts">;
 
@@ -95,7 +96,7 @@ export function ContactsScreen({ navigation }: Props) {
       const conversation = await createDirectConversation(item.user);
       navigation.navigate("ChatRoom", { conversationId: conversation.id, title: item.alias ?? item.user.displayName });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Suhbat ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Suhbat ochib bo'lmadi");
     }
   };
 
@@ -169,7 +170,7 @@ export function ContactsScreen({ navigation }: Props) {
       await contactsApi.setFavorite(item.id, !item.isFavorite);
       load();
     } catch {
-      Alert.alert("Xatolik", "O'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("O'zgartirib bo'lmadi"));
     }
   };
 
@@ -179,7 +180,7 @@ export function ContactsScreen({ navigation }: Props) {
       await contactsApi.sendRequest(suggestion.user.username);
       setSentSuggestionIds((prev) => new Set(prev).add(suggestion.user.id));
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
     } finally {
       setAddingSuggestionId(null);
     }
@@ -193,7 +194,7 @@ export function ContactsScreen({ navigation }: Props) {
   const onLongPressContact = (item: Contact) => {
     Alert.alert(item.alias ?? item.user.displayName, undefined, [
       {
-        text: "👤 Profilni ko'rish",
+        text: tr("👤 Profilni ko'rish"),
         onPress: () => navigation.navigate("UserProfile", { userId: item.user.id }),
       },
       {
@@ -201,7 +202,7 @@ export function ContactsScreen({ navigation }: Props) {
         onPress: () => onToggleFavorite(item),
       },
       {
-        text: "✏️ Taxallus qo'yish",
+        text: tr("✏️ Taxallus qo'yish"),
         onPress: () => {
           setAliasInput(item.alias ?? "");
           setAliasContact(item);
@@ -215,7 +216,7 @@ export function ContactsScreen({ navigation }: Props) {
         },
       },
       {
-        text: "🚫 Bloklash",
+        text: tr("🚫 Bloklash"),
         style: "destructive",
         onPress: () => {
           contactsApi
@@ -225,7 +226,7 @@ export function ContactsScreen({ navigation }: Props) {
         },
       },
       {
-        text: "Kontaktni o'chirish",
+        text: tr("Kontaktni o'chirish"),
         style: "destructive",
         onPress: () => {
           contactsApi
@@ -234,7 +235,7 @@ export function ContactsScreen({ navigation }: Props) {
             .catch(() => {});
         },
       },
-      { text: "Bekor qilish", style: "cancel" },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
@@ -247,7 +248,7 @@ export function ContactsScreen({ navigation }: Props) {
       setContacts((prev) => prev.map((c) => (c.id === updated.id ? { ...c, alias: updated.alias } : c)));
       setAliasContact(null);
     } catch {
-      Alert.alert("Xatolik", "Taxallusni saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Taxallusni saqlab bo'lmadi"));
     } finally {
       setSavingAlias(false);
     }
@@ -262,7 +263,7 @@ export function ContactsScreen({ navigation }: Props) {
       setContacts((prev) => prev.map((c) => (c.id === updated.id ? { ...c, note: updated.note } : c)));
       setNoteContact(null);
     } catch {
-      Alert.alert("Xatolik", "Eslatmani saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Eslatmani saqlab bo'lmadi"));
     } finally {
       setSavingNote(false);
     }
@@ -277,7 +278,7 @@ export function ContactsScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Kontaktlarni yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -286,19 +287,19 @@ export function ContactsScreen({ navigation }: Props) {
         <View style={styles.addIcon}>
           <Text style={styles.addIconText}>➕</Text>
         </View>
-        <Text style={styles.addText}>Kontakt qo'shish</Text>
+        <Text style={styles.addText}>{tr("Kontakt qo'shish")}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.addRow} onPress={() => navigation.navigate("Birthdays")}>
         <View style={[styles.addIcon, styles.birthdayIcon]}>
           <Text style={styles.addIconText}>🎂</Text>
         </View>
-        <Text style={styles.addText}>Tug'ilgan kunlar</Text>
+        <Text style={styles.addText}>{tr("Tug'ilgan kunlar")}</Text>
       </TouchableOpacity>
 
       {requests.length > 0 && (
         <View>
-          <Text style={styles.sectionTitle}>So'rovlar</Text>
+          <Text style={styles.sectionTitle}>{tr("So'rovlar")}</Text>
           {requests.map((req) => (
             <View key={req.id} style={styles.row}>
               <Avatar uri={req.owner.avatarUrl} name={req.owner.displayName} />
@@ -311,10 +312,10 @@ export function ContactsScreen({ navigation }: Props) {
                 )}
               </View>
               <TouchableOpacity style={styles.acceptButton} onPress={() => onAccept(req.id)}>
-                <Text style={styles.acceptText}>Qabul qilish</Text>
+                <Text style={styles.acceptText}>{tr("Qabul qilish")}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.declineButton} onPress={() => onDecline(req.id)}>
-                <Text style={styles.declineText}>Rad etish</Text>
+                <Text style={styles.declineText}>{tr("Rad etish")}</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -323,16 +324,16 @@ export function ContactsScreen({ navigation }: Props) {
 
       {outgoingRequests.length > 0 && (
         <View>
-          <Text style={styles.sectionTitle}>Yuborilgan so'rovlar</Text>
+          <Text style={styles.sectionTitle}>{tr("Yuborilgan so'rovlar")}</Text>
           {outgoingRequests.map((req) => (
             <View key={req.id} style={styles.row}>
               <Avatar uri={req.target.avatarUrl} name={req.target.displayName} />
               <View style={styles.requestInfo}>
                 <Text style={styles.name}>{req.target.displayName}</Text>
-                <Text style={styles.requestMutual}>Javob kutilmoqda</Text>
+                <Text style={styles.requestMutual}>{tr("Javob kutilmoqda")}</Text>
               </View>
               <TouchableOpacity style={styles.declineButton} onPress={() => onCancelOutgoing(req.id)}>
-                <Text style={styles.declineText}>Bekor qilish</Text>
+                <Text style={styles.declineText}>{tr("Bekor qilish")}</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -341,7 +342,7 @@ export function ContactsScreen({ navigation }: Props) {
 
       {suggestions.length > 0 && (
         <View>
-          <Text style={styles.sectionTitle}>Sizga tanish bo'lishi mumkin</Text>
+          <Text style={styles.sectionTitle}>{tr("Sizga tanish bo'lishi mumkin")}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.suggestionsRow}>
             {suggestions.map((s) => (
               <View key={s.user.id} style={styles.suggestionCard}>
@@ -376,13 +377,13 @@ export function ContactsScreen({ navigation }: Props) {
         </View>
       )}
 
-      <Text style={styles.sectionTitle}>Kontaktlar</Text>
+      <Text style={styles.sectionTitle}>{tr("Kontaktlar")}</Text>
       {contacts.length > 0 && (
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}
@@ -400,7 +401,7 @@ export function ContactsScreen({ navigation }: Props) {
           <View style={[styles.sortToggleCheckbox, sortOnlineFirst && styles.sortToggleCheckboxActive]}>
             {sortOnlineFirst && <Text style={styles.sortToggleCheckmark}>✓</Text>}
           </View>
-          <Text style={styles.sortToggleText}>Onlaynlarni birinchi ko'rsatish</Text>
+          <Text style={styles.sortToggleText}>{tr("Onlaynlarni birinchi ko'rsatish")}</Text>
         </TouchableOpacity>
       )}
       <View style={styles.listContainer}>
@@ -461,7 +462,7 @@ export function ContactsScreen({ navigation }: Props) {
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <Pressable style={styles.modalBackdrop} onPress={() => setAliasContact(null)}>
             <Pressable style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Taxallus qo'yish</Text>
+              <Text style={styles.modalTitle}>{tr("Taxallus qo'yish")}</Text>
               <Text style={styles.modalSubtitle}>{aliasContact?.user.displayName}</Text>
               <TextInput
                 style={styles.modalInput}
@@ -474,10 +475,10 @@ export function ContactsScreen({ navigation }: Props) {
               />
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.modalCancelButton} onPress={() => setAliasContact(null)}>
-                  <Text style={styles.modalCancelText}>Bekor qilish</Text>
+                  <Text style={styles.modalCancelText}>{tr("Bekor qilish")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveAlias} disabled={savingAlias}>
-                  {savingAlias ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+                  {savingAlias ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>{tr("Saqlash")}</Text>}
                 </TouchableOpacity>
               </View>
             </Pressable>
@@ -489,13 +490,13 @@ export function ContactsScreen({ navigation }: Props) {
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <Pressable style={styles.modalBackdrop} onPress={() => setNoteContact(null)}>
             <Pressable style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
+              <Text style={styles.modalTitle}>{tr("Shaxsiy eslatma")}</Text>
               <Text style={styles.modalSubtitle}>{noteContact?.alias ?? noteContact?.user.displayName}</Text>
               <TextInput
                 style={[styles.modalInput, styles.modalNoteInput]}
                 value={noteInput}
                 onChangeText={setNoteInput}
-                placeholder="Faqat sizga ko'rinadigan eslatma..."
+                placeholder={tr("Faqat sizga ko'rinadigan eslatma...")}
                 placeholderTextColor={colors.textSecondary}
                 autoFocus
                 multiline
@@ -503,10 +504,10 @@ export function ContactsScreen({ navigation }: Props) {
               />
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteContact(null)}>
-                  <Text style={styles.modalCancelText}>Bekor qilish</Text>
+                  <Text style={styles.modalCancelText}>{tr("Bekor qilish")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
-                  {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+                  {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>{tr("Saqlash")}</Text>}
                 </TouchableOpacity>
               </View>
             </Pressable>

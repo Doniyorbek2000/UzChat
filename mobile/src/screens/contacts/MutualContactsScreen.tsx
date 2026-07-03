@@ -7,6 +7,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { User } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "MutualContacts">;
 
@@ -43,7 +44,7 @@ export function MutualContactsScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Kontaktlarni yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -66,7 +67,7 @@ export function MutualContactsScreen({ route, navigation }: Props) {
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Umumiy kontaktlar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Umumiy kontaktlar yo'q")}</Text>
           </View>
         }
       />

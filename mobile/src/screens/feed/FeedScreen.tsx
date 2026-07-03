@@ -12,6 +12,7 @@ import { Avatar } from "../../components/Avatar";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Feed">;
 
@@ -88,16 +89,16 @@ export function FeedScreen({ navigation }: Props) {
   };
 
   const deletePost = (postId: string) => {
-    Alert.alert("O'chirish", "Postni o'chirishni xohlaysizmi?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'chirish"), tr("Postni o'chirishni xohlaysizmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish", style: "destructive",
+        text: tr("O'chirish"), style: "destructive",
         onPress: async () => {
           try {
             await feedApi.deletePost(postId);
             setPosts((prev) => prev.filter((p) => p.id !== postId));
           } catch {
-            Alert.alert("Xatolik", "Postni o'chirib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Postni o'chirib bo'lmadi"));
           }
         },
       },
@@ -181,7 +182,7 @@ export function FeedScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Postlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Postlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -206,8 +207,8 @@ export function FeedScreen({ navigation }: Props) {
       ListEmptyComponent={
         <EmptyState
           icon="📝"
-          title="Hali postlar yo'q"
-          subtitle="Birinchi postingizni yarating!"
+          title={tr("Hali postlar yo'q")}
+          subtitle={tr("Birinchi postingizni yarating!")}
           actionLabel="Post yaratish"
           onAction={() => navigation.navigate("CreatePost")}
         />

@@ -6,6 +6,7 @@ import { autoReplyApi, AutoReplySettings } from "../../api/autoReply";
 import { invalidateAutoReplyCache } from "../../utils/autoReply";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AutoReplySettings">;
 
@@ -39,9 +40,9 @@ export function AutoReplyScreen(_props: Props) {
       const updated = await autoReplyApi.update({ isEnabled, message, onlyForStrangers: onlyStrangers });
       setSettings(updated);
       invalidateAutoReplyCache();
-      Alert.alert("Saqlandi", "Avtomatik javob sozlamalari saqlandi");
+      Alert.alert(tr("Saqlandi"), tr("Avtomatik javob sozlamalari saqlandi"));
     } catch {
-      Alert.alert("Xatolik", "Sozlamalarni saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamalarni saqlab bo'lmadi"));
     }
     setSaving(false);
   };
@@ -51,26 +52,26 @@ export function AutoReplyScreen(_props: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Sozlamalarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Sozlamalarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
     <View style={styles.container}>
       <TouchableOpacity style={styles.toggleRow} onPress={() => setIsEnabled(!isEnabled)}>
-        <Text style={styles.toggleLabel}>Avtomatik javob</Text>
+        <Text style={styles.toggleLabel}>{tr("Avtomatik javob")}</Text>
         <View style={[styles.toggle, isEnabled && styles.toggleActive]}>
           <View style={[styles.toggleThumb, isEnabled && styles.toggleThumbActive]} />
         </View>
       </TouchableOpacity>
 
-      <Text style={styles.label}>Javob matni</Text>
-      <TextInput style={[styles.input, styles.multiline]} value={message} onChangeText={setMessage} placeholder="Avtomatik javob matni..." placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
+      <Text style={styles.label}>{tr("Javob matni")}</Text>
+      <TextInput style={[styles.input, styles.multiline]} value={message} onChangeText={setMessage} placeholder={tr("Avtomatik javob matni...")} placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
 
       <TouchableOpacity style={styles.toggleRow} onPress={() => setOnlyStrangers(!onlyStrangers)}>
         <View>
-          <Text style={styles.toggleLabel}>Faqat notanishlar uchun</Text>
-          <Text style={styles.toggleHint}>Kontaktlaringizga avtomatik javob yuborilmaydi</Text>
+          <Text style={styles.toggleLabel}>{tr("Faqat notanishlar uchun")}</Text>
+          <Text style={styles.toggleHint}>{tr("Kontaktlaringizga avtomatik javob yuborilmaydi")}</Text>
         </View>
         <View style={[styles.toggle, onlyStrangers && styles.toggleActive]}>
           <View style={[styles.toggleThumb, onlyStrangers && styles.toggleThumbActive]} />
@@ -78,7 +79,7 @@ export function AutoReplyScreen(_props: Props) {
       </TouchableOpacity>
 
       <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.5 }]} onPress={handleSave} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>Saqlash</Text>}
+        {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>{tr("Saqlash")}</Text>}
       </TouchableOpacity>
     </View>
     </KeyboardAvoidingView>

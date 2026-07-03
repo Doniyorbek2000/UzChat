@@ -1,5 +1,6 @@
 import { contactsService } from "../modules/contacts/contacts.service";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 
@@ -16,6 +17,5 @@ export function startBirthdayReminderJob() {
       logger.error("Birthday reminder job failed", { error: String(err) });
     }
   };
-  run();
-  setInterval(run, CHECK_INTERVAL_MS);
+  scheduleExclusiveJob("birthday-reminders", CHECK_INTERVAL_MS, run, { immediate: true });
 }

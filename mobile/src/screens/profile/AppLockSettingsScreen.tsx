@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useAppLockStore } from "../../store/appLockStore";
 import { PinPad } from "../../components/PinPad";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AppLockSettings">;
 
@@ -87,7 +88,7 @@ export function AppLockSettingsScreen({}: Props) {
       <View style={styles.container}>
         <PinPad title={STEP_TITLES[step]} error={error} resetKey={resetKey} onComplete={onComplete} />
         <TouchableOpacity style={styles.cancelButton} onPress={cancel}>
-          <Text style={styles.cancelText}>Bekor qilish</Text>
+          <Text style={styles.cancelText}>{tr("Bekor qilish")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -96,7 +97,7 @@ export function AppLockSettingsScreen({}: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.row}>
-        <Text style={styles.rowLabel}>PIN kod bilan qulflash</Text>
+        <Text style={styles.rowLabel}>{tr("PIN kod bilan qulflash")}</Text>
         <Switch
           value={isEnabled}
           onValueChange={(value) => setStep(value ? "setNew1" : "disableConfirm")}
@@ -105,12 +106,12 @@ export function AppLockSettingsScreen({}: Props) {
       </View>
       {isEnabled && (
         <TouchableOpacity style={styles.row} onPress={() => setStep("changeOld")}>
-          <Text style={styles.rowLabel}>PIN kodni o'zgartirish</Text>
+          <Text style={styles.rowLabel}>{tr("PIN kodni o'zgartirish")}</Text>
           <Text style={styles.rowArrow}>›</Text>
         </TouchableOpacity>
       )}
       <Text style={styles.description}>
-        Yoqilganda, ilova fonga o'tib qaytarilganda yoki qayta ochilganda 4 xonali PIN kod so'raladi.
+        {tr("Yoqilganda, ilova fonga o'tib qaytarilganda yoki qayta ochilganda 4 xonali PIN kod so'raladi.")}
       </Text>
     </View>
   );

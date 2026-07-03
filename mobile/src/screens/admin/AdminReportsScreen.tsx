@@ -13,6 +13,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { adminApi, AdminReport } from "../../api/admin";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 const reasonLabels: Record<string, string> = {
   SPAM: "Spam",
@@ -24,9 +25,9 @@ const reasonLabels: Record<string, string> = {
 };
 
 const statusLabels: Record<string, { label: string; color: string }> = {
-  PENDING: { label: "Kutilmoqda", color: colors.warning },
-  RESOLVED: { label: "Hal qilindi", color: "#34C759" },
-  DISMISSED: { label: "Rad etildi", color: "#8E8E93" },
+  PENDING: { label: tr("Kutilmoqda"), color: colors.warning },
+  RESOLVED: { label: tr("Hal qilindi"), color: "#34C759" },
+  DISMISSED: { label: tr("Rad etildi"), color: "#8E8E93" },
 };
 
 export default function AdminReportsScreen() {
@@ -56,7 +57,7 @@ export default function AdminReportsScreen() {
   const handleAction = (report: AdminReport, action: "resolve" | "dismiss") => {
     const label = action === "resolve" ? "Hal qilish" : "Rad etish";
     Alert.alert(label, `Ushbu shikoyatni ${label.toLowerCase()} istaysizmi?`, [
-      { text: "Bekor", style: "cancel" },
+      { text: tr("Bekor"), style: "cancel" },
       {
         text: label,
         onPress: async () => {
@@ -99,13 +100,13 @@ export default function AdminReportsScreen() {
               style={[styles.actionBtn, { backgroundColor: "#34C759" }]}
               onPress={() => handleAction(item, "resolve")}
             >
-              <Text style={styles.actionText}>Hal qilish</Text>
+              <Text style={styles.actionText}>{tr("Hal qilish")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: "#8E8E93" }]}
               onPress={() => handleAction(item, "dismiss")}
             >
-              <Text style={styles.actionText}>Rad etish</Text>
+              <Text style={styles.actionText}>{tr("Rad etish")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -122,7 +123,7 @@ export default function AdminReportsScreen() {
   }
 
   if (error && reports.length === 0) {
-    return <ErrorView message="Shikoyatlarni yuklab bo'lmadi" onRetry={() => load()} />;
+    return <ErrorView message={tr("Shikoyatlarni yuklab bo'lmadi")} onRetry={() => load()} />;
   }
 
   return (
@@ -134,17 +135,17 @@ export default function AdminReportsScreen() {
       contentContainerStyle={{ padding: 16 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={() => load(page)} tintColor={colors.primary} />}
       ListEmptyComponent={
-        <Text style={styles.empty}>Shikoyatlar yo'q</Text>
+        <Text style={styles.empty}>{tr("Shikoyatlar yo'q")}</Text>
       }
       ListFooterComponent={
         totalPages > 1 ? (
           <View style={styles.pagination}>
             <TouchableOpacity disabled={page <= 1} onPress={() => load(page - 1)}>
-              <Text style={[styles.pageBtn, page <= 1 && { opacity: 0.3 }]}>‹ Oldingi</Text>
+              <Text style={[styles.pageBtn, page <= 1 && { opacity: 0.3 }]}>{tr("‹ Oldingi")}</Text>
             </TouchableOpacity>
             <Text style={styles.pageInfo}>{page} / {totalPages}</Text>
             <TouchableOpacity disabled={page >= totalPages} onPress={() => load(page + 1)}>
-              <Text style={[styles.pageBtn, page >= totalPages && { opacity: 0.3 }]}>Keyingi ›</Text>
+              <Text style={[styles.pageBtn, page >= totalPages && { opacity: 0.3 }]}>{tr("Keyingi ›")}</Text>
             </TouchableOpacity>
           </View>
         ) : null

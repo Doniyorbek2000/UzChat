@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { communitiesApi } from "../../api/communities";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreateCommunity">;
 
@@ -15,7 +16,7 @@ export function CreateCommunityScreen({ navigation }: Props) {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      Alert.alert("Xatolik", "Jamiyat nomini kiriting");
+      Alert.alert(tr("Xatolik"), tr("Jamiyat nomini kiriting"));
       return;
     }
     setSaving(true);
@@ -24,11 +25,11 @@ export function CreateCommunityScreen({ navigation }: Props) {
         name: name.trim(),
         description: description.trim() || undefined,
       });
-      Alert.alert("Muvaffaqiyat", "Jamiyat yaratildi!", [
-        { text: "OK", onPress: () => navigation.replace("CommunityView", { communityId: community.id }) },
+      Alert.alert(tr("Muvaffaqiyat"), tr("Jamiyat yaratildi!"), [
+        { text: tr("OK"), onPress: () => navigation.replace("CommunityView", { communityId: community.id }) },
       ]);
     } catch {
-      Alert.alert("Xatolik", "Jamiyatni yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Jamiyatni yaratib bo'lmadi"));
     }
     setSaving(false);
   };
@@ -40,22 +41,22 @@ export function CreateCommunityScreen({ navigation }: Props) {
         <Avatar name={name.trim() || "?"} size={80} />
       </View>
 
-      <Text style={styles.label}>Jamiyat nomi</Text>
+      <Text style={styles.label}>{tr("Jamiyat nomi")}</Text>
       <TextInput
         style={styles.input}
         value={name}
         onChangeText={setName}
-        placeholder="Masalan: O'zbek dasturchilar"
+        placeholder={tr("Masalan: O'zbek dasturchilar")}
         placeholderTextColor={colors.textSecondary}
         maxLength={100}
       />
 
-      <Text style={styles.label}>Tavsif (ixtiyoriy)</Text>
+      <Text style={styles.label}>{tr("Tavsif (ixtiyoriy)")}</Text>
       <TextInput
         style={[styles.input, styles.multiline]}
         value={description}
         onChangeText={setDescription}
-        placeholder="Jamiyat haqida qisqacha..."
+        placeholder={tr("Jamiyat haqida qisqacha...")}
         placeholderTextColor={colors.textSecondary}
         multiline
         maxLength={500}
@@ -63,7 +64,7 @@ export function CreateCommunityScreen({ navigation }: Props) {
 
       <View style={styles.hint}>
         <Text style={styles.hintIcon}>💡</Text>
-        <Text style={styles.hintText}>Jamiyat yaratgandan so'ng, unga guruhlar va kanallar qo'shishingiz mumkin</Text>
+        <Text style={styles.hintText}>{tr("Jamiyat yaratgandan so'ng, unga guruhlar va kanallar qo'shishingiz mumkin")}</Text>
       </View>
 
       <TouchableOpacity
@@ -71,7 +72,7 @@ export function CreateCommunityScreen({ navigation }: Props) {
         onPress={handleCreate}
         disabled={!name.trim() || saving}
       >
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>Jamiyat yaratish</Text>}
+        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>{tr("Jamiyat yaratish")}</Text>}
       </TouchableOpacity>
     </ScrollView>
     </KeyboardAvoidingView>

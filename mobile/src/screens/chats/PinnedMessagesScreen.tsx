@@ -9,6 +9,7 @@ import { PinnedMessageInfo } from "../../types";
 import { formatTime } from "../../utils/conversation";
 import { getPreviewLabel } from "../../utils/messagePreview";
 import { formatPinTimeRemaining } from "../../utils/pinExpiry";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "PinnedMessages">;
 
@@ -29,9 +30,9 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
   const canManagePins = conversation?.type !== "GROUP" || myRole === "OWNER" || myRole === "ADMIN";
 
   const onUnpinAll = () => {
-    Alert.alert("Hammasini yechish", "Barcha qadalgan xabarlar olib tashlansinmi?", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "Olib tashlash", style: "destructive", onPress: () => unpinAllMessages(conversationId).catch(() => {}) },
+    Alert.alert(tr("Hammasini yechish"), tr("Barcha qadalgan xabarlar olib tashlansinmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("Olib tashlash"), style: "destructive", onPress: () => unpinAllMessages(conversationId).catch(() => {}) },
     ]);
   };
 
@@ -41,7 +42,7 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
         pinnedMessages.length > 0 && canManagePins
           ? () => (
               <TouchableOpacity onPress={onUnpinAll} hitSlop={8}>
-                <Text style={styles.unpinAllButton}>Hammasini yechish</Text>
+                <Text style={styles.unpinAllButton}>{tr("Hammasini yechish")}</Text>
               </TouchableOpacity>
             )
           : undefined,
@@ -65,9 +66,9 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
   }, [pinnedMessages, search, conversationKey]);
 
   const onUnpin = (item: PinnedMessageInfo) => {
-    Alert.alert("Qadalgan xabar", "Xabarni qadashdan olib tashlansinmi?", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "Olib tashlash", style: "destructive", onPress: () => unpinMessage(conversationId, item.id).catch(() => {}) },
+    Alert.alert(tr("Qadalgan xabar"), tr("Xabarni qadashdan olib tashlansinmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("Olib tashlash"), style: "destructive", onPress: () => unpinMessage(conversationId, item.id).catch(() => {}) },
     ]);
   };
 
@@ -82,7 +83,7 @@ export function PinnedMessagesScreen({ route, navigation }: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}

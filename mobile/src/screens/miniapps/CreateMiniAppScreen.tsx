@@ -4,20 +4,21 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { miniAppsApi } from "../../api/miniapps";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreateMiniApp">;
 
 const CATEGORIES = [
-  { key: "transport", label: "Transport", icon: "🚕" },
-  { key: "food", label: "Ovqat", icon: "🍽️" },
-  { key: "health", label: "Sog'liq", icon: "🏥" },
-  { key: "shopping", label: "Xaridlar", icon: "🛍️" },
-  { key: "finance", label: "Moliya", icon: "💰" },
-  { key: "games", label: "O'yinlar", icon: "🎮" },
-  { key: "news", label: "Yangiliklar", icon: "📰" },
-  { key: "entertainment", label: "Ko'ngilochar", icon: "🎬" },
-  { key: "travel", label: "Sayohat", icon: "✈️" },
-  { key: "other", label: "Boshqa", icon: "📦" },
+  { key: "transport", label: tr("Transport"), icon: "🚕" },
+  { key: "food", label: tr("Ovqat"), icon: "🍽️" },
+  { key: "health", label: tr("Sog'liq"), icon: "🏥" },
+  { key: "shopping", label: tr("Xaridlar"), icon: "🛍️" },
+  { key: "finance", label: tr("Moliya"), icon: "💰" },
+  { key: "games", label: tr("O'yinlar"), icon: "🎮" },
+  { key: "news", label: tr("Yangiliklar"), icon: "📰" },
+  { key: "entertainment", label: tr("Ko'ngilochar"), icon: "🎬" },
+  { key: "travel", label: tr("Sayohat"), icon: "✈️" },
+  { key: "other", label: tr("Boshqa"), icon: "📦" },
 ];
 
 export function CreateMiniAppScreen({ navigation }: Props) {
@@ -30,11 +31,11 @@ export function CreateMiniAppScreen({ navigation }: Props) {
 
   const onCreate = async () => {
     if (!name.trim()) {
-      Alert.alert("Xatolik", "Nomni kiriting");
+      Alert.alert(tr("Xatolik"), tr("Nomni kiriting"));
       return;
     }
     if (!url.trim() || !url.startsWith("http")) {
-      Alert.alert("Xatolik", "To'g'ri URL kiriting (https://...)");
+      Alert.alert(tr("Xatolik"), tr("To'g'ri URL kiriting (https://...)"));
       return;
     }
     setCreating(true);
@@ -46,10 +47,10 @@ export function CreateMiniAppScreen({ navigation }: Props) {
         iconUrl: iconUrl.trim() || undefined,
         category,
       });
-      Alert.alert("Muvaffaqiyat", "Mini-dastur yaratildi");
+      Alert.alert(tr("Muvaffaqiyat"), tr("Mini-dastur yaratildi"));
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Yaratib bo'lmadi");
     } finally {
       setCreating(false);
     }
@@ -65,44 +66,44 @@ export function CreateMiniAppScreen({ navigation }: Props) {
             <Text style={styles.previewIconText}>{previewLetter}</Text>
           </View>
           <Text style={styles.previewName}>{name.trim() || "Mini-dastur nomi"}</Text>
-          <Text style={styles.previewHint}>Oldindan ko'rinish</Text>
+          <Text style={styles.previewHint}>{tr("Oldindan ko'rinish")}</Text>
         </View>
 
         <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Asosiy ma'lumotlar</Text>
+          <Text style={styles.formTitle}>{tr("Asosiy ma'lumotlar")}</Text>
 
-          <Text style={styles.label}>Nomi *</Text>
-          <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={64} placeholder="Mini-dastur nomi" placeholderTextColor={colors.textSecondary} />
+          <Text style={styles.label}>{tr("Nomi *")}</Text>
+          <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={64} placeholder={tr("Mini-dastur nomi")} placeholderTextColor={colors.textSecondary} />
 
-          <Text style={styles.label}>URL *</Text>
+          <Text style={styles.label}>{tr("URL *")}</Text>
           <TextInput
             style={styles.input}
             value={url}
             onChangeText={setUrl}
-            placeholder="https://example.com/app"
+            placeholder={tr("https://example.com/app")}
             placeholderTextColor={colors.textSecondary}
             autoCapitalize="none"
             keyboardType="url"
           />
 
-          <Text style={styles.label}>Tavsif</Text>
+          <Text style={styles.label}>{tr("Tavsif")}</Text>
           <TextInput
             style={[styles.input, styles.descInput]}
             value={description}
             onChangeText={setDescription}
             maxLength={256}
-            placeholder="Qisqacha tavsif"
+            placeholder={tr("Qisqacha tavsif")}
             placeholderTextColor={colors.textSecondary}
             multiline
           />
           <Text style={styles.charCounter}>{description.length}/256</Text>
 
-          <Text style={styles.label}>Ikon URL</Text>
+          <Text style={styles.label}>{tr("Ikon URL")}</Text>
           <TextInput
             style={styles.input}
             value={iconUrl}
             onChangeText={setIconUrl}
-            placeholder="https://example.com/icon.png"
+            placeholder={tr("https://example.com/icon.png")}
             placeholderTextColor={colors.textSecondary}
             autoCapitalize="none"
             keyboardType="url"
@@ -110,7 +111,7 @@ export function CreateMiniAppScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Kategoriya</Text>
+          <Text style={styles.formTitle}>{tr("Kategoriya")}</Text>
           <View style={styles.categoryGrid}>
             {CATEGORIES.map((c) => {
               const active = category === c.key;
@@ -134,7 +135,7 @@ export function CreateMiniAppScreen({ navigation }: Props) {
           disabled={!name.trim() || !url.trim() || creating}
           activeOpacity={0.7}
         >
-          {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>Yaratish</Text>}
+          {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>{tr("Yaratish")}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

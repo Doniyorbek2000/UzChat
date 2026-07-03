@@ -3,6 +3,7 @@ import { authApi } from "../api/auth";
 import { usersApi } from "../api/users";
 import { setUnauthorizedHandler } from "../api/client";
 import { secureStorage } from "../storage/secureStorage";
+import { messageCache } from "../storage/messageCache";
 import { generateKeyPair, KeyPair } from "../crypto/e2ee";
 import { decryptKeyBackup, encryptKeyBackup } from "../crypto/keyBackup";
 import { devicesApi } from "../api/devices";
@@ -243,6 +244,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     await secureStorage.clearTokens();
     await useAppLockStore.getState().reset();
+    await messageCache.clearAll().catch(() => {});
     keyManager.clearCache();
     disconnectSocket();
     set({ user: null, isAuthenticated: false });
@@ -254,6 +256,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await secureStorage.clearTokens();
     await secureStorage.clearKeyPair();
     await useAppLockStore.getState().reset();
+    await messageCache.clearAll().catch(() => {});
     keyManager.clearCache();
     disconnectSocket();
     set({ user: null, keyPair: null, isAuthenticated: false });

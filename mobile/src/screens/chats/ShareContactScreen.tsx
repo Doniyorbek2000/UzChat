@@ -7,6 +7,7 @@ import { useChatStore } from "../../store/chatStore";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ShareContact">;
 
@@ -44,7 +45,7 @@ export function ShareContactScreen({ route, navigation }: Props) {
       await sendContactMessage(conversationId, contact.user);
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kontaktni yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Kontaktni yuborib bo'lmadi");
     } finally {
       setSendingId(null);
     }
@@ -65,7 +66,7 @@ export function ShareContactScreen({ route, navigation }: Props) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}

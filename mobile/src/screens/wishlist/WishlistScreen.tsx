@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { wishlistApi, WishlistItem } from "../../api/wishlist";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Wishlist">;
 
@@ -28,9 +29,9 @@ export function WishlistScreen({ navigation }: Props) {
   }, []);
 
   const removeItem = (productId: string) => {
-    Alert.alert("O'chirish", "Istaklar ro'yxatidan olib tashlansinmi?", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "O'chirish", style: "destructive", onPress: async () => {
+    Alert.alert(tr("O'chirish"), tr("Istaklar ro'yxatidan olib tashlansinmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("O'chirish"), style: "destructive", onPress: async () => {
         await wishlistApi.remove(productId).catch(() => {});
         setItems((prev) => prev.filter((i) => i.productId !== productId));
       }},
@@ -46,7 +47,7 @@ export function WishlistScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Istaklar ro'yxatini yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Istaklar ro'yxatini yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -89,10 +90,10 @@ export function WishlistScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>❤️</Text>
-            <Text style={styles.emptyTitle}>Istaklar ro'yxati bo'sh</Text>
-            <Text style={styles.emptyHint}>Bozordan yoqtirgan mahsulotlarni qo'shing</Text>
+            <Text style={styles.emptyTitle}>{tr("Istaklar ro'yxati bo'sh")}</Text>
+            <Text style={styles.emptyHint}>{tr("Bozordan yoqtirgan mahsulotlarni qo'shing")}</Text>
             <TouchableOpacity style={styles.browseBtn} onPress={() => navigation.navigate("Marketplace")}>
-              <Text style={styles.browseBtnText}>Bozorga o'tish</Text>
+              <Text style={styles.browseBtnText}>{tr("Bozorga o'tish")}</Text>
             </TouchableOpacity>
           </View>
         }

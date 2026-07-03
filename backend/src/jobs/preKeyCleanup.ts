@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const INTERVAL_MS = 12 * 60 * 60 * 1000;
 
@@ -92,5 +93,5 @@ export function startPreKeyCleanupJob() {
   };
 
   setTimeout(run, 60_000);
-  setInterval(run, INTERVAL_MS);
+  scheduleExclusiveJob("prekey-cleanup", INTERVAL_MS, run);
 }

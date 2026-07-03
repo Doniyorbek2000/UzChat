@@ -5,6 +5,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { colors } from "../../theme/colors";
 import { formatFileSize } from "../../utils/mediaFile";
 import { useChatSettingsStore } from "../../store/chatSettingsStore";
+import { tr } from "../../i18n";
 
 interface CacheBreakdown {
   media: number;
@@ -62,10 +63,10 @@ export function StorageUsageScreen() {
   const total = breakdown ? breakdown.media + breakdown.exports + breakdown.temp : 0;
 
   const onClear = () => {
-    Alert.alert("Keshni tozalash", "Yuklab olingan media va vaqtinchalik fayllar o'chiriladi. Davom etilsinmi?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Keshni tozalash"), tr("Yuklab olingan media va vaqtinchalik fayllar o'chiriladi. Davom etilsinmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Tozalash",
+        text: tr("Tozalash"),
         style: "destructive",
         onPress: async () => {
           setClearing(true);
@@ -92,29 +93,29 @@ export function StorageUsageScreen() {
     <View style={styles.container}>
       <View style={[styles.row, styles.toggleRow]}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>📥 Mediani avtomatik yuklab olish</Text>
+          <Text style={styles.rowLabel}>{tr("📥 Mediani avtomatik yuklab olish")}</Text>
           <Text style={styles.rowDescription}>
-            O'chirilganda, rasm va ovozli xabarlar faqat ustiga bosilganda yuklab olinadi
+            {tr("O'chirilganda, rasm va ovozli xabarlar faqat ustiga bosilganda yuklab olinadi")}
           </Text>
         </View>
         <Switch value={autoDownloadMedia} onValueChange={setAutoDownloadMedia} trackColor={{ true: colors.primary }} />
       </View>
 
       <View style={styles.totalBox}>
-        <Text style={styles.totalLabel}>Jami kesh hajmi</Text>
+        <Text style={styles.totalLabel}>{tr("Jami kesh hajmi")}</Text>
         <Text style={styles.totalValue}>{formatFileSize(total)}</Text>
       </View>
 
       <View style={styles.row}>
-        <Text style={styles.rowLabel}>🖼 Media fayllar</Text>
+        <Text style={styles.rowLabel}>{tr("🖼 Media fayllar")}</Text>
         <Text style={styles.rowValue}>{formatFileSize(breakdown.media)}</Text>
       </View>
       <View style={styles.row}>
-        <Text style={styles.rowLabel}>📤 Eksport qilingan suhbatlar</Text>
+        <Text style={styles.rowLabel}>{tr("📤 Eksport qilingan suhbatlar")}</Text>
         <Text style={styles.rowValue}>{formatFileSize(breakdown.exports)}</Text>
       </View>
       <View style={[styles.row, styles.rowLast]}>
-        <Text style={styles.rowLabel}>🗑 Vaqtinchalik fayllar</Text>
+        <Text style={styles.rowLabel}>{tr("🗑 Vaqtinchalik fayllar")}</Text>
         <Text style={styles.rowValue}>{formatFileSize(breakdown.temp)}</Text>
       </View>
 
@@ -128,7 +129,7 @@ export function StorageUsageScreen() {
         onPress={onClear}
         disabled={clearing || total === 0}
       >
-        {clearing ? <ActivityIndicator color="#fff" /> : <Text style={styles.clearButtonText}>Keshni tozalash</Text>}
+        {clearing ? <ActivityIndicator color="#fff" /> : <Text style={styles.clearButtonText}>{tr("Keshni tozalash")}</Text>}
       </TouchableOpacity>
     </View>
   );

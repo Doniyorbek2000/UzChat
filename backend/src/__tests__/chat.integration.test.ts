@@ -10,7 +10,8 @@ const mockEmit = vi.fn().mockReturnThis();
 const mockTo = vi.fn().mockReturnValue({ emit: mockEmit, socketsJoin: vi.fn(), except: vi.fn().mockReturnValue({ emit: mockEmit }) });
 const mockIo = { to: mockTo, in: vi.fn().mockReturnValue({ disconnectSockets: vi.fn() }), sockets: { adapter: { rooms: new Map() } } } as any;
 vi.spyOn(socketsModule, "getIo").mockReturnValue(mockIo);
-vi.spyOn(socketsModule, "isUserOnline").mockReturnValue(false);
+vi.spyOn(socketsModule, "isUserOnline").mockResolvedValue(false);
+vi.spyOn(socketsModule, "filterOnlineUsers").mockResolvedValue(new Set());
 
 let app: Express;
 let tokenA: string;

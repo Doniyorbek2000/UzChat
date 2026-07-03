@@ -9,6 +9,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { uploadPlainFile } from "../../utils/mediaFile";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Stories">;
 
@@ -49,7 +50,7 @@ export function StoriesScreen({ navigation }: Props) {
       await storiesApi.create(url);
       await loadFeed();
     } catch {
-      Alert.alert("Xatolik", "Hikoya yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Hikoya yaratib bo'lmadi"));
     } finally {
       setUploading(false);
     }
@@ -72,7 +73,7 @@ export function StoriesScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Hikoyalarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadFeed(); }} />;
+    return <ErrorView message={tr("Hikoyalarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadFeed(); }} />;
   }
 
   return (
@@ -87,7 +88,7 @@ export function StoriesScreen({ navigation }: Props) {
           )}
         </View>
         <View style={styles.myStoryInfo}>
-          <Text style={styles.myStoryTitle}>Mening hikoyam</Text>
+          <Text style={styles.myStoryTitle}>{tr("Mening hikoyam")}</Text>
           <Text style={styles.myStorySubtitle}>
             {myStories ? `${myStories.stories.length} hikoya` : "Hikoya qo'shish uchun bosing"}
           </Text>
@@ -97,7 +98,7 @@ export function StoriesScreen({ navigation }: Props) {
       {uploading && (
         <View style={styles.uploadingRow}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={styles.uploadingText}> Yuklanmoqda...</Text>
+          <Text style={styles.uploadingText}> {tr("Yuklanmoqda...")}</Text>
         </View>
       )}
 
@@ -106,7 +107,7 @@ export function StoriesScreen({ navigation }: Props) {
       </TouchableOpacity>
 
       {otherStories.length > 0 && (
-        <Text style={styles.sectionTitle}>So'nggi yangiliklar</Text>
+        <Text style={styles.sectionTitle}>{tr("So'nggi yangiliklar")}</Text>
       )}
       <FlatList
         data={otherStories}
@@ -127,7 +128,7 @@ export function StoriesScreen({ navigation }: Props) {
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Hali hikoyalar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Hali hikoyalar yo'q")}</Text>
           </View>
         }
       />

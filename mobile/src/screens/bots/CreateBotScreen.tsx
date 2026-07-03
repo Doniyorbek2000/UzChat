@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { botsApi } from "../../api/bots";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreateBot">;
 
@@ -15,11 +16,11 @@ export function CreateBotScreen({ navigation }: Props) {
 
   const handleCreate = async () => {
     if (!username.trim() || !displayName.trim()) {
-      Alert.alert("Xatolik", "Username va nom to'ldirilishi shart");
+      Alert.alert(tr("Xatolik"), tr("Username va nom to'ldirilishi shart"));
       return;
     }
     if (!username.trim().toLowerCase().endsWith("bot")) {
-      Alert.alert("Xatolik", "Bot username 'bot' bilan tugashi kerak (masalan: mybot)");
+      Alert.alert(tr("Xatolik"), tr("Bot username 'bot' bilan tugashi kerak (masalan: mybot)"));
       return;
     }
     setCreating(true);
@@ -29,11 +30,11 @@ export function CreateBotScreen({ navigation }: Props) {
         displayName: displayName.trim(),
         description: description.trim() || undefined,
       });
-      Alert.alert("Bot yaratildi!", `Token: ${bot.token}\n\nBu tokenni saqlang — boshqa ko'rsatilmaydi.`, [
-        { text: "OK", onPress: () => navigation.goBack() },
+      Alert.alert(tr("Bot yaratildi!"), `Token: ${bot.token}\n\nBu tokenni saqlang — boshqa ko'rsatilmaydi.`, [
+        { text: tr("OK"), onPress: () => navigation.goBack() },
       ]);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message || "Bot yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message || "Bot yaratib bo'lmadi");
     }
     setCreating(false);
   };
@@ -43,30 +44,30 @@ export function CreateBotScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text style={styles.label}>Username</Text>
+      <Text style={styles.label}>{tr("Username")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="myassistantbot"
+        placeholder={tr("myassistantbot")}
         placeholderTextColor={colors.textSecondary}
         value={username}
         onChangeText={setUsername}
         autoCapitalize="none"
       />
-      <Text style={styles.hint}>Username "bot" bilan tugashi kerak</Text>
+      <Text style={styles.hint}>{tr("Username \"bot\" bilan tugashi kerak")}</Text>
 
-      <Text style={styles.label}>Ko'rsatiladigan nom</Text>
+      <Text style={styles.label}>{tr("Ko'rsatiladigan nom")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Bot nomi"
+        placeholder={tr("Bot nomi")}
         placeholderTextColor={colors.textSecondary}
         value={displayName}
         onChangeText={setDisplayName}
       />
 
-      <Text style={styles.label}>Tavsif (ixtiyoriy)</Text>
+      <Text style={styles.label}>{tr("Tavsif (ixtiyoriy)")}</Text>
       <TextInput
         style={[styles.input, styles.multiline]}
-        placeholder="Bot nima qiladi..."
+        placeholder={tr("Bot nima qiladi...")}
         placeholderTextColor={colors.textSecondary}
         value={description}
         onChangeText={setDescription}
@@ -78,7 +79,7 @@ export function CreateBotScreen({ navigation }: Props) {
         {creating ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.createBtnText}>Bot yaratish</Text>
+          <Text style={styles.createBtnText}>{tr("Bot yaratish")}</Text>
         )}
       </TouchableOpacity>
     </ScrollView>

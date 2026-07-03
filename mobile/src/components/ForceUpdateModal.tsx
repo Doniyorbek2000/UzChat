@@ -3,6 +3,7 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Platform } fr
 import { API_URL } from "../config/env";
 import { colors } from "../theme/colors";
 import appJson from "../../app.json";
+import { tr } from "../i18n";
 
 const APP_VERSION = appJson.expo.version;
 const STORE_URL = Platform.select({
@@ -45,12 +46,12 @@ export function ForceUpdateModal() {
     <Modal visible animationType="fade" transparent>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Text style={styles.title}>Yangilanish kerak</Text>
+          <Text style={styles.title}>{tr("Yangilanish kerak")}</Text>
           <Text style={styles.message}>
-            UzChat'ning yangi versiyasi mavjud. Davom etish uchun ilovani yangilang.
+            {tr("UzChat'ning yangi versiyasi mavjud. Davom etish uchun ilovani yangilang.")}
           </Text>
           <TouchableOpacity style={styles.button} onPress={() => Linking.openURL(STORE_URL)}>
-            <Text style={styles.buttonText}>Yangilash</Text>
+            <Text style={styles.buttonText}>{tr("Yangilash")}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NewChannel">;
 
@@ -56,11 +57,11 @@ export function NewChannelScreen({ navigation }: Props) {
 
   const onCreate = async () => {
     if (!title.trim()) {
-      Alert.alert("Xatolik", "Kanal nomini kiriting");
+      Alert.alert(tr("Xatolik"), tr("Kanal nomini kiriting"));
       return;
     }
     if (selected.size < 1) {
-      Alert.alert("Xatolik", "Kamida 1 ta obunachi tanlang");
+      Alert.alert(tr("Xatolik"), tr("Kamida 1 ta obunachi tanlang"));
       return;
     }
     setCreating(true);
@@ -69,7 +70,7 @@ export function NewChannelScreen({ navigation }: Props) {
       const conversation = await createChannelConversation(title.trim(), members);
       navigation.replace("ChatRoom", { conversationId: conversation.id, title: conversation.title ?? title });
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kanal yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Kanal yaratib bo'lmadi");
     } finally {
       setCreating(false);
     }
@@ -84,18 +85,18 @@ export function NewChannelScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={loadContacts} />;
+    return <ErrorView message={tr("Kontaktlarni yuklab bo'lmadi")} onRetry={loadContacts} />;
   }
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Kanal nomi" placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
+      <TextInput style={styles.input} placeholder={tr("Kanal nomi")} placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
       {contacts.length > 0 && (
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}
@@ -134,7 +135,7 @@ export function NewChannelScreen({ navigation }: Props) {
         }
       />
       <TouchableOpacity style={styles.button} onPress={onCreate} disabled={creating}>
-        {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kanal yaratish</Text>}
+        {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Kanal yaratish")}</Text>}
       </TouchableOpacity>
     </View>
   );

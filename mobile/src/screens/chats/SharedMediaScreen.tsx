@@ -16,6 +16,7 @@ import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { formatTime, getConversationDisplay } from "../../utils/conversation";
 import { extractFirstUrl } from "../../utils/linkPreview";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "SharedMedia">;
 
@@ -24,11 +25,11 @@ const PAGE_SIZE = 30;
 type MediaTab = "all" | "media" | "audio" | "files" | "links";
 
 const TABS: { key: MediaTab; label: string }[] = [
-  { key: "all", label: "Hammasi" },
-  { key: "media", label: "Media" },
-  { key: "audio", label: "Audio" },
-  { key: "files", label: "Fayllar" },
-  { key: "links", label: "Havolalar" },
+  { key: "all", label: tr("Hammasi") },
+  { key: "media", label: tr("Media") },
+  { key: "audio", label: tr("Audio") },
+  { key: "files", label: tr("Fayllar") },
+  { key: "links", label: tr("Havolalar") },
 ];
 
 function matchesTab(tab: MediaTab, type: DecryptedMessage["type"]) {
@@ -190,7 +191,7 @@ export function SharedMediaScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Mediafayllarni yuklab bo'lmadi" onRetry={() => { setLoading(true); setError(false); if (conversation) { const key = getConversationKey(conversation); chatsApi.listMedia(conversationId).then((messages) => { setItems(messages.map((m) => decryptToMessage(key, m))); setHasMore(messages.length === PAGE_SIZE); }).catch(() => setError(true)).finally(() => setLoading(false)); } }} />;
+    return <ErrorView message={tr("Mediafayllarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); setError(false); if (conversation) { const key = getConversationKey(conversation); chatsApi.listMedia(conversationId).then((messages) => { setItems(messages.map((m) => decryptToMessage(key, m))); setHasMore(messages.length === PAGE_SIZE); }).catch(() => setError(true)).finally(() => setLoading(false)); } }} />;
   }
 
   return (
@@ -212,7 +213,7 @@ export function SharedMediaScreen({ route, navigation }: Props) {
             style={[styles.senderChip, !selectedSenderId && styles.senderChipActive]}
             onPress={() => setSelectedSenderId(null)}
           >
-            <Text style={[styles.senderChipText, !selectedSenderId && styles.senderChipTextActive]}>Hammasi</Text>
+            <Text style={[styles.senderChipText, !selectedSenderId && styles.senderChipTextActive]}>{tr("Hammasi")}</Text>
           </TouchableOpacity>
           {senders.map((sender) => (
             <TouchableOpacity

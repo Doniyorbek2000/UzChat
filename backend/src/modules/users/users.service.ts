@@ -262,7 +262,7 @@ export const usersService = {
     if (ownerId === targetId) throw Errors.badRequest("O'zingizga obuna bo'lib bo'lmaydi");
     const target = await prisma.user.findUnique({ where: { id: targetId }, select: { id: true } });
     if (!target) throw Errors.notFound("Foydalanuvchi");
-    if (isUserOnline(targetId)) throw Errors.conflict("Foydalanuvchi allaqachon onlayn");
+    if (await isUserOnline(targetId)) throw Errors.conflict("Foydalanuvchi allaqachon onlayn");
 
     const visible = await filterVisibleOnlineOwners(ownerId, [targetId]);
     if (!visible.has(targetId)) throw Errors.forbidden();

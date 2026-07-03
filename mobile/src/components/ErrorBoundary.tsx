@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { colors } from "../theme/colors";
+import { tr } from "../i18n";
 
 interface Props {
   children: ReactNode;
@@ -33,10 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <View style={styles.container}>
           <Text style={styles.icon}>⚠️</Text>
-          <Text style={styles.title}>Xatolik yuz berdi</Text>
-          <Text style={styles.message}>Ilovada kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring.</Text>
+          <Text style={styles.title}>{tr("Xatolik yuz berdi")}</Text>
+          <Text style={styles.message}>{tr("Ilovada kutilmagan xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={this.handleRetry}>
-            <Text style={styles.retryText}>Qayta urinish</Text>
+            <Text style={styles.retryText}>{tr("Qayta urinish")}</Text>
           </TouchableOpacity>
         </View>
       );

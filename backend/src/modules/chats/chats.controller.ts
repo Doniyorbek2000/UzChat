@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { chatsService } from "./chats.service";
-import { getIo, isUserOnline } from "../../sockets";
+import { getIo, filterOnlineUsers } from "../../sockets";
 import { filterViewersForLastSeen } from "../../utils/lastSeen";
 import {
   createConversationSchema,
@@ -25,8 +25,9 @@ import {
 
 async function syncNewParticipantsPresence(participants: { userId: string }[], newParticipantIds: string[]) {
   const isNew = new Set(newParticipantIds);
+  const onlineIds = await filterOnlineUsers(participants.map((p) => p.userId));
   for (const other of participants) {
-    if (!isUserOnline(other.userId)) continue;
+    if (!onlineIds.has(other.userId)) continue;
     const viewerIds = participants
       .filter((p) => p.userId !== other.userId && (isNew.has(p.userId) || isNew.has(other.userId)))
       .map((p) => p.userId);

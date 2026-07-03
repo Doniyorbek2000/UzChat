@@ -7,6 +7,7 @@ import { hashtagsApi } from "../../api/hashtags";
 import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "HashtagPosts">;
 
@@ -52,7 +53,7 @@ export function HashtagPostsScreen({ route }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Postlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Postlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -94,7 +95,7 @@ export function HashtagPostsScreen({ route }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>#</Text>
-            <Text style={styles.emptyText}>Postlar topilmadi</Text>
+            <Text style={styles.emptyText}>{tr("Postlar topilmadi")}</Text>
           </View>
         }
       />

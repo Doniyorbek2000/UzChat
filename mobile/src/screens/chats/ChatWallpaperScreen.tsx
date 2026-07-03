@@ -6,6 +6,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { useWallpaperStore } from "../../store/wallpaperStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 import {
   CHAT_WALLPAPERS,
   ChatWallpaper,
@@ -25,16 +26,16 @@ export function ChatWallpaperScreen({ route }: Props) {
   const customUri = getCustomWallpaperUri(activeId);
 
   const onSetForAll = () => {
-    Alert.alert("Barcha suhbatlar uchun", "Tanlangan fonni barcha suhbatlar uchun standart qilib o'rnatasizmi?", [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "O'rnatish", onPress: () => setWallpaper(DEFAULT_WALLPAPER_KEY, activeId).catch(() => {}) },
+    Alert.alert(tr("Barcha suhbatlar uchun"), tr("Tanlangan fonni barcha suhbatlar uchun standart qilib o'rnatasizmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("O'rnatish"), onPress: () => setWallpaper(DEFAULT_WALLPAPER_KEY, activeId).catch(() => {}) },
     ]);
   };
 
   const onPickFromGallery = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Ruxsat kerak", "Surat tanlash uchun galereyaga ruxsat bering");
+      Alert.alert(tr("Ruxsat kerak"), tr("Surat tanlash uchun galereyaga ruxsat bering"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.7 });
@@ -49,7 +50,7 @@ export function ChatWallpaperScreen({ route }: Props) {
       await FileSystem.copyAsync({ from: result.assets[0].uri, to: destUri });
       await setWallpaper(conversationId, makeCustomWallpaperId(destUri));
     } catch {
-      Alert.alert("Xatolik", "Suratni fon qilib o'rnatib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Suratni fon qilib o'rnatib bo'lmadi"));
     } finally {
       setPicking(false);
     }
@@ -89,7 +90,7 @@ export function ChatWallpaperScreen({ route }: Props) {
         contentContainerStyle={styles.grid}
       />
       <TouchableOpacity style={styles.defaultButton} onPress={onSetForAll}>
-        <Text style={styles.defaultButtonText}>Barcha suhbatlar uchun standart qilish</Text>
+        <Text style={styles.defaultButtonText}>{tr("Barcha suhbatlar uchun standart qilish")}</Text>
       </TouchableOpacity>
     </View>
   );

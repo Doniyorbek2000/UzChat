@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { communitiesApi, Community } from "../../api/communities";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CommunityView">;
 
@@ -19,10 +20,10 @@ export function CommunityViewScreen({ route, navigation }: Props) {
   }, [communityId, navigation]);
 
   const handleRemoveGroup = (conversationId: string) => {
-    Alert.alert("Olib tashlash", "Bu guruhni jamiyatdan olib tashlamoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Olib tashlash"), tr("Bu guruhni jamiyatdan olib tashlamoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Olib tashlash",
+        text: tr("Olib tashlash"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -31,7 +32,7 @@ export function CommunityViewScreen({ route, navigation }: Props) {
               prev ? { ...prev, groups: prev.groups?.filter((g) => g.conversationId !== conversationId) } : prev
             );
           } catch {
-            Alert.alert("Xatolik", "Guruhni olib tashlab bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Guruhni olib tashlab bo'lmadi"));
           }
         },
       },
@@ -43,7 +44,7 @@ export function CommunityViewScreen({ route, navigation }: Props) {
   }
 
   if (error || !community) {
-    return <ErrorView message="Jamoa ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); communitiesApi.get(communityId).then((c) => { setCommunity(c); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Jamoa ma'lumotlarini yuklab bo'lmadi")} onRetry={() => { setLoading(true); communitiesApi.get(communityId).then((c) => { setCommunity(c); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -57,16 +58,16 @@ export function CommunityViewScreen({ route, navigation }: Props) {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Text style={styles.statValue}>{community.groups?.length ?? 0}</Text>
-            <Text style={styles.statLabel}>Guruhlar</Text>
+            <Text style={styles.statLabel}>{tr("Guruhlar")}</Text>
           </View>
           <View style={styles.stat}>
             <Text style={styles.statValue}>{community.memberCount}</Text>
-            <Text style={styles.statLabel}>A'zolar</Text>
+            <Text style={styles.statLabel}>{tr("A'zolar")}</Text>
           </View>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Guruhlar</Text>
+      <Text style={styles.sectionTitle}>{tr("Guruhlar")}</Text>
 
       <FlatList
         data={community.groups ?? []}
@@ -91,8 +92,8 @@ export function CommunityViewScreen({ route, navigation }: Props) {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Guruhlar yo'q</Text>
-            <Text style={styles.emptyHint}>Jamiyatga guruhlar qo'shing</Text>
+            <Text style={styles.emptyText}>{tr("Guruhlar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Jamiyatga guruhlar qo'shing")}</Text>
           </View>
         }
       />

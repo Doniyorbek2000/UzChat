@@ -2,6 +2,7 @@ import { RedPacketStatus } from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { redPacketsService } from "../modules/redpackets/redpackets.service";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const INTERVAL_MS = 10 * 60 * 1000;
 
@@ -26,6 +27,5 @@ export function startRedPacketRefundsJob() {
       logger.error("Red packet refund job failed", { error: String(err) });
     }
   };
-  run();
-  setInterval(run, INTERVAL_MS);
+  scheduleExclusiveJob("red-packet-refunds", INTERVAL_MS, run, { immediate: true });
 }

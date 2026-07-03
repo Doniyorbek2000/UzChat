@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { greetingsApi, SentCardData } from "../../api/greetings";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GreetingCards">;
 
@@ -47,7 +48,7 @@ export function GreetingCardsScreen(_props: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Kartochkalarni yuklab bo'lmadi" onRetry={loadData} />
+        <ErrorView message={tr("Kartochkalarni yuklab bo'lmadi")} onRetry={loadData} />
       ) : (
         <FlatList
           data={items}

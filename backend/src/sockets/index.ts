@@ -12,6 +12,7 @@ import { filterVisibleOnlineOwners, filterViewersForLastSeen } from "../utils/la
 import { presenceService } from "../services/presence.service";
 import { logger } from "../utils/logger";
 import { getRedis, getSubscriber } from "../config/redis";
+import { socketEventsCounter } from "../middleware/metrics.middleware";
 
 let io: Server | undefined;
 
@@ -26,9 +27,31 @@ export function getIo(): Server {
   return io;
 }
 
-export function isUserOnline(userId: string): boolean {
+/** Checks only sockets connected to THIS node. Cheap, but misses users on other replicas. */
+export function isUserOnlineLocal(userId: string): boolean {
   if (!io) return false;
   return io.sockets.adapter.rooms.has(`user:${userId}`);
+}
+
+/**
+ * Cluster-wide online check: fast local-room hit first, then the shared
+ * Redis presence key maintained by connection counting. Falls back to the
+ * local answer when Redis is unavailable (single-node mode).
+ */
+export async function isUserOnline(userId: string): Promise<boolean> {
+  if (isUserOnlineLocal(userId)) return true;
+  return presenceService.isOnline(userId);
+}
+
+/** Cluster-wide batch filter: returns the subset of userIds that are online anywhere. */
+export async function filterOnlineUsers(userIds: string[]): Promise<Set<string>> {
+  const online = new Set<string>(userIds.filter((id) => isUserOnlineLocal(id)));
+  const rest = userIds.filter((id) => !online.has(id));
+  if (rest.length > 0) {
+    const fromRedis = await presenceService.getOnlineUsers(rest);
+    for (const id of fromRedis) online.add(id);
+  }
+  return online;
 }
 
 /** Force-disconnects every socket belonging to the given session (refresh token), e.g. after it's revoked. */
@@ -116,7 +139,15 @@ async function handleConnection(socket: AuthenticatedSocket) {
     },
   });
 
-  const wasOnline = isUserOnline(authed.userId);
+  const wasOnline = await isUserOnline(authed.userId);
+  await presenceService.addConnection(authed.userId).catch(() => {});
+
+  // Keep the shared presence key alive for long-lived connections (its TTL
+  // exists so a crashed node's users eventually read as offline).
+  const presenceHeartbeat = setInterval(() => {
+    presenceService.refreshConnection(authed.userId).catch(() => {});
+  }, 120_000);
+  presenceHeartbeat.unref?.();
 
   const smallGroupIds: string[] = [];
   for (const p of participations) {
@@ -158,11 +189,9 @@ async function handleConnection(socket: AuthenticatedSocket) {
     }
   }
 
-  const onlineUserIds = [...relatedUserIds].filter((id) => isUserOnline(id));
+  const onlineUserIds = [...(await filterOnlineUsers([...relatedUserIds]))];
   const visibleOnlineUserIds = await filterVisibleOnlineOwners(authed.userId, onlineUserIds);
   socket.emit("presence:initial", { userIds: [...visibleOnlineUserIds] });
-
-  presenceService.setOnline(authed.userId).catch(() => {});
 
   if (!wasOnline) {
     const viewerIds = await filterViewersForLastSeen(authed.userId, [...relatedUserIds]);
@@ -195,6 +224,10 @@ async function handleConnection(socket: AuthenticatedSocket) {
     io!.to(`conversation:${message.conversationId}`).emit("message:new", message);
   }
 
+  socket.onAny((event) => {
+    socketEventsCounter.inc({ event: String(event).slice(0, 64) });
+  });
+
   registerChatHandlers(io!, authed);
   registerCallHandlers(io!, authed);
 
@@ -214,10 +247,11 @@ async function handleConnection(socket: AuthenticatedSocket) {
   });
 
   socket.on("disconnect", async () => {
+    clearInterval(presenceHeartbeat);
     try {
       await prisma.user.update({ where: { id: authed.userId }, data: { lastSeenAt: new Date() } });
-      presenceService.setOffline(authed.userId).catch(() => {});
-      if (!isUserOnline(authed.userId)) {
+      const lastConnectionAnywhere = await presenceService.removeConnection(authed.userId);
+      if (!isUserOnlineLocal(authed.userId) && lastConnectionAnywhere) {
         const smallConvs = await prisma.conversationParticipant.findMany({
           where: { userId: authed.userId },
           include: {

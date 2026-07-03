@@ -15,6 +15,11 @@ router.get("/feed", async (req: Request, res: Response) => {
   res.json(reels);
 });
 
+router.get("/latest", async (req: Request, res: Response) => {
+  const reels = await reelsService.getLatest(req.user!.sub, req.query.cursor as string | undefined);
+  res.json(reels);
+});
+
 router.get("/trending", async (req: Request, res: Response) => {
   const reels = await reelsService.getTrending();
   res.json(reels);
@@ -36,8 +41,13 @@ router.get("/:reelId", async (req: Request, res: Response) => {
 });
 
 router.post("/:reelId/view", async (req: Request, res: Response) => {
-  await reelsService.view(req.params.reelId);
+  await reelsService.view(req.params.reelId, req.user!.sub);
   res.status(204).send();
+});
+
+router.post("/:reelId/share", async (req: Request, res: Response) => {
+  const result = await reelsService.share(req.user!.sub, req.params.reelId);
+  res.json(result);
 });
 
 router.put("/:reelId/like", async (req: Request, res: Response) => {

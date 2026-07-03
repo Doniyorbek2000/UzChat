@@ -1,5 +1,6 @@
 import { channelStatsService } from "../modules/chats/channelStats.service";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -12,6 +13,5 @@ export function startChannelStatsJob() {
       logger.error("Channel stats job failed", { error: String(err) });
     }
   };
-  run();
-  setInterval(run, INTERVAL_MS);
+  scheduleExclusiveJob("channel-stats", INTERVAL_MS, run, { immediate: true });
 }

@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TwoFactorSettings">;
 
@@ -22,11 +23,11 @@ export function TwoFactorSettingsScreen({}: Props) {
 
   const onEnable = async () => {
     if (twoFactorPassword.length < 8) {
-      Alert.alert("Xatolik", "Qo'shimcha parol kamida 8 ta belgidan iborat bo'lishi kerak");
+      Alert.alert(tr("Xatolik"), tr("Qo'shimcha parol kamida 8 ta belgidan iborat bo'lishi kerak"));
       return;
     }
     if (twoFactorPassword !== confirmPassword) {
-      Alert.alert("Xatolik", "Qo'shimcha parollar mos kelmadi");
+      Alert.alert(tr("Xatolik"), tr("Qo'shimcha parollar mos kelmadi"));
       return;
     }
     setSaving(true);
@@ -37,19 +38,19 @@ export function TwoFactorSettingsScreen({}: Props) {
       setTwoFactorPassword("");
       setConfirmPassword("");
       setHint("");
-      Alert.alert("Yoqildi", "Ikki bosqichli tekshiruv yoqildi");
+      Alert.alert(tr("Yoqildi"), tr("Ikki bosqichli tekshiruv yoqildi"));
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Yoqib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Yoqib bo'lmadi");
     } finally {
       setSaving(false);
     }
   };
 
   const onDisable = () => {
-    Alert.alert("O'chirish", "Ikki bosqichli tekshiruvni o'chirishni xohlaysizmi?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'chirish"), tr("Ikki bosqichli tekshiruvni o'chirishni xohlaysizmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: () => {
           Alert.prompt(
@@ -62,7 +63,7 @@ export function TwoFactorSettingsScreen({}: Props) {
                 await usersApi.disableTwoFactor(password);
                 await refreshProfile();
               } catch (err: any) {
-                Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "O'chirib bo'lmadi");
+                Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "O'chirib bo'lmadi");
               } finally {
                 setSaving(false);
               }
@@ -78,15 +79,15 @@ export function TwoFactorSettingsScreen({}: Props) {
     return (
       <View style={styles.container}>
         <View style={styles.statusBox}>
-          <Text style={styles.statusTitle}>✅ Ikki bosqichli tekshiruv yoqilgan</Text>
+          <Text style={styles.statusTitle}>{tr("✅ Ikki bosqichli tekshiruv yoqilgan")}</Text>
           <Text style={styles.statusText}>
-            Hisobingizga kirishda parolingizdan tashqari qo'shimcha parol ham so'raladi.
+            {tr("Hisobingizga kirishda parolingizdan tashqari qo'shimcha parol ham so'raladi.")}
           </Text>
           {user.twoFactorHint && <Text style={styles.statusHint}>Maslahat: {user.twoFactorHint}</Text>}
         </View>
 
         <TouchableOpacity style={styles.dangerButton} onPress={onDisable} disabled={saving}>
-          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.dangerButtonText}>O'chirish</Text>}
+          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.dangerButtonText}>{tr("O'chirish")}</Text>}
         </TouchableOpacity>
       </View>
     );
@@ -96,23 +97,23 @@ export function TwoFactorSettingsScreen({}: Props) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <Text style={styles.description}>
-        Yoqilganda, hisobingizga kirishda oddiy paroldan tashqari qo'shimcha (bulutli) parol ham so'raladi.
+        {tr("Yoqilganda, hisobingizga kirishda oddiy paroldan tashqari qo'shimcha (bulutli) parol ham so'raladi.")}
       </Text>
 
-      <Text style={styles.label}>Joriy parol</Text>
+      <Text style={styles.label}>{tr("Joriy parol")}</Text>
       <TextInput style={styles.input} value={currentPassword} onChangeText={setCurrentPassword} secureTextEntry autoComplete="password" />
 
-      <Text style={styles.label}>Qo'shimcha parol</Text>
+      <Text style={styles.label}>{tr("Qo'shimcha parol")}</Text>
       <TextInput style={styles.input} value={twoFactorPassword} onChangeText={setTwoFactorPassword} secureTextEntry autoComplete="password" />
 
-      <Text style={styles.label}>Qo'shimcha parolni tasdiqlang</Text>
+      <Text style={styles.label}>{tr("Qo'shimcha parolni tasdiqlang")}</Text>
       <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry autoComplete="password" />
 
-      <Text style={styles.label}>Maslahat (ixtiyoriy)</Text>
-      <TextInput style={styles.input} value={hint} onChangeText={setHint} placeholder="Masalan, sevimli kitobim" placeholderTextColor={colors.textSecondary} />
+      <Text style={styles.label}>{tr("Maslahat (ixtiyoriy)")}</Text>
+      <TextInput style={styles.input} value={hint} onChangeText={setHint} placeholder={tr("Masalan, sevimli kitobim")} placeholderTextColor={colors.textSecondary} />
 
       <TouchableOpacity style={styles.button} onPress={onEnable} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Yoqish</Text>}
+        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Yoqish")}</Text>}
       </TouchableOpacity>
     </ScrollView>
     </KeyboardAvoidingView>

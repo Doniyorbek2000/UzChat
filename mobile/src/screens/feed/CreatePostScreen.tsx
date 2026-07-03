@@ -7,13 +7,14 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { feedApi } from "../../api/feed";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreatePost">;
 
 const VISIBILITY_OPTIONS = [
-  { key: "PUBLIC", label: "Hammaga" },
-  { key: "CONTACTS", label: "Kontaktlar" },
-  { key: "PRIVATE", label: "Faqat men" },
+  { key: "PUBLIC", label: tr("Hammaga") },
+  { key: "CONTACTS", label: tr("Kontaktlar") },
+  { key: "PRIVATE", label: tr("Faqat men") },
 ] as const;
 
 export function CreatePostScreen({ navigation }: Props) {
@@ -23,7 +24,7 @@ export function CreatePostScreen({ navigation }: Props) {
 
   const handleSubmit = async () => {
     if (!content.trim()) {
-      Alert.alert("Xatolik", "Post matni kiriting");
+      Alert.alert(tr("Xatolik"), tr("Post matni kiriting"));
       return;
     }
     setSubmitting(true);
@@ -31,7 +32,7 @@ export function CreatePostScreen({ navigation }: Props) {
       await feedApi.createPost({ content: content.trim(), visibility });
       navigation.goBack();
     } catch {
-      Alert.alert("Xatolik", "Post yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Post yaratib bo'lmadi"));
     }
     setSubmitting(false);
   };
@@ -41,7 +42,7 @@ export function CreatePostScreen({ navigation }: Props) {
       <ScrollView keyboardDismissMode="on-drag" contentContainerStyle={styles.scroll}>
         <TextInput
           style={styles.textInput}
-          placeholder="Nima haqida o'ylayapsiz?"
+          placeholder={tr("Nima haqida o'ylayapsiz?")}
           placeholderTextColor={colors.textSecondary}
           value={content}
           onChangeText={setContent}
@@ -50,7 +51,7 @@ export function CreatePostScreen({ navigation }: Props) {
           maxLength={2000}
         />
 
-        <Text style={styles.sectionTitle}>Ko'rinish</Text>
+        <Text style={styles.sectionTitle}>{tr("Ko'rinish")}</Text>
         <View style={styles.visibilityRow}>
           {VISIBILITY_OPTIONS.map((opt) => (
             <TouchableOpacity
@@ -76,7 +77,7 @@ export function CreatePostScreen({ navigation }: Props) {
         {submitting ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.submitText}>Joylash</Text>
+          <Text style={styles.submitText}>{tr("Joylash")}</Text>
         )}
       </TouchableOpacity>
     </KeyboardAvoidingView>

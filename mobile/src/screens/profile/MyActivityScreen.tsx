@@ -11,6 +11,7 @@ import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { ActivityStats } from "../../types";
 import { getConversationDisplay, formatJoinDate } from "../../utils/conversation";
+import { tr } from "../../i18n";
 
 // JS Date#getDay(): 0=Yakshanba..6=Shanba. Reordered to start the week on Monday.
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -33,7 +34,7 @@ export function MyActivityScreen({ navigation }: Props) {
   useFocusEffect(loadData);
 
   if (error) {
-    return <ErrorView message="Faollik ma'lumotlarini yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Faollik ma'lumotlarini yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   if (!stats || !user) {
@@ -52,35 +53,35 @@ export function MyActivityScreen({ navigation }: Props) {
       <View style={styles.statsSection}>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.totalSent}</Text>
-          <Text style={styles.statLabel}>📤 Yuborilgan</Text>
+          <Text style={styles.statLabel}>{tr("📤 Yuborilgan")}</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.totalReceived}</Text>
-          <Text style={styles.statLabel}>📥 Qabul qilingan</Text>
+          <Text style={styles.statLabel}>{tr("📥 Qabul qilingan")}</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.conversationCount}</Text>
-          <Text style={styles.statLabel}>💬 Suhbatlar</Text>
+          <Text style={styles.statLabel}>{tr("💬 Suhbatlar")}</Text>
         </View>
       </View>
 
       <View style={styles.statsSection}>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.media}</Text>
-          <Text style={styles.statLabel}>🖼 Media</Text>
+          <Text style={styles.statLabel}>{tr("🖼 Media")}</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.voice}</Text>
-          <Text style={styles.statLabel}>🎵 Ovozli</Text>
+          <Text style={styles.statLabel}>{tr("🎵 Ovozli")}</Text>
         </View>
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{stats.files}</Text>
-          <Text style={styles.statLabel}>📄 Fayl</Text>
+          <Text style={styles.statLabel}>{tr("📄 Fayl")}</Text>
         </View>
       </View>
 
       <View style={styles.activitySection}>
-        <Text style={styles.activityTitle}>Haftalik faollik</Text>
+        <Text style={styles.activityTitle}>{tr("Haftalik faollik")}</Text>
         <View style={styles.weekdayRow}>
           {WEEKDAY_ORDER.map((dayIndex, i) => {
             const count = stats.byWeekday[dayIndex];
@@ -99,7 +100,7 @@ export function MyActivityScreen({ navigation }: Props) {
 
       {stats.topConversations.length > 0 && (
         <View style={styles.activitySection}>
-          <Text style={styles.activityTitle}>Eng faol suhbatlar</Text>
+          <Text style={styles.activityTitle}>{tr("Eng faol suhbatlar")}</Text>
           {stats.topConversations.map((entry) => {
             const conversation = conversations.find((c) => c.id === entry.conversationId);
             if (!conversation) return null;

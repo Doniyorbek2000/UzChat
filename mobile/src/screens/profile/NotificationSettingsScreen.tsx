@@ -7,6 +7,7 @@ import { usersApi } from "../../api/users";
 import { sendTestNotification } from "../../utils/pushNotifications";
 import { formatDateTime } from "../../utils/conversation";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "NotificationSettings">;
 type UpdateMeInput = Parameters<typeof usersApi.updateMe>[0];
@@ -50,7 +51,7 @@ export function NotificationSettingsScreen({}: Props) {
       await usersApi.updateMe(data);
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -70,7 +71,7 @@ export function NotificationSettingsScreen({}: Props) {
       await refreshProfile();
       setTimePicker(null);
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -86,7 +87,7 @@ export function NotificationSettingsScreen({}: Props) {
       await usersApi.updateMe({ pauseNotificationsFor: duration });
       await refreshProfile();
     } catch {
-      Alert.alert("Xatolik", "Sozlamani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sozlamani o'zgartirib bo'lmadi"));
     } finally {
       setSaving(null);
     }
@@ -97,12 +98,12 @@ export function NotificationSettingsScreen({}: Props) {
       onPauseNotifications("off");
       return;
     }
-    Alert.alert("Bezovta qilmang", "Bildirishnomalarni qancha vaqtga o'chirmoqchisiz?", [
-      { text: "1 soat", onPress: () => onPauseNotifications("1h") },
-      { text: "8 soat", onPress: () => onPauseNotifications("8h") },
-      { text: "1 kun", onPress: () => onPauseNotifications("1d") },
-      { text: "Doimiy", onPress: () => onPauseNotifications("forever") },
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Bezovta qilmang"), tr("Bildirishnomalarni qancha vaqtga o'chirmoqchisiz?"), [
+      { text: tr("1 soat"), onPress: () => onPauseNotifications("1h") },
+      { text: tr("8 soat"), onPress: () => onPauseNotifications("8h") },
+      { text: tr("1 kun"), onPress: () => onPauseNotifications("1d") },
+      { text: tr("Doimiy"), onPress: () => onPauseNotifications("forever") },
+      { text: tr("Bekor qilish"), style: "cancel" },
     ]);
   };
 
@@ -111,9 +112,9 @@ export function NotificationSettingsScreen({}: Props) {
     setTesting(true);
     try {
       const sent = await sendTestNotification();
-      if (!sent) Alert.alert("Ruxsat kerak", "Bildirishnomalarga ruxsat berilmagan");
+      if (!sent) Alert.alert(tr("Ruxsat kerak"), tr("Bildirishnomalarga ruxsat berilmagan"));
     } catch {
-      Alert.alert("Xatolik", "Sinov bildirishnomasini yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Sinov bildirishnomasini yuborib bo'lmadi"));
     } finally {
       setTesting(false);
     }
@@ -129,7 +130,7 @@ export function NotificationSettingsScreen({}: Props) {
 
       <TouchableOpacity style={styles.row} onPress={onPausePress} disabled={saving === "pauseNotifications"}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>🔕 Bezovta qilmang</Text>
+          <Text style={styles.rowLabel}>{tr("🔕 Bezovta qilmang")}</Text>
           <Text style={styles.rowDescription}>
             {isPaused
               ? user.notificationsPaused
@@ -141,14 +142,14 @@ export function NotificationSettingsScreen({}: Props) {
         {saving === "pauseNotifications" ? (
           <ActivityIndicator color={colors.primary} />
         ) : (
-          isPaused && <Text style={styles.pausedBadge}>Yoniq</Text>
+          isPaused && <Text style={styles.pausedBadge}>{tr("Yoniq")}</Text>
         )}
       </TouchableOpacity>
 
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Shaxsiy suhbatlar</Text>
-          <Text style={styles.rowDescription}>Shaxsiy suhbatlardagi yangi xabarlar uchun bildirishnoma</Text>
+          <Text style={styles.rowLabel}>{tr("Shaxsiy suhbatlar")}</Text>
+          <Text style={styles.rowDescription}>{tr("Shaxsiy suhbatlardagi yangi xabarlar uchun bildirishnoma")}</Text>
         </View>
         {saving === "notifyPrivateChats" ? (
           <ActivityIndicator color={colors.primary} />
@@ -163,8 +164,8 @@ export function NotificationSettingsScreen({}: Props) {
 
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Guruhlar</Text>
-          <Text style={styles.rowDescription}>Guruh suhbatlaridagi yangi xabarlar uchun bildirishnoma</Text>
+          <Text style={styles.rowLabel}>{tr("Guruhlar")}</Text>
+          <Text style={styles.rowDescription}>{tr("Guruh suhbatlaridagi yangi xabarlar uchun bildirishnoma")}</Text>
         </View>
         {saving === "notifyGroupChats" ? (
           <ActivityIndicator color={colors.primary} />
@@ -179,8 +180,8 @@ export function NotificationSettingsScreen({}: Props) {
 
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Reaksiyalar</Text>
-          <Text style={styles.rowDescription}>Xabarlaringizga reaksiya qo'yilganda bildirishnoma</Text>
+          <Text style={styles.rowLabel}>{tr("Reaksiyalar")}</Text>
+          <Text style={styles.rowDescription}>{tr("Xabarlaringizga reaksiya qo'yilganda bildirishnoma")}</Text>
         </View>
         {saving === "notifyReactions" ? (
           <ActivityIndicator color={colors.primary} />
@@ -195,9 +196,9 @@ export function NotificationSettingsScreen({}: Props) {
 
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Eslatishlar (@)</Text>
+          <Text style={styles.rowLabel}>{tr("Eslatishlar (@)")}</Text>
           <Text style={styles.rowDescription}>
-            Sizni @-eslatib o'tgan xabarlar uchun bildirishnoma, ovozsiz qilingan suhbatlarda ham
+            {tr("Sizni @-eslatib o'tgan xabarlar uchun bildirishnoma, ovozsiz qilingan suhbatlarda ham")}
           </Text>
         </View>
         {saving === "notifyMentions" ? (
@@ -213,9 +214,9 @@ export function NotificationSettingsScreen({}: Props) {
 
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Matnni yashirish</Text>
+          <Text style={styles.rowLabel}>{tr("Matnni yashirish")}</Text>
           <Text style={styles.rowDescription}>
-            Bildirishnomalarda yuboruvchi ismi va xabar matni ko'rsatilmaydi
+            {tr("Bildirishnomalarda yuboruvchi ismi va xabar matni ko'rsatilmaydi")}
           </Text>
         </View>
         {saving === "hideNotificationContent" ? (
@@ -231,9 +232,9 @@ export function NotificationSettingsScreen({}: Props) {
 
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>Ovozsiz suhbatlar hisoblagichda</Text>
+          <Text style={styles.rowLabel}>{tr("Ovozsiz suhbatlar hisoblagichda")}</Text>
           <Text style={styles.rowDescription}>
-            Ovozsiz qilingan suhbatlar ilova belgisi va papka hisoblagichlariga qo'shiladi
+            {tr("Ovozsiz qilingan suhbatlar ilova belgisi va papka hisoblagichlariga qo'shiladi")}
           </Text>
         </View>
         {saving === "includeMutedInBadge" ? (
@@ -249,9 +250,9 @@ export function NotificationSettingsScreen({}: Props) {
 
       <View style={styles.row}>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel}>🌙 Sokin soatlar</Text>
+          <Text style={styles.rowLabel}>{tr("🌙 Sokin soatlar")}</Text>
           <Text style={styles.rowDescription}>
-            Belgilangan vaqt oralig'ida hech qanday bildirishnoma kelmaydi
+            {tr("Belgilangan vaqt oralig'ida hech qanday bildirishnoma kelmaydi")}
           </Text>
         </View>
         {saving === "quietHoursEnabled" ? (
@@ -269,14 +270,14 @@ export function NotificationSettingsScreen({}: Props) {
         <>
           <TouchableOpacity style={styles.row} onPress={() => setTimePicker("start")}>
             <View style={styles.rowText}>
-              <Text style={styles.rowLabel}>Boshlanish vaqti</Text>
+              <Text style={styles.rowLabel}>{tr("Boshlanish vaqti")}</Text>
             </View>
             <Text style={styles.timeValue}>{formatHour(user.quietHoursStart)}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.row} onPress={() => setTimePicker("end")}>
             <View style={styles.rowText}>
-              <Text style={styles.rowLabel}>Tugash vaqti</Text>
+              <Text style={styles.rowLabel}>{tr("Tugash vaqti")}</Text>
             </View>
             <Text style={styles.timeValue}>{formatHour(user.quietHoursEnd)}</Text>
           </TouchableOpacity>
@@ -287,7 +288,7 @@ export function NotificationSettingsScreen({}: Props) {
         {testing ? (
           <ActivityIndicator color={colors.primary} />
         ) : (
-          <Text style={styles.testButtonText}>🔔 Sinov bildirishnomasini yuborish</Text>
+          <Text style={styles.testButtonText}>{tr("🔔 Sinov bildirishnomasini yuborish")}</Text>
         )}
       </TouchableOpacity>
 

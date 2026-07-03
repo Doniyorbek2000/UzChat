@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { themesApi, SharedTheme } from "../../api/themes";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ThemeStore">;
 
@@ -46,9 +47,9 @@ export function ThemeStoreScreen({ navigation }: Props) {
   const handleInstall = async (themeId: string) => {
     try {
       await themesApi.install(themeId);
-      Alert.alert("Muvaffaqiyat", "Mavzu o'rnatildi!");
+      Alert.alert(tr("Muvaffaqiyat"), tr("Mavzu o'rnatildi!"));
     } catch {
-      Alert.alert("Xatolik", "Mavzuni o'rnatib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Mavzuni o'rnatib bo'lmadi"));
     }
   };
 
@@ -87,7 +88,7 @@ export function ThemeStoreScreen({ navigation }: Props) {
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Mavzularni qidirish..."
+          placeholder={tr("Mavzularni qidirish...")}
           returnKeyType="search"
           placeholderTextColor={colors.textSecondary}
           value={search}
@@ -121,7 +122,7 @@ export function ThemeStoreScreen({ navigation }: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Mavzularni yuklab bo'lmadi" onRetry={load} />
+        <ErrorView message={tr("Mavzularni yuklab bo'lmadi")} onRetry={load} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"

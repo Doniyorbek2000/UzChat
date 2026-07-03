@@ -6,6 +6,7 @@ import { eventsApi, ChatEvent } from "../../api/events";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ConversationEvents">;
 
@@ -52,7 +53,7 @@ export function ConversationEventsScreen({ route }: Props) {
       setLocation("");
       setShowCreate(false);
     } catch {
-      Alert.alert("Xatolik", "Tadbir yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Tadbir yaratib bo'lmadi"));
     }
     setCreating(false);
   };
@@ -63,22 +64,22 @@ export function ConversationEventsScreen({ route }: Props) {
       const updated = await eventsApi.listByConversation(conversationId);
       setEvents(updated);
     } catch {
-      Alert.alert("Xatolik", "Ishtirokni belgilab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Ishtirokni belgilab bo'lmadi"));
     }
   };
 
   const handleDelete = (eventId: string) => {
-    Alert.alert("O'chirish", "Bu tadbirni o'chirmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'chirish"), tr("Bu tadbirni o'chirmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           try {
             await eventsApi.delete(eventId);
             setEvents((prev) => prev.filter((e) => e.id !== eventId));
           } catch {
-            Alert.alert("Xatolik", "Tadbirni o'chirib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Tadbirni o'chirib bo'lmadi"));
           }
         },
       },
@@ -90,7 +91,7 @@ export function ConversationEventsScreen({ route }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Tadbirlarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Tadbirlarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -101,10 +102,10 @@ export function ConversationEventsScreen({ route }: Props) {
 
       {showCreate && (
         <View style={styles.form}>
-          <TextInput style={styles.input} placeholder="Tadbir nomi..." placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
+          <TextInput style={styles.input} placeholder={tr("Tadbir nomi...")} placeholderTextColor={colors.textSecondary} value={title} onChangeText={setTitle} />
           <TextInput style={styles.input} placeholder="Manzil (ixtiyoriy)..." placeholderTextColor={colors.textSecondary} value={location} onChangeText={setLocation} />
           <TouchableOpacity style={[styles.submitBtn, (!title.trim() || creating) && { opacity: 0.5 }]} onPress={handleCreate} disabled={!title.trim() || creating}>
-            {creating ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitBtnText}>Yaratish</Text>}
+            {creating ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitBtnText}>{tr("Yaratish")}</Text>}
           </TouchableOpacity>
         </View>
       )}
@@ -144,7 +145,7 @@ export function ConversationEventsScreen({ route }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📅</Text>
-            <Text style={styles.emptyText}>Tadbirlar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Tadbirlar yo'q")}</Text>
           </View>
         }
       />

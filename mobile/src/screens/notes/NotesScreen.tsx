@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { notesApi, Note } from "../../api/notes";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Notes">;
 
@@ -44,7 +45,7 @@ export function NotesScreen(_props: Props) {
       setContent("");
       setShowCreate(false);
     } catch {
-      Alert.alert("Xatolik", "Eslatma yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Eslatma yaratib bo'lmadi"));
     }
     setSaving(false);
   };
@@ -54,22 +55,22 @@ export function NotesScreen(_props: Props) {
       const updated = await notesApi.update(note.id, { isPinned: !note.isPinned });
       setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
     } catch {
-      Alert.alert("Xatolik", "Eslatmani o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Eslatmani o'zgartirib bo'lmadi"));
     }
   };
 
   const handleDelete = (note: Note) => {
-    Alert.alert("O'chirish", `"${note.title}" eslatmasini o'chirmoqchimisiz?`, [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("O'chirish"), `"${note.title}" eslatmasini o'chirmoqchimisiz?`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           try {
             await notesApi.delete(note.id);
             setNotes((prev) => prev.filter((n) => n.id !== note.id));
           } catch {
-            Alert.alert("Xatolik", "Eslatmani o'chirib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Eslatmani o'chirib bo'lmadi"));
           }
         },
       },
@@ -85,7 +86,7 @@ export function NotesScreen(_props: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Eslatmalarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Eslatmalarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -98,7 +99,7 @@ export function NotesScreen(_props: Props) {
         <View style={styles.form}>
           <TextInput
             style={styles.input}
-            placeholder="Sarlavha..."
+            placeholder={tr("Sarlavha...")}
             placeholderTextColor={colors.textSecondary}
             value={title}
             onChangeText={setTitle}
@@ -106,7 +107,7 @@ export function NotesScreen(_props: Props) {
           />
           <TextInput
             style={[styles.input, styles.multiline]}
-            placeholder="Matn..."
+            placeholder={tr("Matn...")}
             placeholderTextColor={colors.textSecondary}
             value={content}
             onChangeText={setContent}
@@ -128,7 +129,7 @@ export function NotesScreen(_props: Props) {
             disabled={!title.trim() || !content.trim() || saving}
             activeOpacity={0.7}
           >
-            {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitBtnText}>Saqlash</Text>}
+            {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitBtnText}>{tr("Saqlash")}</Text>}
           </TouchableOpacity>
         </View>
       )}
@@ -150,8 +151,8 @@ export function NotesScreen(_props: Props) {
             onLongPress={() => {
               Alert.alert(item.title, undefined, [
                 { text: item.isPinned ? "📌 Olib tashlash" : "📌 Qadash", onPress: () => handleTogglePin(item) },
-                { text: "🗑 O'chirish", style: "destructive", onPress: () => handleDelete(item) },
-                { text: "Bekor qilish", style: "cancel" },
+                { text: tr("🗑 O'chirish"), style: "destructive", onPress: () => handleDelete(item) },
+                { text: tr("Bekor qilish"), style: "cancel" },
               ]);
             }}
           >
@@ -166,8 +167,8 @@ export function NotesScreen(_props: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📝</Text>
-            <Text style={styles.emptyTitle}>Eslatmalar yo'q</Text>
-            <Text style={styles.emptyHint}>Fikrlaringizni yozib boring</Text>
+            <Text style={styles.emptyTitle}>{tr("Eslatmalar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Fikrlaringizni yozib boring")}</Text>
           </View>
         }
       />

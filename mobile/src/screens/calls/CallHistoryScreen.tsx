@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CallHistory">;
 
@@ -64,7 +65,7 @@ export function CallHistoryScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Qo'ng'iroqlar tarixini yuklab bo'lmadi" onRetry={() => { setLoading(true); loadHistory(); }} />;
+    return <ErrorView message={tr("Qo'ng'iroqlar tarixini yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadHistory(); }} />;
   }
 
   return (
@@ -126,7 +127,7 @@ export function CallHistoryScreen({ navigation }: Props) {
           );
         }}
         ListEmptyComponent={
-          <EmptyState icon="📞" title="Hali qo'ng'iroqlar yo'q" subtitle="Qo'ng'iroq qilish uchun kontaktni tanlang" />
+          <EmptyState icon="📞" title={tr("Hali qo'ng'iroqlar yo'q")} subtitle={tr("Qo'ng'iroq qilish uchun kontaktni tanlang")} />
         }
       />
     </View>

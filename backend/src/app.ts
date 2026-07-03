@@ -59,6 +59,7 @@ import { loyaltyRouter } from "./modules/loyalty/loyalty.controller";
 import { faqRouter } from "./modules/faq/faq.controller";
 import { notifLogRouter } from "./modules/notiflog/notiflog.controller";
 import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
+import { metricsMiddleware, metricsHandler } from "./middleware/metrics.middleware";
 import { apiRateLimiter } from "./middleware/rateLimit.middleware";
 import { requestIdMiddleware } from "./middleware/requestId.middleware";
 import { privacyHeaders, stripSensitiveFields } from "./middleware/privacy.middleware";
@@ -70,6 +71,7 @@ export function createApp() {
   app.disable("x-powered-by");
 
   app.use(requestIdMiddleware);
+  app.use(metricsMiddleware);
   app.use(privacyHeaders);
   app.use(stripSensitiveFields);
   app.use(helmet({
@@ -109,6 +111,8 @@ export function createApp() {
       app.use(morgan("dev"));
     }
   }
+
+  app.get("/metrics", metricsHandler);
 
   app.get("/health", async (_req, res) => {
     const start = Date.now();

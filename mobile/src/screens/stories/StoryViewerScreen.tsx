@@ -6,6 +6,7 @@ import { storiesApi, StoryGroup } from "../../api/stories";
 import { chatsApi } from "../../api/chats";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "StoryViewer">;
 const { width, height } = Dimensions.get("window");
@@ -51,7 +52,7 @@ export function StoryViewerScreen({ navigation, route }: Props) {
       const found = feed.find((g) => g.user.id === userId);
       setGroup(found ?? null);
     } catch {
-      Alert.alert("Xatolik", "Hikoyalarni yuklab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Hikoyalarni yuklab bo'lmadi"));
     }
     setLoading(false);
   }, [userId]);
@@ -102,7 +103,7 @@ export function StoryViewerScreen({ navigation, route }: Props) {
         if (index > 0) setIndex(index - 1);
       }
     } catch {
-      Alert.alert("Xatolik", "Hikoyani o'chirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Hikoyani o'chirib bo'lmadi"));
     }
   };
 
@@ -113,9 +114,9 @@ export function StoryViewerScreen({ navigation, route }: Props) {
   if (!group || !story) {
     return (
       <View style={styles.container}>
-        <Text style={styles.emptyText}>Hikoyalar topilmadi</Text>
+        <Text style={styles.emptyText}>{tr("Hikoyalar topilmadi")}</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
-          <Text style={styles.closeBtnText}>Yopish</Text>
+          <Text style={styles.closeBtnText}>{tr("Yopish")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -157,7 +158,7 @@ export function StoryViewerScreen({ navigation, route }: Props) {
           {isOwn ? (
             <View style={styles.footer}>
               <TouchableOpacity onPress={onDelete} style={styles.deleteBtn}>
-                <Text style={styles.deleteBtnText}>O'chirish</Text>
+                <Text style={styles.deleteBtnText}>{tr("O'chirish")}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -165,7 +166,7 @@ export function StoryViewerScreen({ navigation, route }: Props) {
               <TextInput
                 ref={inputRef}
                 style={styles.replyInput}
-                placeholder="Javob yozing..."
+                placeholder={tr("Javob yozing...")}
                 placeholderTextColor="rgba(255,255,255,0.5)"
                 value={replyText}
                 onChangeText={setReplyText}

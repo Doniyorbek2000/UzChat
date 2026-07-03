@@ -25,6 +25,7 @@ import { reelsApi, Reel, ReelComment } from "../../api/reels";
 import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = MainTabScreenProps<"Reels">;
 
@@ -41,6 +42,8 @@ export function ReelsFeedScreen({ navigation }: Props) {
   const [likedReels, setLikedReels] = useState<Set<string>>(new Set());
   const [activeReel, setActiveReel] = useState<Reel | null>(null);
   const [videoPaused, setVideoPaused] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [commentReelId, setCommentReelId] = useState<string | null>(null);
   const [comments, setComments] = useState<ReelComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -62,6 +65,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
     try {
       const data = tab === "trending" ? await reelsApi.getTrending() : await reelsApi.getFeed();
       setReels(data);
+      setHasMore(tab === "feed" && data.length >= 20);
       const liked = new Set<string>();
       data.forEach((r) => {
         if (r.likes && r.likes.length > 0) liked.add(r.id);
@@ -76,6 +80,59 @@ export function ReelsFeedScreen({ navigation }: Props) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Ranked feed pagination: the cursor is simply how many items we've loaded.
+  const loadMore = useCallback(async () => {
+    if (tab !== "feed" || loadingMore || !hasMore || loading) return;
+    setLoadingMore(true);
+    try {
+      const data = await reelsApi.getFeed(String(reels.length));
+      setHasMore(data.length >= 20);
+      setReels((prev) => {
+        const seen = new Set(prev.map((r) => r.id));
+        return [...prev, ...data.filter((r) => !seen.has(r.id))];
+      });
+      setLikedReels((prev) => {
+        const next = new Set(prev);
+        data.forEach((r) => {
+          if (r.likes && r.likes.length > 0) next.add(r.id);
+        });
+        return next;
+      });
+    } catch {}
+    setLoadingMore(false);
+  }, [tab, loadingMore, hasMore, loading, reels.length]);
+
+  // Registers a (server-side deduplicated) view once the player opens.
+  useEffect(() => {
+    if (!activeReel) return;
+    reelsApi.view(activeReel.id).catch(() => {});
+  }, [activeReel?.id]);
+
+  // Instagram-style vertical swipe between reels inside the player.
+  const touchStartY = useRef(0);
+  const activeIndex = activeReel ? reels.findIndex((r) => r.id === activeReel.id) : -1;
+  const nextReel = activeIndex >= 0 ? reels[activeIndex + 1] : undefined;
+
+  const goToReel = (direction: 1 | -1) => {
+    if (activeIndex < 0) return;
+    const target = reels[activeIndex + direction];
+    if (target) {
+      setActiveReel(target);
+      setVideoPaused(false);
+    } else if (direction === 1) {
+      loadMore();
+    }
+  };
+
+  const onPlayerTouchStart = (pageY: number) => {
+    touchStartY.current = pageY;
+  };
+  const onPlayerTouchEnd = (pageY: number) => {
+    const dy = pageY - touchStartY.current;
+    if (dy < -60) goToReel(1);
+    else if (dy > 60) goToReel(-1);
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -139,7 +196,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
       const data = await reelsApi.getComments(reelId);
       setComments(data);
     } catch {
-      Alert.alert("Xatolik", "Izohlarni yuklab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Izohlarni yuklab bo'lmadi"));
     }
     setCommentsLoading(false);
   };
@@ -155,7 +212,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
         prev.map((r) => r.id === commentReelId ? { ...r, commentCount: r.commentCount + 1 } : r)
       );
     } catch {
-      Alert.alert("Xatolik", "Izoh yozib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Izoh yozib bo'lmadi"));
     }
     setSendingComment(false);
   };
@@ -170,7 +227,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
         );
       }
     } catch {
-      Alert.alert("Xatolik", "Izohni o'chirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Izohni o'chirib bo'lmadi"));
     }
   };
 
@@ -181,8 +238,11 @@ export function ReelsFeedScreen({ navigation }: Props) {
           ? `${reel.author.displayName}: ${reel.caption}`
           : `${reel.author.displayName} ning reeli`,
       });
+      const result = await reelsApi.share(reel.id).catch(() => null);
       setReels((prev) =>
-        prev.map((r) => r.id === reel.id ? { ...r, shareCount: r.shareCount + 1 } : r)
+        prev.map((r) =>
+          r.id === reel.id ? { ...r, shareCount: result?.shareCount ?? r.shareCount + 1 } : r
+        )
       );
     } catch {}
   };
@@ -266,19 +326,19 @@ export function ReelsFeedScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Reels</Text>
+        <Text style={styles.headerTitle}>{tr("Reels")}</Text>
         <View style={styles.tabs}>
           <TouchableOpacity
             style={[styles.tab, tab === "feed" && styles.tabActive]}
             onPress={() => setTab("feed")}
           >
-            <Text style={[styles.tabText, tab === "feed" && styles.tabTextActive]}>Yangilar</Text>
+            <Text style={[styles.tabText, tab === "feed" && styles.tabTextActive]}>{tr("Siz uchun")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, tab === "trending" && styles.tabActive]}
             onPress={() => setTab("trending")}
           >
-            <Text style={[styles.tabText, tab === "trending" && styles.tabTextActive]}>Trendlar</Text>
+            <Text style={[styles.tabText, tab === "trending" && styles.tabTextActive]}>{tr("Trendlar")}</Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity
@@ -292,7 +352,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
       {loading && !refreshing ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : error ? (
-        <ErrorView message="Reellarni yuklab bo'lmadi" onRetry={load} />
+        <ErrorView message={tr("Reellarni yuklab bo'lmadi")} onRetry={load} />
       ) : (
         <FlatList
           data={reels}
@@ -306,6 +366,11 @@ export function ReelsFeedScreen({ navigation }: Props) {
           maxToRenderPerBatch={6}
           windowSize={5}
           removeClippedSubviews
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? <ActivityIndicator color={colors.primary} style={{ paddingVertical: 16 }} /> : null
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -318,13 +383,13 @@ export function ReelsFeedScreen({ navigation }: Props) {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>🎬</Text>
-              <Text style={styles.emptyTitle}>Hali reellar yo'q</Text>
-              <Text style={styles.emptyHint}>Birinchi bo'lib reel yarating!</Text>
+              <Text style={styles.emptyTitle}>{tr("Hali reellar yo'q")}</Text>
+              <Text style={styles.emptyHint}>{tr("Birinchi bo'lib reel yarating!")}</Text>
               <TouchableOpacity
                 style={styles.emptyButton}
                 onPress={() => navigation.navigate("CreateReel")}
               >
-                <Text style={styles.emptyButtonText}>Reel yaratish</Text>
+                <Text style={styles.emptyButtonText}>{tr("Reel yaratish")}</Text>
               </TouchableOpacity>
             </View>
           }
@@ -333,7 +398,11 @@ export function ReelsFeedScreen({ navigation }: Props) {
 
       <Modal visible={!!activeReel} animationType="slide" statusBarTranslucent>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
-        <SafeAreaView style={styles.playerContainer}>
+        <SafeAreaView
+          style={styles.playerContainer}
+          onTouchStart={(e) => onPlayerTouchStart(e.nativeEvent.pageY)}
+          onTouchEnd={(e) => onPlayerTouchEnd(e.nativeEvent.pageY)}
+        >
           <TouchableOpacity style={styles.closeBtn} onPress={() => { setActiveReel(null); setVideoPaused(false); }}>
             <Text style={styles.closeBtnText}>✕</Text>
           </TouchableOpacity>
@@ -388,6 +457,16 @@ export function ReelsFeedScreen({ navigation }: Props) {
                   )}
                 </View>
               </View>
+
+              {/* Warms the cache for the next reel so an up-swipe starts instantly. */}
+              {nextReel && (
+                <Video
+                  source={{ uri: nextReel.videoUrl }}
+                  style={styles.preloadVideo}
+                  shouldPlay={false}
+                  isMuted
+                />
+              )}
             </>
           )}
         </SafeAreaView>
@@ -400,7 +479,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
           <TouchableOpacity style={styles.commentDismiss} onPress={() => { setCommentReelId(null); setComments([]); setCommentText(""); }} />
           <View style={styles.commentSheet}>
             <View style={styles.commentHeader}>
-              <Text style={styles.commentHeaderTitle}>Izohlar</Text>
+              <Text style={styles.commentHeaderTitle}>{tr("Izohlar")}</Text>
               <TouchableOpacity onPress={() => { setCommentReelId(null); setComments([]); setCommentText(""); }}>
                 <Text style={styles.commentHeaderClose}>✕</Text>
               </TouchableOpacity>
@@ -416,9 +495,9 @@ export function ReelsFeedScreen({ navigation }: Props) {
                   <TouchableOpacity
                     style={styles.commentItem}
                     onLongPress={() => {
-                      Alert.alert("Izoh", undefined, [
-                        { text: "O'chirish", style: "destructive", onPress: () => deleteComment(item.id) },
-                        { text: "Bekor qilish", style: "cancel" },
+                      Alert.alert(tr("Izoh"), undefined, [
+                        { text: tr("O'chirish"), style: "destructive", onPress: () => deleteComment(item.id) },
+                        { text: tr("Bekor qilish"), style: "cancel" },
                       ]);
                     }}
                   >
@@ -434,7 +513,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
                 )}
                 contentContainerStyle={styles.commentList}
                 ListEmptyComponent={
-                  <Text style={styles.commentEmpty}>Hali izohlar yo'q</Text>
+                  <Text style={styles.commentEmpty}>{tr("Hali izohlar yo'q")}</Text>
                 }
               />
             )}
@@ -442,7 +521,7 @@ export function ReelsFeedScreen({ navigation }: Props) {
             <View style={styles.commentInputRow}>
               <TextInput
                 style={styles.commentInput}
-                placeholder="Izoh yozing..."
+                placeholder={tr("Izoh yozing...")}
                 placeholderTextColor={colors.textSecondary}
                 value={commentText}
                 onChangeText={setCommentText}
@@ -577,6 +656,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   emptyButtonText: { fontSize: 15, fontWeight: "600", color: "#fff" },
+  preloadVideo: { width: 1, height: 1, position: "absolute", opacity: 0 },
   playerContainer: { flex: 1, backgroundColor: "#000" },
   closeBtn: { position: "absolute", top: 50, left: 16, zIndex: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
   closeBtnText: { fontSize: 18, color: "#fff", fontWeight: "700" },

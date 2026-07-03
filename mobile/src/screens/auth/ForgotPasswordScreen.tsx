@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackParamList } from "../../navigation/types";
 import { authApi } from "../../api/auth";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "ForgotPassword">;
 
@@ -21,7 +22,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
       await authApi.requestPasswordReset(phone.trim());
       setStep("reset");
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Kod yuborib bo'lmadi");
     } finally {
       setLoading(false);
     }
@@ -29,25 +30,25 @@ export function ForgotPasswordScreen({ navigation }: Props) {
 
   const onReset = async () => {
     if (code.length !== 6) {
-      Alert.alert("Xatolik", "6 xonali kodni kiriting");
+      Alert.alert(tr("Xatolik"), tr("6 xonali kodni kiriting"));
       return;
     }
     if (newPassword.length < 10 || !/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
-      Alert.alert("Xatolik", "Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak");
+      Alert.alert(tr("Xatolik"), tr("Parol kamida 10 ta belgi, 1 katta harf, 1 kichik harf va 1 raqam bo'lishi kerak"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert("Xatolik", "Yangi parollar mos kelmadi");
+      Alert.alert(tr("Xatolik"), tr("Yangi parollar mos kelmadi"));
       return;
     }
     setLoading(true);
     try {
       await authApi.resetPassword(phone.trim(), code, newPassword);
-      Alert.alert("Tiklandi", "Parolingiz muvaffaqiyatli tiklandi. Endi yangi parol bilan kiring.", [
-        { text: "OK", onPress: () => navigation.navigate("Login") },
+      Alert.alert(tr("Tiklandi"), tr("Parolingiz muvaffaqiyatli tiklandi. Endi yangi parol bilan kiring."), [
+        { text: tr("OK"), onPress: () => navigation.navigate("Login") },
       ]);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Parolni tiklab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Parolni tiklab bo'lmadi");
     } finally {
       setLoading(false);
     }
@@ -58,7 +59,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView keyboardDismissMode="on-drag" contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Parolni tiklash</Text>
+          <Text style={styles.title}>{tr("Parolni tiklash")}</Text>
           <Text style={styles.subtitle}>{phone} raqamiga yuborilgan 6 xonali kodni va yangi parolni kiriting</Text>
 
           <TextInput
@@ -73,7 +74,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
           />
           <TextInput
             style={styles.input}
-            placeholder="Yangi parol"
+            placeholder={tr("Yangi parol")}
             placeholderTextColor={colors.textSecondary}
             secureTextEntry
                 autoComplete="password"
@@ -82,7 +83,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
           />
           <TextInput
             style={styles.input}
-            placeholder="Yangi parolni tasdiqlang"
+            placeholder={tr("Yangi parolni tasdiqlang")}
             placeholderTextColor={colors.textSecondary}
             secureTextEntry
                 autoComplete="password"
@@ -91,10 +92,10 @@ export function ForgotPasswordScreen({ navigation }: Props) {
           />
 
           <TouchableOpacity style={[styles.button, !canReset && styles.buttonDisabled]} onPress={onReset} disabled={!canReset}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Parolni tiklash</Text>}
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Parolni tiklash")}</Text>}
           </TouchableOpacity>
           <TouchableOpacity style={styles.linkButton} onPress={() => setStep("phone")} disabled={loading}>
-            <Text style={styles.linkButtonText}>Orqaga</Text>
+            <Text style={styles.linkButtonText}>{tr("Orqaga")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -105,8 +106,8 @@ export function ForgotPasswordScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Parolni tiklash</Text>
-        <Text style={styles.subtitle}>Telefon raqamingizni kiriting, sizga tasdiqlash kodi yuboriladi</Text>
+        <Text style={styles.title}>{tr("Parolni tiklash")}</Text>
+        <Text style={styles.subtitle}>{tr("Telefon raqamingizni kiriting, sizga tasdiqlash kodi yuboriladi")}</Text>
 
         <TextInput
           style={styles.input}
@@ -120,7 +121,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
         />
 
         <TouchableOpacity style={[styles.button, !canRequest && styles.buttonDisabled]} onPress={onRequestCode} disabled={!canRequest}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kod yuborish</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Kod yuborish")}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

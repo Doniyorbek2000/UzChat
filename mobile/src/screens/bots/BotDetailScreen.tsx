@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { botsApi, Bot } from "../../api/bots";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "BotDetail">;
 
@@ -24,22 +25,22 @@ export function BotDetailScreen({ route, navigation }: Props) {
       const updated = await botsApi.toggleActive(botId);
       setBot(updated);
     } catch {
-      Alert.alert("Xatolik", "Holatni o'zgartirib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Holatni o'zgartirib bo'lmadi"));
     }
   };
 
   const handleDelete = () => {
-    Alert.alert("Botni o'chirish", "Haqiqatan ham bu botni o'chirmoqchimisiz?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Botni o'chirish"), tr("Haqiqatan ham bu botni o'chirmoqchimisiz?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "O'chirish",
+        text: tr("O'chirish"),
         style: "destructive",
         onPress: async () => {
           try {
             await botsApi.delete(botId);
             navigation.goBack();
           } catch {
-            Alert.alert("Xatolik", "Botni o'chirib bo'lmadi");
+            Alert.alert(tr("Xatolik"), tr("Botni o'chirib bo'lmadi"));
           }
         },
       },
@@ -50,7 +51,7 @@ export function BotDetailScreen({ route, navigation }: Props) {
     return <ActivityIndicator size="large" color={colors.primary} style={{ flex: 1, justifyContent: "center" }} />;
   }
   if (error || !bot) {
-    return <ErrorView message="Bot ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); botsApi.get(botId).then((b) => { setBot(b); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Bot ma'lumotlarini yuklab bo'lmadi")} onRetry={() => { setLoading(true); botsApi.get(botId).then((b) => { setBot(b); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -65,13 +66,13 @@ export function BotDetailScreen({ route, navigation }: Props) {
         <View style={styles.statusRow}>
           <View style={[styles.statusDot, { backgroundColor: bot.isActive ? colors.online : colors.danger }]} />
           <Text style={styles.statusText}>{bot.isActive ? "Faol" : "Nofaol"}</Text>
-          {bot.isInline && <Text style={styles.inlineBadge}>Inline</Text>}
+          {bot.isInline && <Text style={styles.inlineBadge}>{tr("Inline")}</Text>}
         </View>
       </View>
 
       {bot.owner && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Yaratuvchi</Text>
+          <Text style={styles.sectionTitle}>{tr("Yaratuvchi")}</Text>
           <Text style={styles.ownerText}>{bot.owner.displayName} (@{bot.owner.username})</Text>
         </View>
       )}
@@ -79,7 +80,7 @@ export function BotDetailScreen({ route, navigation }: Props) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Buyruqlar ({bot.commands.length})</Text>
         {bot.commands.length === 0 ? (
-          <Text style={styles.emptyCmds}>Buyruqlar yo'q</Text>
+          <Text style={styles.emptyCmds}>{tr("Buyruqlar yo'q")}</Text>
         ) : (
           bot.commands.map((cmd) => (
             <View key={cmd.id} style={styles.cmdRow}>
@@ -95,7 +96,7 @@ export function BotDetailScreen({ route, navigation }: Props) {
           <Text style={styles.toggleBtnText}>{bot.isActive ? "To'xtatish" : "Faollashtirish"}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-          <Text style={styles.deleteBtnText}>Botni o'chirish</Text>
+          <Text style={styles.deleteBtnText}>{tr("Botni o'chirish")}</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

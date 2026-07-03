@@ -14,6 +14,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { adminApi, AdminUser } from "../../api/admin";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 export default function AdminUsersScreen() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -47,9 +48,9 @@ export default function AdminUsersScreen() {
       user.isAdmin ? "Admin huquqini olib tashlash" : "Admin qilish",
       `${user.displayName} ni ${user.isAdmin ? "oddiy foydalanuvchi" : "admin"} qilmoqchimisiz?`,
       [
-        { text: "Bekor", style: "cancel" },
+        { text: tr("Bekor"), style: "cancel" },
         {
-          text: "Ha",
+          text: tr("Ha"),
           style: "destructive",
           onPress: async () => {
             await adminApi.setUserAdmin(user.id, !user.isAdmin);
@@ -65,30 +66,29 @@ export default function AdminUsersScreen() {
       await adminApi.setUserVerified(user.id, false);
       load(page, search);
     } else {
-      Alert.alert("Tasdiqlash turi", "Qaysi turdagi tasdiq?", [
-        { text: "Rasmiy", onPress: async () => { await adminApi.setUserVerified(user.id, true, "official"); load(page, search); } },
-        { text: "Biznes", onPress: async () => { await adminApi.setUserVerified(user.id, true, "business"); load(page, search); } },
-        { text: "Ijodkor", onPress: async () => { await adminApi.setUserVerified(user.id, true, "creator"); load(page, search); } },
-        { text: "Bekor", style: "cancel" },
+      Alert.alert(tr("Tasdiqlash turi"), tr("Qaysi turdagi tasdiq?"), [
+        { text: tr("Rasmiy"), onPress: async () => { await adminApi.setUserVerified(user.id, true, "official"); load(page, search); } },
+        { text: tr("Biznes"), onPress: async () => { await adminApi.setUserVerified(user.id, true, "business"); load(page, search); } },
+        { text: tr("Ijodkor"), onPress: async () => { await adminApi.setUserVerified(user.id, true, "creator"); load(page, search); } },
+        { text: tr("Bekor"), style: "cancel" },
       ]);
     }
   };
 
   const deleteUser = (user: AdminUser) => {
-    Alert.alert(
-      "Foydalanuvchini o'chirish",
+    Alert.alert(tr("Foydalanuvchini o'chirish"),
       `${user.displayName} (@${user.username}) ni o'chirmoqchimisiz? Bu qaytarib bo'lmaydi!`,
       [
-        { text: "Bekor", style: "cancel" },
+        { text: tr("Bekor"), style: "cancel" },
         {
-          text: "O'chirish",
+          text: tr("O'chirish"),
           style: "destructive",
           onPress: async () => {
             try {
               await adminApi.deleteUser(user.id);
               load(page, search);
             } catch {
-              Alert.alert("Xatolik", "Foydalanuvchini o'chirishda xatolik yuz berdi");
+              Alert.alert(tr("Xatolik"), tr("Foydalanuvchini o'chirishda xatolik yuz berdi"));
             }
           },
         },
@@ -103,7 +103,7 @@ export default function AdminUsersScreen() {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={styles.userName}>{item.displayName}</Text>
             {item.isVerified && <Text style={styles.badge}> ✅</Text>}
-            {item.isAdmin && <Text style={styles.adminBadge}> ADMIN</Text>}
+            {item.isAdmin && <Text style={styles.adminBadge}> {tr("ADMIN")}</Text>}
           </View>
           <Text style={styles.userSub}>@{item.username} • {item.phone}</Text>
           <Text style={styles.userDate}>
@@ -119,7 +119,7 @@ export default function AdminUsersScreen() {
           <Text style={styles.actionText}>{item.isVerified ? "Tasdiq olish" : "Tasdiqlash"}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.danger }]} onPress={() => deleteUser(item)}>
-          <Text style={styles.actionText}>O'chirish</Text>
+          <Text style={styles.actionText}>{tr("O'chirish")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -138,14 +138,14 @@ export default function AdminUsersScreen() {
           onSubmitEditing={handleSearch}
         />
         <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
-          <Text style={styles.searchBtnText}>Qidirish</Text>
+          <Text style={styles.searchBtnText}>{tr("Qidirish")}</Text>
         </TouchableOpacity>
       </View>
 
       {loading && users.length === 0 ? (
         <ActivityIndicator size="large" style={{ marginTop: 40 }} color={colors.primary} />
       ) : error && users.length === 0 ? (
-        <ErrorView message="Foydalanuvchilarni yuklab bo'lmadi" onRetry={() => load(1, search)} />
+        <ErrorView message={tr("Foydalanuvchilarni yuklab bo'lmadi")} onRetry={() => load(1, search)} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"
@@ -157,7 +157,7 @@ export default function AdminUsersScreen() {
           ListEmptyComponent={
             !loading ? (
               <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingTop: 40 }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 15 }}>Foydalanuvchilar topilmadi</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 15 }}>{tr("Foydalanuvchilar topilmadi")}</Text>
               </View>
             ) : null
           }
@@ -165,11 +165,11 @@ export default function AdminUsersScreen() {
             totalPages > 1 ? (
               <View style={styles.pagination}>
                 <TouchableOpacity disabled={page <= 1} onPress={() => load(page - 1, search)}>
-                  <Text style={[styles.pageBtn, page <= 1 && { opacity: 0.3 }]}>‹ Oldingi</Text>
+                  <Text style={[styles.pageBtn, page <= 1 && { opacity: 0.3 }]}>{tr("‹ Oldingi")}</Text>
                 </TouchableOpacity>
                 <Text style={styles.pageInfo}>{page} / {totalPages}</Text>
                 <TouchableOpacity disabled={page >= totalPages} onPress={() => load(page + 1, search)}>
-                  <Text style={[styles.pageBtn, page >= totalPages && { opacity: 0.3 }]}>Keyingi ›</Text>
+                  <Text style={[styles.pageBtn, page >= totalPages && { opacity: 0.3 }]}>{tr("Keyingi ›")}</Text>
                 </TouchableOpacity>
               </View>
             ) : null

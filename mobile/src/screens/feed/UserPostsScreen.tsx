@@ -9,6 +9,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { feedApi, Post } from "../../api/feed";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "UserPosts">;
 
@@ -91,7 +92,7 @@ export function UserPostsScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Postlarni yuklab bo'lmadi" onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Postlarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); loadPosts().finally(() => setLoading(false)); }} />;
   }
 
   return (
@@ -138,7 +139,7 @@ export function UserPostsScreen({ route, navigation }: Props) {
       ListFooterComponent={loadingMore ? <ActivityIndicator style={{ padding: 16 }} color={colors.primary} /> : null}
       ListEmptyComponent={
         <View style={styles.center}>
-          <Text style={styles.emptyText}>Postlar yo'q</Text>
+          <Text style={styles.emptyText}>{tr("Postlar yo'q")}</Text>
         </View>
       }
     />

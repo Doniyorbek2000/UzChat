@@ -8,6 +8,7 @@ import { Contact } from "../../types";
 import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "SendPayment">;
 
@@ -45,21 +46,21 @@ export function SendPaymentScreen({ navigation }: Props) {
 
   const onSend = async () => {
     if (!selectedContact) {
-      Alert.alert("Xatolik", "Qabul qiluvchini tanlang");
+      Alert.alert(tr("Xatolik"), tr("Qabul qiluvchini tanlang"));
       return;
     }
     const parsedAmount = parseFloat(amount);
     if (!parsedAmount || parsedAmount <= 0) {
-      Alert.alert("Xatolik", "To'g'ri miqdor kiriting");
+      Alert.alert(tr("Xatolik"), tr("To'g'ri miqdor kiriting"));
       return;
     }
     setSending(true);
     try {
       await paymentsApi.send(selectedContact.user.id, parsedAmount, note.trim() || undefined);
-      Alert.alert("Muvaffaqiyat", `${parsedAmount.toLocaleString()} UZS yuborildi`);
+      Alert.alert(tr("Muvaffaqiyat"), `${parsedAmount.toLocaleString()} UZS yuborildi`);
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Pul yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Pul yuborib bo'lmadi");
     } finally {
       setSending(false);
     }
@@ -75,24 +76,24 @@ export function SendPaymentScreen({ navigation }: Props) {
             <Text style={styles.recipientUsername}>@{selectedContact.user.username}</Text>
           </View>
           <TouchableOpacity onPress={() => setSelectedContact(null)}>
-            <Text style={styles.changeBtn}>O'zgartirish</Text>
+            <Text style={styles.changeBtn}>{tr("O'zgartirish")}</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Miqdor (UZS)</Text>
+        <Text style={styles.label}>{tr("Miqdor (UZS)")}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Masalan: 50000"
+          placeholder={tr("Masalan: 50000")}
           placeholderTextColor={colors.textSecondary}
           keyboardType="numeric"
           value={amount}
           onChangeText={setAmount}
         />
 
-        <Text style={styles.label}>Izoh (ixtiyoriy)</Text>
+        <Text style={styles.label}>{tr("Izoh (ixtiyoriy)")}</Text>
         <TextInput
           style={[styles.input, styles.noteInput]}
-          placeholder="Nima uchun?"
+          placeholder={tr("Nima uchun?")}
           placeholderTextColor={colors.textSecondary}
           value={note}
           onChangeText={setNote}
@@ -101,7 +102,7 @@ export function SendPaymentScreen({ navigation }: Props) {
         />
 
         <TouchableOpacity style={styles.sendBtn} onPress={onSend} disabled={sending}>
-          {sending ? <ActivityIndicator color="#fff" /> : <Text style={styles.sendBtnText}>Yuborish</Text>}
+          {sending ? <ActivityIndicator color="#fff" /> : <Text style={styles.sendBtnText}>{tr("Yuborish")}</Text>}
         </TouchableOpacity>
       </View>
     );
@@ -109,10 +110,10 @@ export function SendPaymentScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Qabul qiluvchini tanlang</Text>
+      <Text style={styles.sectionTitle}>{tr("Qabul qiluvchini tanlang")}</Text>
       <TextInput
         style={styles.searchInput}
-        placeholder="Kontakt qidirish..."
+        placeholder={tr("Kontakt qidirish...")}
         returnKeyType="search"
         placeholderTextColor={colors.textSecondary}
         value={search}
@@ -123,7 +124,7 @@ export function SendPaymentScreen({ navigation }: Props) {
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={loadContacts} />
+        <ErrorView message={tr("Kontaktlarni yuklab bo'lmadi")} onRetry={loadContacts} />
       ) : (
         <FlatList
           keyboardShouldPersistTaps="handled"
@@ -141,7 +142,7 @@ export function SendPaymentScreen({ navigation }: Props) {
           )}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={styles.emptyText}>Kontaktlar topilmadi</Text>
+              <Text style={styles.emptyText}>{tr("Kontaktlar topilmadi")}</Text>
             </View>
           }
         />

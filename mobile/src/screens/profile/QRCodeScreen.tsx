@@ -8,6 +8,7 @@ import { useAuthStore } from "../../store/authStore";
 import { usersApi } from "../../api/users";
 import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "QRCode">;
 
@@ -40,17 +41,17 @@ export function QRCodeScreen({ navigation }: Props) {
             return;
           }
         } catch {
-          Alert.alert("Xatolik", "Foydalanuvchini qidirib bo'lmadi", [
-            { text: "OK", onPress: () => setScanned(false) },
+          Alert.alert(tr("Xatolik"), tr("Foydalanuvchini qidirib bo'lmadi"), [
+            { text: tr("OK"), onPress: () => setScanned(false) },
           ]);
           return;
         }
-        Alert.alert("Topilmadi", `@${scannedUsername} foydalanuvchi topilmadi`, [
-          { text: "OK", onPress: () => setScanned(false) },
+        Alert.alert(tr("Topilmadi"), `@${scannedUsername} foydalanuvchi topilmadi`, [
+          { text: tr("OK"), onPress: () => setScanned(false) },
         ]);
       } else {
-        Alert.alert("Noto'g'ri QR kod", "Bu QR kod UzChat profili emas", [
-          { text: "OK", onPress: () => setScanned(false) },
+        Alert.alert(tr("Noto'g'ri QR kod"), tr("Bu QR kod UzChat profili emas"), [
+          { text: tr("OK"), onPress: () => setScanned(false) },
         ]);
       }
     },
@@ -72,14 +73,14 @@ export function QRCodeScreen({ navigation }: Props) {
 
   const onCopy = async () => {
     await Clipboard.setStringAsync(profileLink);
-    Alert.alert("Nusxalandi", "Profil havolasi nusxalandi");
+    Alert.alert(tr("Nusxalandi"), tr("Profil havolasi nusxalandi"));
   };
 
   const renderScanTab = () => {
     if (!permission) {
       return (
         <View style={styles.scanContainer}>
-          <Text style={styles.scanHint}>Kamera ruxsatini tekshirmoqda...</Text>
+          <Text style={styles.scanHint}>{tr("Kamera ruxsatini tekshirmoqda...")}</Text>
         </View>
       );
     }
@@ -88,12 +89,12 @@ export function QRCodeScreen({ navigation }: Props) {
       return (
         <View style={styles.scanContainer}>
           <Text style={styles.scanIcon}>📷</Text>
-          <Text style={styles.scanTitle}>Kamera ruxsati kerak</Text>
+          <Text style={styles.scanTitle}>{tr("Kamera ruxsati kerak")}</Text>
           <Text style={styles.scanHint}>
-            QR kodni skanerlash uchun kameraga ruxsat bering
+            {tr("QR kodni skanerlash uchun kameraga ruxsat bering")}
           </Text>
           <TouchableOpacity style={styles.scanButton} onPress={requestPermission}>
-            <Text style={styles.scanButtonText}>Ruxsat berish</Text>
+            <Text style={styles.scanButtonText}>{tr("Ruxsat berish")}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -110,12 +111,12 @@ export function QRCodeScreen({ navigation }: Props) {
         <View style={styles.cameraOverlay}>
           <View style={styles.scanFrame} />
           <Text style={styles.scanInstructions}>
-            QR kodni ramka ichiga joylashtiring
+            {tr("QR kodni ramka ichiga joylashtiring")}
           </Text>
         </View>
         {scanned && (
           <TouchableOpacity style={styles.rescanBtn} onPress={() => setScanned(false)}>
-            <Text style={styles.rescanBtnText}>Qayta skanerlash</Text>
+            <Text style={styles.rescanBtnText}>{tr("Qayta skanerlash")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -126,10 +127,10 @@ export function QRCodeScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, tab === "my" && styles.tabActive]} onPress={() => setTab("my")}>
-          <Text style={[styles.tabText, tab === "my" && styles.tabTextActive]}>Mening QR kodom</Text>
+          <Text style={[styles.tabText, tab === "my" && styles.tabTextActive]}>{tr("Mening QR kodom")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, tab === "scan" && styles.tabActive]} onPress={() => setTab("scan")}>
-          <Text style={[styles.tabText, tab === "scan" && styles.tabTextActive]}>Skanerlash</Text>
+          <Text style={[styles.tabText, tab === "scan" && styles.tabTextActive]}>{tr("Skanerlash")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -143,14 +144,14 @@ export function QRCodeScreen({ navigation }: Props) {
             <Image source={{ uri: qrUrl }} style={styles.qrImage} resizeMode="contain" />
           </View>
 
-          <Text style={styles.hint}>Bu QR kodni skanerlash orqali boshqalar sizni topishi mumkin</Text>
+          <Text style={styles.hint}>{tr("Bu QR kodni skanerlash orqali boshqalar sizni topishi mumkin")}</Text>
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.actionBtn} onPress={onShare}>
-              <Text style={styles.actionBtnText}>Ulashish</Text>
+              <Text style={styles.actionBtnText}>{tr("Ulashish")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={onCopy}>
-              <Text style={styles.actionBtnText}>Nusxalash</Text>
+              <Text style={styles.actionBtnText}>{tr("Nusxalash")}</Text>
             </TouchableOpacity>
           </View>
         </View>

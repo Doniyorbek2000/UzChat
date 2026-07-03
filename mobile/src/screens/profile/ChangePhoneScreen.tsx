@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { authApi } from "../../api/auth";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ChangePhone">;
 
@@ -18,7 +19,7 @@ export function ChangePhoneScreen({ navigation }: Props) {
 
   const onRequestOtp = async () => {
     if (!/^\+[1-9]\d{7,14}$/.test(newPhone.trim())) {
-      Alert.alert("Xatolik", "Telefon raqam +998901234567 formatida bo'lishi kerak");
+      Alert.alert(tr("Xatolik"), tr("Telefon raqam +998901234567 formatida bo'lishi kerak"));
       return;
     }
     setLoading(true);
@@ -26,7 +27,7 @@ export function ChangePhoneScreen({ navigation }: Props) {
       await authApi.requestPhoneChange(newPhone.trim());
       setStep("otp");
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Kod yuborib bo'lmadi");
     } finally {
       setLoading(false);
     }
@@ -34,18 +35,18 @@ export function ChangePhoneScreen({ navigation }: Props) {
 
   const onVerifyOtp = async () => {
     if (code.length !== 6) {
-      Alert.alert("Xatolik", "6 xonali kodni kiriting");
+      Alert.alert(tr("Xatolik"), tr("6 xonali kodni kiriting"));
       return;
     }
     setLoading(true);
     try {
       await authApi.verifyPhoneChange(newPhone.trim(), code);
       await refreshProfile();
-      Alert.alert("Saqlandi", "Telefon raqam muvaffaqiyatli o'zgartirildi", [
-        { text: "OK", onPress: () => navigation.goBack() },
+      Alert.alert(tr("Saqlandi"), tr("Telefon raqam muvaffaqiyatli o'zgartirildi"), [
+        { text: tr("OK"), onPress: () => navigation.goBack() },
       ]);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Kod noto'g'ri");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Kod noto'g'ri");
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ export function ChangePhoneScreen({ navigation }: Props) {
     return (
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.label}>Tasdiqlash kodi</Text>
+          <Text style={styles.label}>{tr("Tasdiqlash kodi")}</Text>
           <Text style={styles.hint}>{newPhone.trim()} raqamiga yuborilgan 6 xonali kodni kiriting</Text>
           <TextInput
             style={[styles.input, styles.codeInput]}
@@ -69,10 +70,10 @@ export function ChangePhoneScreen({ navigation }: Props) {
             autoFocus
           />
           <TouchableOpacity style={[styles.button, !canVerify && styles.buttonDisabled]} onPress={onVerifyOtp} disabled={!canVerify}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tasdiqlash</Text>}
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Tasdiqlash")}</Text>}
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryButton} onPress={() => setStep("phone")} disabled={loading}>
-            <Text style={styles.secondaryButtonText}>Raqamni o'zgartirish</Text>
+            <Text style={styles.secondaryButtonText}>{tr("Raqamni o'zgartirish")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -83,10 +84,10 @@ export function ChangePhoneScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Joriy raqam</Text>
+        <Text style={styles.label}>{tr("Joriy raqam")}</Text>
         <Text style={styles.hint}>{user?.phone}</Text>
 
-        <Text style={styles.label}>Yangi raqam</Text>
+        <Text style={styles.label}>{tr("Yangi raqam")}</Text>
         <TextInput
           style={styles.input}
           placeholder="+998901234567"
@@ -98,7 +99,7 @@ export function ChangePhoneScreen({ navigation }: Props) {
         />
 
         <TouchableOpacity style={[styles.button, !canRequest && styles.buttonDisabled]} onPress={onRequestOtp} disabled={!canRequest}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kod yuborish</Text>}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Kod yuborish")}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>

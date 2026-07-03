@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { Contact } from "../../types";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EditBroadcastList">;
 
@@ -56,11 +57,11 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
 
   const onSave = async () => {
     if (!name.trim()) {
-      Alert.alert("Xatolik", "Ro'yxat nomini kiriting");
+      Alert.alert(tr("Xatolik"), tr("Ro'yxat nomini kiriting"));
       return;
     }
     if (selected.size < 1) {
-      Alert.alert("Xatolik", "Kamida 1 ta a'zo tanlang");
+      Alert.alert(tr("Xatolik"), tr("Kamida 1 ta a'zo tanlang"));
       return;
     }
     setSaving(true);
@@ -73,7 +74,7 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
       }
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
     } finally {
       setSaving(false);
     }
@@ -88,18 +89,18 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Kontaktlarni yuklab bo'lmadi" onRetry={loadContacts} />;
+    return <ErrorView message={tr("Kontaktlarni yuklab bo'lmadi")} onRetry={loadContacts} />;
   }
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Ro'yxat nomi" placeholderTextColor={colors.textSecondary} value={name} onChangeText={setName} />
+      <TextInput style={styles.input} placeholder={tr("Ro'yxat nomi")} placeholderTextColor={colors.textSecondary} value={name} onChangeText={setName} />
       {contacts.length > 0 && (
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Qidirish"
+            placeholder={tr("Qidirish")}
             placeholderTextColor={colors.textSecondary}
             value={search}
             onChangeText={setSearch}
@@ -138,7 +139,7 @@ export function EditBroadcastListScreen({ navigation, route }: Props) {
         }
       />
       <TouchableOpacity style={styles.button} onPress={onSave} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Saqlash</Text>}
+        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{tr("Saqlash")}</Text>}
       </TouchableOpacity>
     </View>
   );

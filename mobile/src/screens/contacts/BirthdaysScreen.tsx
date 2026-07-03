@@ -11,6 +11,7 @@ import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { UpcomingBirthday } from "../../types";
 import { formatBirthday, getBirthdayWishText } from "../../utils/birthday";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Birthdays">;
 
@@ -57,7 +58,7 @@ export function BirthdaysScreen({ navigation }: Props) {
         title: contactAliases[item.user.id] ?? item.user.displayName,
       });
     } catch {
-      Alert.alert("Xatolik", "Suhbat ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Suhbat ochib bo'lmadi"));
     } finally {
       setCongratulatingId(null);
     }
@@ -72,7 +73,7 @@ export function BirthdaysScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Tug'ilgan kunlarni yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Tug'ilgan kunlarni yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -101,7 +102,7 @@ export function BirthdaysScreen({ navigation }: Props) {
                 {congratulatingId === item.user.id ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
-                  <Text style={styles.congratsButtonText}>🎉 Tabriklash</Text>
+                  <Text style={styles.congratsButtonText}>{tr("🎉 Tabriklash")}</Text>
                 )}
               </TouchableOpacity>
             ) : (
@@ -111,7 +112,7 @@ export function BirthdaysScreen({ navigation }: Props) {
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Keyingi 30 kun ichida tug'ilgan kun yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Keyingi 30 kun ichida tug'ilgan kun yo'q")}</Text>
           </View>
         }
       />

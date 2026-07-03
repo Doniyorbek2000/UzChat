@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { colors } from "../theme/colors";
+import { tr } from "../i18n";
 
 interface Props {
   message?: string;
@@ -13,7 +14,7 @@ export function ErrorView({ message = "Xatolik yuz berdi", onRetry }: Props) {
       <Text style={styles.message}>{message}</Text>
       {onRetry && (
         <TouchableOpacity style={styles.button} onPress={onRetry}>
-          <Text style={styles.buttonText}>Qayta urinish</Text>
+          <Text style={styles.buttonText}>{tr("Qayta urinish")}</Text>
         </TouchableOpacity>
       )}
     </View>

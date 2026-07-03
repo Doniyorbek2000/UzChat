@@ -9,6 +9,7 @@ import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { GroupAuditLogEntry } from "../../types";
 import { formatTime } from "../../utils/conversation";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GroupAuditLog">;
 
@@ -33,9 +34,9 @@ const ACTION_ICONS: Record<GroupAuditLogEntry["action"], string> = {
 };
 
 const SETTINGS_FIELD_LABELS: Record<string, string> = {
-  title: "guruh nomi",
+  title: tr("guruh nomi"),
   avatarUrl: "guruh rasmi",
-  description: "guruh tavsifi",
+  description: tr("guruh tavsifi"),
   welcomeMessage: "salomlashuv xabari",
   onlyAdminsCanSend: "faqat adminlar yozishi",
   slowModeSeconds: "sekin rejim",
@@ -173,7 +174,7 @@ export function GroupAuditLogScreen({ route }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Audit logni yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Audit logni yuklab bo'lmadi")} onRetry={load} />;
   }
 
   return (
@@ -199,7 +200,7 @@ export function GroupAuditLogScreen({ route }: Props) {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Hozircha harakatlar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Hozircha harakatlar yo'q")}</Text>
           </View>
         }
       />

@@ -3,6 +3,7 @@ import { DecryptedMessage, useChatStore } from "../store/chatStore";
 import { useAuthStore } from "../store/authStore";
 import { colors } from "../theme/colors";
 import { formatPollTimeRemaining } from "../utils/pollDeadline";
+import { tr } from "../i18n";
 
 interface Props {
   message: DecryptedMessage;
@@ -109,7 +110,7 @@ export function PollBubble({ message, conversationId, onShowVotes }: Props) {
       )}
       {!isQuiz && !meta.anonymous && totalVoters > 0 && onShowVotes && (
         <TouchableOpacity onPress={onShowVotes}>
-          <Text style={styles.votesLink}>Ovozlarni ko'rish</Text>
+          <Text style={styles.votesLink}>{tr("Ovozlarni ko'rish")}</Text>
         </TouchableOpacity>
       )}
     </View>

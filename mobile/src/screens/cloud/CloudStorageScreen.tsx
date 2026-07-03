@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { cloudApi, CloudFileData, CloudFolderData, CloudUsage } from "../../api/cloud";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CloudStorage">;
 
@@ -61,14 +62,14 @@ export function CloudStorageScreen(_props: Props) {
       setNewFolderName("");
       setShowCreateFolder(false);
     } catch {
-      Alert.alert("Xatolik", "Papka yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Papka yaratib bo'lmadi"));
     }
   };
 
   const deleteFile = (file: CloudFileData) => {
-    Alert.alert("O'chirish", `"${file.name}" faylini o'chirmoqchimisiz?`, [
-      { text: "Bekor qilish", style: "cancel" },
-      { text: "O'chirish", style: "destructive", onPress: async () => {
+    Alert.alert(tr("O'chirish"), `"${file.name}" faylini o'chirmoqchimisiz?`, [
+      { text: tr("Bekor qilish"), style: "cancel" },
+      { text: tr("O'chirish"), style: "destructive", onPress: async () => {
         await cloudApi.deleteFile(file.id).catch(() => {});
         setFiles((prev) => prev.filter((f) => f.id !== file.id));
       }},
@@ -87,7 +88,7 @@ export function CloudStorageScreen(_props: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Bulut ma'lumotlarini yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Bulut ma'lumotlarini yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -110,8 +111,8 @@ export function CloudStorageScreen(_props: Props) {
 
       {showCreateFolder && (
         <View style={styles.createForm}>
-          <TextInput style={styles.input} placeholder="Papka nomi..." placeholderTextColor={colors.textSecondary} value={newFolderName} onChangeText={setNewFolderName} />
-          <TouchableOpacity style={styles.submitBtn} onPress={createFolder}><Text style={styles.submitBtnText}>Yaratish</Text></TouchableOpacity>
+          <TextInput style={styles.input} placeholder={tr("Papka nomi...")} placeholderTextColor={colors.textSecondary} value={newFolderName} onChangeText={setNewFolderName} />
+          <TouchableOpacity style={styles.submitBtn} onPress={createFolder}><Text style={styles.submitBtnText}>{tr("Yaratish")}</Text></TouchableOpacity>
         </View>
       )}
 
@@ -148,7 +149,7 @@ export function CloudStorageScreen(_props: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>☁️</Text>
-            <Text style={styles.emptyText}>Bu papka bo'sh</Text>
+            <Text style={styles.emptyText}>{tr("Bu papka bo'sh")}</Text>
           </View>
         }
       />

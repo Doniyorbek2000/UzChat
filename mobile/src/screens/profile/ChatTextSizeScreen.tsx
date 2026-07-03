@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { FONT_SCALES, FontScale, useChatSettingsStore } from "../../store/chatSettingsStore";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 const LABELS: Record<FontScale, string> = {
   0.85: "Kichik",
@@ -17,10 +18,10 @@ export function ChatTextSizeScreen() {
     <View style={styles.container}>
       <View style={styles.preview}>
         <View style={[styles.bubble, styles.bubbleOther]}>
-          <Text style={[styles.previewText, { fontSize: 16 * fontScale }]}>Salom! Qalaysiz?</Text>
+          <Text style={[styles.previewText, { fontSize: 16 * fontScale }]}>{tr("Salom! Qalaysiz?")}</Text>
         </View>
         <View style={[styles.bubble, styles.bubbleSelf]}>
-          <Text style={[styles.previewText, { fontSize: 16 * fontScale }]}>Yaxshi, rahmat 🙂</Text>
+          <Text style={[styles.previewText, { fontSize: 16 * fontScale }]}>{tr("Yaxshi, rahmat 🙂")}</Text>
         </View>
       </View>
       {FONT_SCALES.map((scale) => {

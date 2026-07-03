@@ -5,6 +5,7 @@ import { RootStackParamList } from "../../navigation/types";
 import { voiceRoomsApi, VoiceRoom } from "../../api/voiceRooms";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "VoiceRooms">;
 
@@ -78,10 +79,10 @@ export function VoiceRoomsScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, tab === "live" && styles.tabActive]} onPress={() => setTab("live")}>
-          <Text style={[styles.tabText, tab === "live" && styles.tabTextActive]}>🎙️ Jonli</Text>
+          <Text style={[styles.tabText, tab === "live" && styles.tabTextActive]}>{tr("🎙️ Jonli")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, tab === "scheduled" && styles.tabActive]} onPress={() => setTab("scheduled")}>
-          <Text style={[styles.tabText, tab === "scheduled" && styles.tabTextActive]}>📅 Rejalashtirilgan</Text>
+          <Text style={[styles.tabText, tab === "scheduled" && styles.tabTextActive]}>{tr("📅 Rejalashtirilgan")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -90,7 +91,7 @@ export function VoiceRoomsScreen({ navigation }: Props) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <ErrorView message="Ovozli xonalarni yuklab bo'lmadi" onRetry={load} />
+        <ErrorView message={tr("Ovozli xonalarni yuklab bo'lmadi")} onRetry={load} />
       ) : (
         <FlatList
           data={rooms}

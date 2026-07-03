@@ -5,6 +5,7 @@ import { MediaStream, RTCView } from "react-native-webrtc";
 import { RootStackParamList } from "../../navigation/types";
 import { Avatar } from "../../components/Avatar";
 import { getSocket } from "../../socket/socket";
+import { tr } from "../../i18n";
 import {
   addRemoteIceCandidate,
   answerIncomingCall,
@@ -61,7 +62,7 @@ export function CallScreen({ navigation, route }: Props) {
 
     if (!isIncoming) {
       startOutgoingCall(userId, "", callType, sessionCallbacks).catch(() => {
-        Alert.alert("Xatolik", "Kamera/mikrofonga ruxsat berilmadi yoki qo'ng'iroqni boshlab bo'lmadi");
+        Alert.alert(tr("Xatolik"), tr("Kamera/mikrofonga ruxsat berilmadi yoki qo'ng'iroqni boshlab bo'lmadi"));
         finishCall();
       });
     }
@@ -144,7 +145,7 @@ export function CallScreen({ navigation, route }: Props) {
     Vibration.cancel();
     const offer = incomingOfferRef.current;
     if (!offer) {
-      Alert.alert("Xatolik", "Qo'ng'iroq ma'lumotlari topilmadi");
+      Alert.alert(tr("Xatolik"), tr("Qo'ng'iroq ma'lumotlari topilmadi"));
       finishCall();
       return;
     }
@@ -154,7 +155,7 @@ export function CallScreen({ navigation, route }: Props) {
       onConnected: () => setState("connected"),
       onEnded: () => finishCall(),
     }).catch(() => {
-      Alert.alert("Xatolik", "Kamera/mikrofonga ruxsat berilmadi yoki javob berib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Kamera/mikrofonga ruxsat berilmadi yoki javob berib bo'lmadi"));
       getSocket()?.emit("call:reject", { targetUserId: userId, conversationId: "" });
       finishCall();
     });
@@ -245,24 +246,24 @@ export function CallScreen({ navigation, route }: Props) {
           <>
             <TouchableOpacity style={[styles.actionBtn, styles.answerBtn]} onPress={onAnswer}>
               <Text style={styles.actionIcon}>📞</Text>
-              <Text style={styles.actionLabelBelow}>Javob berish</Text>
+              <Text style={styles.actionLabelBelow}>{tr("Javob berish")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtn, styles.endBtn]} onPress={onReject}>
               <Text style={styles.actionIcon}>📵</Text>
-              <Text style={styles.actionLabelBelow}>Rad etish</Text>
+              <Text style={styles.actionLabelBelow}>{tr("Rad etish")}</Text>
             </TouchableOpacity>
           </>
         )}
         {state === "ringing" && !isIncoming && (
           <TouchableOpacity style={[styles.actionBtn, styles.endBtn]} onPress={onEnd}>
             <Text style={styles.actionIcon}>📵</Text>
-            <Text style={styles.actionLabelBelow}>Bekor qilish</Text>
+            <Text style={styles.actionLabelBelow}>{tr("Bekor qilish")}</Text>
           </TouchableOpacity>
         )}
         {state === "connected" && (
           <TouchableOpacity style={[styles.actionBtn, styles.endBtn]} onPress={onEnd}>
             <Text style={styles.actionIcon}>📵</Text>
-            <Text style={styles.actionLabelBelow}>Tugatish</Text>
+            <Text style={styles.actionLabelBelow}>{tr("Tugatish")}</Text>
           </TouchableOpacity>
         )}
       </View>

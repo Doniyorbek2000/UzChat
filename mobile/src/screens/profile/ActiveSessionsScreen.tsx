@@ -8,6 +8,7 @@ import { colors } from "../../theme/colors";
 import { Session } from "../../types";
 import { formatDateTime } from "../../utils/conversation";
 import { formatSessionDevice } from "../../utils/session";
+import { tr } from "../../i18n";
 
 export function ActiveSessionsScreen() {
   const logout = useAuthStore((s) => s.logout);
@@ -37,10 +38,10 @@ export function ActiveSessionsScreen() {
   };
 
   const onTerminate = (session: Session) => {
-    Alert.alert("Seansni tugatish", "Ushbu qurilmadagi seansni tugatasizmi?", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Seansni tugatish"), tr("Ushbu qurilmadagi seansni tugatasizmi?"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Tugatish",
+        text: tr("Tugatish"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -52,7 +53,7 @@ export function ActiveSessionsScreen() {
             setSessions((prev) => prev.filter((s) => s.id !== session.id));
           } catch (err: any) {
             const message = err?.response?.data?.error?.message;
-            Alert.alert("Xatolik", message ?? "Seansni tugatib bo'lmadi");
+            Alert.alert(tr("Xatolik"), message ?? "Seansni tugatib bo'lmadi");
           }
         },
       },
@@ -60,10 +61,10 @@ export function ActiveSessionsScreen() {
   };
 
   const onTerminateOthers = () => {
-    Alert.alert("Barcha boshqa seanslarni tugatish", "Joriy qurilmadan tashqari barcha seanslar tugatiladi", [
-      { text: "Bekor qilish", style: "cancel" },
+    Alert.alert(tr("Barcha boshqa seanslarni tugatish"), tr("Joriy qurilmadan tashqari barcha seanslar tugatiladi"), [
+      { text: tr("Bekor qilish"), style: "cancel" },
       {
-        text: "Tugatish",
+        text: tr("Tugatish"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -71,7 +72,7 @@ export function ActiveSessionsScreen() {
             setSessions((prev) => prev.filter((s) => s.isCurrent));
           } catch (err: any) {
             const message = err?.response?.data?.error?.message;
-            Alert.alert("Xatolik", message ?? "Seanslarni tugatib bo'lmadi");
+            Alert.alert(tr("Xatolik"), message ?? "Seanslarni tugatib bo'lmadi");
           }
         },
       },
@@ -87,7 +88,7 @@ export function ActiveSessionsScreen() {
   }
 
   if (error) {
-    return <ErrorView message="Seanslarni yuklab bo'lmadi" onRetry={() => { setLoading(true); load().finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Seanslarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); load().finally(() => setLoading(false)); }} />;
   }
 
   const otherSessionsCount = sessions.filter((s) => !s.isCurrent).length;
@@ -102,7 +103,7 @@ export function ActiveSessionsScreen() {
         ListHeaderComponent={
           otherSessionsCount > 0 ? (
             <TouchableOpacity style={styles.terminateAllRow} onPress={onTerminateOthers}>
-              <Text style={styles.terminateAllText}>Barcha boshqa seanslarni tugatish</Text>
+              <Text style={styles.terminateAllText}>{tr("Barcha boshqa seanslarni tugatish")}</Text>
             </TouchableOpacity>
           ) : null
         }
@@ -113,7 +114,7 @@ export function ActiveSessionsScreen() {
                 <Text style={styles.device}>{formatSessionDevice(item.userAgent)}</Text>
                 {item.isCurrent && (
                   <View style={styles.currentBadge}>
-                    <Text style={styles.currentBadgeText}>Joriy</Text>
+                    <Text style={styles.currentBadgeText}>{tr("Joriy")}</Text>
                   </View>
                 )}
               </View>
@@ -125,7 +126,7 @@ export function ActiveSessionsScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Faol seanslar topilmadi</Text>
+            <Text style={styles.emptyText}>{tr("Faol seanslar topilmadi")}</Text>
           </View>
         }
       />

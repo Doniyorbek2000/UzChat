@@ -14,6 +14,7 @@ import { adminApi, DashboardStats, SystemHealth } from "../../api/admin";
 import type { RootStackParamList } from "../../navigation/types";
 import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -56,7 +57,7 @@ export default function AdminDashboardScreen() {
   }
 
   if (error && !stats) {
-    return <ErrorView message="Dashboard ma'lumotlarini yuklab bo'lmadi" onRetry={load} />;
+    return <ErrorView message={tr("Dashboard ma'lumotlarini yuklab bo'lmadi")} onRetry={load} />;
   }
 
   const formatBytes = (b: number) => `${(b / 1024 / 1024).toFixed(1)} MB`;
@@ -71,43 +72,43 @@ export default function AdminDashboardScreen() {
       style={styles.container}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.primary} />}
     >
-      <Text style={styles.title}>Admin Panel</Text>
+      <Text style={styles.title}>{tr("Admin Panel")}</Text>
 
       {stats && (
         <>
-          <Text style={styles.sectionTitle}>Statistika</Text>
+          <Text style={styles.sectionTitle}>{tr("Statistika")}</Text>
           <View style={styles.grid}>
-            <StatCard label="Foydalanuvchilar" value={stats.users.total} sub={`Bugun: +${stats.users.newToday}`} color="#007AFF" />
-            <StatCard label="Suhbatlar" value={stats.conversations.total} color="#34C759" />
-            <StatCard label="Xabarlar" value={stats.messages.total} sub={`Bugun: ${stats.messages.today}`} color={colors.warning} />
-            <StatCard label="Do'konlar" value={stats.stores.total} color="#AF52DE" />
-            <StatCard label="Buyurtmalar" value={stats.orders.total} color="#FF3B30" />
-            <StatCard label="Postlar" value={stats.posts.total} color="#5856D6" />
+            <StatCard label={tr("Foydalanuvchilar")} value={stats.users.total} sub={`Bugun: +${stats.users.newToday}`} color="#007AFF" />
+            <StatCard label={tr("Suhbatlar")} value={stats.conversations.total} color="#34C759" />
+            <StatCard label={tr("Xabarlar")} value={stats.messages.total} sub={`Bugun: ${stats.messages.today}`} color={colors.warning} />
+            <StatCard label={tr("Do'konlar")} value={stats.stores.total} color="#AF52DE" />
+            <StatCard label={tr("Buyurtmalar")} value={stats.orders.total} color="#FF3B30" />
+            <StatCard label={tr("Postlar")} value={stats.posts.total} color="#5856D6" />
           </View>
         </>
       )}
 
       {health && (
         <>
-          <Text style={styles.sectionTitle}>Tizim holati</Text>
+          <Text style={styles.sectionTitle}>{tr("Tizim holati")}</Text>
           <View style={styles.healthCard}>
-            <HealthRow label="Holat" value={health.status === "ok" ? "Ishlayapti" : "Xatolik"} />
-            <HealthRow label="Ishlash vaqti" value={formatUptime(health.uptime)} />
-            <HealthRow label="Xotira (RSS)" value={formatBytes(health.memory.rss)} />
-            <HealthRow label="Heap ishlatilgan" value={formatBytes(health.memory.heapUsed)} />
-            <HealthRow label="DB kechikish" value={`${health.dbLatencyMs}ms`} />
-            <HealthRow label="Node.js" value={health.nodeVersion} />
+            <HealthRow label={tr("Holat")} value={health.status === "ok" ? "Ishlayapti" : "Xatolik"} />
+            <HealthRow label={tr("Ishlash vaqti")} value={formatUptime(health.uptime)} />
+            <HealthRow label={tr("Xotira (RSS)")} value={formatBytes(health.memory.rss)} />
+            <HealthRow label={tr("Heap ishlatilgan")} value={formatBytes(health.memory.heapUsed)} />
+            <HealthRow label={tr("DB kechikish")} value={`${health.dbLatencyMs}ms`} />
+            <HealthRow label={tr("Node.js")} value={health.nodeVersion} />
           </View>
         </>
       )}
 
-      <Text style={styles.sectionTitle}>Boshqaruv</Text>
+      <Text style={styles.sectionTitle}>{tr("Boshqaruv")}</Text>
       <TouchableOpacity
         style={styles.menuItem}
         onPress={() => nav.navigate("AdminUsers" as any)}
       >
         <Text style={styles.menuIcon}>👥</Text>
-        <Text style={styles.menuText}>Foydalanuvchilar</Text>
+        <Text style={styles.menuText}>{tr("Foydalanuvchilar")}</Text>
         <Text style={styles.menuArrow}>›</Text>
       </TouchableOpacity>
 
@@ -116,7 +117,7 @@ export default function AdminDashboardScreen() {
         onPress={() => nav.navigate("AdminReports" as any)}
       >
         <Text style={styles.menuIcon}>🚨</Text>
-        <Text style={styles.menuText}>Shikoyatlar</Text>
+        <Text style={styles.menuText}>{tr("Shikoyatlar")}</Text>
         <Text style={styles.menuArrow}>›</Text>
       </TouchableOpacity>
 

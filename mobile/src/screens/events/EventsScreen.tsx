@@ -6,6 +6,7 @@ import { eventsApi, ChatEvent } from "../../api/events";
 import { useAuthStore } from "../../store/authStore";
 import { colors } from "../../theme/colors";
 import { ErrorView } from "../../components";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Events">;
 
@@ -35,7 +36,7 @@ export function EventsScreen({ navigation }: Props) {
       const updated = await eventsApi.getUpcoming();
       setEvents(updated);
     } catch {
-      Alert.alert("Xatolik", "Ishtirokni belgilab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Ishtirokni belgilab bo'lmadi"));
     }
   };
 
@@ -104,7 +105,7 @@ export function EventsScreen({ navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Tadbirlarni yuklab bo'lmadi" onRetry={loadData} />;
+    return <ErrorView message={tr("Tadbirlarni yuklab bo'lmadi")} onRetry={loadData} />;
   }
 
   return (
@@ -118,8 +119,8 @@ export function EventsScreen({ navigation }: Props) {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📅</Text>
-            <Text style={styles.emptyTitle}>Kelgusi tadbirlar yo'q</Text>
-            <Text style={styles.emptyHint}>Guruh yoki kanaldagi tadbirlar shu yerda ko'rinadi</Text>
+            <Text style={styles.emptyTitle}>{tr("Kelgusi tadbirlar yo'q")}</Text>
+            <Text style={styles.emptyHint}>{tr("Guruh yoki kanaldagi tadbirlar shu yerda ko'rinadi")}</Text>
           </View>
         }
       />

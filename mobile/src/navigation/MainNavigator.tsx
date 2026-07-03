@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, View, StyleSheet } from "react-native";
+import * as Notifications from "expo-notifications";
 import { MainTabParamList } from "./types";
 import { ChatListScreen } from "../screens/chats/ChatListScreen";
 import { ReelsFeedScreen } from "../screens/reels/ReelsFeedScreen";
@@ -9,6 +11,7 @@ import { useChatStore } from "../store/chatStore";
 import { useAuthStore } from "../store/authStore";
 import { isConversationUnread } from "../utils/conversation";
 import { colors } from "../theme/colors";
+import { useT } from "../i18n";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -55,6 +58,13 @@ export function MainNavigator() {
     ? conversations.filter((c) => !c.isArchived && isConversationUnread(c, user.id)).length
     : 0;
 
+  // Mirror the in-app unread count on the app icon badge (like Telegram).
+  useEffect(() => {
+    Notifications.setBadgeCountAsync(unreadCount).catch(() => {});
+  }, [unreadCount]);
+
+  const t = useT();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -67,10 +77,10 @@ export function MainNavigator() {
         ),
       })}
     >
-      <Tab.Screen name="Chats" component={ChatListScreen} options={{ title: "Suhbatlar" }} />
-      <Tab.Screen name="Reels" component={ReelsFeedScreen} options={{ title: "Reels" }} />
-      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: "Kashfiyotlar" }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: "Profil" }} />
+      <Tab.Screen name="Chats" component={ChatListScreen} options={{ title: t("tabChats") }} />
+      <Tab.Screen name="Reels" component={ReelsFeedScreen} options={{ title: t("tabReels") }} />
+      <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: t("tabDiscover") }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t("tabProfile") }} />
     </Tab.Navigator>
   );
 }

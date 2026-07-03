@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { logger } from "../utils/logger";
+import { scheduleExclusiveJob } from "../utils/jobLock";
 
 const INTERVAL_MS = 60 * 60 * 1000;
 const STALE_HOURS = 24;
@@ -18,6 +19,5 @@ export function startNearbyCleanupJob() {
       logger.error("Nearby cleanup job failed", { error: String(err) });
     }
   };
-  run();
-  setInterval(run, INTERVAL_MS);
+  scheduleExclusiveJob("nearby-cleanup", INTERVAL_MS, run, { immediate: true });
 }

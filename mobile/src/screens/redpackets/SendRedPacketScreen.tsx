@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { redPacketsApi } from "../../api/redpackets";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "SendRedPacket">;
 
@@ -16,7 +17,7 @@ export function SendRedPacketScreen({ navigation }: Props) {
   const handleSend = async () => {
     const num = parseFloat(amount);
     if (isNaN(num) || num <= 0) {
-      Alert.alert("Xatolik", "To'g'ri miqdor kiriting");
+      Alert.alert(tr("Xatolik"), tr("To'g'ri miqdor kiriting"));
       return;
     }
     setSubmitting(true);
@@ -25,13 +26,12 @@ export function SendRedPacketScreen({ navigation }: Props) {
         amount: num,
         message: message.trim() || undefined,
       });
-      Alert.alert(
-        "Qizil konvert yaratildi!",
+      Alert.alert(tr("Qizil konvert yaratildi!"),
         `ID: ${packet.id.slice(0, 8)}...\nMiqdor: ${num.toLocaleString()} UZS\n\nDo'stingizga konvert ID ni yuboring!`,
-        [{ text: "OK", onPress: () => navigation.goBack() }]
+        [{ text: tr("OK"), onPress: () => navigation.goBack() }]
       );
     } catch {
-      Alert.alert("Xatolik", "Konvert yaratib bo'lmadi. Balansni tekshiring.");
+      Alert.alert(tr("Xatolik"), tr("Konvert yaratib bo'lmadi. Balansni tekshiring."));
     }
     setSubmitting(false);
   };
@@ -42,11 +42,11 @@ export function SendRedPacketScreen({ navigation }: Props) {
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.envelope}>
         <Text style={styles.envelopeIcon}>🧧</Text>
-        <Text style={styles.envelopeTitle}>Qizil Konvert</Text>
-        <Text style={styles.envelopeSubtitle}>Pul sovg'a qiling</Text>
+        <Text style={styles.envelopeTitle}>{tr("Qizil Konvert")}</Text>
+        <Text style={styles.envelopeSubtitle}>{tr("Pul sovg'a qiling")}</Text>
       </View>
 
-      <Text style={styles.label}>Miqdor (UZS)</Text>
+      <Text style={styles.label}>{tr("Miqdor (UZS)")}</Text>
       <TextInput
         style={styles.input}
         value={amount}
@@ -56,12 +56,12 @@ export function SendRedPacketScreen({ navigation }: Props) {
         keyboardType="numeric"
       />
 
-      <Text style={styles.label}>Xabar (ixtiyoriy)</Text>
+      <Text style={styles.label}>{tr("Xabar (ixtiyoriy)")}</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
         value={message}
         onChangeText={setMessage}
-        placeholder="Bayram muborak!"
+        placeholder={tr("Bayram muborak!")}
         placeholderTextColor={colors.textSecondary}
         multiline
         maxLength={200}
@@ -75,7 +75,7 @@ export function SendRedPacketScreen({ navigation }: Props) {
         {submitting ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.sendBtnText}>Konvert yuborish</Text>
+          <Text style={styles.sendBtnText}>{tr("Konvert yuborish")}</Text>
         )}
       </TouchableOpacity>
     </ScrollView>

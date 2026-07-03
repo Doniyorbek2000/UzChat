@@ -8,6 +8,7 @@ import { Avatar } from "../../components/Avatar";
 import { colors } from "../../theme/colors";
 import { Conversation } from "../../types";
 import { getConversationDisplay } from "../../utils/conversation";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EditChatFolder">;
 
@@ -47,7 +48,7 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
       await setFolderFilters(folderId, { includeUnread, includeGroups, includeDirect, excludeMuted });
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Saqlab bo'lmadi");
     } finally {
       setSaving(false);
     }
@@ -60,7 +61,7 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
           <ActivityIndicator color={colors.primary} />
         ) : (
           <TouchableOpacity onPress={onSave} hitSlop={8}>
-            <Text style={styles.saveButton}>Saqlash</Text>
+            <Text style={styles.saveButton}>{tr("Saqlash")}</Text>
           </TouchableOpacity>
         ),
     });
@@ -92,29 +93,29 @@ export function EditChatFolderScreen({ route, navigation }: Props) {
         ItemSeparatorComponent={Separator}
         ListHeaderComponent={
           <View style={styles.filtersSection}>
-            <Text style={styles.filtersTitle}>Avtomatik qo'shish</Text>
+            <Text style={styles.filtersTitle}>{tr("Avtomatik qo'shish")}</Text>
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>O'qilmagan suhbatlar</Text>
+              <Text style={styles.filterLabel}>{tr("O'qilmagan suhbatlar")}</Text>
               <Switch value={includeUnread} onValueChange={setIncludeUnread} trackColor={{ true: colors.primary }} />
             </View>
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Guruhlar</Text>
+              <Text style={styles.filterLabel}>{tr("Guruhlar")}</Text>
               <Switch value={includeGroups} onValueChange={setIncludeGroups} trackColor={{ true: colors.primary }} />
             </View>
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Shaxsiy suhbatlar</Text>
+              <Text style={styles.filterLabel}>{tr("Shaxsiy suhbatlar")}</Text>
               <Switch value={includeDirect} onValueChange={setIncludeDirect} trackColor={{ true: colors.primary }} />
             </View>
             <View style={styles.filterRow}>
-              <Text style={styles.filterLabel}>Ovozsizlarni chiqarib tashlash</Text>
+              <Text style={styles.filterLabel}>{tr("Ovozsizlarni chiqarib tashlash")}</Text>
               <Switch value={excludeMuted} onValueChange={setExcludeMuted} trackColor={{ true: colors.primary }} />
             </View>
-            <Text style={[styles.filtersTitle, styles.chatsTitle]}>Suhbatlar</Text>
+            <Text style={[styles.filtersTitle, styles.chatsTitle]}>{tr("Suhbatlar")}</Text>
           </View>
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Suhbatlar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Suhbatlar yo'q")}</Text>
           </View>
         }
       />

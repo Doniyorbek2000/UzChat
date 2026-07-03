@@ -10,6 +10,7 @@ import { ErrorView } from "../../components";
 import { colors } from "../../theme/colors";
 import { BannedGroupMember, User } from "../../types";
 import { formatJoinDate } from "../../utils/conversation";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "BannedUsers">;
 
@@ -67,14 +68,14 @@ export function BannedUsersScreen({ route }: Props) {
     try {
       await chatsApi.unbanUser(conversationId, userId);
     } catch {
-      Alert.alert("Xatolik", "Blokdan chiqarib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Blokdan chiqarib bo'lmadi"));
       load();
     }
   };
 
   const onBan = async (target: User) => {
     if (bans.some((b) => b.user.id === target.id)) {
-      Alert.alert("Xatolik", "Foydalanuvchi allaqachon bloklangan");
+      Alert.alert(tr("Xatolik"), tr("Foydalanuvchi allaqachon bloklangan"));
       return;
     }
     setBanningId(target.id);
@@ -84,7 +85,7 @@ export function BannedUsersScreen({ route }: Props) {
       setQuery("");
       setResults([]);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Bloklab bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Bloklab bo'lmadi");
     } finally {
       setBanningId(null);
     }
@@ -99,7 +100,7 @@ export function BannedUsersScreen({ route }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Bloklangan foydalanuvchilarni yuklab bo'lmadi" onRetry={() => { setLoading(true); load(); }} />;
+    return <ErrorView message={tr("Bloklangan foydalanuvchilarni yuklab bo'lmadi")} onRetry={() => { setLoading(true); load(); }} />;
   }
 
   return (
@@ -109,10 +110,10 @@ export function BannedUsersScreen({ route }: Props) {
         qo'shilmaydi.
       </Text>
       <View style={styles.searchSection}>
-        <Text style={styles.searchLabel}>Foydalanuvchini bloklash</Text>
+        <Text style={styles.searchLabel}>{tr("Foydalanuvchini bloklash")}</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="Username bo'yicha qidirish"
+          placeholder={tr("Username bo'yicha qidirish")}
           returnKeyType="search"
           placeholderTextColor={colors.textSecondary}
           value={query}
@@ -132,13 +133,13 @@ export function BannedUsersScreen({ route }: Props) {
               {banningId === item.id ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.banButtonText}>Bloklash</Text>
+                <Text style={styles.banButtonText}>{tr("Bloklash")}</Text>
               )}
             </TouchableOpacity>
           </View>
         ))}
         {!searching && query.trim().length >= 2 && results.length === 0 && (
-          <Text style={styles.searchEmptyText}>Hech narsa topilmadi</Text>
+          <Text style={styles.searchEmptyText}>{tr("Hech narsa topilmadi")}</Text>
         )}
       </View>
       <FlatList
@@ -154,13 +155,13 @@ export function BannedUsersScreen({ route }: Props) {
               <Text style={styles.date}>Bloklangan: {formatJoinDate(item.createdAt)}</Text>
             </View>
             <TouchableOpacity style={styles.unbanButton} onPress={() => onUnban(item.user.id)}>
-              <Text style={styles.unbanText}>Blokdan chiqarish</Text>
+              <Text style={styles.unbanText}>{tr("Blokdan chiqarish")}</Text>
             </TouchableOpacity>
           </View>
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>Bloklangan foydalanuvchilar yo'q</Text>
+            <Text style={styles.emptyText}>{tr("Bloklangan foydalanuvchilar yo'q")}</Text>
           </View>
         }
       />

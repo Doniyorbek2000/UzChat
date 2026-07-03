@@ -6,16 +6,17 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { marketplaceApi } from "../../api/marketplace";
 import { colors } from "../../theme/colors";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CreateStore">;
 
 const CATEGORIES = [
-  { key: "electronics", label: "Elektronika" },
-  { key: "clothing", label: "Kiyimlar" },
-  { key: "food", label: "Oziq-ovqat" },
-  { key: "home", label: "Uy-joy" },
-  { key: "beauty", label: "Go'zallik" },
-  { key: "general", label: "Boshqa" },
+  { key: "electronics", label: tr("Elektronika") },
+  { key: "clothing", label: tr("Kiyimlar") },
+  { key: "food", label: tr("Oziq-ovqat") },
+  { key: "home", label: tr("Uy-joy") },
+  { key: "beauty", label: tr("Go'zallik") },
+  { key: "general", label: tr("Boshqa") },
 ];
 
 export function CreateStoreScreen({ navigation }: Props) {
@@ -26,7 +27,7 @@ export function CreateStoreScreen({ navigation }: Props) {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert("Xatolik", "Do'kon nomini kiriting");
+      Alert.alert(tr("Xatolik"), tr("Do'kon nomini kiriting"));
       return;
     }
     setSubmitting(true);
@@ -38,7 +39,7 @@ export function CreateStoreScreen({ navigation }: Props) {
       });
       navigation.goBack();
     } catch {
-      Alert.alert("Xatolik", "Do'kon yaratib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Do'kon yaratib bo'lmadi"));
     }
     setSubmitting(false);
   };
@@ -47,13 +48,13 @@ export function CreateStoreScreen({ navigation }: Props) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={90}>
 
     <ScrollView keyboardDismissMode="on-drag" style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>Do'kon nomi *</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Do'kon nomini kiriting" placeholderTextColor={colors.textSecondary} maxLength={100} />
+      <Text style={styles.label}>{tr("Do'kon nomi *")}</Text>
+      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder={tr("Do'kon nomini kiriting")} placeholderTextColor={colors.textSecondary} maxLength={100} />
 
-      <Text style={styles.label}>Tavsif</Text>
-      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder="Do'kon haqida" placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
+      <Text style={styles.label}>{tr("Tavsif")}</Text>
+      <TextInput style={[styles.input, styles.textArea]} value={description} onChangeText={setDescription} placeholder={tr("Do'kon haqida")} placeholderTextColor={colors.textSecondary} multiline maxLength={500} />
 
-      <Text style={styles.label}>Kategoriya</Text>
+      <Text style={styles.label}>{tr("Kategoriya")}</Text>
       <View style={styles.categoryRow}>
         {CATEGORIES.map((c) => (
           <TouchableOpacity
@@ -71,7 +72,7 @@ export function CreateStoreScreen({ navigation }: Props) {
         onPress={handleSubmit}
         disabled={!name.trim() || submitting}
       >
-        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Do'kon yaratish</Text>}
+        {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>{tr("Do'kon yaratish")}</Text>}
       </TouchableOpacity>
     </ScrollView>
 

@@ -4,6 +4,8 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { usersApi } from "../../api/users";
 import { contactsApi } from "../../api/contacts";
+import { reelsApi, Reel } from "../../api/reels";
+import { Video, ResizeMode } from "expo-av";
 import { reportsApi } from "../../api/reports";
 import { REPORT_REASONS } from "../../utils/reportReasons";
 import { useChatStore } from "../../store/chatStore";
@@ -15,6 +17,7 @@ import { colors } from "../../theme/colors";
 import { Contact, User } from "../../types";
 import { formatTime } from "../../utils/conversation";
 import { formatBirthday, isBirthdayToday } from "../../utils/birthday";
+import { tr } from "../../i18n";
 
 type Props = NativeStackScreenProps<RootStackParamList, "UserProfile">;
 
@@ -33,6 +36,8 @@ export function UserProfileScreen({ route, navigation }: Props) {
   const [savingNote, setSavingNote] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
+  const [reels, setReels] = useState<Reel[]>([]);
+  const [activeReel, setActiveReel] = useState<Reel | null>(null);
   const currentUser = useAuthStore((s) => s.user);
   const onlineUsers = useChatStore((s) => s.onlineUsers);
   const contactAliases = useChatStore((s) => s.contactAliases);
@@ -58,6 +63,16 @@ export function UserProfileScreen({ route, navigation }: Props) {
       .catch(() => {});
   }, [userId]);
 
+  // Instagram-style profile: the user's public reels, if any.
+  useEffect(() => {
+    reelsApi.getByUser(userId).then(setReels).catch(() => {});
+  }, [userId]);
+
+  // Views are deduplicated server-side per viewer.
+  useEffect(() => {
+    if (activeReel) reelsApi.view(activeReel.id).catch(() => {});
+  }, [activeReel?.id]);
+
   useEffect(() => {
     if (profile) navigation.setOptions({ title: contactAliases[profile.id] ?? profile.displayName });
   }, [profile, contactAliases, navigation]);
@@ -72,7 +87,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         title: contactAliases[profile.id] ?? profile.displayName,
       });
     } catch {
-      Alert.alert("Xatolik", "Suhbat ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Suhbat ochib bo'lmadi"));
     } finally {
       setOpening(false);
     }
@@ -88,7 +103,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         title: `🔒 ${contactAliases[profile.id] ?? profile.displayName}`,
       });
     } catch {
-      Alert.alert("Xatolik", "Maxfiy suhbat ochib bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Maxfiy suhbat ochib bo'lmadi"));
     } finally {
       setOpening(false);
     }
@@ -113,7 +128,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
       setContact((prev) => (prev ? { ...prev, note: updated.note } : prev));
       setNoteModalOpen(false);
     } catch {
-      Alert.alert("Xatolik", "Eslatmani saqlab bo'lmadi");
+      Alert.alert(tr("Xatolik"), tr("Eslatmani saqlab bo'lmadi"));
     } finally {
       setSavingNote(false);
     }
@@ -131,7 +146,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         setNotifyOnlineRequested(true);
       }
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "Amalni bajarib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "Amalni bajarib bo'lmadi");
     } finally {
       setNotifyLoading(false);
     }
@@ -139,17 +154,17 @@ export function UserProfileScreen({ route, navigation }: Props) {
 
   const onReport = () => {
     if (!profile) return;
-    Alert.alert("Shikoyat sababi", "Nima uchun shikoyat qilmoqchisiz?", [
+    Alert.alert(tr("Shikoyat sababi"), tr("Nima uchun shikoyat qilmoqchisiz?"), [
       ...REPORT_REASONS.map((option) => ({
         text: option.label,
         onPress: () => {
           reportsApi
             .create({ reportedUserId: profile.id, reason: option.value })
-            .then(() => Alert.alert("Yuborildi", "Shikoyatingiz qabul qilindi"))
-            .catch(() => Alert.alert("Xatolik", "Shikoyatni yuborib bo'lmadi"));
+            .then(() => Alert.alert(tr("Yuborildi"), tr("Shikoyatingiz qabul qilindi")))
+            .catch(() => Alert.alert(tr("Xatolik"), tr("Shikoyatni yuborib bo'lmadi")));
         },
       })),
-      { text: "Bekor qilish", style: "cancel" as const },
+      { text: tr("Bekor qilish"), style: "cancel" as const },
     ]);
   };
 
@@ -160,7 +175,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
       await contactsApi.sendRequest(profile.username);
       setRequestSent(true);
     } catch (err: any) {
-      Alert.alert("Xatolik", err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
+      Alert.alert(tr("Xatolik"), err?.response?.data?.error?.message ?? "So'rov yuborib bo'lmadi");
     } finally {
       setSendingRequest(false);
     }
@@ -175,13 +190,13 @@ export function UserProfileScreen({ route, navigation }: Props) {
   }
 
   if (error) {
-    return <ErrorView message="Profil ma'lumotlarini yuklab bo'lmadi" onRetry={() => { setLoading(true); setError(false); usersApi.getById(userId).then((p) => { setProfile(p); setNotifyOnlineRequested(!!p.notifyOnlineRequested); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
+    return <ErrorView message={tr("Profil ma'lumotlarini yuklab bo'lmadi")} onRetry={() => { setLoading(true); setError(false); usersApi.getById(userId).then((p) => { setProfile(p); setNotifyOnlineRequested(!!p.notifyOnlineRequested); setError(false); }).catch(() => setError(true)).finally(() => setLoading(false)); }} />;
   }
 
   if (!profile) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>Foydalanuvchi topilmadi</Text>
+        <Text style={styles.emptyText}>{tr("Foydalanuvchi topilmadi")}</Text>
       </View>
     );
   }
@@ -214,14 +229,14 @@ export function UserProfileScreen({ route, navigation }: Props) {
 
       {!!profile.bio && (
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Bio</Text>
+          <Text style={styles.sectionLabel}>{tr("Bio")}</Text>
           <Linkify text={profile.bio} style={styles.bio} />
         </View>
       )}
 
       {!!formatBirthday(profile.birthdayDay, profile.birthdayMonth) && (
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Tug'ilgan kun</Text>
+          <Text style={styles.sectionLabel}>{tr("Tug'ilgan kun")}</Text>
           <Text style={styles.bio}>
             🎂 {formatBirthday(profile.birthdayDay, profile.birthdayMonth)}
             {isBirthdayToday(profile.birthdayDay, profile.birthdayMonth) && "  🎉 Bugun tug'ilgan kuni!"}
@@ -231,36 +246,56 @@ export function UserProfileScreen({ route, navigation }: Props) {
 
       {!!contact && (
         <TouchableOpacity style={styles.section} onPress={onOpenNoteModal}>
-          <Text style={styles.sectionLabel}>Shaxsiy eslatma</Text>
+          <Text style={styles.sectionLabel}>{tr("Shaxsiy eslatma")}</Text>
           {contact.note ? (
             <Text style={styles.bio}>{contact.note}</Text>
           ) : (
-            <Text style={styles.notePlaceholder}>Eslatma qo'shish...</Text>
+            <Text style={styles.notePlaceholder}>{tr("Eslatma qo'shish...")}</Text>
           )}
         </TouchableOpacity>
       )}
 
       <View style={styles.actions}>
+        {reels.length > 0 && (
+          <View style={styles.reelsSection}>
+            <Text style={styles.reelsTitle}>🎬 Reels ({reels.length})</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.reelsRow}>
+              {reels.map((reel) => (
+                <TouchableOpacity key={reel.id} style={styles.reelThumbWrap} onPress={() => setActiveReel(reel)} activeOpacity={0.85}>
+                  {reel.thumbnailUrl ? (
+                    <Image source={{ uri: reel.thumbnailUrl }} style={styles.reelThumb} />
+                  ) : (
+                    <View style={[styles.reelThumb, styles.reelThumbPlaceholder]}>
+                      <Text style={styles.reelThumbPlay}>▶</Text>
+                    </View>
+                  )}
+                  <Text style={styles.reelThumbViews}>▶ {reel.viewCount}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         <TouchableOpacity style={styles.actionRow} onPress={onMessage} disabled={opening}>
           <Text style={styles.actionIcon}>💬</Text>
-          <Text style={styles.actionText}>Xabar yozish</Text>
+          <Text style={styles.actionText}>{tr("Xabar yozish")}</Text>
           {opening && <ActivityIndicator color={colors.primary} size="small" />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={onSecretChat} disabled={opening}>
           <Text style={styles.actionIcon}>🔒</Text>
-          <Text style={styles.actionText}>Maxfiy suhbat</Text>
+          <Text style={styles.actionText}>{tr("Maxfiy suhbat")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("UserPosts", { userId: profile.id })}>
           <Text style={styles.actionIcon}>📰</Text>
-          <Text style={styles.actionText}>Postlari</Text>
+          <Text style={styles.actionText}>{tr("Postlari")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("CommonGroups", { userId: profile.id })}>
           <Text style={styles.actionIcon}>👥</Text>
-          <Text style={styles.actionText}>Umumiy guruhlar</Text>
+          <Text style={styles.actionText}>{tr("Umumiy guruhlar")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate("MutualContacts", { userId: profile.id })}>
           <Text style={styles.actionIcon}>🤝</Text>
-          <Text style={styles.actionText}>Umumiy kontaktlar</Text>
+          <Text style={styles.actionText}>{tr("Umumiy kontaktlar")}</Text>
         </TouchableOpacity>
         {!contact && profile.id !== currentUser?.id && (
           <TouchableOpacity style={styles.actionRow} onPress={onAddContact} disabled={sendingRequest || requestSent}>
@@ -280,7 +315,7 @@ export function UserProfileScreen({ route, navigation }: Props) {
         )}
         <TouchableOpacity style={styles.actionRow} onPress={onShare}>
           <Text style={styles.actionIcon}>📤</Text>
-          <Text style={styles.actionText}>Profilni ulashish</Text>
+          <Text style={styles.actionText}>{tr("Profilni ulashish")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionRow}
@@ -292,12 +327,12 @@ export function UserProfileScreen({ route, navigation }: Props) {
           }
         >
           <Text style={styles.actionIcon}>🔐</Text>
-          <Text style={styles.actionText}>Shifrlash kaliti</Text>
+          <Text style={styles.actionText}>{tr("Shifrlash kaliti")}</Text>
         </TouchableOpacity>
         {profile.id !== currentUser?.id && (
           <TouchableOpacity style={styles.actionRow} onPress={onReport}>
             <Text style={styles.actionIcon}>🚩</Text>
-            <Text style={[styles.actionText, styles.dangerText]}>Foydalanuvchini shikoyat qilish</Text>
+            <Text style={[styles.actionText, styles.dangerText]}>{tr("Foydalanuvchini shikoyat qilish")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -307,17 +342,36 @@ export function UserProfileScreen({ route, navigation }: Props) {
         </Pressable>
       </Modal>
 
+      <Modal visible={!!activeReel} animationType="fade" onRequestClose={() => setActiveReel(null)}>
+        <View style={styles.reelViewer}>
+          <TouchableOpacity style={styles.reelViewerClose} onPress={() => setActiveReel(null)} hitSlop={12}>
+            <Text style={styles.reelViewerCloseText}>✕</Text>
+          </TouchableOpacity>
+          {activeReel && (
+            <Video
+              source={{ uri: activeReel.videoUrl }}
+              style={styles.reelViewerVideo}
+              resizeMode={ResizeMode.CONTAIN}
+              shouldPlay
+              isLooping
+              useNativeControls={false}
+            />
+          )}
+          {activeReel?.caption ? <Text style={styles.reelViewerCaption}>{activeReel.caption}</Text> : null}
+        </View>
+      </Modal>
+
       <Modal visible={noteModalOpen} transparent animationType="fade" onRequestClose={() => setNoteModalOpen(false)}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <Pressable style={styles.modalBackdrop} onPress={() => setNoteModalOpen(false)}>
             <Pressable style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Shaxsiy eslatma</Text>
+              <Text style={styles.modalTitle}>{tr("Shaxsiy eslatma")}</Text>
               <Text style={styles.modalSubtitle}>{contactAliases[profile.id] ?? profile.displayName}</Text>
               <TextInput
                 style={[styles.modalInput, styles.modalNoteInput]}
                 value={noteInput}
                 onChangeText={setNoteInput}
-                placeholder="Faqat sizga ko'rinadigan eslatma..."
+                placeholder={tr("Faqat sizga ko'rinadigan eslatma...")}
                 placeholderTextColor={colors.textSecondary}
                 autoFocus
                 multiline
@@ -325,10 +379,10 @@ export function UserProfileScreen({ route, navigation }: Props) {
               />
               <View style={styles.modalActions}>
                 <TouchableOpacity style={styles.modalCancelButton} onPress={() => setNoteModalOpen(false)}>
-                  <Text style={styles.modalCancelText}>Bekor qilish</Text>
+                  <Text style={styles.modalCancelText}>{tr("Bekor qilish")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalSaveButton} onPress={onSaveNote} disabled={savingNote}>
-                  {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>Saqlash</Text>}
+                  {savingNote ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalSaveText}>{tr("Saqlash")}</Text>}
                 </TouchableOpacity>
               </View>
             </Pressable>
@@ -372,6 +426,19 @@ const styles = StyleSheet.create({
   actionIcon: { fontSize: 18 },
   actionText: { fontSize: 15, color: colors.text, flex: 1 },
   dangerText: { color: colors.danger },
+  reelsSection: { marginTop: 12 },
+  reelsTitle: { fontSize: 14, fontWeight: "700", color: colors.text, paddingHorizontal: 16, marginBottom: 8 },
+  reelsRow: { gap: 8, paddingHorizontal: 16 },
+  reelThumbWrap: { width: 92 },
+  reelThumb: { width: 92, height: 140, borderRadius: 10, backgroundColor: colors.border },
+  reelThumbPlaceholder: { alignItems: "center", justifyContent: "center" },
+  reelThumbPlay: { fontSize: 24, color: colors.textSecondary },
+  reelThumbViews: { position: "absolute", bottom: 6, left: 6, color: "#fff", fontSize: 11, fontWeight: "600", textShadowColor: "rgba(0,0,0,0.6)", textShadowRadius: 3 },
+  reelViewer: { flex: 1, backgroundColor: "#000", justifyContent: "center" },
+  reelViewerVideo: { width: "100%", height: "100%" },
+  reelViewerClose: { position: "absolute", top: 48, right: 20, zIndex: 10 },
+  reelViewerCloseText: { color: "#fff", fontSize: 22, fontWeight: "600" },
+  reelViewerCaption: { position: "absolute", bottom: 40, left: 16, right: 16, color: "#fff", fontSize: 14, textShadowColor: "rgba(0,0,0,0.7)", textShadowRadius: 4 },
   viewerOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.9)",

@@ -4,6 +4,7 @@ import { downloadAndDecryptFile, extensionFromName, getCachedFileUri } from "../
 import { DecryptedMessage } from "../store/chatStore";
 import { useChatSettingsStore } from "../store/chatSettingsStore";
 import { colors } from "../theme/colors";
+import { tr } from "../i18n";
 
 const MAX_WIDTH = 220;
 const MAX_HEIGHT = 280;
@@ -73,8 +74,8 @@ export function MediaImageBubble({ message, conversationKey, onOpenViewer }: Pro
   if (error) {
     return (
       <Pressable style={[styles.box, { width, height }]} onPress={() => { setError(false); download(); }}>
-        <Text style={styles.errorText}>⚠️ Yuklab bo'lmadi</Text>
-        <Text style={styles.downloadText}>Qayta urinish uchun bosing</Text>
+        <Text style={styles.errorText}>{tr("⚠️ Yuklab bo'lmadi")}</Text>
+        <Text style={styles.downloadText}>{tr("Qayta urinish uchun bosing")}</Text>
       </Pressable>
     );
   }
@@ -83,7 +84,7 @@ export function MediaImageBubble({ message, conversationKey, onOpenViewer }: Pro
     return (
       <Pressable style={[styles.box, { width, height }]} onPress={download}>
         <Text style={styles.downloadIcon}>⬇️</Text>
-        <Text style={styles.downloadText}>Yuklab olish</Text>
+        <Text style={styles.downloadText}>{tr("Yuklab olish")}</Text>
       </Pressable>
     );
   }
@@ -110,7 +111,7 @@ export function MediaImageBubble({ message, conversationKey, onOpenViewer }: Pro
         {!revealed && (
           <View style={styles.spoilerOverlay}>
             <Text style={styles.spoilerIcon}>👁</Text>
-            <Text style={styles.spoilerText}>Ko'rsatish uchun bosing</Text>
+            <Text style={styles.spoilerText}>{tr("Ko'rsatish uchun bosing")}</Text>
           </View>
         )}
       </Pressable>
