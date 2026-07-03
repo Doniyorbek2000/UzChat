@@ -4,6 +4,7 @@ import multer from "multer";
 import { AppError } from "../utils/errors";
 import { logger } from "../utils/logger";
 import { isProduction } from "../config/env";
+import { errorTracking } from "../services/errorTracking.service";
 
 export function notFoundHandler(_req: Request, res: Response) {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "Endpoint topilmadi" } });
@@ -45,6 +46,14 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     url: req.originalUrl,
     error: err instanceof Error ? err.message : String(err),
     ...(isProduction ? {} : { stack: err instanceof Error ? err.stack : undefined }),
+  });
+
+  // Forward to the error tracker (no-op unless SENTRY_DSN is configured).
+  errorTracking.captureException(err, {
+    requestId,
+    method: req.method,
+    url: req.originalUrl,
+    userId: req.user?.sub,
   });
 
   res.status(500).json({ error: { code: "INTERNAL_ERROR", message: "Server xatosi yuz berdi", requestId } });

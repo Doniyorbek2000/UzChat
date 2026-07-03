@@ -5,6 +5,7 @@ import { prisma } from "./config/prisma";
 import { initRedis, closeRedis } from "./config/redis";
 import { initSocketServer, getIo } from "./sockets";
 import { logger } from "./utils/logger";
+import { errorTracking } from "./services/errorTracking.service";
 import { startMessageExpiryJob } from "./jobs/messageExpiry";
 import { startScheduledMessagesJob } from "./jobs/scheduledMessages";
 import { startBirthdayReminderJob } from "./jobs/birthdayReminders";
@@ -54,9 +55,11 @@ startRedPacketRefundsJob();
 
 process.on("unhandledRejection", (reason) => {
   logger.error("Unhandled promise rejection", { reason: String(reason) });
+  errorTracking.captureException(reason);
 });
 process.on("uncaughtException", (err) => {
   logger.error("Uncaught exception — shutting down", { error: err.message, stack: err.stack });
+  errorTracking.captureException(err);
   gracefulShutdown("uncaughtException");
 });
 

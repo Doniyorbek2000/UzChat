@@ -22,10 +22,20 @@ const icons: Record<keyof MainTabParamList, string> = {
   Profile: "👤",
 };
 
-function TabIcon({ name, badge }: { name: keyof MainTabParamList; badge?: number }) {
+const TAB_LABELS = {
+  Chats: "tabChats",
+  Reels: "tabReels",
+  Discover: "tabDiscover",
+  Profile: "tabProfile",
+} as const;
+
+function TabIcon({ name, badge, label }: { name: keyof MainTabParamList; badge?: number; label: string }) {
+  const a11yLabel = badge && badge > 0 ? `${label}, ${badge} o'qilmagan` : label;
   return (
-    <View>
-      <Text style={{ fontSize: 20 }}>{icons[name]}</Text>
+    <View accessible accessibilityRole="tab" accessibilityLabel={a11yLabel}>
+      <Text style={{ fontSize: 20 }} accessibilityElementsHidden importantForAccessibility="no">
+        {icons[name]}
+      </Text>
       {!!badge && badge > 0 && (
         <View style={badgeStyles.badge}>
           <Text style={badgeStyles.badgeText}>{badge > 99 ? "99+" : badge}</Text>
@@ -73,6 +83,7 @@ export function MainNavigator() {
           <TabIcon
             name={route.name as keyof MainTabParamList}
             badge={route.name === "Chats" ? unreadCount : undefined}
+            label={t(TAB_LABELS[route.name as keyof MainTabParamList])}
           />
         ),
       })}

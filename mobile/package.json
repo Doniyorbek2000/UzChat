@@ -38,7 +38,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.9"
   },
   "scripts": {
     "start": "expo start",
@@ -49,7 +50,8 @@
     "build:preview": "eas build --profile preview --platform android",
     "build:production": "eas build --profile production --platform android",
     "submit:android": "eas submit --platform android",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "private": true
 }

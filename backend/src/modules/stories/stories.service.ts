@@ -2,6 +2,7 @@ import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { CreateStoryInput } from "./stories.schema";
 import { logger } from "../../utils/logger";
+import { moderationService } from "../../services/moderation.service";
 
 const STORY_DURATION_MS = 24 * 60 * 60 * 1000;
 
@@ -14,6 +15,9 @@ const userSummarySelect = {
 
 export const storiesService = {
   async createStory(userId: string, input: CreateStoryInput) {
+    const mod = moderationService.check(input.caption);
+    if (!mod.ok) throw Errors.badRequest(mod.message ?? "Hikoya qabul qilinmadi");
+
     const expiresAt = new Date(Date.now() + STORY_DURATION_MS);
     return prisma.story.create({
       data: {

@@ -1,5 +1,6 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
+import { moderationService } from "../../services/moderation.service";
 
 const userSelect = { id: true, username: true, displayName: true, avatarUrl: true };
 
@@ -7,6 +8,11 @@ export const feedService = {
   async createPost(userId: string, data: { content?: string; mediaUrls?: string[]; visibility?: string }) {
     if (!data.content && (!data.mediaUrls || data.mediaUrls.length === 0)) {
       throw Errors.badRequest("Post matn yoki media bo'lishi kerak");
+    }
+    // Only PUBLIC posts are broadly visible; still filter CONTACTS-scope too.
+    if (data.visibility !== "PRIVATE") {
+      const mod = moderationService.check(data.content);
+      if (!mod.ok) throw Errors.badRequest(mod.message ?? "Post qabul qilinmadi");
     }
     return prisma.post.create({
       data: {
@@ -131,6 +137,9 @@ export const feedService = {
   },
 
   async addComment(userId: string, postId: string, content: string) {
+    const mod = moderationService.check(content);
+    if (!mod.ok) throw Errors.badRequest(mod.message ?? "Izoh qabul qilinmadi");
+
     const post = await prisma.post.findUnique({ where: { id: postId } });
     if (!post) throw Errors.notFound("Post topilmadi");
 

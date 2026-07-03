@@ -1,6 +1,7 @@
 import { prisma } from "../../config/prisma";
 import { Errors } from "../../utils/errors";
 import { presenceService } from "../../services/presence.service";
+import { moderationService } from "../../services/moderation.service";
 import { CreateReelInput, ReelCommentInput } from "./reels.schema";
 
 const authorSelect = {
@@ -12,6 +13,9 @@ const authorSelect = {
 
 export const reelsService = {
   async create(authorId: string, input: CreateReelInput) {
+    const mod = moderationService.checkAll(input.caption, ...(input.hashtags ?? []));
+    if (!mod.ok) throw Errors.badRequest(mod.message ?? "Kontent qabul qilinmadi");
+
     return prisma.reel.create({
       data: {
         authorId,
@@ -156,6 +160,9 @@ export const reelsService = {
   },
 
   async addComment(authorId: string, reelId: string, input: ReelCommentInput) {
+    const mod = moderationService.check(input.text);
+    if (!mod.ok) throw Errors.badRequest(mod.message ?? "Izoh qabul qilinmadi");
+
     const reel = await prisma.reel.findUnique({ where: { id: reelId } });
     if (!reel) throw Errors.notFound("Reel");
 
